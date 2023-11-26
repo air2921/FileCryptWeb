@@ -6,6 +6,7 @@ using webapi.Interfaces.SQL;
 using webapi.Models;
 using Newtonsoft.Json;
 using webapi.Interfaces.Controllers;
+using webapi.Localization.English;
 
 namespace webapi.Controllers.Base.CryptographyUtils
 {
@@ -35,6 +36,24 @@ namespace webapi.Controllers.Base.CryptographyUtils
             _readMime = readMime;
             _createFile = createFile;
             _logger = logger;
+        }
+
+        public bool CheckFileType(string type)
+        {
+            string lowerType = type.ToLowerInvariant();
+
+            string privateType = FileType.PrivateType;
+            string internalType = FileType.InternalType;
+            string receivedType = FileType.ReceivedType;
+
+            string[] typesArray = new string[]
+            {
+                privateType,
+                internalType,
+                receivedType
+            };
+
+            return typesArray.Contains(lowerType);
         }
 
         public async Task<bool> CheckFile(IFormFile? file)
@@ -99,7 +118,7 @@ namespace webapi.Controllers.Base.CryptographyUtils
             try
             {
                 if (System.IO.File.Exists(filePath))
-                    await Task.Run(() => System.IO.File.Delete(filePath));
+                    await Task.Run(() => File.Delete(filePath));
             }
             catch (Exception ex)
             {

@@ -35,6 +35,10 @@ namespace webapi.Controllers.Base
 
             try
             {
+                var IsValidRoute = _fileService.CheckFileType(type);
+                if (!IsValidRoute)
+                    return StatusCode(400, new { message = "Invalid route request" });
+
                 if (!Directory.Exists(DEFAULT_FOLDER))
                     Directory.CreateDirectory(DEFAULT_FOLDER);
 
