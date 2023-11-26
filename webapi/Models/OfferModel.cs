@@ -10,19 +10,15 @@ namespace webapi.Models
         [Key]
         public int offer_id { get; set; }
 
-        [Required]
         [JsonIgnore(Condition = JsonIgnoreCondition.WhenWritingNull)]
-        public string offer_header { get; set; }
+        public string? offer_header { get; set; }
 
-        [Required]
         [JsonIgnore(Condition = JsonIgnoreCondition.WhenWritingNull)]
-        public string offer_body { get; set; }
+        public string? offer_body { get; set; }
 
-        [Required]
-        public string offer_type { get; set; }
+        public string? offer_type { get; set; }
 
-        [Required]
-        public bool is_accepted { get; set; }
+        public bool? is_accepted { get; set; }
 
         [ForeignKey("sender_id")]
         public int sender_id { get; set; }

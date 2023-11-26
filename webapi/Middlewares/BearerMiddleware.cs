@@ -1,7 +1,4 @@
-﻿using Microsoft.AspNetCore.Builder;
-using Microsoft.AspNetCore.Http;
-using Microsoft.EntityFrameworkCore;
-using System.Threading.Tasks;
+﻿using Microsoft.EntityFrameworkCore;
 using webapi.DB;
 using webapi.Interfaces.Services;
 using webapi.Models;
@@ -23,6 +20,8 @@ namespace webapi.Middlewares
             if (context.Request.Cookies.TryGetValue("JwtToken", out string? jwt))
             {
                 context.Request.Headers.Add("Authorization", $"Bearer {jwt}");
+                await _next(context);
+                return;
             }
             else
             {

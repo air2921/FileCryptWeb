@@ -1,4 +1,5 @@
-﻿using webapi.Exceptions;
+﻿using Microsoft.EntityFrameworkCore;
+using webapi.Exceptions;
 using webapi.Interfaces.SQL;
 using webapi.Localization.English;
 using webapi.Models;
@@ -16,7 +17,7 @@ namespace webapi.DB.SQL.Offers
 
         public async Task DeleteById(int id)
         {
-            var offer = await _dbContext.Offers.FindAsync(id) ??
+            var offer = await _dbContext.Offers.FirstOrDefaultAsync(o => o.offer_id == id) ??
                 throw new OfferException(ExceptionOfferMessages.OfferNotFound);
 
             _dbContext.Offers.Remove(offer);

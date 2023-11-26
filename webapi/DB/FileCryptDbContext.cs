@@ -23,12 +23,14 @@ namespace webapi.DB
             modelBuilder.Entity<FileModel>()
                 .HasOne(f => f.User)
                 .WithMany(u => u.Files)
-                .HasForeignKey(f => f.user_id);
+                .HasForeignKey(f => f.user_id)
+                .OnDelete(DeleteBehavior.Cascade);
 
             modelBuilder.Entity<UserModel>()
                 .HasOne(u => u.Keys)
                 .WithOne(k => k.User)
-                .HasForeignKey<KeyModel>(k => k.user_id);
+                .HasForeignKey<KeyModel>(k => k.user_id)
+                .OnDelete(DeleteBehavior.Cascade);
 
             modelBuilder.Entity<NotificationModel>()
                 .HasOne(n => n.Sender)

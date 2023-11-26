@@ -16,7 +16,7 @@ namespace webapi.DB.SQL.Files.Mimes
 
         public async Task<string> ReadMimeById(int id)
         {
-            var mime = await _dbContext.Mimes.FindAsync(id) ??
+            var mime = await _dbContext.Mimes.FirstOrDefaultAsync(m => m.mime_id == id) ??
                 throw new MimeException(ExceptionMimeMessages.MimeNotFound);
 
             return mime.mime_name;

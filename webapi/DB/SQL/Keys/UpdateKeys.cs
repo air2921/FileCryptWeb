@@ -14,7 +14,6 @@ namespace webapi.DB.SQL.Keys
     {
         private readonly FileCryptDbContext _dbContext;
         private readonly IValidation _validation;
-        private readonly IGenerateKey _generateKey;
         private readonly IConfiguration _configuration;
         private readonly IEncryptKey _encrypt;
         private readonly byte[] secretKey;
@@ -22,13 +21,11 @@ namespace webapi.DB.SQL.Keys
         public UpdateKeys(
             FileCryptDbContext dbContext,
             IValidation validation,
-            IGenerateKey generateKey,
             IConfiguration configuration,
             IEncryptKey encrypt)
         {
             _dbContext = dbContext;
             _validation = validation;
-            _generateKey = generateKey;
             _configuration = configuration;
             _encrypt = encrypt;
             secretKey = Convert.FromBase64String(_configuration["FileCryptKey"]!);
@@ -43,7 +40,7 @@ namespace webapi.DB.SQL.Keys
             await _dbContext.SaveChangesAsync();
         }
 
-        public async Task UpdatePersonalInternalKeyToYourOwn(KeyModel keyModel)
+        public async Task UpdatePersonalInternalKey(KeyModel keyModel)
         {
             if (string.IsNullOrEmpty(keyModel.person_internal_key))
                 throw new ArgumentException(ErrorMessage.InvalidKey);
@@ -63,7 +60,7 @@ namespace webapi.DB.SQL.Keys
             }
         }
 
-        public async Task UpdatePrivateKeyToYourOwn(KeyModel keyModel)
+        public async Task UpdatePrivateKey(KeyModel keyModel)
         {
             if (string.IsNullOrEmpty(keyModel.private_key))
                 throw new ArgumentException(ErrorMessage.InvalidKey);
@@ -80,26 +77,6 @@ namespace webapi.DB.SQL.Keys
             {
                 throw new ArgumentException(ErrorMessage.InvalidKey);
             }
-        }
-
-        public async Task UpdatePersonalInternalKey(int id)
-        {
-            var existingUser = await _dbContext.Keys.FirstOrDefaultAsync(u => u.user_id == id) ??
-                throw new UserException(ExceptionUserMessages.UserNotFound);
-
-            var internalKey = await _encrypt.EncryptionKeyAsync(_generateKey.GenerateKey(), secretKey);
-            existingUser.person_internal_key = internalKey;
-            await _dbContext.SaveChangesAsync();
-        }
-
-        public async Task UpdatePrivateKey(int id)
-        {
-            var existingUser = await _dbContext.Keys.FirstOrDefaultAsync(u => u.user_id == id) ??
-                throw new UserException(ExceptionUserMessages.UserNotFound);
-
-            var privateKey = await _encrypt.EncryptionKeyAsync(_generateKey.GenerateKey(), secretKey);
-            existingUser.private_key = privateKey;
-            await _dbContext.SaveChangesAsync();
         }
     }
 }

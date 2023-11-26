@@ -1,4 +1,5 @@
-﻿using webapi.Exceptions;
+﻿using Microsoft.EntityFrameworkCore;
+using webapi.Exceptions;
 using webapi.Interfaces.SQL;
 using webapi.Localization.English;
 using webapi.Models;
@@ -16,7 +17,7 @@ namespace webapi.DB.SQL.Notifications
 
         public async Task DeleteById(int id)
         {
-            var notification = await _dbContext.Notifications.FindAsync(id) ??
+            var notification = await _dbContext.Notifications.FirstOrDefaultAsync(u => u.notification_id == id) ??
                 throw new NotificationException(ExceptionNotificationMessages.NotificationNotFound);
 
             _dbContext.Notifications.Remove(notification);

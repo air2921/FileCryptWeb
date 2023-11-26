@@ -17,7 +17,7 @@ namespace webapi.DB.SQL.Notifications
 
         public async Task<NotificationModel> ReadNotificationById(int id)
         {
-            var notification = await _dbContext.Notifications.FindAsync(id) ??
+            var notification = await _dbContext.Notifications.FirstOrDefaultAsync(u => u.notification_id == id) ??
                 throw new NotificationException(ExceptionNotificationMessages.NotificationNotFound);
 
             return notification;

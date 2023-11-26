@@ -9,20 +9,15 @@ namespace webapi.Models
         [Key]
         public int notification_id { get; set; }
 
-        [Required]
-        public string message_header { get; set; }
+        public string? message_header { get; set; }
 
-        [Required]
-        public string message { get; set; }
+        public string? message { get; set; }
 
-        [Required]
-        public string priority { get; set; }
+        public string? priority { get; set; }
 
-        [Required]
-        public DateTime send_time { get; set; }
+        public DateTime? send_time { get; set; }
 
-        [Required]
-        public bool is_checked { get; set; }
+        public bool? is_checked { get; set; }
 
 
         [ForeignKey("sender_id")]

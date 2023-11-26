@@ -198,16 +198,21 @@ namespace webapi
                 app.UseSwaggerUI();
             }
 
+            app.UseFreeze();
+            app.UseAPI();
+            app.UseSession();
             app.UseHttpsRedirection();
             app.UseStaticFiles();
             app.UseRouting();
-            app.UseSession();
-            app.UseFreeze();
             app.UseBearer();
             app.UseAuthentication();
             app.UseAuthorization();
-            app.UseAPI();
             app.UseLog();
+
+            app.UseEndpoints(endpoint =>
+            {
+                endpoint.MapControllers();
+            });
         }
     }
 }

@@ -17,7 +17,6 @@ namespace webapi.Models
         public DateTime? expiry_date { get; set; }
 
         [ForeignKey("user_id")]
-        [Required]
         public int user_id { get; set; }
 
         [JsonIgnore]

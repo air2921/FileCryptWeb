@@ -25,6 +25,8 @@
         public const string KeyUpdated = "Key was updated";
         public const string KeyRemoved = "Key was removed";
         public const string UsernameUpdated = "Username was updated";
+        public const string PasswordUpdated = "Your password was updated";
+        public const string OldEmailConfirmed = "Old email was successfully confirmed";
     }
 
     public static class AccountErrorMessage
@@ -32,10 +34,11 @@
         public const string PasswordIncorrect = "Password is incorrect";
         public const string CodeIncorrect = "Code is incorrect";
         public const string VerifyCodeNull = "Сode timed out or an error occurred while receiving the code";
-        public const string InvalidFormatCode = "The verification code must not contain letters or symbols";
         public const string InvalidFormatPassword = "Invalid password format";
         public const string NullUserData = "Error while retrieving user data";
         public const string Error = "Unexpected error";
         public const string UserNotFound = "User was not found";
+        public const string UserExists = "User already exists";
+        public const string Forbidden = "Action prohibited";
     }
 }

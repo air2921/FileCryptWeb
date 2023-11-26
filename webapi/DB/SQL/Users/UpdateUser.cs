@@ -1,4 +1,5 @@
-﻿using webapi.Exceptions;
+﻿using Microsoft.EntityFrameworkCore;
+using webapi.Exceptions;
 using webapi.Interfaces.Services;
 using webapi.Interfaces.SQL.User;
 using webapi.Localization.English;
@@ -19,7 +20,7 @@ namespace webapi.DB.SQL.Users
 
         public async Task UpdateUsernameById(UserModel userModel)
         {
-            var existingUser = await _dbContext.Users.FindAsync(userModel.id) ??
+            var existingUser = await _dbContext.Users.FirstOrDefaultAsync(u => u.id == userModel.id) ??
                 throw new UserException(ExceptionUserMessages.UserNotFound);
 
             existingUser.username = userModel.username;
@@ -28,7 +29,7 @@ namespace webapi.DB.SQL.Users
 
         public async Task UpdatePasswordById(UserModel userModel)
         {
-            var existingUser = await _dbContext.Users.FindAsync(userModel.id) ??
+            var existingUser = await _dbContext.Users.FirstOrDefaultAsync(u => u.id == userModel.id) ??
                 throw new UserException(ExceptionUserMessages.UserNotFound);
 
             existingUser.password_hash = _passwordManager.HashingPassword(userModel.password_hash);
@@ -38,7 +39,7 @@ namespace webapi.DB.SQL.Users
 
         public async Task UpdateEmailById(UserModel userModel)
         {
-            var existingUser = await _dbContext.Users.FindAsync(userModel.id) ??
+            var existingUser = await _dbContext.Users.FirstOrDefaultAsync(u => u.id == userModel.id) ??
                 throw new UserException(ExceptionUserMessages.UserNotFound);
 
             existingUser.email = userModel.email;
@@ -47,7 +48,7 @@ namespace webapi.DB.SQL.Users
 
         public async Task UpdateRoleById(UserModel userModel)
         {
-            var existingUser = await _dbContext.Users.FindAsync(userModel.id) ??
+            var existingUser = await _dbContext.Users.FirstOrDefaultAsync(u => u.id == userModel.id) ??
                 throw new UserException(ExceptionUserMessages.UserNotFound);
 
             existingUser.role = userModel.role;

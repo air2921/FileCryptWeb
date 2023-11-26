@@ -17,7 +17,7 @@ namespace webapi.DB.SQL.Offers
 
         public async Task<OfferModel> ReadOneOffer(int id)
         {
-            var offer = await _dbContext.Offers.FindAsync(id) ??
+            var offer = await _dbContext.Offers.FirstOrDefaultAsync(o=> o.offer_id == id) ??
                 throw new OfferException(ExceptionOfferMessages.OfferNotFound);
 
             return offer;

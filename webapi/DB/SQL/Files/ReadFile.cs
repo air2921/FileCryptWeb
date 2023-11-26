@@ -38,16 +38,6 @@ namespace webapi.DB.SQL.Files
                 throw new FileException(ExceptionFileMessages.FileNotFound);
         }
 
-        public async Task<int[]> ReadFilesIDByUserID(FileModel fileModel)
-        {
-            var files = await _dbContext.Files
-                .Where(f => f.user_id == fileModel.user_id)
-                .Select(f => f.file_id)
-                .ToListAsync() ?? throw new FileException(ExceptionFileMessages.NoOneFileNotFound);
-
-            return files.ToArray();
-        }
-
         public async Task<List<FileModel>> ReadAllFiles(FileModel fileModel)
         {
             return await _dbContext.Files.Where(f => f.user_id == fileModel.user_id).ToListAsync() ??

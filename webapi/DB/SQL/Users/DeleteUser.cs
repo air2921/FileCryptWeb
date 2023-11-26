@@ -1,4 +1,5 @@
-﻿using webapi.Exceptions;
+﻿using Microsoft.EntityFrameworkCore;
+using webapi.Exceptions;
 using webapi.Interfaces.SQL;
 using webapi.Localization.English;
 using webapi.Models;
@@ -16,7 +17,7 @@ namespace webapi.DB.SQL.Users
 
         public async Task DeleteById(int id)
         {
-            var user = await _dbContext.Users.FindAsync(id) ??
+            var user = await _dbContext.Users.FirstOrDefaultAsync(u => u.id == id) ??
                 throw new UserException(ExceptionUserMessages.UserNotFound);
 
             _dbContext.Users.Remove(user);

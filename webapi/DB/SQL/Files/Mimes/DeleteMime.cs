@@ -17,7 +17,7 @@ namespace webapi.DB.SQL.Files.Mimes
 
         public async Task DeleteById(int id)
         {
-            var mime = await _dbContext.Mimes.FindAsync(id) ??
+            var mime = await _dbContext.Mimes.FirstOrDefaultAsync(m => m.mime_id == id) ??
                 throw new MimeException(ExceptionMimeMessages.MimeNotFound);
 
             _dbContext.Mimes.Remove(mime);

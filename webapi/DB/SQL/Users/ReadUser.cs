@@ -1,4 +1,5 @@
-﻿using webapi.Exceptions;
+﻿using Microsoft.EntityFrameworkCore;
+using webapi.Exceptions;
 using webapi.Interfaces.SQL.User;
 using webapi.Localization.English;
 using webapi.Models;
@@ -16,7 +17,7 @@ namespace webapi.DB.SQL.Users
 
         public async Task<UserModel> ReadFullUser(int id)
         {
-            var user = await _dbContext.Users.FindAsync(id) ??
+            var user = await _dbContext.Users.FirstOrDefaultAsync(u => u.id == id) ??
                 throw new UserException(ExceptionUserMessages.UserNotFound);
 
             return user;
@@ -24,7 +25,7 @@ namespace webapi.DB.SQL.Users
 
         public async Task<string> ReadRoleById(int id)
         {
-            var user = await _dbContext.Users.FindAsync(id) ??
+            var user = await _dbContext.Users.FirstOrDefaultAsync(u => u.id == id) ??
                 throw new UserException(ExceptionUserMessages.UserNotFound);
 
             return user.role;

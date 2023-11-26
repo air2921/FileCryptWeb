@@ -8,11 +8,9 @@ namespace webapi.Models
     public class KeyModel
     {
         [Key]
-        [Required]
         public int key_id { get; set; }
 
-        [Required]
-        public string private_key { get; set; }
+        public string? private_key { get; set; }
 
         public string? person_internal_key { get; set; }
 

@@ -33,7 +33,7 @@ namespace webapi.DB.SQL.Tokens
 
         public async Task<int[]> ReadSuspectRefresh()
         {
-            var tokens = await _dbContext.Tokens.Where(t => t.refresh_token.EndsWith("==")).Select(t => t.user_id).ToArrayAsync() ??
+            var tokens = await _dbContext.Tokens.Where(t => !t.refresh_token.EndsWith("==")).Select(t => t.user_id).ToArrayAsync() ??
                 throw new TokenException(ExceptionTokenMessages.NoOneSuspectRefresh);
 
             return tokens;

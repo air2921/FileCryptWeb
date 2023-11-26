@@ -17,10 +17,10 @@ namespace webapi.DB.SQL.Offers
 
         public async Task UpdateReceivedKeyFromOffer(OfferModel offerModel)
         {
-            var offer = await _dbContext.Offers.FindAsync(offerModel.offer_id) ??
+            var offer = await _dbContext.Offers.FirstOrDefaultAsync(o => o.offer_id == offerModel.offer_id) ??
                 throw new OfferException(ExceptionOfferMessages.OfferNotFound);
 
-            if (offer.is_accepted)
+            if ((bool)offer.is_accepted)
                 throw new OfferException(ExceptionOfferMessages.OfferIsAccepted);
 
             var targetUser = await _dbContext.Keys.FirstOrDefaultAsync(k => k.user_id == offer.receiver_id) ??
