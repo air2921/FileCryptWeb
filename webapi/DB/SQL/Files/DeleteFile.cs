@@ -40,5 +40,13 @@ namespace webapi.DB.SQL.Files
             _dbContext.Remove(file);
             await _dbContext.SaveChangesAsync();
         }
+
+        public async Task DeleteAllUserFiles(int userId)
+        {
+            var files = await _dbContext.Files.Where(f => f.user_id == userId).ToArrayAsync();
+
+            _dbContext.RemoveRange(files);
+            await _dbContext.SaveChangesAsync();
+        }
     }
 }

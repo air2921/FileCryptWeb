@@ -23,12 +23,12 @@ namespace webapi.DB.SQL.Users
             return user;
         }
 
-        public async Task<string> ReadRoleById(int id)
+        public async Task<List<UserModel>> ReadAllUsers()
         {
-            var user = await _dbContext.Users.FirstOrDefaultAsync(u => u.id == id) ??
-                throw new UserException(ExceptionUserMessages.UserNotFound);
+            var users = await _dbContext.Users.ToListAsync() ??
+                throw new UserException(ExceptionUserMessages.NoOneUserNotFound);
 
-            return user.role;
+            return users;
         }
     }
 }

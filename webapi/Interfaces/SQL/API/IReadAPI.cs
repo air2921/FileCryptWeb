@@ -6,5 +6,6 @@ namespace webapi.Interfaces.SQL.API
     {
         Task<ApiModel> ReadUserApiSettings(int id);
         Task<int> ReadUserIdByApiKey(string apiKey);
+        Task<dynamic> ReadUserByApiKey(string apiKey);
     }
 }
