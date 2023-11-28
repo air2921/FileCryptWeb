@@ -10,7 +10,7 @@ using webapi.Services;
 
 namespace webapi.Controllers.Account
 {
-    [Route("api/auth/reg")]
+    [Route("api/auth")]
     [ApiController]
     public class AuthRegistrationController : ControllerBase
     {
@@ -40,7 +40,7 @@ namespace webapi.Controllers.Account
             _dbContext = dbContext;
         }
 
-        [HttpPost("user")]
+        [HttpPost("register")]
         public async Task<IActionResult> Registration([FromBody] UserModel userModel)
         {
             var email = userModel.email.ToLowerInvariant();
@@ -103,7 +103,7 @@ namespace webapi.Controllers.Account
                 HttpContext.Session.Remove("Username");
                 HttpContext.Session.Remove("Role");
 
-                return StatusCode(201);
+                return StatusCode(201, new { userModel });
             }
             catch (Exception ex)
             {

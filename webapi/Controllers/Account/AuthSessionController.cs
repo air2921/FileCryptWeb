@@ -10,7 +10,7 @@ using webapi.Models;
 
 namespace webapi.Controllers.Account
 {
-    [Route("api/auth/session")]
+    [Route("api/auth")]
     [ApiController]
     public class AuthSessionController : ControllerBase
     {
@@ -102,10 +102,6 @@ namespace webapi.Controllers.Account
                 _tokenService.DeleteTokens();
                 return StatusCode(404);
             }
-            catch (ArgumentException)
-            {
-                return StatusCode(500);
-            }
         }
 
         [HttpPut("logout")]
@@ -125,10 +121,6 @@ namespace webapi.Controllers.Account
             {
                 _tokenService.DeleteTokens();
                 return StatusCode(404, new { message = ex.Message });
-            }
-            catch (ArgumentException)
-            {
-                return StatusCode(500);
             }
             finally
             {
