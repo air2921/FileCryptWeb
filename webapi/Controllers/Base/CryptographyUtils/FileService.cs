@@ -1,7 +1,6 @@
 ﻿using webapi.Exceptions;
 using webapi.Interfaces.Redis;
 using webapi.Interfaces.Services;
-using webapi.Interfaces.SQL.Files.Mimes;
 using webapi.Interfaces.SQL;
 using webapi.Models;
 using Newtonsoft.Json;
@@ -16,7 +15,7 @@ namespace webapi.Controllers.Base.CryptographyUtils
         private readonly IVirusCheck _virusCheck;
         private readonly IRedisCache _redisCache;
         private readonly IRedisKeys _redisKeys;
-        private readonly IReadMime _readMime;
+        private readonly IRead<FileMimeModel> _read;
         private readonly ICreate<FileModel> _createFile;
         private readonly ILogger<FileService> _logger;
 
@@ -25,7 +24,7 @@ namespace webapi.Controllers.Base.CryptographyUtils
             IVirusCheck virusCheck,
             IRedisCache redisCache,
             IRedisKeys redisKeys,
-            IReadMime readMime,
+            IRead<FileMimeModel> read,
             ICreate<FileModel> createFile,
             ILogger<FileService> logger)
         {
@@ -33,7 +32,7 @@ namespace webapi.Controllers.Base.CryptographyUtils
             _virusCheck = virusCheck;
             _redisCache = redisCache;
             _redisKeys = redisKeys;
-            _readMime = readMime;
+            _read = read;
             _createFile = createFile;
             _logger = logger;
         }
@@ -91,8 +90,8 @@ namespace webapi.Controllers.Base.CryptographyUtils
             {
                 try
                 {
-                    var mimesDb = await _readMime.ReadAllMimes();
-                    string[] mimesArray = mimesDb.ToArray();
+                    var mimesDb = await _read.ReadAll();
+                    string[] mimesArray = mimesDb.Select(m => m.mime_name).ToArray();
 
                     var mimesJson = JsonConvert.SerializeObject(mimesArray);
 
@@ -117,7 +116,7 @@ namespace webapi.Controllers.Base.CryptographyUtils
         {
             try
             {
-                if (System.IO.File.Exists(filePath))
+                if (File.Exists(filePath))
                     await Task.Run(() => File.Delete(filePath));
             }
             catch (Exception ex)

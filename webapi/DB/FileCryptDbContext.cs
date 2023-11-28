@@ -67,6 +67,10 @@ namespace webapi.DB
                 .WithOne(a => a.User)
                 .HasForeignKey<ApiModel>(a => a.user_id)
                 .OnDelete(DeleteBehavior.Cascade);
+
+            modelBuilder.Entity<ApiModel>()
+                .HasIndex(a => a.api_key)
+                .IsUnique();
         }
     }
 }

@@ -2,8 +2,9 @@
 using webapi.Interfaces.Controllers;
 using webapi.Interfaces.Redis;
 using webapi.Interfaces.Services;
-using webapi.Interfaces.SQL.Keys;
+using webapi.Interfaces.SQL;
 using webapi.Localization.English;
+using webapi.Models;
 
 namespace webapi.Controllers.Base.CryptographyUtils
 {
@@ -17,14 +18,14 @@ namespace webapi.Controllers.Base.CryptographyUtils
         private readonly ILogger<CryptographyParamsProvider> _logger;
         private readonly IRedisCache _redisCache;
         private readonly IRedisKeys _redisKeys;
-        private readonly IReadKeys _readKeys;
+        private readonly IRead<KeyModel> _readKeys;
 
         public CryptographyParamsProvider(
             IUserInfo userInfo,
             ILogger<CryptographyParamsProvider> logger,
             IRedisKeys redisKeys,
             IRedisCache redisCache,
-            IReadKeys readKeys)
+            IRead<KeyModel> readKeys)
         {
             _userInfo = userInfo;
             _logger = logger;
@@ -41,15 +42,15 @@ namespace webapi.Controllers.Base.CryptographyUtils
             {
                 if (lowerFileType == privateType)
                 {
-                    return new CryptographyParams(await _redisCache.CacheKey(_redisKeys.PrivateKey, () => _readKeys.ReadPrivateKey(_userInfo.UserId)));
+                    return new CryptographyParams(await _redisCache.CacheKey(_redisKeys.PrivateKey, () => _readKeys.ReadById(_userInfo.UserId, true)));
                 }
                 else if (lowerFileType == internalType)
                 {
-                    return new CryptographyParams(await _redisCache.CacheKey(_redisKeys.PersonalInternalKey, () => _readKeys.ReadPersonalInternalKey(_userInfo.UserId)));
+                    return new CryptographyParams(await _redisCache.CacheKey(_redisKeys.PersonalInternalKey, () => _readKeys.ReadById(_userInfo.UserId, true)));
                 }
                 else if (lowerFileType == receivedType)
                 {
-                    return new CryptographyParams(await _redisCache.CacheKey(_redisKeys.ReceivedInternalKey, () => _readKeys.ReadReceivedInternalKey(_userInfo.UserId)));
+                    return new CryptographyParams(await _redisCache.CacheKey(_redisKeys.ReceivedInternalKey, () => _readKeys.ReadById(_userInfo.UserId, true)));
                 }
                 throw new InvalidRouteException();
             }

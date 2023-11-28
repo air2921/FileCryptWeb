@@ -1,9 +1,7 @@
 ﻿using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
-using webapi.DB.SQL.Files;
 using webapi.Exceptions;
 using webapi.Interfaces.SQL;
-using webapi.Interfaces.SQL.Files;
 using webapi.Models;
 
 namespace webapi.Controllers.Core
@@ -15,13 +13,13 @@ namespace webapi.Controllers.Core
     {
         private readonly IDelete<FileModel> _deleteFileById;
         private readonly IDeleteByName<FileModel> _deleteFileByName;
-        private readonly IReadFile _readFile;
+        private readonly IRead<FileModel> _read;
 
-        public FileController(IDelete<FileModel> deleteFileById, IDeleteByName<FileModel> deleteFileByName, IReadFile readFile)
+        public FileController(IDelete<FileModel> deleteFileById, IDeleteByName<FileModel> deleteFileByName, IRead<FileModel> read)
         {
             _deleteFileById = deleteFileById;
             _deleteFileByName = deleteFileByName;
-            _readFile = readFile;
+            _read = read;
         }
 
         [HttpDelete("delete/one/{byID}")]
@@ -46,21 +44,12 @@ namespace webapi.Controllers.Core
             }
         }
 
-        [HttpGet("get/one/{byID}")]
-        public async Task<IActionResult> GetOneFile(FileModel fileModel, [FromRoute] bool byID)
+        [HttpGet("get/one")]
+        public async Task<IActionResult> GetOneFile([FromBody] int id)
         {
             try
             {
-                var file = new FileModel();
-
-                if (byID)
-                {
-                    file = await _readFile.ReadFileByIdOrName(fileModel, ReadFile.FILE_ID);
-
-                    return StatusCode(200, new { file });
-                }
-
-                file = await _readFile.ReadFileByIdOrName(fileModel, ReadFile.FILE_NAME);
+                var file = await _read.ReadById(id, null);
 
                 return StatusCode(200, new { file });
             }

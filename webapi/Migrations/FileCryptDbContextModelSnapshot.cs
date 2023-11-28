@@ -51,6 +51,9 @@ namespace webapi.Migrations
 
                     b.HasKey("api_id");
 
+                    b.HasIndex("api_key")
+                        .IsUnique();
+
                     b.HasIndex("user_id")
                         .IsUnique();
 

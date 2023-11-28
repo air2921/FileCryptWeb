@@ -1,10 +1,11 @@
-﻿using Microsoft.AspNetCore.Http;
+﻿using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 
 namespace webapi.Controllers.Core
 {
-    [Route("api/[controller]")]
+    [Route("api/core/offer")]
     [ApiController]
+    [Authorize]
     public class OfferController : ControllerBase
     {
 
