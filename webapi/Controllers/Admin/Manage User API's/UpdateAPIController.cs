@@ -19,7 +19,7 @@ namespace webapi.Controllers.Admin.Manage_User_s_API
         }
 
         [HttpPut("settings")]
-        public async Task<IActionResult> UpdateAPI(ApiModel apiModel)
+        public async Task<IActionResult> UpdateAPI([FromBody] ApiModel apiModel)
         {
             try
             {

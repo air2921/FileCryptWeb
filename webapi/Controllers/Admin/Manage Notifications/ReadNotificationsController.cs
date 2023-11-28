@@ -24,7 +24,7 @@ namespace webapi.Controllers.Admin.Manage_Notifications
         }
 
         [HttpGet("one")]
-        public async Task<IActionResult> GetOneNotification(int id)
+        public async Task<IActionResult> GetOneNotification([FromBody] int id)
         {
             try
             {
@@ -54,7 +54,7 @@ namespace webapi.Controllers.Admin.Manage_Notifications
         }
 
         [HttpGet("all/user")]
-        public async Task<IActionResult> ReadAllUserNotifications(int userID)
+        public async Task<IActionResult> ReadAllUserNotifications([FromBody] int userID)
         {
             try
             {

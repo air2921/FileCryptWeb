@@ -21,7 +21,7 @@ namespace webapi.Controllers.Admin.Manage_Files.Manage_MIME_s
         }
 
         [HttpPost("allowed")]
-        public async Task<IActionResult> CreateNewMime(FileMimeModel mimeModel)
+        public async Task<IActionResult> CreateNewMime([FromBody] FileMimeModel mimeModel)
         {
             await _createMime.Create(mimeModel);
 

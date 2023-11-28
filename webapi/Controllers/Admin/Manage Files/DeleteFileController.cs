@@ -21,7 +21,7 @@ namespace webapi.Controllers.Admin.Manage_Files
         }
 
         [HttpDelete("one/file/{byID}")]
-        public async Task<IActionResult> DeleteOneFile(FileModel fileModel, [FromRoute] bool byID)
+        public async Task<IActionResult> DeleteOneFile([FromBody] FileModel fileModel, [FromRoute] bool byID)
         {
             try
             {

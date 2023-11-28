@@ -24,7 +24,7 @@ namespace webapi.Controllers.Admin.Manage_Tokens
         }
 
         [HttpPut("revoke/refresh")]
-        public async Task<IActionResult> RevokeRefreshToken(int id)
+        public async Task<IActionResult> RevokeRefreshToken([FromBody] int id)
         {
             try
             {

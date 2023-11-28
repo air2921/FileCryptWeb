@@ -19,7 +19,7 @@ namespace webapi.Controllers.Admin.Manage_Files.Manage_MIME_s
         }
 
         [HttpGet("one")]
-        public async Task<IActionResult> ReadOneMime(int id)
+        public async Task<IActionResult> ReadOneMime([FromBody] int id)
         {
             try
             {

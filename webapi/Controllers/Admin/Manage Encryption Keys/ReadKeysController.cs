@@ -36,8 +36,8 @@ namespace webapi.Controllers.Admin.Manage_Encryption_Keys
             secretKey = Convert.FromBase64String(_configuration["FileCryptKey"]!);
         }
 
-        [HttpGet("allKeys")]
-        public async Task<IActionResult> AllKeys(int userId)
+        [HttpGet("all")]
+        public async Task<IActionResult> AllKeys([FromBody] int userId)
         {
             try
             {

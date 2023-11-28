@@ -17,8 +17,9 @@ namespace webapi.DB.SQL
 
         public async Task Create(OfferModel offerModel)
         {
-            bool exists = await _dbContext.Users.AnyAsync(u => u.id == offerModel.sender_id && u.id == offerModel.receiver_id);
-            if (!exists)
+            bool senderExists = await _dbContext.Users.AnyAsync(u => u.id == offerModel.sender_id);
+            bool receiverExists = await _dbContext.Users.AnyAsync(u => u.id == offerModel.receiver_id);
+            if (!senderExists || !receiverExists)
                 throw new UserException(AccountErrorMessage.UserNotFound);
 
             await _dbContext.AddAsync(offerModel);

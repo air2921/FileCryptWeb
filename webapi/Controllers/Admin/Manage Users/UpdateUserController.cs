@@ -22,7 +22,7 @@ namespace webapi.Controllers.Admin.Manage_Users
         }
 
         [HttpPut("role")]
-        public async Task<IActionResult> UpdateRole(UserModel userModel)
+        public async Task<IActionResult> UpdateRole([FromBody] UserModel userModel)
         {
             try
             {

@@ -1,6 +1,5 @@
 ﻿using MailKit.Security;
 using Microsoft.AspNetCore.Authorization;
-using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Mvc;
 using System.Net.Sockets;
 using webapi.Exceptions;
@@ -27,12 +26,12 @@ namespace webapi.Controllers.Admin
             _userInfo = userInfo;
         }
 
-        [HttpPost("send")]
-        public async Task<IActionResult> SendEmail(NotificationModel notificationModel, string receiverUsername, string receiverEmail)
+        [HttpPost("send/{username}/{email}")]
+        public async Task<IActionResult> SendEmail([FromBody] NotificationModel notificationModel, [FromRoute] string username, [FromRoute] string email)
         {
             try
             {
-                var userModel = new UserModel { username = receiverUsername, email = receiverEmail };
+                var userModel = new UserModel { username = username, email = email };
 
                 await _emailSender.SendMessage(userModel, notificationModel.message_header, notificationModel.message);
 

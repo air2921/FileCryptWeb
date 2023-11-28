@@ -24,7 +24,7 @@ namespace webapi.Controllers.Admin.Manage_Users
         }
 
         [HttpDelete("user")]
-        public async Task<IActionResult> DeleteUser(int id)
+        public async Task<IActionResult> DeleteUser([FromBody] int id)
         {
             try
             {

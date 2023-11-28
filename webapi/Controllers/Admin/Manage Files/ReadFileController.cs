@@ -19,7 +19,7 @@ namespace webapi.Controllers.Admin.Manage_Files
         }
 
         [HttpGet("one")]
-        public async Task<IActionResult> ReadOneFile(int id)
+        public async Task<IActionResult> ReadOneFile([FromBody] int id)
         {
             try
             {

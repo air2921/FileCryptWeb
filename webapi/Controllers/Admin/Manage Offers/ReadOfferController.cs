@@ -24,7 +24,7 @@ namespace webapi.Controllers.Admin.Manage_Offers
         }
 
         [HttpGet("one")]
-        public async Task<IActionResult> ReadOneOffer(int offerID)
+        public async Task<IActionResult> ReadOneOffer([FromBody] int offerID)
         {
             try
             {
@@ -54,7 +54,7 @@ namespace webapi.Controllers.Admin.Manage_Offers
         }
 
         [HttpGet("all/user/offers")]
-        public async Task<IActionResult> ReadAllUserOffers(int userID)
+        public async Task<IActionResult> ReadAllUserOffers([FromBody] int userID)
         {
             try
             {

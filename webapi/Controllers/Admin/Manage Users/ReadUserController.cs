@@ -17,7 +17,7 @@ namespace webapi.Controllers.Admin.Manage_Users
         }
 
         [HttpGet("one")]
-        public async Task<IActionResult> ReadUser(int id)
+        public async Task<IActionResult> ReadUser([FromBody] int id)
         {
             try
             {
