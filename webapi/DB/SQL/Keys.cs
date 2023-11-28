@@ -1,12 +1,14 @@
 ﻿using Microsoft.EntityFrameworkCore;
+using webapi.Exceptions;
 using webapi.Interfaces.Cryptography;
 using webapi.Interfaces.Services;
 using webapi.Interfaces.SQL;
+using webapi.Localization.English;
 using webapi.Models;
 
-namespace webapi.DB.SQL.Keys
+namespace webapi.DB.SQL
 {
-    public class CreateKey : ICreate<KeyModel>
+    public class Keys : ICreate<KeyModel>, IRead<KeyModel>
     {
         private readonly FileCryptDbContext _dbContext;
         private readonly IGenerateKey _generateKey;
@@ -14,7 +16,7 @@ namespace webapi.DB.SQL.Keys
         private readonly IConfiguration _configuration;
         private readonly byte[] secretKey;
 
-        public CreateKey(
+        public Keys(
             FileCryptDbContext dbContext,
             IGenerateKey generateKey,
             IEncryptKey encrypt,
@@ -39,6 +41,23 @@ namespace webapi.DB.SQL.Keys
                 await _dbContext.AddAsync(keyModel);
                 await _dbContext.SaveChangesAsync();
             }
+        }
+
+        public async Task<KeyModel> ReadById(int id, bool? byForeign)
+        {
+            if(byForeign == false)
+            {
+                return await _dbContext.Keys.FirstOrDefaultAsync(k => k.key_id == id) ??
+                    throw new UserException(ExceptionUserMessages.UserNotFound);
+            }
+
+            return await _dbContext.Keys.FirstOrDefaultAsync(k => k.user_id == id) ??
+                throw new UserException(ExceptionUserMessages.UserNotFound);
+        }
+
+        public async Task<IEnumerable<KeyModel>> ReadAll()
+        {
+            return await _dbContext.Keys.ToListAsync();
         }
     }
 }

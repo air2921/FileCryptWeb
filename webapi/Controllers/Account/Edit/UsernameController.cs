@@ -2,7 +2,7 @@
 using Microsoft.AspNetCore.Mvc;
 using webapi.Exceptions;
 using webapi.Interfaces.Services;
-using webapi.Interfaces.SQL.User;
+using webapi.Interfaces.SQL;
 using webapi.Localization.English;
 using webapi.Models;
 
@@ -13,12 +13,12 @@ namespace webapi.Controllers.Account.Edit
     [Authorize]
     public class UsernameController : ControllerBase
     {
-        private readonly IUpdateUser _update;
+        private readonly IUpdate<UserModel> _update;
         private readonly IUserInfo _userInfo;
         private readonly ITokenService _tokenService;
 
         public UsernameController(
-            IUpdateUser update,
+            IUpdate<UserModel> update,
             IUserInfo userInfo,
             ITokenService tokenService)
         {
@@ -37,7 +37,7 @@ namespace webapi.Controllers.Account.Edit
 
                 var newUserModel = new UserModel { id = _userInfo.UserId, username = userModel.username };
 
-                await _update.UpdateUsernameById(newUserModel);
+                await _update.Update(newUserModel, null);
                 await _tokenService.UpdateJwtToken();
 
                 return StatusCode(200, new { message = AccountSuccessMessage.UsernameUpdated, new_username = userModel.username });

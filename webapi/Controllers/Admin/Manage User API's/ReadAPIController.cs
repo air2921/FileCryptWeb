@@ -1,7 +1,10 @@
 ﻿using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
+using Microsoft.EntityFrameworkCore;
+using webapi.DB;
 using webapi.Exceptions;
-using webapi.Interfaces.SQL.API;
+using webapi.Interfaces.SQL;
+using webapi.Models;
 
 namespace webapi.Controllers.Admin.Manage_User_s_API
 {
@@ -10,19 +13,30 @@ namespace webapi.Controllers.Admin.Manage_User_s_API
     [Authorize(Roles = "HighestAdmin")]
     public class ReadAPIController : ControllerBase
     {
-        private readonly IReadAPI _readAPI;
+        private readonly IRead<ApiModel> _read;
+        private readonly FileCryptDbContext _dbContext;
 
-        public ReadAPIController(IReadAPI readAPI)
+        public ReadAPIController(IRead<ApiModel> read, FileCryptDbContext dbContext)
         {
-            _readAPI = readAPI;
+            _read = read;
+            _dbContext = dbContext;
         }
 
-        [HttpGet("settings")]
-        public async Task<IActionResult> GetApiSettings(int id)
+        [HttpGet("settings/{byRelation}")]
+        public async Task<IActionResult> GetApiSettings(int id, [FromRoute] bool ByRelation)
         {
             try
             {
-                var api = await _readAPI.ReadUserApiSettings(id);
+                var api = new ApiModel();
+
+                if(ByRelation)
+                {
+                    api = await _read.ReadById(id, true);
+                }
+                else
+                {
+                    api = await _read.ReadById(id, false);
+                }
 
                 return StatusCode(200, new { api });
             }
@@ -33,18 +47,14 @@ namespace webapi.Controllers.Admin.Manage_User_s_API
         }
 
         [HttpGet("user")]
-        public async Task<IActionResult> GetUserByApiKey(string apiKey)
+        public async Task<IActionResult> GetApiByApiKey(string apiKey)
         {
-            try
-            {
-                var user = await _readAPI.ReadUserByApiKey(apiKey);
+            var api = await _dbContext.API.FirstOrDefaultAsync(a => a.api_key == apiKey);
 
-                return StatusCode(200, new { user });
-            }
-            catch (ApiException ex)
-            {
-                return StatusCode(404, new { message = ex.Message });
-            }
+            if (api is null)
+                return StatusCode(404, new { message = "API key doesn't exists" });
+
+            return StatusCode(200, new { api });
         }
     }
 }

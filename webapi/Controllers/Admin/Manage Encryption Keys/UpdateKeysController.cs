@@ -3,7 +3,7 @@ using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
 using webapi.DB;
 using webapi.Exceptions;
-using webapi.Interfaces.SQL.Keys;
+using webapi.Interfaces.SQL;
 using webapi.Localization.English;
 
 namespace webapi.Controllers.Admin.Manage_Encryption_Keys
@@ -36,7 +36,7 @@ namespace webapi.Controllers.Admin.Manage_Encryption_Keys
             }
         }
 
-        [HttpPut("revoke/nternal")]
+        [HttpPut("revoke/internal")]
         [Authorize(Roles = "HighestAdmin")]
         public async Task<IActionResult> RevokeInternal(int userId)
         {
@@ -57,7 +57,7 @@ namespace webapi.Controllers.Admin.Manage_Encryption_Keys
             }
         }
 
-        [HttpPut("revoke/internal")]
+        [HttpPut("revoke/private")]
         [Authorize(Roles = "HighestAdmin")]
         public async Task<IActionResult> RevokePrivate(int userId)
         {

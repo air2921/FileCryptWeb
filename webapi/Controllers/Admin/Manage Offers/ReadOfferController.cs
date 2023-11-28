@@ -1,7 +1,10 @@
 ﻿using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
+using Microsoft.EntityFrameworkCore;
+using webapi.DB;
 using webapi.Exceptions;
-using webapi.Interfaces.SQL.Offers;
+using webapi.Interfaces.SQL;
+using webapi.Localization.English;
 using webapi.Models;
 
 namespace webapi.Controllers.Admin.Manage_Offers
@@ -11,19 +14,21 @@ namespace webapi.Controllers.Admin.Manage_Offers
     [Authorize(Roles = "HighestAdmin,Admin")]
     public class ReadOfferController : ControllerBase
     {
-        private readonly IReadOffer _readOffer;
+        private readonly FileCryptDbContext _dbContext;
+        private readonly IRead<OfferModel> _read;
 
-        public ReadOfferController(IReadOffer readOffer)
+        public ReadOfferController(FileCryptDbContext dbContext, IRead<OfferModel> read)
         {
-            _readOffer = readOffer;
+            _dbContext = dbContext;
+            _read = read;
         }
 
-        [HttpGet("one/offer")]
+        [HttpGet("one")]
         public async Task<IActionResult> ReadOneOffer(int offerID)
         {
             try
             {
-                var offer = await _readOffer.ReadOneOffer(offerID);
+                var offer = await _read.ReadById(offerID, false);
 
                 return StatusCode(200, new { offer });
             }
@@ -33,44 +38,31 @@ namespace webapi.Controllers.Admin.Manage_Offers
             }
         }
 
-        [HttpGet("all/offers")]
-        public async Task<IActionResult> ReadAllUserOffers(OfferModel offerModel)
+        [HttpGet("all")]
+        public async Task<IActionResult> ReadAllOffer()
         {
             try
             {
-                var offers = await _readOffer.ReadAllOffers(offerModel);
+                var offer = await _read.ReadAll();
+
+                return StatusCode(200, new { offer });
+            }
+            catch (OfferException ex)
+            {
+                return StatusCode(404, new { message = ex.Message });
+            }
+        }
+
+        [HttpGet("all/user/offers")]
+        public async Task<IActionResult> ReadAllUserOffers(int userID)
+        {
+            try
+            {
+                var offers = await _dbContext.Offers.Where(o => o.sender_id == userID && o.receiver_id == userID).ToListAsync();
+                if (offers is null)
+                    return StatusCode(404, new { message = ExceptionOfferMessages.NoOneOfferNotFound });
 
                 return StatusCode(200, new { offers });
-            }
-            catch (OfferException ex)
-            {
-                return StatusCode(404, new { message = ex.Message });
-            }
-        }
-
-        [HttpGet("all/received/offers")]
-        public async Task<IActionResult> ReadReceivedOffers(int receiverID)
-        {
-            try
-            {
-                var receivedOffers = await _readOffer.ReadAllReceivedOffers(receiverID);
-
-                return StatusCode(200, new { receivedOffers });
-            }
-            catch (OfferException ex)
-            {
-                return StatusCode(404, new { message = ex.Message });
-            }
-        }
-
-        [HttpGet("all/sended/offers")]
-        public async Task<IActionResult> ReadSendedOffers(int senderID)
-        {
-            try
-            {
-                var sendedOffers = await _readOffer.ReadAllSendedOffers(senderID);
-
-                return StatusCode(200, new { sendedOffers });
             }
             catch (OfferException ex)
             {

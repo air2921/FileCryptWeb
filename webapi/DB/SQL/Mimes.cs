@@ -1,18 +1,20 @@
 ﻿using Microsoft.EntityFrameworkCore;
+using webapi.Exceptions;
 using webapi.Interfaces.Services;
 using webapi.Interfaces.SQL;
+using webapi.Localization.English;
 using webapi.Models;
 
-namespace webapi.DB.SQL.Files.Mimes
+namespace webapi.DB.SQL
 {
-    public class CreateMime : ICreate<FileMimeModel>, IInsertBase<FileMimeModel>
+    public class Mimes : ICreate<FileMimeModel>, IRead<FileMimeModel>, IDelete<FileMimeModel>, IDeleteByName<FileMimeModel>, IInsertBase<FileMimeModel>
     {
         private readonly FileCryptDbContext _dbContext;
-        private readonly ILogger<CreateMime> _logger;
+        private readonly ILogger<Mimes> _logger;
         private readonly IWebHostEnvironment _webHostEnvironment;
         private readonly IFileManager _fileManager;
 
-        public CreateMime(FileCryptDbContext dbContext, ILogger<CreateMime> logger, IWebHostEnvironment webHostEnvironment, IFileManager fileManager)
+        public Mimes(FileCryptDbContext dbContext, ILogger<Mimes> logger, IWebHostEnvironment webHostEnvironment, IFileManager fileManager)
         {
             _dbContext = dbContext;
             _logger = logger;
@@ -112,6 +114,35 @@ namespace webapi.DB.SQL.Files.Mimes
                 }
             }
 
+            await _dbContext.SaveChangesAsync();
+        }
+
+        public async Task<FileMimeModel> ReadById(int id, bool? byForeign)
+        {
+            return await _dbContext.Mimes.FirstOrDefaultAsync(m => m.mime_id == id) ??
+                throw new MimeException(ExceptionMimeMessages.MimeNotFound);
+        }
+
+        public async Task<IEnumerable<FileMimeModel>> ReadAll()
+        {
+            return await _dbContext.Mimes.ToListAsync();
+        }
+
+        public async Task DeleteById(int id)
+        {
+            var mime = await _dbContext.Mimes.FirstOrDefaultAsync(m => m.mime_id == id) ??
+                throw new MimeException(ExceptionMimeMessages.MimeNotFound);
+
+            _dbContext.Mimes.Remove(mime);
+            await _dbContext.SaveChangesAsync();
+        }
+
+        public async Task DeleteByName(string mime_name)
+        {
+            var mime = await _dbContext.Mimes.FirstOrDefaultAsync(m => m.mime_name == mime_name) ??
+                throw new MimeException(ExceptionMimeMessages.MimeNotFound);
+
+            _dbContext.Mimes.Remove(mime);
             await _dbContext.SaveChangesAsync();
         }
     }

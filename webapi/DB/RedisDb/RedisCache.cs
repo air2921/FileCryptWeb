@@ -1,12 +1,15 @@
-﻿using webapi.Exceptions;
+﻿using MongoDB.Libmongocrypt;
+using webapi.Exceptions;
 using webapi.Interfaces.Cryptography;
 using webapi.Interfaces.Redis;
+using webapi.Models;
 
 namespace webapi.DB.RedisDb
 {
     public class RedisCache : IRedisCache
     {
         private readonly IRedisDbContext _context;
+        private readonly IRedisKeys _redisKeys;
         private readonly IConfiguration _configuration;
         private readonly ILogger<RedisCache> _logger;
         private readonly IDecryptKey _decrypt;
@@ -14,18 +17,20 @@ namespace webapi.DB.RedisDb
 
         public RedisCache(
             IRedisDbContext context,
+            IRedisKeys redisKeys,
             IConfiguration configuration,
             ILogger<RedisCache> logger,
             IDecryptKey decrypt)
         {
             _context = context;
+            _redisKeys = redisKeys;
             _configuration = configuration;
             _logger = logger;
             _decrypt = decrypt;
             secretKey = Convert.FromBase64String(_configuration["FileCryptKey"]!);
         }
 
-        public async Task<string> CacheKey(string key, Func<Task<string>> readKeyFunction)
+        public async Task<string> CacheKey(string key, Func<Task<KeyModel>> readKeyFunction)
         {
             try
             {
@@ -39,7 +44,26 @@ namespace webapi.DB.RedisDb
                 }
                 else
                 {
-                    var encryptionKey = await readKeyFunction();
+                    var keys = await readKeyFunction();
+                    string encryptionKey = null;
+
+                    if (key == _redisKeys.PrivateKey)
+                    {
+                        encryptionKey = keys.private_key;
+                    }
+                    else if (key == _redisKeys.PersonalInternalKey)
+                    {
+                        encryptionKey = keys.person_internal_key;
+                    }
+                    else if (key == _redisKeys.ReceivedInternalKey)
+                    {
+                        encryptionKey = keys.received_internal_key;
+                    }
+                    else
+                    {
+                        throw new ArgumentException();
+                    }
+
                     await db.StringSetAsync(key, encryptionKey, TimeSpan.FromMinutes(30));
 
                     var decryptedKey = await _decrypt.DecryptionKeyAsync(encryptionKey, secretKey);

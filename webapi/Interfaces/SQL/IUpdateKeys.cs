@@ -1,6 +1,6 @@
 ﻿using webapi.Models;
 
-namespace webapi.Interfaces.SQL.Keys
+namespace webapi.Interfaces.SQL
 {
     public interface IUpdateKeys
     {

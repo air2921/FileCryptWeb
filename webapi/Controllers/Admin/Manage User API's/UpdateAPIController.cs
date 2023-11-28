@@ -1,6 +1,7 @@
 ﻿using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
-using webapi.Interfaces.SQL.API;
+using webapi.Exceptions;
+using webapi.Interfaces.SQL;
 using webapi.Models;
 
 namespace webapi.Controllers.Admin.Manage_User_s_API
@@ -10,19 +11,26 @@ namespace webapi.Controllers.Admin.Manage_User_s_API
     [Authorize(Roles = "HighestAdmin")]
     public class UpdateAPIController : ControllerBase
     {
-        private readonly IUpdateAPI _updateAPI;
+        private readonly IUpdate<ApiModel> _update;
 
-        public UpdateAPIController(IUpdateAPI updateAPI)
+        public UpdateAPIController(IUpdate<ApiModel> update)
         {
-            _updateAPI = updateAPI;
+            _update = update;
         }
 
         [HttpPut("settings")]
         public async Task<IActionResult> UpdateAPI(ApiModel apiModel)
         {
-            await _updateAPI.UpdateApiSetting(apiModel);
+            try
+            {
+                await _update.Update(apiModel, true);
 
-            return StatusCode(200, new { apiModel });
+                return StatusCode(200, new { apiModel });
+            }
+            catch (ApiException ex)
+            {
+                return StatusCode(404, new { message = ex.Message });
+            }
         }
     }
 }

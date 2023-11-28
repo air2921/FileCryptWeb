@@ -31,18 +31,12 @@
     {
         public const string OfferNotFound = "Offer was not found";
         public const string OfferIsAccepted = "The offer was previously accepted";
+        public const string NoOneOfferNotFound = "No one offer was not found";
     }
 
     public static class ExceptionMimeMessages
     {
         public const string MimeNotFound = "MIME type was not found";
-    }
-
-    public static class ExceptionPathMessages
-    {
-        public const string DirectoryNotFound = "The directory at the specified path does not exist";
-        public const string PathNotFound = "Path to directory not found";
-        public const string FolderNotEmpty = "The directory must not contain any files";
     }
 
     public static class ExceptionApiMessages

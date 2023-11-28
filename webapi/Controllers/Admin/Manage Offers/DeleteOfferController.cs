@@ -19,7 +19,7 @@ namespace webapi.Controllers.Admin.Manage_Offers
             _deleteOffer = deleteOffer;
         }
 
-        [HttpDelete("one/offer")]
+        [HttpDelete("one")]
         public async Task<IActionResult> DeleteOffer(int id)
         {
             try
