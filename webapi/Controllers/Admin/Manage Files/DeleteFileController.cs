@@ -1,8 +1,7 @@
 ﻿using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
-using webapi.DB.SQL.Files;
 using webapi.Exceptions;
-using webapi.Interfaces.SQL.Files;
+using webapi.Interfaces.SQL;
 using webapi.Models;
 
 namespace webapi.Controllers.Admin.Manage_Files
@@ -12,45 +11,33 @@ namespace webapi.Controllers.Admin.Manage_Files
     [Authorize(Roles = "HighestAdmin,Admin")]
     public class DeleteFileController : ControllerBase
     {
-        private readonly IDeleteFile _deleteFile;
+        private readonly IDelete<FileModel> _deleteById;
+        private readonly IDeleteByName<FileModel> _deleteByName;
 
-        public DeleteFileController(IDeleteFile deleteFile)
+        public DeleteFileController(IDelete<FileModel> deleteById, IDeleteByName<FileModel> deleteByName)
         {
-            _deleteFile = deleteFile;
+            _deleteById = deleteById;
+            _deleteByName = deleteByName;
         }
 
         [HttpDelete("one/file/{byID}")]
-        public async Task<IActionResult> DeleteOneFile(FileModel fileModel, [FromRoute] bool byID)
+        public async Task<IActionResult> DeleteOneFile([FromBody] FileModel fileModel, [FromRoute] bool byID)
         {
             try
             {
                 if (byID)
                 {
-                    await _deleteFile.DeleteFileByNameOrID(fileModel, DeleteFile.FILE_ID);
-
+                    await _deleteById.DeleteById(fileModel.file_id);
                     return StatusCode(200);
                 }
 
-                await _deleteFile.DeleteFileByNameOrID(fileModel, DeleteFile.FILE_NAME);
-
+                await _deleteByName.DeleteByName(fileModel.file_name);
                 return StatusCode(200);
             }
             catch (FileException ex)
             {
                 return StatusCode(404, new { message = ex.Message });
             }
-            catch (ArgumentException)
-            {
-                return StatusCode(503);
-            }
-        }
-
-        [HttpDelete("all/files")]
-        public async Task<IActionResult> DeleteFiles(int userId)
-        {
-            await _deleteFile.DeleteAllUserFiles(userId);
-
-            return StatusCode(200);
         }
     }
 }

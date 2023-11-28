@@ -25,7 +25,8 @@ namespace webapi.Models
         [ForeignKey("user_id")]
         [JsonIgnore]
         public int user_id { get; set; }
+
         [JsonIgnore]
-        public UserModel User { get; set; }
+        public UserModel? User { get; set; }
     }
 }

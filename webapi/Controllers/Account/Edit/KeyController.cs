@@ -1,10 +1,11 @@
 ﻿using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
+using Microsoft.EntityFrameworkCore;
+using webapi.DB;
 using webapi.Exceptions;
 using webapi.Interfaces.Redis;
 using webapi.Interfaces.Services;
-using webapi.Interfaces.SQL.Keys;
-using webapi.Interfaces.SQL.Offers;
+using webapi.Interfaces.SQL;
 using webapi.Localization.English;
 using webapi.Models;
 
@@ -15,8 +16,8 @@ namespace webapi.Controllers.Account.Edit
     [Authorize]
     public class KeyController : ControllerBase
     {
+        private readonly FileCryptDbContext _dbContext;
         private readonly IUpdateKeys _updateKeys;
-        private readonly IUpdateOffer _updateOffer;
         private readonly IGenerateKey _generateKey;
         private readonly IRedisCache _redisCaching;
         private readonly IRedisKeys _redisKeys;
@@ -24,16 +25,16 @@ namespace webapi.Controllers.Account.Edit
         private readonly ITokenService _tokenService;
 
         public KeyController(
+            FileCryptDbContext dbContext,
             IUpdateKeys updateKeys,
-            IUpdateOffer updateOffer,
             IGenerateKey generateKey,
             IRedisCache redisCaching,
             IRedisKeys redisKeys,
             IUserInfo userInfo,
             ITokenService tokenService)
         {
+            _dbContext = dbContext;
             _updateKeys = updateKeys;
-            _updateOffer = updateOffer;
             _generateKey = generateKey;
             _redisCaching = redisCaching;
             _redisKeys = redisKeys;
@@ -143,21 +144,31 @@ namespace webapi.Controllers.Account.Edit
         }
 
         [HttpPut("received/from/offer")]
-        public async Task<IActionResult> UpdateReceivedKey(OfferModel offerModel)
+        public async Task<IActionResult> UpdateReceivedKey(int offerID)
         {
-            try
+            var offer = await _dbContext.Offers.FirstOrDefaultAsync(o => o.offer_id == offerID);
+            if (offer is null)
+                return StatusCode(404, new { message = ExceptionOfferMessages.OfferNotFound });
+
+            if (offer.receiver_id != _userInfo.UserId)
+                return StatusCode(400);
+
+            if (offer.is_accepted == true)
+                return StatusCode(403, new { message = ExceptionOfferMessages.OfferIsAccepted });
+
+            var targetUser = await _dbContext.Keys.FirstOrDefaultAsync(k => k.user_id == offer.receiver_id);
+            if(targetUser is null)
             {
-                await _updateOffer.UpdateReceivedKeyFromOffer(offerModel);
-                return StatusCode(200, new { message = AccountSuccessMessage.KeyUpdated, key_from_id_offer = offerModel.offer_id });
+                _tokenService.DeleteTokens();
+                return StatusCode(401);
             }
-            catch (OfferException ex)
-            {
-                return StatusCode(404, new { message = ex.Message });
-            }
-            catch (UserException ex)
-            {
-                return StatusCode(404, new { message = ex.Message });
-            }
+
+            targetUser.received_internal_key = offer.offer_body;
+            offer.is_accepted = true;
+
+            await _dbContext.SaveChangesAsync();
+
+            return StatusCode(200, new { message = AccountSuccessMessage.KeyUpdated, key_from_id_offer = offerID });
         }
     }
 }

@@ -1,8 +1,7 @@
 ﻿using Microsoft.AspNetCore.Mvc;
-using webapi.DB.SQL.Tokens;
 using webapi.DB;
 using webapi.Exceptions;
-using webapi.Interfaces.SQL.Tokens;
+using webapi.Interfaces.SQL;
 using webapi.Localization.English;
 using webapi.Models;
 using Microsoft.AspNetCore.Authorization;
@@ -15,17 +14,17 @@ namespace webapi.Controllers.Admin.Manage_Tokens
     [Authorize(Roles = "HighestAdmin,Admin")]
     public class UpdateTokenController : ControllerBase
     {
-        private readonly IUpdateToken _updateToken;
+        private readonly IUpdate<TokenModel> _update;
         private readonly FileCryptDbContext _dbContext;
 
-        public UpdateTokenController(IUpdateToken updateToken, FileCryptDbContext dbContext)
+        public UpdateTokenController(IUpdate<TokenModel> update, FileCryptDbContext dbContext)
         {
-            _updateToken = updateToken;
+            _update = update;
             _dbContext = dbContext;
         }
 
         [HttpPut("revoke/refresh")]
-        public async Task<IActionResult> RevokeRefreshToken(int id)
+        public async Task<IActionResult> RevokeRefreshToken([FromBody] int id)
         {
             try
             {
@@ -39,7 +38,7 @@ namespace webapi.Controllers.Admin.Manage_Tokens
                 if (!User.IsInRole("HighestAdmin") && targetUser.role == "HighestAdmin")
                     return StatusCode(403, new { message = ErrorMessage.HighestRoleError });
 
-                await _updateToken.UpdateRefreshToken(tokenModel, UpdateToken.USER_ID);
+                await _update.Update(tokenModel, true);
 
                 return StatusCode(200, new { message = SuccessMessage.SuccessRefreshRevoked });
             }

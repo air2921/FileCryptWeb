@@ -2,16 +2,15 @@
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
 using webapi.DB;
-using webapi.DB.SQL.Tokens;
 using webapi.Exceptions;
 using webapi.Interfaces.Redis;
 using webapi.Interfaces.Services;
-using webapi.Interfaces.SQL.Tokens;
+using webapi.Interfaces.SQL;
 using webapi.Models;
 
 namespace webapi.Controllers.Account
 {
-    [Route("api/auth/session")]
+    [Route("api/auth")]
     [ApiController]
     public class AuthSessionController : ControllerBase
     {
@@ -21,7 +20,7 @@ namespace webapi.Controllers.Account
         private readonly IRedisKeys _redisKeys;
         private readonly IPasswordManager _passwordManager;
         private readonly ITokenService _tokenService;
-        private readonly IUpdateToken _updateToken;
+        private readonly IUpdate<TokenModel> _update;
 
         public AuthSessionController(
             FileCryptDbContext dbContext,
@@ -30,7 +29,7 @@ namespace webapi.Controllers.Account
             IRedisKeys redisKeys,
             IPasswordManager passwordManager,
             ITokenService tokenService,
-            IUpdateToken updateToken)
+            IUpdate<TokenModel> update)
         {
             _dbContext = dbContext;
             _userInfo = userInfo;
@@ -38,7 +37,7 @@ namespace webapi.Controllers.Account
             _redisKeys = redisKeys;
             _passwordManager = passwordManager;
             _tokenService = tokenService;
-            _updateToken = updateToken;
+            _update = update;
         }
 
         [HttpPost("login")]
@@ -78,7 +77,7 @@ namespace webapi.Controllers.Account
                 string jwtToken = _tokenService.GenerateJwtToken(newUserModel, 20);
                 var jwtCookieOptions = _tokenService.SetCookieOptions(TimeSpan.FromMinutes(20));
 
-                await _updateToken.UpdateRefreshToken(newTokenModel, UpdateToken.USER_ID);
+                await _update.Update(newTokenModel, true);
 
                 Response.Cookies.Append("JwtToken", jwtToken, jwtCookieOptions);
                 Response.Cookies.Append("RefreshToken", refreshToken, refreshCookieOptions);
@@ -103,10 +102,6 @@ namespace webapi.Controllers.Account
                 _tokenService.DeleteTokens();
                 return StatusCode(404);
             }
-            catch (ArgumentException)
-            {
-                return StatusCode(500);
-            }
         }
 
         [HttpPut("logout")]
@@ -117,7 +112,7 @@ namespace webapi.Controllers.Account
             {
                 var tokenModel = new TokenModel() { user_id = _userInfo.UserId, refresh_token = "", expiry_date = DateTime.UtcNow.AddYears(-100) };
 
-                await _updateToken.UpdateRefreshToken(tokenModel, UpdateToken.USER_ID);
+                await _update.Update(tokenModel, true);
                 _tokenService.DeleteTokens();
 
                 return StatusCode(200);
@@ -126,10 +121,6 @@ namespace webapi.Controllers.Account
             {
                 _tokenService.DeleteTokens();
                 return StatusCode(404, new { message = ex.Message });
-            }
-            catch (ArgumentException)
-            {
-                return StatusCode(500);
             }
             finally
             {

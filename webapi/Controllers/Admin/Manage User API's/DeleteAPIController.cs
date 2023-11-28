@@ -22,7 +22,7 @@ namespace webapi.Controllers.Admin.Manage_User_s_API
         }
 
         [HttpDelete("revoke/apikey/{byID}")]
-        public async Task<IActionResult> RevokeAPI(ApiModel apiModel, [FromRoute] bool byID)
+        public async Task<IActionResult> RevokeAPI([FromBody] ApiModel apiModel, [FromRoute] bool byID)
         {
             try
             {

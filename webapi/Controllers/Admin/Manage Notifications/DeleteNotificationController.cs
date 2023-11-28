@@ -20,7 +20,7 @@ namespace webapi.Controllers.Admin.Manage_Notifications
         }
 
         [HttpDelete("one/notification")]
-        public async Task<IActionResult> DeleteNotification(int id)
+        public async Task<IActionResult> DeleteNotification([FromBody] int id)
         {
             try
             {

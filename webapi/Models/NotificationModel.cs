@@ -1,5 +1,6 @@
 ﻿using System.ComponentModel.DataAnnotations.Schema;
 using System.ComponentModel.DataAnnotations;
+using System.Text.Json.Serialization;
 
 namespace webapi.Models
 {
@@ -26,8 +27,11 @@ namespace webapi.Models
         [ForeignKey("receiver_id")]
         public int receiver_id { get; set; }
 
-        public virtual UserModel Sender { get; set; }
-        public virtual UserModel Receiver { get; set; }
+        [JsonIgnore]
+        public virtual UserModel? Sender { get; set; }
+
+        [JsonIgnore]
+        public virtual UserModel? Receiver { get; set; }
     }
 
     public enum Priority

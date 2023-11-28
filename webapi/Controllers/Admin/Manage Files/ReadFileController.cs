@@ -1,8 +1,7 @@
 ﻿using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
-using webapi.DB.SQL.Files;
 using webapi.Exceptions;
-using webapi.Interfaces.SQL.Files;
+using webapi.Interfaces.SQL;
 using webapi.Models;
 
 namespace webapi.Controllers.Admin.Manage_Files
@@ -12,36 +11,25 @@ namespace webapi.Controllers.Admin.Manage_Files
     [Authorize(Roles = "HighestAdmin,Admin")]
     public class ReadFileController : ControllerBase
     {
-        private readonly IReadFile _readFile;
+        private readonly IRead<FileModel> _read;
 
-        public ReadFileController(IReadFile readFile)
+        public ReadFileController(IRead<FileModel> read)
         {
-            _readFile = readFile;
+            _read = read;
         }
 
-        [HttpGet("one/file/{byID}")]
-        public async Task<IActionResult> ReadOneFile(FileModel fileModel, [FromRoute] bool byID)
+        [HttpGet("one")]
+        public async Task<IActionResult> ReadOneFile([FromBody] int id)
         {
             try
             {
-                if (byID)
-                {
-                    await _readFile.ReadFileByIdOrName(fileModel, ReadFile.FILE_ID);
+                var file = await _read.ReadById(id, null);
 
-                    return StatusCode(200);
-                }
-
-                await _readFile.ReadFileByIdOrName(fileModel, ReadFile.FILE_NAME);
-
-                return StatusCode(200);
+                return StatusCode(200, new { file });
             }
             catch (FileException ex)
             {
                 return StatusCode(404, new { message = ex.Message });
-            }
-            catch (ArgumentException)
-            {
-                return StatusCode(503);
             }
         }
     }

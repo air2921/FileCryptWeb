@@ -25,7 +25,7 @@ namespace webapi.Controllers.Admin.Manage_Files.Manage_MIME_s
         }
 
         [HttpDelete("one/mime/{byID}")]
-        public async Task<IActionResult> DeleteOneMime(FileMimeModel mimeModel, [FromRoute] bool byID)
+        public async Task<IActionResult> DeleteOneMime([FromBody] FileMimeModel mimeModel, [FromRoute] bool byID)
         {
             try
             {

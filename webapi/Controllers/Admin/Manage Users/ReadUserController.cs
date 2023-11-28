@@ -1,6 +1,7 @@
 ﻿using Microsoft.AspNetCore.Mvc;
 using webapi.Exceptions;
-using webapi.Interfaces.SQL.User;
+using webapi.Interfaces.SQL;
+using webapi.Models;
 
 namespace webapi.Controllers.Admin.Manage_Users
 {
@@ -8,19 +9,19 @@ namespace webapi.Controllers.Admin.Manage_Users
     [ApiController]
     public class ReadUserController : ControllerBase
     {
-        private readonly IReadUser _readUser;
+        private readonly IRead<UserModel> _read;
 
-        public ReadUserController(IReadUser readUser)
+        public ReadUserController(IRead<UserModel> read)
         {
-            _readUser = readUser;
+            _read = read;
         }
 
         [HttpGet("one")]
-        public async Task<IActionResult> ReadUser(int id)
+        public async Task<IActionResult> ReadUser([FromBody] int id)
         {
             try
             {
-                var user = await _readUser.ReadFullUser(id);
+                var user = await _read.ReadById(id, null);
 
                 return StatusCode(200, new { user });
             }
@@ -35,7 +36,7 @@ namespace webapi.Controllers.Admin.Manage_Users
         {
             try
             {
-                var users = await _readUser.ReadAllUsers();
+                var users = await _read.ReadAll();
 
                 return StatusCode(200, new { users });
             }
