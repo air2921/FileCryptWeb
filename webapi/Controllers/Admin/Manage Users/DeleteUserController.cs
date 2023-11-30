@@ -7,7 +7,7 @@ using webapi.Models;
 
 namespace webapi.Controllers.Admin.Manage_Users
 {
-    [Route("api/admin/users/delete")]
+    [Route("api/admin/users")]
     [ApiController]
     [Authorize(Roles = "HighestAdmin,Admin")]
     public class DeleteUserController : ControllerBase
@@ -23,7 +23,7 @@ namespace webapi.Controllers.Admin.Manage_Users
             _delete = delete;
         }
 
-        [HttpDelete("user")]
+        [HttpDelete("one")]
         public async Task<IActionResult> DeleteUser([FromBody] int id)
         {
             try

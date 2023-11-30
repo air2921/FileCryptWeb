@@ -7,7 +7,7 @@ using webapi.Models;
 
 namespace webapi.Controllers.Admin.Manage_Notifications
 {
-    [Route("api/admin/notifications/delete")]
+    [Route("api/admin/notifications")]
     [ApiController]
     [Authorize(Roles = "HighestAdmin")]
     public class DeleteNotificationController : ControllerBase
@@ -19,7 +19,7 @@ namespace webapi.Controllers.Admin.Manage_Notifications
             _deleteNotification = deleteNotification;
         }
 
-        [HttpDelete("one/notification")]
+        [HttpDelete("one")]
         public async Task<IActionResult> DeleteNotification([FromBody] int id)
         {
             try

@@ -7,7 +7,7 @@ using webapi.Models;
 
 namespace webapi.Controllers.Admin.Manage_Offers
 {
-    [Route("api/admin/offers/delete")]
+    [Route("api/admin/offers")]
     [ApiController]
     [Authorize(Roles = "HighestAdmin,Admin")]
     public class DeleteOfferController : ControllerBase

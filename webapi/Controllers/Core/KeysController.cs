@@ -1,45 +1,96 @@
 ﻿using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
-using Microsoft.EntityFrameworkCore;
-using webapi.DB;
+using System.Security.Cryptography;
 using webapi.Exceptions;
+using webapi.Interfaces.Cryptography;
 using webapi.Interfaces.Redis;
 using webapi.Interfaces.Services;
 using webapi.Interfaces.SQL;
 using webapi.Localization.English;
 using webapi.Models;
 
-namespace webapi.Controllers.Account.Edit
+namespace webapi.Controllers.Core
 {
-    [Route("api/account/edit/keys")]
+    [Route("api/core/keys")]
     [ApiController]
     [Authorize]
-    public class KeyController : ControllerBase
+    public class KeysController : ControllerBase
     {
-        private readonly FileCryptDbContext _dbContext;
+        private readonly IConfiguration _configuration;
+        private readonly IRead<KeyModel> _readKeys;
         private readonly IUpdateKeys _updateKeys;
         private readonly IGenerateKey _generateKey;
         private readonly IRedisCache _redisCaching;
         private readonly IRedisKeys _redisKeys;
         private readonly IUserInfo _userInfo;
         private readonly ITokenService _tokenService;
+        private readonly IDecryptKey _decryptKey;
+        private readonly ILogger<KeysController> _logger;
+        private readonly byte[] secretKey;
 
-        public KeyController(
-            FileCryptDbContext dbContext,
+        public KeysController(
+            IConfiguration configuration,
+            IRead<KeyModel> readKeys,
             IUpdateKeys updateKeys,
             IGenerateKey generateKey,
             IRedisCache redisCaching,
             IRedisKeys redisKeys,
             IUserInfo userInfo,
-            ITokenService tokenService)
+            ITokenService tokenService,
+            IDecryptKey decryptKey,
+            ILogger<KeysController> logger)
         {
-            _dbContext = dbContext;
+            _configuration = configuration;
+            _readKeys = readKeys;
             _updateKeys = updateKeys;
             _generateKey = generateKey;
             _redisCaching = redisCaching;
             _redisKeys = redisKeys;
             _userInfo = userInfo;
             _tokenService = tokenService;
+            _decryptKey = decryptKey;
+            _logger = logger;
+            secretKey = Convert.FromBase64String(_configuration["FileCryptKey"]!);
+        }
+
+        [HttpGet("all")]
+        public async Task<IActionResult> GetAllKeys()
+        {
+            try
+            {
+                HashSet<string> decryptedKeys = new();
+
+                var userKeys = await _readKeys.ReadById(_userInfo.UserId, true);
+
+                string?[] encryptionKeys =
+                {
+                    userKeys.private_key,
+                    userKeys.person_internal_key,
+                    userKeys.received_internal_key
+                };
+
+                foreach (string? encryptedKey in encryptionKeys)
+                {
+                    try
+                    {
+                        if (encryptedKey is null)
+                            continue;
+
+                        decryptedKeys.Add(await _decryptKey.DecryptionKeyAsync(encryptedKey, secretKey));
+                    }
+                    catch (CryptographicException ex)
+                    {
+                        _logger.LogCritical(ex.ToString(), nameof(GetAllKeys));
+                        continue;
+                    }
+                }
+                return StatusCode(200, new { decryptedKeys });
+            }
+            catch (UserException ex)
+            {
+                _tokenService.DeleteTokens();
+                return StatusCode(404, new { message = ex.Message });
+            }
         }
 
         [HttpPut("private/auto")]
@@ -58,7 +109,7 @@ namespace webapi.Controllers.Account.Edit
             catch (UserException ex)
             {
                 _tokenService.DeleteTokens();
-                return StatusCode(404, new { message = ex.Message }); 
+                return StatusCode(404, new { message = ex.Message });
             }
         }
 
@@ -74,23 +125,6 @@ namespace webapi.Controllers.Account.Edit
                 await _redisCaching.DeleteCache(_redisKeys.PersonalInternalKey);
 
                 return StatusCode(200, new { message = AccountSuccessMessage.KeyUpdated, internal_key = key });
-            }
-            catch (UserException ex)
-            {
-                _tokenService.DeleteTokens();
-                return StatusCode(404, new { message = ex.Message });
-            }
-        }
-
-        [HttpPut("received/clean")]
-        public async Task<IActionResult> CleanReceivedInternalKey()
-        {
-            try
-            {
-                await _updateKeys.CleanReceivedInternalKey(_userInfo.UserId);
-                await _redisCaching.DeleteCache(_redisKeys.ReceivedInternalKey);
-
-                return StatusCode(200, new { message = AccountSuccessMessage.KeyRemoved });
             }
             catch (UserException ex)
             {
@@ -143,32 +177,21 @@ namespace webapi.Controllers.Account.Edit
             }
         }
 
-        [HttpPut("received/from/offer")]
-        public async Task<IActionResult> UpdateReceivedKey(int offerID)
+        [HttpPut("received/clean")]
+        public async Task<IActionResult> CleanReceivedInternalKey()
         {
-            var offer = await _dbContext.Offers.FirstOrDefaultAsync(o => o.offer_id == offerID);
-            if (offer is null)
-                return StatusCode(404, new { message = ExceptionOfferMessages.OfferNotFound });
+            try
+            {
+                await _updateKeys.CleanReceivedInternalKey(_userInfo.UserId);
+                await _redisCaching.DeleteCache(_redisKeys.ReceivedInternalKey);
 
-            if (offer.receiver_id != _userInfo.UserId)
-                return StatusCode(400);
-
-            if (offer.is_accepted == true)
-                return StatusCode(403, new { message = ExceptionOfferMessages.OfferIsAccepted });
-
-            var targetUser = await _dbContext.Keys.FirstOrDefaultAsync(k => k.user_id == offer.receiver_id);
-            if(targetUser is null)
+                return StatusCode(200, new { message = AccountSuccessMessage.KeyRemoved });
+            }
+            catch (UserException ex)
             {
                 _tokenService.DeleteTokens();
-                return StatusCode(401);
+                return StatusCode(404, new { message = ex.Message });
             }
-
-            targetUser.received_internal_key = offer.offer_body;
-            offer.is_accepted = true;
-
-            await _dbContext.SaveChangesAsync();
-
-            return StatusCode(200, new { message = AccountSuccessMessage.KeyUpdated, key_from_id_offer = offerID });
         }
     }
 }

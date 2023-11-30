@@ -6,7 +6,7 @@ using webapi.Models;
 
 namespace webapi.Controllers.Admin.Manage_User_s_API
 {
-    [Route("api/admin/api/update")]
+    [Route("api/admin/api")]
     [ApiController]
     [Authorize(Roles = "HighestAdmin")]
     public class UpdateAPIController : ControllerBase

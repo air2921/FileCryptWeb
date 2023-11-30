@@ -8,9 +8,9 @@ using webapi.Models;
 
 namespace webapi.Controllers.Admin.Manage_Files.Manage_MIME_s
 {
-    [Route("api/admin/mime/delete")]
+    [Route("api/admin/mime")]
     [ApiController]
-    [Authorize(Roles = "HighestAdmin")]
+    [Authorize(Roles = "HighestAdmin,Admin")]
     public class DeleteMIMEController : ControllerBase
     {
         private readonly FileCryptDbContext _dbContext;
@@ -24,7 +24,7 @@ namespace webapi.Controllers.Admin.Manage_Files.Manage_MIME_s
             _deleteMimeByName = deleteMimeByName;
         }
 
-        [HttpDelete("one/mime/{byID}")]
+        [HttpDelete("one/{byID}")]
         public async Task<IActionResult> DeleteOneMime([FromBody] FileMimeModel mimeModel, [FromRoute] bool byID)
         {
             try

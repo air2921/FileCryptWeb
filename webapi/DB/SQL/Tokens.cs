@@ -48,7 +48,7 @@ namespace webapi.DB.SQL
             }
             else
             {
-                var existingToken = await _dbContext.Tokens.FirstOrDefaultAsync(t => t.token_id == tokenModel.token_id) ??
+                var existingToken = await _dbContext.Tokens.FirstOrDefaultAsync(t => t.user_id == tokenModel.user_id) ??
                     throw new TokenException("");
 
                 existingToken.expiry_date = tokenModel.expiry_date;

@@ -9,7 +9,7 @@ using webapi.Models;
 
 namespace webapi.Controllers.Admin.Manage_Notifications
 {
-    [Route("api/admin/notifications/read")]
+    [Route("api/admin/notifications")]
     [ApiController]
     [Authorize(Roles = "HighestAdmin,Admin")]
     public class ReadNotificationsController : ControllerBase

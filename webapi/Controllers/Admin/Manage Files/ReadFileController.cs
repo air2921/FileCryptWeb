@@ -6,7 +6,7 @@ using webapi.Models;
 
 namespace webapi.Controllers.Admin.Manage_Files
 {
-    [Route("api/admin/files/get")]
+    [Route("api/admin/files")]
     [ApiController]
     [Authorize(Roles = "HighestAdmin,Admin")]
     public class ReadFileController : ControllerBase

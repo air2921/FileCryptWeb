@@ -20,7 +20,6 @@ namespace webapi.Models
 
         public bool? is_checked { get; set; }
 
-
         [ForeignKey("sender_id")]
         public int sender_id { get; set; }
 

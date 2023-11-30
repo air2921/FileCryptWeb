@@ -5,7 +5,7 @@ using webapi.Models;
 
 namespace webapi.Controllers.Admin.Manage_Users
 {
-    [Route("api/admin/users/get")]
+    [Route("api/admin/users")]
     [ApiController]
     public class ReadUserController : ControllerBase
     {
