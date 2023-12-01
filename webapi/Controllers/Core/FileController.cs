@@ -9,7 +9,7 @@ using webapi.Models;
 
 namespace webapi.Controllers.Core
 {
-    [Route("api/core/file")]
+    [Route("api/core/files")]
     [ApiController]
     [Authorize]
     public class FileController : ControllerBase

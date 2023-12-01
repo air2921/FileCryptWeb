@@ -10,7 +10,7 @@ using webapi.Models;
 
 namespace webapi.Controllers.Core
 {
-    [Route("api/core/offer")]
+    [Route("api/core/offers")]
     [ApiController]
     [Authorize]
     public class OfferController : ControllerBase
@@ -18,6 +18,7 @@ namespace webapi.Controllers.Core
         private readonly FileCryptDbContext _dbContext;
         private readonly IUserInfo _userInfo;
         private readonly ICreate<OfferModel> _createOffer;
+        private readonly ICreate<NotificationModel> _createNotification;
         private readonly IRead<UserModel> _readUser;
         private readonly IRead<KeyModel> _readKeys;
         private readonly IRead<OfferModel> _readOffer;
@@ -28,6 +29,7 @@ namespace webapi.Controllers.Core
             FileCryptDbContext dbContext,
             IUserInfo userInfo,
             ICreate<OfferModel> createOffer,
+            ICreate<NotificationModel> createNotification,
             IRead<UserModel> readUser,
             IRead<KeyModel> readKeys,
             IRead<OfferModel> readOffer,
@@ -37,6 +39,7 @@ namespace webapi.Controllers.Core
             _dbContext = dbContext;
             _userInfo = userInfo;
             _createOffer = createOffer;
+            _createNotification = createNotification;
             _readUser = readUser;
             _readKeys = readKeys;
             _readOffer = readOffer;
@@ -74,7 +77,19 @@ namespace webapi.Controllers.Core
                 receiver_id = receiverID
             };
 
+            var notificationModel = new NotificationModel
+            {
+                message_header = "New offer",
+                message = $"You got a new offer from {_userInfo.Username}#{_userInfo.UserId}",
+                priority = Priority.trade.ToString(),
+                send_time = DateTime.UtcNow,
+                is_checked = false,
+                sender_id = _userInfo.UserId,
+                receiver_id = receiverID
+            };
+
             await _createOffer.Create(offerModel);
+            await _createNotification.Create(notificationModel);
 
             return StatusCode(201, new { offerModel });
         }

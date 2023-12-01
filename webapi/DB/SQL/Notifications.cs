@@ -28,8 +28,13 @@ namespace webapi.DB.SQL
 
         public async Task<NotificationModel> ReadById(int id, bool? byForeign)
         {
-            return await _dbContext.Notifications.FirstOrDefaultAsync(u => u.notification_id == id) ??
+            var notification = await _dbContext.Notifications.FirstOrDefaultAsync(u => u.notification_id == id) ??
                 throw new NotificationException(ExceptionNotificationMessages.NotificationNotFound);
+
+            notification.is_checked = true;
+            await _dbContext.SaveChangesAsync();
+
+            return notification;
         }
 
         public async Task<IEnumerable<NotificationModel>> ReadAll()
