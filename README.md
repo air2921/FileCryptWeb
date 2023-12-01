@@ -20,9 +20,9 @@ All values must be added to the secret store. The expected configuration setting
 
  **ClamAV**: You need to install and run ClamAV, and configure it on "localhost" and port 3310
 
-   ClamAV configuration files are located in the **'/config'**
+   ClamAV configuration files are located in the '/config'
 
- **Redis**: You need to run the Redis server on **'localhost'**, and port **'6379'**
+ **Redis**: You need to run the Redis server on 'localhost', and port '6379'
 
 ## Database Migration with Entity Framework Core (EF Core)
 
