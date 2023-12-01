@@ -9,7 +9,7 @@ using webapi.Models;
 
 namespace webapi.Controllers.Admin.Manage_Encryption_Keys
 {
-    [Route("api/admin/keys/get")]
+    [Route("api/admin/keys")]
     [ApiController]
     [Authorize(Roles = "HighestAdmin")]
     public class ReadKeysController : ControllerBase
@@ -47,10 +47,10 @@ namespace webapi.Controllers.Admin.Manage_Encryption_Keys
 
                 string?[] encryptionKeys =
                 {
-                userKeys.private_key,
-                userKeys.person_internal_key,
-                userKeys.received_internal_key
-            };
+                    userKeys.private_key,
+                    userKeys.person_internal_key,
+                    userKeys.received_internal_key
+                };
 
                 foreach (string? encryptedKey in encryptionKeys)
                 {

@@ -6,7 +6,7 @@ using webapi.Models;
 
 namespace webapi.Controllers.Admin.Manage_Files
 {
-    [Route("api/admin/files/delete")]
+    [Route("api/admin/files")]
     [ApiController]
     [Authorize(Roles = "HighestAdmin,Admin")]
     public class DeleteFileController : ControllerBase
@@ -20,7 +20,7 @@ namespace webapi.Controllers.Admin.Manage_Files
             _deleteByName = deleteByName;
         }
 
-        [HttpDelete("one/file/{byID}")]
+        [HttpDelete("one/{byID}")]
         public async Task<IActionResult> DeleteOneFile([FromBody] FileModel fileModel, [FromRoute] bool byID)
         {
             try

@@ -6,9 +6,9 @@ using webapi.Models;
 
 namespace webapi.Controllers.Admin.Manage_Files.Manage_MIME_s
 {
-    [Route("api/admin/mime/create")]
+    [Route("api/admin/mime")]
     [ApiController]
-    [Authorize(Roles = "HighestAdmin,Admin")]
+    [Authorize(Roles = "HighestAdmin")]
     public class CreateMIMEController : ControllerBase
     {
         private readonly ICreate<FileMimeModel> _createMime;
@@ -20,7 +20,7 @@ namespace webapi.Controllers.Admin.Manage_Files.Manage_MIME_s
             _insertBase = insertBase;
         }
 
-        [HttpPost("allowed")]
+        [HttpPost("add/new")]
         public async Task<IActionResult> CreateNewMime([FromBody] FileMimeModel mimeModel)
         {
             await _createMime.Create(mimeModel);
@@ -28,7 +28,7 @@ namespace webapi.Controllers.Admin.Manage_Files.Manage_MIME_s
             return StatusCode(201, new { message = SuccessMessage.SuccessCreatedNewMime });
         }
 
-        [HttpPost("allowed/secure/{secure}")]
+        [HttpPost("add/{secure}")]
         public async Task<IActionResult> CreateSecureBaseMIMICollection([FromRoute] bool secure)
         {
             await _insertBase.DBInsertBase(null, secure);

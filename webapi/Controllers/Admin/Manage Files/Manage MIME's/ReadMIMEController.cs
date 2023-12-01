@@ -6,9 +6,9 @@ using webapi.Models;
 
 namespace webapi.Controllers.Admin.Manage_Files.Manage_MIME_s
 {
-    [Route("api/admin/mime/get")]
+    [Route("api/admin/mime")]
     [ApiController]
-    [Authorize(Roles = "HighestAdmin")]
+    [Authorize(Roles = "HighestAdmin,Admin")]
     public class ReadMIMEController : ControllerBase
     {
         private readonly IRead<FileMimeModel> _readMime;

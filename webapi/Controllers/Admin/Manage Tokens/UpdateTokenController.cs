@@ -9,7 +9,7 @@ using Microsoft.EntityFrameworkCore;
 
 namespace webapi.Controllers.Admin.Manage_Tokens
 {
-    [Route("api/admin/tokens/update")]
+    [Route("api/admin/tokens")]
     [ApiController]
     [Authorize(Roles = "HighestAdmin,Admin")]
     public class UpdateTokenController : ControllerBase

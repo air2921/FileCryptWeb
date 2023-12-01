@@ -2,7 +2,6 @@
 using System.ComponentModel.DataAnnotations;
 using System.Text.Json.Serialization;
 using System.Net;
-using Microsoft.EntityFrameworkCore;
 
 namespace webapi.Models
 {

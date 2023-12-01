@@ -8,7 +8,7 @@ using webapi.Models;
 
 namespace webapi.Controllers.Admin.Manage_User_s_API
 {
-    [Route("api/admin/api/get")]
+    [Route("api/admin/api")]
     [ApiController]
     [Authorize(Roles = "HighestAdmin")]
     public class ReadAPIController : ControllerBase
@@ -29,14 +29,7 @@ namespace webapi.Controllers.Admin.Manage_User_s_API
             {
                 var api = new ApiModel();
 
-                if(ByRelation)
-                {
-                    api = await _read.ReadById(id, true);
-                }
-                else
-                {
-                    api = await _read.ReadById(id, false);
-                }
+                api = await _read.ReadById(id, ByRelation);
 
                 return StatusCode(200, new { api });
             }
