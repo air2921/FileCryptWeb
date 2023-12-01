@@ -13,6 +13,7 @@ namespace webapi.DB
         public DbSet<FileMimeModel> Mimes { get; set; }
         public DbSet<TokenModel> Tokens { get; set; }
         public DbSet<ApiModel> API { get; set; }
+        public DbSet<LinkModel> Links { get; set; }
 
         public FileCryptDbContext(DbContextOptions<FileCryptDbContext> options) : base(options)
         {
@@ -71,6 +72,12 @@ namespace webapi.DB
             modelBuilder.Entity<ApiModel>()
                 .HasIndex(a => a.api_key)
                 .IsUnique();
+
+            modelBuilder.Entity<LinkModel>()
+                .HasOne(l => l.User)
+                .WithMany(l => l.Links)
+                .HasForeignKey(l => l.user_id)
+                .OnDelete(DeleteBehavior.Cascade);
         }
     }
 }

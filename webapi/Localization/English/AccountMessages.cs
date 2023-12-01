@@ -17,6 +17,11 @@
         public const string ConfirmNewEmailBody = "You have selected this Email as new for your FileCryptWeb account.\n" +
             "If it wasn't you, please ignore this message.\n\n" +
             "Your confirm code: ";
+
+        public const string RecoveryAccountHeader = "Your application for account recovery has been approved";
+        public const string RecoveryAccountBody = "You have applied for account recovery\n" +
+            "If it was not you,please change your password.\n" +
+            "Your unique recovery link: ";
     }
 
     public static class AccountSuccessMessage

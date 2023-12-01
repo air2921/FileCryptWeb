@@ -30,9 +30,7 @@
   </ItemGroup>
 
   <ItemGroup>
-    <Folder Include="Exceptions\" />
     <Folder Include="Localization\" />
-    <Folder Include="Models\" />
     <Folder Include="Services\" />
   </ItemGroup>
 
