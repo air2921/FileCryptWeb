@@ -1,5 +1,6 @@
-# FileCryptWeb-ASP.NET Core + Reactjs
-SPA web application on ASP.NET Core + React
+# FileCryptWeb
+
+## SPA web application on ASP.NET Core + React
 
 ## Configuration Settings:
 
