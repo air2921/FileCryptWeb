@@ -108,7 +108,7 @@ namespace webapi.Controllers.Core
 
             await _dbContext.SaveChangesAsync();
 
-            return StatusCode(200);
+            return StatusCode(200, new { message = SuccessMessage.SuccessOfferAccepted });
         }
 
         [HttpGet("{id}")]

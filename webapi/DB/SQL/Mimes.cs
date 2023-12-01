@@ -125,7 +125,8 @@ namespace webapi.DB.SQL
 
         public async Task<IEnumerable<FileMimeModel>> ReadAll()
         {
-            return await _dbContext.Mimes.ToListAsync();
+            return await _dbContext.Mimes.ToListAsync() ??
+                throw new MimeException(ExceptionMimeMessages.MimesNotFound);
         }
 
         public async Task DeleteById(int id)

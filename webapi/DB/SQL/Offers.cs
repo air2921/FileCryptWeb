@@ -43,7 +43,8 @@ namespace webapi.DB.SQL
 
         public async Task<IEnumerable<OfferModel>> ReadAll()
         {
-            return await _dbContext.Offers.ToListAsync();
+            return await _dbContext.Offers.ToListAsync() ??
+                throw new OfferException(ExceptionOfferMessages.NoOneOfferNotFound);
         }
     }
 }

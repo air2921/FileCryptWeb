@@ -5,6 +5,7 @@ using webapi.DB;
 using webapi.Exceptions;
 using webapi.Interfaces.Services;
 using webapi.Interfaces.SQL;
+using webapi.Localization.English;
 using webapi.Models;
 
 namespace webapi.Controllers.Core
@@ -90,7 +91,7 @@ namespace webapi.Controllers.Core
             var files = await query.ToListAsync();
 
             if (files is null || files.Count == 0)
-                return StatusCode(404);
+                return StatusCode(404, new { message = ExceptionFileMessages.NoOneFileNotFound });
 
             return StatusCode(200, new { files });
         }

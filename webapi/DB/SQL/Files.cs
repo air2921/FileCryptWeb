@@ -1,6 +1,7 @@
 ﻿using Microsoft.EntityFrameworkCore;
 using webapi.Exceptions;
 using webapi.Interfaces.SQL;
+using webapi.Localization.English;
 using webapi.Models;
 
 namespace webapi.DB.SQL
@@ -23,18 +24,19 @@ namespace webapi.DB.SQL
         public async Task<FileModel> ReadById(int id, bool? byForeign)
         {
             return await _dbContext.Files.FirstOrDefaultAsync(f => f.file_id == id) ??
-                throw new FileException("");
+                throw new FileException(ExceptionFileMessages.FileNotFound);
         }
 
         public async Task<IEnumerable<FileModel>> ReadAll()
         {
-            return await _dbContext.Files.ToListAsync();
+            return await _dbContext.Files.ToListAsync() ??
+                throw new FileException(ExceptionFileMessages.NoOneFileNotFound);
         }
 
         public async Task DeleteById(int id)
         {
             var file = await _dbContext.Files.FirstOrDefaultAsync(f => f.file_id == id) ??
-                throw new FileException("");
+                throw new FileException(ExceptionFileMessages.FileNotFound);
 
             _dbContext.Remove(file);
             await _dbContext.SaveChangesAsync();
@@ -43,7 +45,7 @@ namespace webapi.DB.SQL
         public async Task DeleteByName(string fileName)
         {
             var file = await _dbContext.Files.FirstOrDefaultAsync(f => f.file_name == fileName) ??
-                throw new FileException("");
+                throw new FileException(ExceptionFileMessages.FileNotFound);
 
             _dbContext.Remove(file);
             await _dbContext.SaveChangesAsync();

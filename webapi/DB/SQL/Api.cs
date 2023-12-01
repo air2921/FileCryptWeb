@@ -41,16 +41,17 @@ namespace webapi.DB.SQL
             if (byForeign == false)
             {
                 return await api.FirstOrDefaultAsync(a => a.api_id == id) ??
-                    throw new ApiException("");
+                    throw new ApiException(ExceptionApiMessages.ApiNotFound);
             }
 
             return await api.FirstOrDefaultAsync(a => a.user_id == id) ??
-                throw new ApiException("");
+                throw new ApiException(ExceptionApiMessages.ApiNotFound);
         }
 
         public async Task<IEnumerable<ApiModel>> ReadAll()
         {
-            return await _dbContext.API.ToListAsync();
+            return await _dbContext.API.ToListAsync() ??
+                throw new ApiException(ExceptionApiMessages.NoOneApiNotFound);
         }
 
         public async Task Update(ApiModel apiModel, bool? byForeign)
@@ -58,7 +59,7 @@ namespace webapi.DB.SQL
             if(byForeign == true)
             {
                 var api = await _dbContext.API.FirstOrDefaultAsync(a => a.user_id == apiModel.user_id) ??
-                    throw new ApiException(ExceptionApiMessages.UserApiNotFound);
+                    throw new ApiException(ExceptionApiMessages.ApiNotFound);
 
                 if (!string.IsNullOrWhiteSpace(apiModel.api_key))
                     api.api_key = apiModel.api_key;
@@ -80,7 +81,7 @@ namespace webapi.DB.SQL
             else
             {
                 var api = await _dbContext.API.FirstOrDefaultAsync(a => a.api_id == apiModel.api_id) ??
-                    throw new ApiException(ExceptionApiMessages.UserApiNotFound);
+                    throw new ApiException(ExceptionApiMessages.ApiNotFound);
 
                 if (!string.IsNullOrWhiteSpace(apiModel.api_key))
                     api.api_key = apiModel.api_key;
@@ -106,7 +107,7 @@ namespace webapi.DB.SQL
         public async Task DeleteById(int id)
         {
             var api = await _dbContext.API.FirstOrDefaultAsync(a => a.user_id == id) ??
-                throw new ApiException(ExceptionApiMessages.UserApiNotFound);
+                throw new ApiException(ExceptionApiMessages.ApiNotFound);
 
             await _redisCache.DeleteCache(api.api_key);
 
@@ -117,7 +118,7 @@ namespace webapi.DB.SQL
         public async Task DeleteByName(string apiKey)
         {
             var api = await _dbContext.API.FirstOrDefaultAsync(a => a.api_key == apiKey) ??
-                throw new ApiException(ExceptionApiMessages.UserApiNotFound);
+                throw new ApiException(ExceptionApiMessages.ApiNotFound);
 
             await _redisCache.DeleteCache(api.api_key);
 

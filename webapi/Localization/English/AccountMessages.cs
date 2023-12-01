@@ -32,6 +32,7 @@
         public const string UsernameUpdated = "Username was updated";
         public const string PasswordUpdated = "Your password was updated";
         public const string OldEmailConfirmed = "Old email was successfully confirmed";
+        public const string EmailSendedRecovery = "A message has been sent to your email with a unique link to restore your account";
     }
 
     public static class AccountErrorMessage
@@ -45,5 +46,6 @@
         public const string UserNotFound = "User was not found";
         public const string UserExists = "User already exists";
         public const string Forbidden = "Action prohibited";
+        public const string InvalidToken = "Invalid token";
     }
 }

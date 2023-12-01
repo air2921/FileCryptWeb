@@ -57,7 +57,8 @@ namespace webapi.DB.SQL
 
         public async Task<IEnumerable<KeyModel>> ReadAll()
         {
-            return await _dbContext.Keys.ToListAsync();
+            return await _dbContext.Keys.ToListAsync() ??
+                throw new UserException(ExceptionUserMessages.NoOneUserNotFound);
         }
     }
 }
