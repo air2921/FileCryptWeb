@@ -24,19 +24,19 @@ namespace webapi.DB.SQL
         public async Task<LinkModel> ReadById(int id, bool? byForeign)
         {
             return await _dbContext.Links.FirstOrDefaultAsync(l => l.link_id == id) ??
-                throw new LinkException("");
+                throw new LinkException(ExceptionLinkMessages.LinkNotFound);
         }
 
         public async Task<IEnumerable<LinkModel>> ReadAll()
         {
             return await _dbContext.Links.ToListAsync() ??
-                throw new LinkException("");
+                throw new LinkException(ExceptionLinkMessages.NoOneLinkNotFound);
         }
 
         public async Task DeleteById(int id)
         {
             var link = await _dbContext.Links.FirstOrDefaultAsync(l => l.link_id == id) ??
-                throw new LinkException(ExceptionMimeMessages.MimeNotFound);
+                throw new LinkException(ExceptionLinkMessages.LinkNotFound);
 
             _dbContext.Links.Remove(link);
             await _dbContext.SaveChangesAsync();
@@ -45,7 +45,7 @@ namespace webapi.DB.SQL
         public async Task DeleteByName(string token)
         {
             var link = await _dbContext.Links.FirstOrDefaultAsync(l => l.u_token == token) ??
-                throw new LinkException(ExceptionMimeMessages.MimeNotFound);
+                throw new LinkException(ExceptionLinkMessages.LinkNotFound);
 
             _dbContext.Links.Remove(link);
             await _dbContext.SaveChangesAsync();

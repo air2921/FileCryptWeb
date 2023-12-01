@@ -6,6 +6,7 @@ using webapi.Exceptions;
 using webapi.Interfaces.Redis;
 using webapi.Interfaces.Services;
 using webapi.Interfaces.SQL;
+using webapi.Localization.English;
 using webapi.Models;
 
 namespace webapi.Controllers.Account
@@ -49,11 +50,11 @@ namespace webapi.Controllers.Account
 
                 var user = await _dbContext.Users.FirstOrDefaultAsync(u => u.email == email);
                 if (user is null)
-                    return StatusCode(404);
+                    return StatusCode(404, new { message = AccountErrorMessage.UserNotFound });
 
                 bool IsCorrect = _passwordManager.CheckPassword(userModel.password_hash, user.password_hash);
                 if (!IsCorrect)
-                    return StatusCode(401);
+                    return StatusCode(401, new { message = AccountErrorMessage.PasswordIncorrect });
 
                 string refreshToken = _tokenService.GenerateRefreshToken();
                 string refreshTokenHash = _tokenService.HashingToken(refreshToken);

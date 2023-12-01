@@ -1,6 +1,7 @@
 ﻿using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
 using webapi.DB;
+using webapi.Exceptions;
 using webapi.Interfaces.Services;
 using webapi.Interfaces.SQL;
 using webapi.Localization.English;
@@ -43,7 +44,7 @@ namespace webapi.Controllers.Account
         {
             var user = await _dbContext.Users.FirstOrDefaultAsync(u => u.email == email.ToLowerInvariant());
             if (user is null)
-                return StatusCode(404);
+                return StatusCode(404, new { message = AccountErrorMessage.UserNotFound });
 
             var token = Guid.NewGuid().ToString("N") + Guid.NewGuid().ToString() + _generateKey.GenerateKey();
 
@@ -60,25 +61,32 @@ namespace webapi.Controllers.Account
             await _emailSender.SendMessage(userModel, EmailMessage.RecoveryAccountHeader, EmailMessage.RecoveryAccountBody + token);
             await _createLink.Create(linkModel);
 
-            return StatusCode(201, new { message = "A message has been sent to your email with a unique link to restore your account" });
+            return StatusCode(201, new { message = AccountSuccessMessage.EmailSendedRecovery });
         }
 
         [HttpPost("{token}")]
         public async Task<IActionResult> RecoveryAccountByToken([FromBody] string password, [FromRoute] string token)
         {
-            var link = await _dbContext.Links.FirstOrDefaultAsync(l => l.u_token == token);
-            if (link is null)
-                return StatusCode(404);
+            try
+            {
+                var link = await _dbContext.Links.FirstOrDefaultAsync(l => l.u_token == token);
+                if (link is null)
+                    return StatusCode(404, new { message = AccountErrorMessage.InvalidToken });
 
-            if (link.expiry_date < DateTime.UtcNow)
-                return StatusCode(400);
+                if (link.expiry_date < DateTime.UtcNow)
+                    return StatusCode(400, new { message = AccountErrorMessage.InvalidToken });
 
-            var userModel = new UserModel { id = link.user_id, password_hash = _passwordManager.HashingPassword(password) };
-            await _updateUser.Update(userModel, null);
+                var userModel = new UserModel { id = link.user_id, password_hash = _passwordManager.HashingPassword(password) };
+                await _updateUser.Update(userModel, null);
 
-            await _deleteByName.DeleteByName(token);
+                await _deleteByName.DeleteByName(token);
 
-            return StatusCode(200);
+                return StatusCode(200, new { message = AccountSuccessMessage.PasswordUpdated });
+            }
+            catch (LinkException ex)
+            {
+                return StatusCode(404, new { message = ex.Message });
+            }
         }
     }
 }

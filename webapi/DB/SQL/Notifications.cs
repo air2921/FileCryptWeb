@@ -39,7 +39,8 @@ namespace webapi.DB.SQL
 
         public async Task<IEnumerable<NotificationModel>> ReadAll()
         {
-            return await _dbContext.Notifications.ToListAsync();
+            return await _dbContext.Notifications.ToListAsync() ??
+                throw new NotificationException(ExceptionNotificationMessages.NoOneNotificationNotFound);
         }
 
         public async Task DeleteById(int id)
