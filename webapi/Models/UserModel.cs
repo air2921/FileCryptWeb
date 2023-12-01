@@ -30,6 +30,9 @@ namespace webapi.Models
 
         [JsonIgnore]
         public ApiModel? API { get; set; }
+
+        [JsonIgnore]
+        public ICollection<LinkModel>? Links { get; set; }
     }
 
     public enum Role

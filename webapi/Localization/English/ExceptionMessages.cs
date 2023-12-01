@@ -37,15 +37,24 @@
     public static class ExceptionMimeMessages
     {
         public const string MimeNotFound = "MIME type was not found";
+        public const string MimesNotFound = "You have no one allowed MIME types";
     }
 
     public static class ExceptionApiMessages
     {
-        public const string UserApiNotFound = "This user does not have an API key";
+        public const string ApiNotFound = "API not found";
+        public const string NoOneApiNotFound = "No one API not found";
     }
 
     public static class ExceptionTokenMessages
     {
-        public const string NoOneSuspectRefresh = "No one suspect refresh tokens was not found";
+        public const string RefreshNotFound = "Refresh token was not found";
+        public const string NoOneRefreshNotFound = "No one refresh tokens was not found";
+    }
+
+    public static class ExceptionLinkMessages
+    {
+        public const string LinkNotFound = "Link was not found";
+        public const string NoOneLinkNotFound = "No one link was not found";
     }
 }

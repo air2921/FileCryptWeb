@@ -25,6 +25,7 @@
         public const string SuccessMimeCollectionCreate = "Basic collection of MIME types added to the database";
         public const string SuccessCreatedFoldderStruct = "Basic folder structure created";
         public const string SuccessOfferDeleted = "The offer was deleted";
+        public const string SuccessOfferAccepted = "The offer was accepted";
         public const string SuccessApiUpdated = "New API settings have been applied";
     }
 

@@ -1,6 +1,7 @@
 ﻿using Microsoft.EntityFrameworkCore;
 using webapi.Exceptions;
 using webapi.Interfaces.SQL;
+using webapi.Localization.English;
 using webapi.Models;
 
 namespace webapi.DB.SQL
@@ -27,16 +28,17 @@ namespace webapi.DB.SQL
             if (byForeign == false)
             {
                 return await token.FirstOrDefaultAsync(t => t.token_id == id) ??
-                    throw new TokenException("");
+                    throw new TokenException(ExceptionTokenMessages.RefreshNotFound);
             }
 
             return await token.FirstOrDefaultAsync(t => t.user_id == id) ??
-                throw new TokenException("");
+                throw new TokenException(ExceptionTokenMessages.RefreshNotFound);
         }
 
         public async Task<IEnumerable<TokenModel>> ReadAll()
         {
-            return await _dbContext.Tokens.ToListAsync();
+            return await _dbContext.Tokens.ToListAsync() ??
+                throw new TokenException(ExceptionTokenMessages.NoOneRefreshNotFound);
         }
 
         public async Task Update(TokenModel tokenModel, bool? byForeign)
@@ -49,7 +51,7 @@ namespace webapi.DB.SQL
             else
             {
                 var existingToken = await _dbContext.Tokens.FirstOrDefaultAsync(t => t.user_id == tokenModel.user_id) ??
-                    throw new TokenException("");
+                    throw new TokenException(ExceptionTokenMessages.RefreshNotFound);
 
                 existingToken.expiry_date = tokenModel.expiry_date;
                 existingToken.refresh_token = tokenModel.refresh_token;

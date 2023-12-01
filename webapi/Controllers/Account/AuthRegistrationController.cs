@@ -47,7 +47,7 @@ namespace webapi.Controllers.Account
 
             var user = await _dbContext.Users.FirstOrDefaultAsync(u => u.email == email);
             if (user is not null)
-                return StatusCode(409);
+                return StatusCode(409, new { message = AccountErrorMessage.UserExists });
 
             if (!Regex.IsMatch(userModel.password_hash, Validation.Password))
                 return StatusCode(400, new { message = AccountErrorMessage.InvalidFormatPassword });
