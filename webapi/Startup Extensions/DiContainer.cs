@@ -23,7 +23,6 @@ namespace webapi
         public static void Singleton(IServiceCollection services)
         {
             services.AddSingleton<IHttpContextAccessor, HttpContextAccessor>();
-            services.AddSingleton<IAes, AesCreator>();
             services.AddSingleton<IValidation, Validation>();
             services.AddSingleton<IRedisDbContext, RedisDbContext>();
             services.AddSingleton<IMongoDbContext, MongoDbContext>();
@@ -79,6 +78,7 @@ namespace webapi
             services.AddScoped<IFileService, FileService>();
             services.AddScoped<IVirusCheck, ClamAV>();
             services.AddScoped<IUserInfo, UserData>();
+            services.AddScoped<IAes, AesCreator>();
         }
 
         public static void Transient(IServiceCollection services)
