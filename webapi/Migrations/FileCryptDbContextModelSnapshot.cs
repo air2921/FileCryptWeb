@@ -51,6 +51,9 @@ namespace webapi.Migrations
 
                     b.HasKey("api_id");
 
+                    b.HasIndex("api_key")
+                        .IsUnique();
+
                     b.HasIndex("user_id")
                         .IsUnique();
 
@@ -131,6 +134,37 @@ namespace webapi.Migrations
                     b.ToTable("keys");
                 });
 
+            modelBuilder.Entity("webapi.Models.LinkModel", b =>
+                {
+                    b.Property<int>("link_id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("integer");
+
+                    NpgsqlPropertyBuilderExtensions.UseIdentityByDefaultColumn(b.Property<int>("link_id"));
+
+                    b.Property<DateTime?>("created_at")
+                        .HasColumnType("timestamp with time zone");
+
+                    b.Property<DateTime?>("expiry_date")
+                        .HasColumnType("timestamp with time zone");
+
+                    b.Property<bool?>("is_used")
+                        .HasColumnType("boolean");
+
+                    b.Property<string>("u_token")
+                        .IsRequired()
+                        .HasColumnType("text");
+
+                    b.Property<int>("user_id")
+                        .HasColumnType("integer");
+
+                    b.HasKey("link_id");
+
+                    b.HasIndex("user_id");
+
+                    b.ToTable("links");
+                });
+
             modelBuilder.Entity("webapi.Models.NotificationModel", b =>
                 {
                     b.Property<int>("notification_id")
@@ -176,6 +210,9 @@ namespace webapi.Migrations
                         .HasColumnType("integer");
 
                     NpgsqlPropertyBuilderExtensions.UseIdentityByDefaultColumn(b.Property<int>("offer_id"));
+
+                    b.Property<DateTime?>("created_at")
+                        .HasColumnType("timestamp with time zone");
 
                     b.Property<bool?>("is_accepted")
                         .HasColumnType("boolean");
@@ -287,6 +324,17 @@ namespace webapi.Migrations
                     b.Navigation("User");
                 });
 
+            modelBuilder.Entity("webapi.Models.LinkModel", b =>
+                {
+                    b.HasOne("webapi.Models.UserModel", "User")
+                        .WithMany("Links")
+                        .HasForeignKey("user_id")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired();
+
+                    b.Navigation("User");
+                });
+
             modelBuilder.Entity("webapi.Models.NotificationModel", b =>
                 {
                     b.HasOne("webapi.Models.UserModel", "Receiver")
@@ -343,6 +391,8 @@ namespace webapi.Migrations
                     b.Navigation("Files");
 
                     b.Navigation("Keys");
+
+                    b.Navigation("Links");
 
                     b.Navigation("Tokens");
                 });

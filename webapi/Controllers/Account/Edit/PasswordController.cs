@@ -1,12 +1,11 @@
 ﻿using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
-using Microsoft.Extensions.Caching.Memory;
 using System.Text.RegularExpressions;
 using webapi.DB;
 using webapi.Exceptions;
 using webapi.Interfaces.Services;
-using webapi.Interfaces.SQL.User;
+using webapi.Interfaces.SQL;
 using webapi.Localization.English;
 using webapi.Models;
 using webapi.Services;
@@ -18,14 +17,14 @@ namespace webapi.Controllers.Account.Edit
     [Authorize]
     public class PasswordController : ControllerBase
     {
-        private readonly IUpdateUser _update;
+        private readonly IUpdate<UserModel> _update;
         private readonly IPasswordManager _passwordManager;
         private readonly ITokenService _tokenService;
         private readonly IUserInfo _userInfo;
         private readonly FileCryptDbContext _dbContext;
 
         public PasswordController(
-            IUpdateUser update,
+            IUpdate<UserModel> update,
             IPasswordManager passwordManager,
             ITokenService tokenService,
             IUserInfo userInfo,
@@ -73,7 +72,7 @@ namespace webapi.Controllers.Account.Edit
                 string password = _passwordManager.HashingPassword(userModel.password_hash);
                 var newUserModel = new UserModel { id = _userInfo.UserId, password_hash = password };
 
-                await _update.UpdatePasswordById(userModel);
+                await _update.Update(userModel, null);
 
                 return StatusCode(200, new { message = AccountSuccessMessage.PasswordUpdated });
             }

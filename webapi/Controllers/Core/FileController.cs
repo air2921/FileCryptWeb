@@ -1,30 +1,41 @@
 ﻿using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
-using webapi.DB.SQL.Files;
+using Microsoft.EntityFrameworkCore;
+using webapi.DB;
 using webapi.Exceptions;
+using webapi.Interfaces.Services;
 using webapi.Interfaces.SQL;
-using webapi.Interfaces.SQL.Files;
+using webapi.Localization.English;
 using webapi.Models;
 
 namespace webapi.Controllers.Core
 {
-    [Route("api/core/file")]
+    [Route("api/core/files")]
     [ApiController]
     [Authorize]
     public class FileController : ControllerBase
     {
+        private readonly FileCryptDbContext _dbContext;
+        private readonly IUserInfo _userInfo;
         private readonly IDelete<FileModel> _deleteFileById;
         private readonly IDeleteByName<FileModel> _deleteFileByName;
-        private readonly IReadFile _readFile;
+        private readonly IRead<FileModel> _readFile;
 
-        public FileController(IDelete<FileModel> deleteFileById, IDeleteByName<FileModel> deleteFileByName, IReadFile readFile)
+        public FileController(
+            FileCryptDbContext dbContext,
+            IUserInfo userInfo,
+            IDelete<FileModel> deleteFileById,
+            IDeleteByName<FileModel> deleteFileByName,
+            IRead<FileModel> readFile)
         {
+            _dbContext = dbContext;
+            _userInfo = userInfo;
             _deleteFileById = deleteFileById;
             _deleteFileByName = deleteFileByName;
             _readFile = readFile;
         }
 
-        [HttpDelete("delete/one/{byID}")]
+        [HttpDelete("one/{byID}")]
         public async Task<IActionResult> DeleteFileFromHistory([FromBody] FileModel fileModel, [FromRoute] bool byID)
         {
             try
@@ -46,21 +57,12 @@ namespace webapi.Controllers.Core
             }
         }
 
-        [HttpGet("get/one/{byID}")]
-        public async Task<IActionResult> GetOneFile(FileModel fileModel, [FromRoute] bool byID)
+        [HttpGet("one/{id}")]
+        public async Task<IActionResult> GetOneFile([FromRoute] int id)
         {
             try
             {
-                var file = new FileModel();
-
-                if (byID)
-                {
-                    file = await _readFile.ReadFileByIdOrName(fileModel, ReadFile.FILE_ID);
-
-                    return StatusCode(200, new { file });
-                }
-
-                file = await _readFile.ReadFileByIdOrName(fileModel, ReadFile.FILE_NAME);
+                var file = await _readFile.ReadById(id, null);
 
                 return StatusCode(200, new { file });
             }
@@ -68,6 +70,30 @@ namespace webapi.Controllers.Core
             {
                 return StatusCode(404, new { message = ex.Message });
             }
+        }
+
+        [HttpGet("all/{byAscending}")]
+        public async Task<IActionResult> GetAllFiles([FromRoute] bool byAscending)
+        {
+            var query = _dbContext.Files.Where(f => f.user_id == _userInfo.UserId).AsQueryable();
+
+            switch(byAscending)
+            {
+                case true:
+                    query = query.OrderByDescending(f => f.operation_date).AsQueryable();
+                    break;
+
+                case false:
+                    query = query.OrderBy(f => f.operation_date).AsQueryable();
+                    break;
+            }
+
+            var files = await query.ToListAsync();
+
+            if (files is null || files.Count == 0)
+                return StatusCode(404, new { message = ExceptionFileMessages.NoOneFileNotFound });
+
+            return StatusCode(200, new { files });
         }
     }
 }

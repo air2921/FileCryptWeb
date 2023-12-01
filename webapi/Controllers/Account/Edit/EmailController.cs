@@ -5,7 +5,7 @@ using Microsoft.Extensions.Caching.Memory;
 using webapi.DB;
 using webapi.Exceptions;
 using webapi.Interfaces.Services;
-using webapi.Interfaces.SQL.User;
+using webapi.Interfaces.SQL;
 using webapi.Localization.English;
 using webapi.Models;
 
@@ -17,7 +17,7 @@ namespace webapi.Controllers.Account.Edit
     public class EmailController : ControllerBase
     {
         private readonly FileCryptDbContext _dbContext;
-        private readonly IUpdateUser _update;
+        private readonly IUpdate<UserModel> _update;
         private readonly IEmailSender<UserModel> _email;
         private readonly IPasswordManager _passwordManager;
         private readonly IGenerateSixDigitCode _generateCode;
@@ -28,7 +28,7 @@ namespace webapi.Controllers.Account.Edit
 
         public EmailController(
             FileCryptDbContext dbContext,
-            IUpdateUser update,
+            IUpdate<UserModel> update,
             IEmailSender<UserModel> email,
             IPasswordManager passwordManager,
             IGenerateSixDigitCode generateCode,
@@ -141,7 +141,7 @@ namespace webapi.Controllers.Account.Edit
                     return StatusCode(422, new { message = AccountErrorMessage.CodeIncorrect });
 
                 var newUserModel = new UserModel { id = _userInfo.UserId, email = email };
-                await _update.UpdateEmailById(newUserModel);
+                await _update.Update(newUserModel, null);
                 await _tokenService.UpdateJwtToken();
 
                 _memoryCache.Remove("Email");

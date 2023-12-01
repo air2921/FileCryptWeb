@@ -10,6 +10,7 @@
     public static class ExceptionUserMessages
     {
         public const string UserNotFound = "User was not found";
+        public const string NoOneUserNotFound = "No one user was not found";
     }
 
     public static class ExceptionNotificationMessages
@@ -30,27 +31,30 @@
     {
         public const string OfferNotFound = "Offer was not found";
         public const string OfferIsAccepted = "The offer was previously accepted";
+        public const string NoOneOfferNotFound = "No one offer was not found";
     }
 
     public static class ExceptionMimeMessages
     {
         public const string MimeNotFound = "MIME type was not found";
-    }
-
-    public static class ExceptionPathMessages
-    {
-        public const string DirectoryNotFound = "The directory at the specified path does not exist";
-        public const string PathNotFound = "Path to directory not found";
-        public const string FolderNotEmpty = "The directory must not contain any files";
+        public const string MimesNotFound = "You have no one allowed MIME types";
     }
 
     public static class ExceptionApiMessages
     {
-        public const string UserApiNotFound = "This user does not have an API key";
+        public const string ApiNotFound = "API not found";
+        public const string NoOneApiNotFound = "No one API not found";
     }
 
     public static class ExceptionTokenMessages
     {
-        public const string NoOneSuspectRefresh = "No one suspect refresh tokens was not found";
+        public const string RefreshNotFound = "Refresh token was not found";
+        public const string NoOneRefreshNotFound = "No one refresh tokens was not found";
+    }
+
+    public static class ExceptionLinkMessages
+    {
+        public const string LinkNotFound = "Link was not found";
+        public const string NoOneLinkNotFound = "No one link was not found";
     }
 }
