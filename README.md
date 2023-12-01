@@ -18,7 +18,7 @@ All values must be added to the secret store. The expected configuration setting
 
 ## Additional setup
 
- **ClamAV**: You need to install and run ClamAV, and configure it on "localhost" and port 3310
+ **ClamAV**: You need to install and run ClamAV, and configure it on **`localhost`** and port **`3310`**
 
    ClamAV configuration files are located in the **`/config`**
 
