@@ -58,7 +58,11 @@ namespace webapi.Controllers.Admin.Manage_Notifications
         {
             try
             {
-                var notifications = await _dbContext.Notifications.Where(o => o.sender_id == userID && o.receiver_id == userID).ToListAsync();
+                var notifications = await _dbContext.Notifications
+                    .Where(n => n.sender_id == userID && n.receiver_id == userID)
+                    .OrderByDescending(n => n.send_time)
+                    .ToListAsync();
+
                 if (notifications is null)
                     return StatusCode(404, new { message = ExceptionNotificationMessages.NoOneNotificationNotFound });
 

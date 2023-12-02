@@ -58,7 +58,10 @@ namespace webapi.Controllers.Admin.Manage_Offers
         {
             try
             {
-                var offers = await _dbContext.Offers.Where(o => o.sender_id == userID && o.receiver_id == userID).ToListAsync();
+                var offers = await _dbContext.Offers
+                    .Where(o => o.sender_id == userID && o.receiver_id == userID)
+                    .OrderByDescending(o => o.created_at)
+                    .ToListAsync();
                 if (offers is null)
                     return StatusCode(404, new { message = ExceptionOfferMessages.NoOneOfferNotFound });
 

@@ -24,7 +24,6 @@ namespace webapi.Controllers.Account.Edit
         private readonly ITokenService _tokenService;
         private readonly IUserInfo _userInfo;
         private readonly IValidation _validation;
-        private readonly IMemoryCache _memoryCache;
 
         public EmailController(
             FileCryptDbContext dbContext,
@@ -34,8 +33,7 @@ namespace webapi.Controllers.Account.Edit
             IGenerateSixDigitCode generateCode,
             ITokenService tokenService,
             IUserInfo userInfo,
-            IValidation validation,
-            IMemoryCache memoryCache)
+            IValidation validation)
         {
             _dbContext = dbContext;
             _update = update;
@@ -45,7 +43,6 @@ namespace webapi.Controllers.Account.Edit
             _tokenService = tokenService;
             _userInfo = userInfo;
             _validation = validation;
-            _memoryCache = memoryCache;
         }
 
         [HttpPost("old")]
@@ -88,10 +85,10 @@ namespace webapi.Controllers.Account.Edit
                 if (!_validation.IsSixDigit(correctCode))
                     return StatusCode(500, new { message = AccountErrorMessage.Error });
 
-                if (verifyCode.Equals(correctCode))
-                    return StatusCode(307, new { message = AccountSuccessMessage.OldEmailConfirmed });
+                if (!verifyCode.Equals(correctCode))
+                    return StatusCode(401, new { message = AccountErrorMessage.CodeIncorrect });
 
-                return StatusCode(401, new { message = AccountErrorMessage.CodeIncorrect });
+                return StatusCode(307, new { message = AccountSuccessMessage.OldEmailConfirmed });
             }
             catch (ArgumentNullException)
             {
@@ -108,14 +105,13 @@ namespace webapi.Controllers.Account.Edit
             if (user is not null)
                 return StatusCode(409, new { message = AccountErrorMessage.UserExists });
 
-            _memoryCache.Set("Email", email);
-
             int code = _generateCode.GenerateSixDigitCode();
             string messageHeader = EmailMessage.ConfirmNewEmailHeader;
             string message = EmailMessage.ConfirmNewEmailBody;
             var newUserModel = new UserModel { username = _userInfo.Username, email = email };
 
             HttpContext.Session.SetString(_userInfo.UserId.ToString(), code.ToString());
+            HttpContext.Session.SetString("Email", email);
 
             await _email.SendMessage(newUserModel, messageHeader, message);
 
@@ -128,7 +124,8 @@ namespace webapi.Controllers.Account.Edit
             try
             {
                 string? code = HttpContext.Session.GetString(_userInfo.UserId.ToString());
-                string? email = _memoryCache.Get<string>("Email");
+                string? email = HttpContext.Session.GetString("Email");
+
                 if (code is null || email is null)
                     return StatusCode(500, new { message = AccountErrorMessage.Error });
 
@@ -144,7 +141,8 @@ namespace webapi.Controllers.Account.Edit
                 await _update.Update(newUserModel, null);
                 await _tokenService.UpdateJwtToken();
 
-                _memoryCache.Remove("Email");
+                HttpContext.Session.Remove(_userInfo.UserId.ToString());
+                HttpContext.Session.Remove("Email");
 
                 return StatusCode(200);
             }
