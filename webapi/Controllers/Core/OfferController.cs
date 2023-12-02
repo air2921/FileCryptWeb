@@ -51,7 +51,7 @@ namespace webapi.Controllers.Core
         public async Task<IActionResult> CreateOneOffer(int receiverID)
         {
             if (_userInfo.UserId == receiverID)
-                return StatusCode(409, new { message = "Send a trade offer to yourself, are you kidding)?" });
+                return StatusCode(409, new { message = "You send a trade offer to yourself, are you kidding)?" });
 
             var receiver = await _readUser.ReadById(receiverID, null);
             if (receiver is null)
