@@ -46,9 +46,7 @@ namespace webapi.Controllers.Account
         {
             try
             {
-                string email = userModel.email.ToLowerInvariant();
-
-                var user = await _dbContext.Users.FirstOrDefaultAsync(u => u.email == email);
+                var user = await _dbContext.Users.FirstOrDefaultAsync(u => u.email == userModel.email.ToLowerInvariant());
                 if (user is null)
                     return StatusCode(404, new { message = AccountErrorMessage.UserNotFound });
 
@@ -57,7 +55,6 @@ namespace webapi.Controllers.Account
                     return StatusCode(401, new { message = AccountErrorMessage.PasswordIncorrect });
 
                 string refreshToken = _tokenService.GenerateRefreshToken();
-                string refreshTokenHash = _tokenService.HashingToken(refreshToken);
                 var refreshCookieOptions = _tokenService.SetCookieOptions(TimeSpan.FromDays(90));
 
                 var newUserModel = new UserModel
@@ -68,17 +65,17 @@ namespace webapi.Controllers.Account
                     role = user.role,
                 };
 
-                var newTokenModel = new TokenModel
+                var tokenModel = new TokenModel
                 {
                     user_id = user.id,
-                    refresh_token = refreshTokenHash,
+                    refresh_token = _tokenService.HashingToken(refreshToken),
                     expiry_date = DateTime.UtcNow.AddDays(90)
                 };
 
                 string jwtToken = _tokenService.GenerateJwtToken(newUserModel, 20);
                 var jwtCookieOptions = _tokenService.SetCookieOptions(TimeSpan.FromMinutes(20));
 
-                await _update.Update(newTokenModel, true);
+                await _update.Update(tokenModel, true);
 
                 Response.Cookies.Append("JwtToken", jwtToken, jwtCookieOptions);
                 Response.Cookies.Append("RefreshToken", refreshToken, refreshCookieOptions);

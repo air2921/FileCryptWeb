@@ -9,10 +9,12 @@ namespace webapi.Middlewares
     public class BearerMiddleware
     {
         private readonly RequestDelegate _next;
+        private readonly ILogger<BearerMiddleware> _logger;
 
-        public BearerMiddleware(RequestDelegate next)
+        public BearerMiddleware(RequestDelegate next, ILogger<BearerMiddleware> logger)
         {
             _next = next;
+            _logger = logger;
         }
 
         public async Task Invoke(HttpContext context, FileCryptDbContext dbContext, ITokenService tokenService)
@@ -27,6 +29,8 @@ namespace webapi.Middlewares
             {
                 if (context.Request.Cookies.TryGetValue("RefreshToken", out string? refresh))
                 {
+                    _logger.LogCritical(tokenService.HashingToken(refresh));
+
                     var userAndToken = await dbContext.Tokens
                         .Where(t => t.refresh_token == tokenService.HashingToken(refresh))
                         .Join(dbContext.Users, token => token.user_id, user => user.id, (token, user) => new { token, user })
