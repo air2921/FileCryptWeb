@@ -40,62 +40,33 @@ namespace webapi.Controllers.Core
                     (combined, files) => new { combined.user, combined.keys, files })
                 .ToListAsync();
 
-            if (!user_keys_files.Any() && id == _userInfo.UserId)
-            {
-                _tokenService.DeleteTokens();
-                return StatusCode(404);
-            }
-
             if (!user_keys_files.Any())
+            {
+                if (id.Equals(_userInfo.UserId))
+                {
+                    _tokenService.DeleteTokens();
+                }
                 return StatusCode(404, new { message = ExceptionUserMessages.UserNotFound });
-
+            }
 
             var keys = user_keys_files.Select(u => u.keys.FirstOrDefault()).FirstOrDefault();
             var files = user_keys_files.Select(u => u.files).ToList();
 
-            if (id == _userInfo.UserId)
-            {
-                var user = user_keys_files.Select(u => new
-                {
-                    u.user.id,
-                    u.user.username,
-                    u.user.role,
-                    u.user.email
-                }).FirstOrDefault();
+            string? privateKey = keys.private_key is not null ? "hidden" : null;
+            string? internalKey = keys.person_internal_key is not null ? "hidden" : null;
+            string? receivedKey = keys.received_internal_key is not null ? "hidden" : null;
 
-                return StatusCode(200, new { user, keys, files });
+            if (id.Equals(_userInfo.UserId))
+            {
+                var user = user_keys_files.Select(u => new { u.user.id, u.user.username, u.user.role, u.user.email }).FirstOrDefault();
+
+                return StatusCode(200, new { user, keys = new { privateKey, internalKey, receivedKey }, files });
             }
             else
             {
-                var user = user_keys_files.Select(u => new
-                {
-                    u.user.id,
-                    u.user.username,
-                    u.user.role
-                }).FirstOrDefault();
+                var user = user_keys_files.Select(u => new { u.user.id, u.user.username, u.user.role }).FirstOrDefault();
 
-                bool hasPrivate = true;
-                bool hasInternal = true;
-                bool hasReceived = true;
-
-                if (keys.private_key is null)
-                    hasPrivate = false;
-                if (keys.person_internal_key is null)
-                    hasInternal = false;
-                if (keys.received_internal_key is null)
-                    hasReceived = false;
-
-                return StatusCode(206, new
-                {
-                    user,
-                    keys = new
-                    {
-                        hasPrivate,
-                        hasInternal,
-                        hasReceived
-                    },
-                    files
-                });
+                return StatusCode(206, new { user, keys = new { privateKey, internalKey, receivedKey }, files });
             }
         }
     }
