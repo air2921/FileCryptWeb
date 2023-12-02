@@ -19,14 +19,6 @@
         public const string NoOneNotificationNotFound = "No one notification was not found";
     }
 
-    public static class ExceptionKeyMessages
-    {
-        public const string RecordKeysNotFound = "Keys not found";
-        public const string InternalKeyNotFound = "Internal key was not found";
-        public const string ReceivedKeyNotFound = "Internal key was not found";
-        public const string PrivateKeyNotFound = "Private key was not found";
-    }
-
     public static class ExceptionOfferMessages
     {
         public const string OfferNotFound = "Offer was not found";
