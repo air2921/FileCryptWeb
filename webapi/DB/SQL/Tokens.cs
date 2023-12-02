@@ -1,7 +1,7 @@
 ﻿using Microsoft.EntityFrameworkCore;
 using webapi.Exceptions;
 using webapi.Interfaces.SQL;
-using webapi.Localization.English;
+using webapi.Localization.Exceptions;
 using webapi.Models;
 
 namespace webapi.DB.SQL

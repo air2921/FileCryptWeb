@@ -3,7 +3,7 @@ using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
 using webapi.DB;
 using webapi.Interfaces.Services;
-using webapi.Localization.English;
+using webapi.Localization.Exceptions;
 
 namespace webapi.Controllers.Core
 {
