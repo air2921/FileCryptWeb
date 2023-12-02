@@ -1,11 +1,9 @@
 ﻿using webapi.Controllers.Base.CryptographyUtils;
 using webapi.Controllers.Base;
-using webapi.DB.MongoDb;
 using webapi.DB.RedisDb;
 using webapi.DB.SQL;
 using webapi.Interfaces.Controllers;
 using webapi.Interfaces.Cryptography;
-using webapi.Interfaces.Mongo;
 using webapi.Interfaces.Redis;
 using webapi.Interfaces.Services;
 using webapi.Interfaces.SQL;
@@ -25,7 +23,6 @@ namespace webapi
             services.AddSingleton<IHttpContextAccessor, HttpContextAccessor>();
             services.AddSingleton<IValidation, Validation>();
             services.AddSingleton<IRedisDbContext, RedisDbContext>();
-            services.AddSingleton<IMongoDbContext, MongoDbContext>();
             services.AddSingleton<IPasswordManager, PasswordManager>();
             services.AddSingleton<IGenerateKey, GenerateCodesAndKeys>();
             services.AddSingleton<IGenerateSixDigitCode, GenerateCodesAndKeys>();

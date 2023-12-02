@@ -6,7 +6,7 @@ using webapi.DB;
 using webapi.Exceptions;
 using webapi.Interfaces.Services;
 using webapi.Interfaces.SQL;
-using webapi.Localization.English;
+using webapi.Localization;
 using webapi.Models;
 using webapi.Services;
 
@@ -69,9 +69,7 @@ namespace webapi.Controllers.Account.Edit
                 if (!Regex.IsMatch(userModel.password_hash, Validation.Password))
                     return StatusCode(422, new { message = AccountErrorMessage.InvalidFormatPassword });
 
-                string password = _passwordManager.HashingPassword(userModel.password_hash);
-                var newUserModel = new UserModel { id = _userInfo.UserId, password_hash = password };
-
+                var newUserModel = new UserModel { id = _userInfo.UserId, password_hash = _passwordManager.HashingPassword(userModel.password_hash) };
                 await _update.Update(userModel, null);
 
                 return StatusCode(200, new { message = AccountSuccessMessage.PasswordUpdated });

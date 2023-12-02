@@ -2,7 +2,7 @@
 using Microsoft.AspNetCore.Mvc;
 using webapi.Exceptions;
 using webapi.Interfaces.SQL;
-using webapi.Localization.English;
+using webapi.Localization;
 using webapi.Models;
 
 namespace webapi.Controllers.Admin.Manage_User_s_API

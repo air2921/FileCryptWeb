@@ -6,7 +6,7 @@ using webapi.Interfaces.Cryptography;
 using webapi.Interfaces.Redis;
 using webapi.Interfaces.Services;
 using webapi.Interfaces.SQL;
-using webapi.Localization.English;
+using webapi.Localization;
 using webapi.Models;
 
 namespace webapi.Controllers.Core
@@ -98,7 +98,7 @@ namespace webapi.Controllers.Core
         {
             try
             {
-                var key = _generateKey.GenerateKey();
+                string key = _generateKey.GenerateKey();
                 var keyModel = new KeyModel { user_id = _userInfo.UserId, private_key = key };
 
                 await _updateKeys.UpdatePrivateKey(keyModel);
@@ -118,7 +118,7 @@ namespace webapi.Controllers.Core
         {
             try
             {
-                var key = _generateKey.GenerateKey();
+                string key = _generateKey.GenerateKey();
                 var keyModel = new KeyModel { user_id = _userInfo.UserId, person_internal_key = key };
 
                 await _updateKeys.UpdatePersonalInternalKey(keyModel);

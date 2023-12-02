@@ -4,7 +4,7 @@ using webapi.DB;
 using webapi.Exceptions;
 using webapi.Interfaces.Services;
 using webapi.Interfaces.SQL;
-using webapi.Localization.English;
+using webapi.Localization;
 using webapi.Models;
 
 namespace webapi.Controllers.Account
@@ -46,7 +46,7 @@ namespace webapi.Controllers.Account
             if (user is null)
                 return StatusCode(404, new { message = AccountErrorMessage.UserNotFound });
 
-            var token = Guid.NewGuid().ToString("N") + Guid.NewGuid().ToString() + _generateKey.GenerateKey();
+            string token = Guid.NewGuid().ToString("N") + Guid.NewGuid().ToString() + _generateKey.GenerateKey();
 
             var linkModel = new LinkModel
             {
@@ -70,10 +70,7 @@ namespace webapi.Controllers.Account
             try
             {
                 var link = await _dbContext.Links.FirstOrDefaultAsync(l => l.u_token == token);
-                if (link is null)
-                    return StatusCode(404, new { message = AccountErrorMessage.InvalidToken });
-
-                if (link.expiry_date < DateTime.UtcNow)
+                if (link is null || link.expiry_date < DateTime.UtcNow)
                     return StatusCode(400, new { message = AccountErrorMessage.InvalidToken });
 
                 var userModel = new UserModel { id = link.user_id, password_hash = _passwordManager.HashingPassword(password) };

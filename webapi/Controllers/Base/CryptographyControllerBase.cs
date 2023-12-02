@@ -2,7 +2,7 @@
 using System.Text.RegularExpressions;
 using webapi.Interfaces.Controllers;
 using webapi.Interfaces.Services;
-using webapi.Localization.English;
+using webapi.Localization;
 using webapi.Services;
 using webapi.Services.Cryptography;
 

@@ -4,7 +4,7 @@ using System.Text.RegularExpressions;
 using webapi.DB;
 using webapi.Interfaces.Services;
 using webapi.Interfaces.SQL;
-using webapi.Localization.English;
+using webapi.Localization;
 using webapi.Models;
 using webapi.Services;
 

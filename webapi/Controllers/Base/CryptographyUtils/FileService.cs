@@ -5,7 +5,7 @@ using webapi.Interfaces.SQL;
 using webapi.Models;
 using Newtonsoft.Json;
 using webapi.Interfaces.Controllers;
-using webapi.Localization.English;
+using webapi.Localization;
 
 namespace webapi.Controllers.Base.CryptographyUtils
 {

@@ -4,7 +4,8 @@ using Microsoft.EntityFrameworkCore;
 using webapi.DB;
 using webapi.Exceptions;
 using webapi.Interfaces.SQL;
-using webapi.Localization.English;
+using webapi.Localization;
+using webapi.Localization.Exceptions;
 
 namespace webapi.Controllers.Admin.Manage_Encryption_Keys
 {
