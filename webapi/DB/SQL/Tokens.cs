@@ -43,12 +43,7 @@ namespace webapi.DB.SQL
 
         public async Task Update(TokenModel tokenModel, bool? byForeign)
         {
-            if(byForeign == false)
-            {
-                _dbContext.Update(tokenModel);
-                await _dbContext.SaveChangesAsync();
-            }
-            else
+            if(byForeign == true)
             {
                 var existingToken = await _dbContext.Tokens.FirstOrDefaultAsync(t => t.user_id == tokenModel.user_id) ??
                     throw new TokenException(ExceptionTokenMessages.RefreshNotFound);
@@ -56,6 +51,16 @@ namespace webapi.DB.SQL
                 existingToken.expiry_date = tokenModel.expiry_date;
                 existingToken.refresh_token = tokenModel.refresh_token;
             }
+            else
+            {
+                var existingToken = await _dbContext.Tokens.FirstOrDefaultAsync(t => t.token_id == tokenModel.token_id) ??
+                    throw new TokenException(ExceptionTokenMessages.RefreshNotFound);
+
+                existingToken.expiry_date = tokenModel.expiry_date;
+                existingToken.refresh_token = tokenModel.refresh_token;
+            }
+
+            await _dbContext.SaveChangesAsync();
         }
     }
 }

@@ -7,7 +7,7 @@ using webapi.Interfaces.Services;
 
 namespace webapi.Controllers.Encryption
 {
-    [Route("cryptography/{type}/encryption")]
+    [Route("api/cryptography/{type}")]
     [ApiController]
     [Authorize]
     public class EncryptController : ControllerBase
@@ -31,7 +31,7 @@ namespace webapi.Controllers.Encryption
 
         [HttpPost("encrypt")]
         [RequestSizeLimit(75 * 1024 * 1024)]
-        public async Task<IActionResult> EncryptFile([FromRoute] string type, IFormFile file)
+        public async Task<IActionResult> EncryptFile([FromRoute] string type, [FromForm] IFormFile file)
         {
             try
             {
