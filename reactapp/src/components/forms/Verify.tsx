@@ -10,7 +10,7 @@ const Verify: React.FC<{ onSuccess: () => void }> = ({ onSuccess }) => {
         e.preventDefault();
 
         try {
-            const response = await axios.post('api/auth/verify', code)
+            const response = await axios.post('https://localhost:7067/api/auth/verify', code)
             const navigate = useNavigate();
 
             if (response.status === 201) {
@@ -48,8 +48,7 @@ const Verify: React.FC<{ onSuccess: () => void }> = ({ onSuccess }) => {
             </form>
             <div>
                 <div>
-                    <h5 className="error-head">Error</h5>
-                    {errorMessage && <span className="error-body">{errorMessage}</span>}
+                    {errorMessage && <span className="error">{errorMessage}</span>}
                 </div>
             </div>
         </div>

@@ -25,6 +25,16 @@ namespace webapi
             services.AddDistributedMemoryCache();
             services.AddAuthorization();
 
+            services.AddCors(options =>
+            {
+                options.AddPolicy("AllowSpecificOrigin", builder =>
+                {
+                    builder.WithOrigins("https://localhost:5173")
+                           .AllowAnyHeader()
+                           .AllowAnyMethod();
+                });
+            });
+
             services.AddSession(session =>
             {
                 session.IOTimeout = TimeSpan.FromMinutes(15);

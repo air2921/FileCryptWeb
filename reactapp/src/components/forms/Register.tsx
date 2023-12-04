@@ -13,13 +13,13 @@ const Register: React.FC = () => {
         e.preventDefault();
 
         try {
-            const response = await axios.post('api/auth/register', {
+            const response = await axios.post('https://localhost:7067/api/auth/register', {
                 email: email,
                 password_hash: password,
                 username: username
             });
 
-            if (response.status === 307) {
+            if (response.status === 200) {
                 setStatusCode(true);
             }
             else {
@@ -81,8 +81,7 @@ const Register: React.FC = () => {
                     </form>
                     <div>
                         <div>
-                            <h5 className="error-head">Error</h5>
-                            {errorMessage && <span className="error-body">{errorMessage}</span>}
+                            {errorMessage && <span className="error">{errorMessage}</span>}
                         </div>
                     </div>
                 </div>

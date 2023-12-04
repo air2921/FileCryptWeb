@@ -30,6 +30,7 @@ namespace webapi
             app.UseHttpsRedirection();
             app.UseStaticFiles();
             app.UseRouting();
+            app.UseCors("AllowSpecificOrigin");
             app.UseBearer();
             app.UseAuthentication();
             app.UseAuthorization();
