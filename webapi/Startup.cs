@@ -26,7 +26,6 @@ namespace webapi
 
             app.UseFreeze();
             app.UseAPI();
-            app.UseSession();
             app.UseHttpsRedirection();
             app.UseStaticFiles();
             app.UseRouting();
@@ -34,6 +33,7 @@ namespace webapi
             app.UseBearer();
             app.UseAuthentication();
             app.UseAuthorization();
+            app.UseSession();
             app.UseLog();
 
             app.UseEndpoints(endpoint =>

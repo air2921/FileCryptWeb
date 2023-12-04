@@ -10,7 +10,7 @@ const Verify: React.FC<{ onSuccess: () => void }> = ({ onSuccess }) => {
         e.preventDefault();
 
         try {
-            const response = await axios.post('https://localhost:7067/api/auth/verify', code)
+            const response = await axios.post(`https://localhost:7067/api/auth/verify?code=${code}`)
             const navigate = useNavigate();
 
             if (response.status === 201) {

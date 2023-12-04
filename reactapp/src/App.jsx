@@ -5,18 +5,13 @@ import Register from './components/forms/Register';
 
 function App() {
     return (
-        <>
-            <header>
-            <Link to="/">FileCryptWeb</Link>
-            <Link to="/auth/signin">Sign In</Link>
-            <Link to="/auth/signup">Sign Up</Link>
-            </header>
+        <div>
             <Routes>
                 {/*<Route path="/" element={ } />*/}
                 {/*<Route path="/auth/signin" element={ } />*/}
                 <Route path="/auth/signup" element={ <Register /> } />
             </Routes>
-        </>
+        </div>
     );
 }
 

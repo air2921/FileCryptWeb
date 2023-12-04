@@ -70,7 +70,7 @@ namespace webapi.Controllers.Account
         }
 
         [HttpPost("verify")]
-        public async Task<IActionResult> VerifyAccount([FromBody] int verifyCode)
+        public async Task<IActionResult> VerifyAccount([FromQuery] int code)
         {
             string? Email = HttpContext.Session.GetString("Email");
             string? Password = HttpContext.Session.GetString("Password");
@@ -80,18 +80,18 @@ namespace webapi.Controllers.Account
             if (Email is null || Password is null || Username is null || Role is null)
                 return StatusCode(422, new { message = AccountErrorMessage.NullUserData });
 
-            string? code = HttpContext.Session.GetString(Email);
-            if (string.IsNullOrWhiteSpace(code))
+            string? savedcode = HttpContext.Session.GetString(Email);
+            if (string.IsNullOrWhiteSpace(savedcode))
                 return StatusCode(422, new { message = AccountErrorMessage.VerifyCodeNull });
 
             try
             {
-                int correctCode = int.Parse(code);
+                int correctCode = int.Parse(savedcode);
 
                 if (!_validation.IsSixDigit(correctCode))
                     return StatusCode(500, new { message = AccountErrorMessage.Error });
 
-                if (!verifyCode.Equals(correctCode))
+                if (!code.Equals(correctCode))
                     return StatusCode(422, new { message = AccountErrorMessage.CodeIncorrect });
 
                 var userModel = new UserModel { email = Email, password_hash = Password, username = Username, role = Role };
