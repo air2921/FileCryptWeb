@@ -59,7 +59,7 @@ namespace webapi.Services.Security
 
         public CookieOptions SetCookieOptions(TimeSpan expireTime)
         {
-            return new CookieOptions { HttpOnly = true, Expires = DateTime.UtcNow.Add(expireTime), Secure = true, SameSite = SameSiteMode.Strict };
+            return new CookieOptions { HttpOnly = true, Expires = DateTime.UtcNow.Add(expireTime), Secure = true, SameSite = SameSiteMode.Lax };
         }
 
         public async Task UpdateJwtToken()

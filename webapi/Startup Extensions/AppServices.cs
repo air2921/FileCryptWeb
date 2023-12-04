@@ -39,7 +39,7 @@ namespace webapi
             {
                 session.IOTimeout = TimeSpan.FromMinutes(15);
                 session.Cookie.HttpOnly = true;
-                session.Cookie.SameSite = SameSiteMode.Strict;
+                session.Cookie.SameSite = SameSiteMode.Lax;
                 session.Cookie.IsEssential = true;
                 session.Cookie.SecurePolicy = CookieSecurePolicy.Always;
             });
