@@ -26,8 +26,8 @@ namespace webapi.Controllers.Admin
             _userInfo = userInfo;
         }
 
-        [HttpPost("send/{username}/{email}")]
-        public async Task<IActionResult> SendEmail([FromBody] NotificationModel notificationModel, [FromRoute] string username, [FromRoute] string email)
+        [HttpPost("send")]
+        public async Task<IActionResult> SendEmail([FromBody] NotificationModel notificationModel, [FromQuery] string username, [FromQuery] string email)
         {
             try
             {

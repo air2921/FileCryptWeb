@@ -8,11 +8,11 @@ namespace webapi
         {
             AppConfigurationCheck.ConfigurationCheck();
 
-            AppServices.Register(services);
-
             DiContainer.Singleton(services);
             DiContainer.Scoped(services);
             DiContainer.Transient(services);
+
+            AppServices.Register(services);
         }
 
         public void Configure(IApplicationBuilder app, IWebHostEnvironment env)
@@ -29,11 +29,11 @@ namespace webapi
             app.UseHttpsRedirection();
             app.UseStaticFiles();
             app.UseRouting();
+            app.UseSession();
             app.UseCors("AllowSpecificOrigin");
             app.UseBearer();
             app.UseAuthentication();
             app.UseAuthorization();
-            app.UseSession();
             app.UseLog();
 
             app.UseEndpoints(endpoint =>

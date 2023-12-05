@@ -51,7 +51,7 @@ namespace webapi.Controllers.Account.Edit
             if (!IsCorrect)
                 return StatusCode(401, new { message = AccountErrorMessage.PasswordIncorrect });
 
-            HttpContext.Session.SetString($"user({_userInfo.UserId}).ValidationCode", Guid.NewGuid().ToString()); 
+            HttpContext.Session.SetString($"code:{_userInfo.UserId}", Guid.NewGuid().ToString()); 
 
             return StatusCode(307);
         }
@@ -61,7 +61,7 @@ namespace webapi.Controllers.Account.Edit
         {
             try
             {
-                string? validateCode = HttpContext.Session.GetString($"user({_userInfo.UserId}).ValidationCode");
+                string? validateCode = HttpContext.Session.GetString($"code:{_userInfo.UserId}");
 
                 if (string.IsNullOrWhiteSpace(validateCode))
                     return StatusCode(403, new { message = AccountErrorMessage.Forbidden });

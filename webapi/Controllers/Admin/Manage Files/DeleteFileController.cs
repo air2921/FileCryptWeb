@@ -20,8 +20,8 @@ namespace webapi.Controllers.Admin.Manage_Files
             _deleteByName = deleteByName;
         }
 
-        [HttpDelete("one/{byID}")]
-        public async Task<IActionResult> DeleteOneFile([FromBody] FileModel fileModel, [FromRoute] bool byID)
+        [HttpDelete("one")]
+        public async Task<IActionResult> DeleteOneFile([FromBody] FileModel fileModel, [FromQuery] bool byID)
         {
             try
             {

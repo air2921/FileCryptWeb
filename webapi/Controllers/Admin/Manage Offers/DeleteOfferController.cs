@@ -19,12 +19,12 @@ namespace webapi.Controllers.Admin.Manage_Offers
             _deleteOffer = deleteOffer;
         }
 
-        [HttpDelete("one")]
-        public async Task<IActionResult> DeleteOffer([FromBody] int id)
+        [HttpDelete("{offerId}")]
+        public async Task<IActionResult> DeleteOffer([FromRoute] int offerId)
         {
             try
             {
-                await _deleteOffer.DeleteById(id);
+                await _deleteOffer.DeleteById(offerId);
 
                 return StatusCode(200, new { message = SuccessMessage.SuccessOfferDeleted });
             }

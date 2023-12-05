@@ -23,12 +23,12 @@ namespace webapi.Controllers.Admin.Manage_Notifications
             _read = read;
         }
 
-        [HttpGet("one")]
-        public async Task<IActionResult> GetOneNotification([FromBody] int id)
+        [HttpGet("{notificationId}")]
+        public async Task<IActionResult> GetOneNotification([FromRoute] int notificationId)
         {
             try
             {
-                var notification = await _read.ReadById(id, null);
+                var notification = await _read.ReadById(notificationId, null);
 
                 return StatusCode(200, new { notification });
             }
@@ -53,13 +53,13 @@ namespace webapi.Controllers.Admin.Manage_Notifications
             }
         }
 
-        [HttpGet("all/user")]
-        public async Task<IActionResult> ReadAllUserNotifications([FromBody] int userID)
+        [HttpGet("all/{userId}")]
+        public async Task<IActionResult> ReadAllUserNotifications([FromRoute] int userId)
         {
             try
             {
                 var notifications = await _dbContext.Notifications
-                    .Where(n => n.sender_id == userID && n.receiver_id == userID)
+                    .Where(n => n.sender_id == userId && n.receiver_id == userId)
                     .OrderByDescending(n => n.send_time)
                     .ToListAsync();
 

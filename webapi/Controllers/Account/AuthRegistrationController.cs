@@ -14,6 +14,11 @@ namespace webapi.Controllers.Account
     [ApiController]
     public class AuthRegistrationController : ControllerBase
     {
+        private const string EMAIL = "Email";
+        private const string PASSWORD = "Password";
+        private const string USERNAME = "Username";
+        private const string ROLE = "Role";
+
         private readonly ILogger<AuthRegistrationController> _logger;
         private readonly ICreate<UserModel> _userCreate;
         private readonly IGenerateSixDigitCode _generateCode;
@@ -58,11 +63,11 @@ namespace webapi.Controllers.Account
 
             string password = _passwordManager.HashingPassword(userModel.password_hash);
 
-            HttpContext.Session.SetString("Email", email);
-            HttpContext.Session.SetString("Password", password);
-            HttpContext.Session.SetString("Username", userModel.username);
-            HttpContext.Session.SetString("Role", Role.User.ToString());
-            HttpContext.Session.SetString(email, code.ToString());
+            HttpContext.Session.SetString(EMAIL, email);
+            HttpContext.Session.SetString(PASSWORD, password);
+            HttpContext.Session.SetString(USERNAME, userModel.username);
+            HttpContext.Session.SetString(ROLE, Role.User.ToString());
+            HttpContext.Session.SetInt32(email, code);
 
             await _email.SendMessage(userModel, messageHeader, messageBody);
 
@@ -72,50 +77,46 @@ namespace webapi.Controllers.Account
         [HttpPost("verify")]
         public async Task<IActionResult> VerifyAccount([FromQuery] int code)
         {
-            string? Email = HttpContext.Session.GetString("Email");
-            string? Password = HttpContext.Session.GetString("Password");
-            string? Username = HttpContext.Session.GetString("Username");
-            string? Role = HttpContext.Session.GetString("Role");
+            string? email = HttpContext.Session.GetString(EMAIL);
+            string? password = HttpContext.Session.GetString(PASSWORD);
+            string? username = HttpContext.Session.GetString(USERNAME);
+            string? role = HttpContext.Session.GetString(ROLE);
+            int correctCode = (int)HttpContext.Session.GetInt32(email);
 
-            if (Email is null || Password is null || Username is null || Role is null)
+            if (email is null || password is null || username is null || role is null)
                 return StatusCode(422, new { message = AccountErrorMessage.NullUserData });
-
-            string? savedcode = HttpContext.Session.GetString(Email);
-            if (string.IsNullOrWhiteSpace(savedcode))
-                return StatusCode(422, new { message = AccountErrorMessage.VerifyCodeNull });
 
             try
             {
-                int correctCode = int.Parse(savedcode);
-
                 if (!_validation.IsSixDigit(correctCode))
                     return StatusCode(500, new { message = AccountErrorMessage.Error });
 
                 if (!code.Equals(correctCode))
                     return StatusCode(422, new { message = AccountErrorMessage.CodeIncorrect });
 
-                var userModel = new UserModel { email = Email, password_hash = Password, username = Username, role = Role };
+                var userModel = new UserModel { email = email, password_hash = password, username = username, role = role };
                 await _userCreate.Create(userModel);
 
-                HttpContext.Session.Remove(Email);
-                HttpContext.Session.Remove("Email");
-                HttpContext.Session.Remove("Password");
-                HttpContext.Session.Remove("Username");
-                HttpContext.Session.Remove("Role");
+                DeleteSessionData(email);
 
                 return StatusCode(201, new { userModel });
             }
             catch (Exception ex)
             {
                 _logger.LogCritical(ex.ToString());
-
-                HttpContext.Session.Remove(Email);
-                HttpContext.Session.Remove("Email");
-                HttpContext.Session.Remove("Password");
-                HttpContext.Session.Remove("Username");
+                DeleteSessionData(email);
 
                 return StatusCode(500, new { message = AccountErrorMessage.Error });
             }
+        }
+
+        private void DeleteSessionData(string email)
+        {
+            HttpContext.Session.Remove(email);
+            HttpContext.Session.Remove(EMAIL);
+            HttpContext.Session.Remove(PASSWORD);
+            HttpContext.Session.Remove(USERNAME);
+            HttpContext.Session.Remove(ROLE);
         }
     }
 }

@@ -48,13 +48,13 @@ namespace webapi.Controllers.Core
             _tokenService = tokenService;
         }
 
-        [HttpPost("one")]
-        public async Task<IActionResult> CreateOneOffer(int receiverID)
+        [HttpPost("{receiverId}")]
+        public async Task<IActionResult> CreateOneOffer([FromRoute] int receiverId)
         {
-            if (_userInfo.UserId == receiverID)
+            if (_userInfo.UserId == receiverId)
                 return StatusCode(409, new { message = "You send a trade offer to yourself, are you kidding)?" });
 
-            var receiver = await _readUser.ReadById(receiverID, null);
+            var receiver = await _readUser.ReadById(receiverId, null);
             if (receiver is null)
                 return StatusCode(404, new { message = ExceptionUserMessages.UserNotFound });
 
@@ -75,7 +75,7 @@ namespace webapi.Controllers.Core
                 offer_type = "Encryption key trade offer",
                 is_accepted = false,
                 sender_id = _userInfo.UserId,
-                receiver_id = receiverID
+                receiver_id = receiverId
             };
 
             var notificationModel = new NotificationModel
@@ -86,7 +86,7 @@ namespace webapi.Controllers.Core
                 send_time = DateTime.UtcNow,
                 is_checked = false,
                 sender_id = _userInfo.UserId,
-                receiver_id = receiverID
+                receiver_id = receiverId
             };
 
             await _createOffer.Create(offerModel);
@@ -95,10 +95,10 @@ namespace webapi.Controllers.Core
             return StatusCode(201, new { offerModel });
         }
 
-        [HttpPut("{id}")]
-        public async Task<IActionResult> AcceptOffer([FromRoute] int id)
+        [HttpPut("{offerId}")]
+        public async Task<IActionResult> AcceptOffer([FromRoute] int offerId)
         {
-            var offer = await _dbContext.Offers.FirstOrDefaultAsync(o => o.offer_id == id && o.receiver_id == _userInfo.UserId);
+            var offer = await _dbContext.Offers.FirstOrDefaultAsync(o => o.offer_id == offerId && o.receiver_id == _userInfo.UserId);
             if (offer is null)
                 return StatusCode(404);
 
@@ -127,8 +127,8 @@ namespace webapi.Controllers.Core
             }
         }
 
-        [HttpGet("all/{sended}")]
-        public async Task<IActionResult> GetAll([FromRoute] bool? sended = null)
+        [HttpGet("all")]
+        public async Task<IActionResult> GetAll([FromQuery] bool? sended = null)
         {
             var query = _dbContext.Offers.OrderByDescending(o => o.created_at).AsQueryable();
             var offers = new List<OfferModel>();
@@ -154,12 +154,12 @@ namespace webapi.Controllers.Core
             return StatusCode(200, new { offers });
         }
 
-        [HttpDelete("{id}")]
-        public async Task<IActionResult> DeleteOneOffer([FromRoute] int id)
+        [HttpDelete("{offerId}")]
+        public async Task<IActionResult> DeleteOneOffer([FromRoute] int offerId)
         {
             try
             {
-                await _deleteOffer.DeleteById(id);
+                await _deleteOffer.DeleteById(offerId);
 
                 return StatusCode(200, new { message = SuccessMessage.SuccessOfferDeleted });
             }

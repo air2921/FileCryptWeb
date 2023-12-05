@@ -22,8 +22,8 @@ namespace webapi.Controllers.Admin.Manage_User_s_API
             _dbContext = dbContext;
         }
 
-        [HttpGet("settings/{byRelation}")]
-        public async Task<IActionResult> GetApiSettings([FromBody] int id, [FromRoute] bool ByRelation)
+        [HttpGet("settings")]
+        public async Task<IActionResult> GetApiSettings([FromBody] int id, [FromQuery] bool ByRelation)
         {
             try
             {
@@ -40,7 +40,7 @@ namespace webapi.Controllers.Admin.Manage_User_s_API
         }
 
         [HttpGet("user")]
-        public async Task<IActionResult> GetApiByApiKey([FromBody] string apiKey)
+        public async Task<IActionResult> GetApiByApiKey([FromQuery] string apiKey)
         {
             var api = await _dbContext.API.FirstOrDefaultAsync(a => a.api_key == apiKey);
 

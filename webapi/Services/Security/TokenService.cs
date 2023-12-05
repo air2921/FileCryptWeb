@@ -54,17 +54,19 @@ namespace webapi.Services.Security
 
         public string GenerateRefreshToken()
         {
-            return Guid.NewGuid().ToString() + "_" + _generateKey.GenerateKey();
+            var str = Guid.NewGuid().ToString("N") + "_" + _generateKey.GenerateKey() + "_" + Guid.NewGuid().ToString();
+
+            return InsertRandomChars(str, 15);
         }
 
         public CookieOptions SetCookieOptions(TimeSpan expireTime)
         {
-            return new CookieOptions { HttpOnly = true, Expires = DateTime.UtcNow.Add(expireTime), Secure = true, SameSite = SameSiteMode.Lax };
+            return new CookieOptions { HttpOnly = true, Expires = DateTime.UtcNow.Add(expireTime), Secure = true, SameSite = SameSiteMode.None };
         }
 
         public async Task UpdateJwtToken()
         {
-            if (!_context.HttpContext.Request.Cookies.TryGetValue("RefreshToken", out string? RefreshToken))
+            if (!_context.HttpContext.Request.Cookies.TryGetValue(Constants.REFRESH_COOKIE_KEY, out string? RefreshToken))
                 throw new UnauthorizedAccessException("Refresh Token was not found");
 
             var token = await _dbContext.Tokens.FirstOrDefaultAsync(t => t.refresh_token == HashingToken(RefreshToken)) ??
@@ -73,31 +75,56 @@ namespace webapi.Services.Security
             if ((DateTime)token.expiry_date! < DateTime.UtcNow)
                 throw new UnauthorizedAccessException("Refresh Token timed out");
 
-            if (_context.HttpContext.Request.Cookies.ContainsKey("JwtToken"))
-                _context.HttpContext.Response.Cookies.Delete("JwtToken");
+            if (_context.HttpContext.Request.Cookies.ContainsKey(Constants.JWT_COOKIE_KEY))
+                _context.HttpContext.Response.Cookies.Delete(Constants.JWT_COOKIE_KEY);
 
-            var user = await _dbContext.Users.FindAsync(token.user_id) ??
+            var user = await _dbContext.Users.FirstOrDefaultAsync(u => u.id == token.user_id) ??
                 throw new UnauthorizedAccessException("User was not found");
 
             var userModel = new UserModel { id = user.id, username = user.username, email = user.email, role = user.role };
 
-            string NewJwtToken = GenerateJwtToken(userModel, 20);
-            var JwtCookieOptions = SetCookieOptions(TimeSpan.FromMinutes(20));
-            _context.HttpContext.Response.Cookies.Append("JwtToken", NewJwtToken, JwtCookieOptions);
+            string NewJwtToken = GenerateJwtToken(userModel, Constants.JWT_EXPIRY);
+            var JwtCookieOptions = SetCookieOptions(TimeSpan.FromMinutes(Constants.JWT_EXPIRY));
+            _context.HttpContext.Response.Cookies.Append(Constants.JWT_COOKIE_KEY, NewJwtToken, JwtCookieOptions);
         }
 
         public string HashingToken(string token)
         {
-            using SHA512 sha = SHA512.Create();
-            byte[] hashBytes = sha.ComputeHash(Encoding.UTF8.GetBytes(token));
+            byte[] hashBytes = SHA512.HashData(Encoding.UTF8.GetBytes(token));
 
             return Convert.ToBase64String(hashBytes);
         }
 
+        private string GenerateRandomChars(int numChars)
+        {
+            string chars = ".!@#$%^&*()_-+=<>?/{}[]";
+            Random random = new();
+            char[] randomArray = new char[numChars];
+
+            for (int i = 0; i < numChars; i++)
+            {
+                randomArray[i] = chars[random.Next(chars.Length)];
+            }
+
+            return new string(randomArray);
+        }
+
+        private string InsertRandomChars(string inputStr, int numChars)
+        {
+            string randomChars = GenerateRandomChars(numChars);
+
+            Random random = new();
+            int insertPosition = random.Next(0, inputStr.Length);
+
+            string outputStr = inputStr.Insert(insertPosition, randomChars);
+
+            return outputStr;
+        }
+
         public void DeleteTokens()
         {
-            _context.HttpContext.Response.Cookies.Delete("RefreshToken");
-            _context.HttpContext.Response.Cookies.Delete("JwtToken");
+            _context.HttpContext.Response.Cookies.Delete(Constants.REFRESH_COOKIE_KEY);
+            _context.HttpContext.Response.Cookies.Delete(Constants.JWT_COOKIE_KEY);
         }
     }
 }

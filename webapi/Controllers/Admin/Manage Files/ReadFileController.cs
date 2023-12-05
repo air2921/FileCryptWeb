@@ -18,12 +18,12 @@ namespace webapi.Controllers.Admin.Manage_Files
             _read = read;
         }
 
-        [HttpGet("one")]
-        public async Task<IActionResult> ReadOneFile([FromBody] int id)
+        [HttpGet("{fileId}")]
+        public async Task<IActionResult> ReadOneFile([FromRoute] int fileId)
         {
             try
             {
-                var file = await _read.ReadById(id, null);
+                var file = await _read.ReadById(fileId, null);
 
                 return StatusCode(200, new { file });
             }
