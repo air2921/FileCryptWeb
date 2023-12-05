@@ -24,14 +24,14 @@ namespace webapi.Controllers.Admin.Manage_Tokens
             _dbContext = dbContext;
         }
 
-        [HttpPut("revoke/refresh")]
-        public async Task<IActionResult> RevokeRefreshToken([FromBody] int id)
+        [HttpPut("revoke/refresh/{userId}")]
+        public async Task<IActionResult> RevokeRefreshToken([FromRoute] int userId)
         {
             try
             {
-                var tokenModel = new TokenModel { user_id = id, refresh_token = null, expiry_date = DateTime.UtcNow.AddYears(-100) };
+                var tokenModel = new TokenModel { user_id = userId, refresh_token = null, expiry_date = DateTime.UtcNow.AddYears(-100) };
 
-                var targetUser = await _dbContext.Users.FirstOrDefaultAsync(u => u.id == id);
+                var targetUser = await _dbContext.Users.FirstOrDefaultAsync(u => u.id == userId);
 
                 if (targetUser is null)
                     return StatusCode(404, new { message = ExceptionUserMessages.UserNotFound });

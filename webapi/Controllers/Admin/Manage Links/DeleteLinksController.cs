@@ -24,12 +24,12 @@ namespace webapi.Controllers.Admin.Manage_Links
             _deleteByName = deleteByName;
         }
 
-        [HttpDelete("{id}")]
-        public async Task<IActionResult> DeleteById([FromRoute] int id)
+        [HttpDelete("{tokenId}")]
+        public async Task<IActionResult> DeleteById([FromRoute] int tokenId)
         {
             try
             {
-                await _deleteById.DeleteById(id);
+                await _deleteById.DeleteById(tokenId);
 
                 return StatusCode(200);
             }
@@ -39,8 +39,8 @@ namespace webapi.Controllers.Admin.Manage_Links
             }
         }
 
-        [HttpDelete("{token}")]
-        public async Task<IActionResult> DeleteByName([FromRoute] string token)
+        [HttpDelete("revoke")]
+        public async Task<IActionResult> DeleteByName([FromQuery] string token)
         {
             try
             {

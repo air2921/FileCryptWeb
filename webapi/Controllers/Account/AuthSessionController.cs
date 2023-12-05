@@ -54,9 +54,6 @@ namespace webapi.Controllers.Account
                 if (!IsCorrect)
                     return StatusCode(401, new { message = AccountErrorMessage.PasswordIncorrect });
 
-                string refreshToken = _tokenService.GenerateRefreshToken();
-                var refreshCookieOptions = _tokenService.SetCookieOptions(TimeSpan.FromDays(90));
-
                 var newUserModel = new UserModel
                 {
                     id = user.id,
@@ -65,6 +62,9 @@ namespace webapi.Controllers.Account
                     role = user.role,
                 };
 
+                string refreshToken = _tokenService.GenerateRefreshToken();
+                string jwtToken = _tokenService.GenerateJwtToken(newUserModel, 20);
+
                 var tokenModel = new TokenModel
                 {
                     user_id = user.id,
@@ -72,28 +72,12 @@ namespace webapi.Controllers.Account
                     expiry_date = DateTime.UtcNow.AddDays(90)
                 };
 
-                string jwtToken = _tokenService.GenerateJwtToken(newUserModel, 20);
-                var jwtCookieOptions = _tokenService.SetCookieOptions(TimeSpan.FromMinutes(20));
-
                 await _update.Update(tokenModel, true);
 
-                Response.Cookies.Append("JwtToken", jwtToken, jwtCookieOptions);
-                Response.Cookies.Append("RefreshToken", refreshToken, refreshCookieOptions);
+                Response.Cookies.Append("JwtToken", jwtToken, _tokenService.SetCookieOptions(TimeSpan.FromMinutes(20)));
+                Response.Cookies.Append("RefreshToken", refreshToken, _tokenService.SetCookieOptions(TimeSpan.FromDays(90)));
 
-                return StatusCode(200,
-                    new
-                    {
-                        jwt = new
-                        {
-                            token = jwtToken,
-                            expiry = DateTime.UtcNow.AddMinutes(20)
-                        },
-                        refresh = new
-                        {
-                            token = refreshToken,
-                            expiry = DateTime.UtcNow.AddDays(90)
-                        }
-                    });
+                return StatusCode(200);
             }
             catch (UserException)
             {
@@ -108,7 +92,7 @@ namespace webapi.Controllers.Account
         {
             try
             {
-                var tokenModel = new TokenModel() { user_id = _userInfo.UserId, refresh_token = "", expiry_date = DateTime.UtcNow.AddYears(-100) };
+                var tokenModel = new TokenModel() { user_id = _userInfo.UserId, refresh_token = null, expiry_date = DateTime.UtcNow.AddYears(-100) };
 
                 await _update.Update(tokenModel, true);
                 _tokenService.DeleteTokens();

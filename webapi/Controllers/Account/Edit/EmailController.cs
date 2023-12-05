@@ -1,7 +1,6 @@
 ﻿using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
-using Microsoft.Extensions.Caching.Memory;
 using webapi.DB;
 using webapi.Exceptions;
 using webapi.Interfaces.Services;
@@ -16,6 +15,8 @@ namespace webapi.Controllers.Account.Edit
     [Authorize]
     public class EmailController : ControllerBase
     {
+        private const string EMAIL = "Email";
+
         private readonly FileCryptDbContext _dbContext;
         private readonly IUpdate<UserModel> _update;
         private readonly IEmailSender<UserModel> _email;
@@ -61,39 +62,28 @@ namespace webapi.Controllers.Account.Edit
 
             int code = _generateCode.GenerateSixDigitCode();
             string messageHeader = EmailMessage.ConfirmOldEmailHeader;
-            string message = EmailMessage.ConfirmOldEmailBody;
+            string message = EmailMessage.ConfirmOldEmailBody + code;
 
             var newUserModel = new UserModel { username = _userInfo.Username, email = _userInfo.Email };
             await _email.SendMessage(newUserModel, messageHeader, message);
 
-            HttpContext.Session.SetString(_userInfo.Email, code.ToString());
+            HttpContext.Session.SetInt32(_userInfo.Email, code);
 
             return StatusCode(200, new { message = AccountSuccessMessage.EmailSended });
         }
 
         [HttpPost("confirm/old")]
-        public IActionResult ConfirmOldEmail([FromBody] int verifyCode)
+        public IActionResult ConfirmOldEmail([FromQuery] int code)
         {
-            try
-            {
-                string? code = HttpContext.Session.GetString(_userInfo.Email);
-                if (code is null)
-                    return StatusCode(500, new { message = AccountErrorMessage.VerifyCodeNull });
+            int correctCode = (int)HttpContext.Session.GetInt32(_userInfo.Email);
 
-                int correctCode = int.Parse(code);
+            if (!_validation.IsSixDigit(correctCode))
+                return StatusCode(500, new { message = AccountErrorMessage.Error });
 
-                if (!_validation.IsSixDigit(correctCode))
-                    return StatusCode(500, new { message = AccountErrorMessage.Error });
+            if (!code.Equals(correctCode))
+                return StatusCode(401, new { message = AccountErrorMessage.CodeIncorrect });
 
-                if (!verifyCode.Equals(correctCode))
-                    return StatusCode(401, new { message = AccountErrorMessage.CodeIncorrect });
-
-                return StatusCode(307, new { message = AccountSuccessMessage.OldEmailConfirmed });
-            }
-            catch (ArgumentNullException)
-            {
-                return StatusCode(500);
-            }
+            return StatusCode(200, new { message = AccountSuccessMessage.OldEmailConfirmed });
         }
 
         [HttpPost("new")]
@@ -107,34 +97,29 @@ namespace webapi.Controllers.Account.Edit
 
             int code = _generateCode.GenerateSixDigitCode();
             string messageHeader = EmailMessage.ConfirmNewEmailHeader;
-            string message = EmailMessage.ConfirmNewEmailBody;
+            string message = EmailMessage.ConfirmNewEmailBody + code;
+
             var newUserModel = new UserModel { username = _userInfo.Username, email = email };
-
-            HttpContext.Session.SetString(_userInfo.UserId.ToString(), code.ToString());
-            HttpContext.Session.SetString("Email", email);
-
             await _email.SendMessage(newUserModel, messageHeader, message);
+
+            HttpContext.Session.SetInt32(_userInfo.UserId.ToString(), code);
+            HttpContext.Session.SetString(EMAIL, email);
 
             return StatusCode(200, new { message = AccountSuccessMessage.EmailSended });
         }
 
         [HttpPut("confirm/new")]
-        public async Task<IActionResult> ConfirmAndUpdateNewEmail([FromBody] int verifyCode)
+        public async Task<IActionResult> ConfirmAndUpdateNewEmail([FromQuery] int code)
         {
             try
             {
-                string? code = HttpContext.Session.GetString(_userInfo.UserId.ToString());
-                string? email = HttpContext.Session.GetString("Email");
+                int correctCode = (int)HttpContext.Session.GetInt32(_userInfo.UserId.ToString());
+                string? email = HttpContext.Session.GetString(EMAIL);
 
-                if (code is null || email is null)
+                if (email is null || !_validation.IsSixDigit(correctCode))
                     return StatusCode(500, new { message = AccountErrorMessage.Error });
 
-                int correctCode = int.Parse(code);
-
-                if (!_validation.IsSixDigit(correctCode))
-                    return StatusCode(500, new { message = AccountErrorMessage.Error });
-
-                if (!verifyCode.Equals(correctCode))
+                if (!code.Equals(correctCode))
                     return StatusCode(422, new { message = AccountErrorMessage.CodeIncorrect });
 
                 var newUserModel = new UserModel { id = _userInfo.UserId, email = email };
@@ -142,7 +127,7 @@ namespace webapi.Controllers.Account.Edit
                 await _tokenService.UpdateJwtToken();
 
                 HttpContext.Session.Remove(_userInfo.UserId.ToString());
-                HttpContext.Session.Remove("Email");
+                HttpContext.Session.Remove(EMAIL);
 
                 return StatusCode(200);
             }

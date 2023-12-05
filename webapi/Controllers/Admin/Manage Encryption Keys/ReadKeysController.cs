@@ -36,8 +36,8 @@ namespace webapi.Controllers.Admin.Manage_Encryption_Keys
             secretKey = Convert.FromBase64String(_configuration["FileCryptKey"]!);
         }
 
-        [HttpGet("all")]
-        public async Task<IActionResult> AllKeys([FromBody] int userId)
+        [HttpGet("all/{userId}")]
+        public async Task<IActionResult> AllKeys([FromRoute] int userId)
         {
             try
             {
@@ -67,7 +67,7 @@ namespace webapi.Controllers.Admin.Manage_Encryption_Keys
                         continue;
                     }
                 }
-                return StatusCode(200, new { keys = decryptedKeys.ToArray() });
+                return StatusCode(200, new { keys = decryptedKeys });
             }
             catch (UserException ex)
             {

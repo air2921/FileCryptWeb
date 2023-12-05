@@ -18,10 +18,10 @@ namespace webapi.Controllers.Admin
             _redisKeys = redisKeys;
         }
 
-        [HttpPut("freeze/{freezeFlag}")]
-        public async Task<IActionResult> FreezeService([FromRoute] bool freezeFlag, [FromBody] TimeSpan? time)
+        [HttpPut("freeze")]
+        public async Task<IActionResult> FreezeService([FromQuery] bool flag, [FromBody] TimeSpan? time)
         {
-            if (freezeFlag && time.HasValue)
+            if (flag && time.HasValue)
             {
                 await _redisCache.CacheData(_redisKeys.ServiceFreezeFlag, "true", time.Value);
                 return StatusCode(200, new { message = $"Service freezed until {DateTime.UtcNow + time}" });

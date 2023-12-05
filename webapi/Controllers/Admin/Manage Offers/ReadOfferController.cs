@@ -23,12 +23,12 @@ namespace webapi.Controllers.Admin.Manage_Offers
             _read = read;
         }
 
-        [HttpGet("one")]
-        public async Task<IActionResult> ReadOneOffer([FromBody] int offerID)
+        [HttpGet("{offerId}")]
+        public async Task<IActionResult> ReadOneOffer([FromRoute] int offerId)
         {
             try
             {
-                var offer = await _read.ReadById(offerID, false);
+                var offer = await _read.ReadById(offerId, false);
 
                 return StatusCode(200, new { offer });
             }
@@ -53,13 +53,13 @@ namespace webapi.Controllers.Admin.Manage_Offers
             }
         }
 
-        [HttpGet("all/user/offers")]
-        public async Task<IActionResult> ReadAllUserOffers([FromBody] int userID)
+        [HttpGet("all/offers/{userId}")]
+        public async Task<IActionResult> ReadAllUserOffers([FromRoute] int userId)
         {
             try
             {
                 var offers = await _dbContext.Offers
-                    .Where(o => o.sender_id == userID && o.receiver_id == userID)
+                    .Where(o => o.sender_id == userId && o.receiver_id == userId)
                     .OrderByDescending(o => o.created_at)
                     .ToListAsync();
                 if (offers is null)

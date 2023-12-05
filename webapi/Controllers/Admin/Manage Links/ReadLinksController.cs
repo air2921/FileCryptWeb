@@ -22,12 +22,12 @@ namespace webapi.Controllers.Admin.Manage_Links
             _readLinks = readLinks;
         }
 
-        [HttpGet("{id}")]
-        public async Task<IActionResult> ReadById([FromRoute] int id)
+        [HttpGet("{tokenId}")]
+        public async Task<IActionResult> ReadById([FromRoute] int tokenId)
         {
             try
             {
-                var link = await _readLinks.ReadById(id, false);
+                var link = await _readLinks.ReadById(tokenId, false);
 
                 return StatusCode(200, new { link });
             }

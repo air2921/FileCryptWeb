@@ -23,8 +23,8 @@ namespace webapi.Controllers.Admin.Manage_Encryption_Keys
             _updateKeys = updateKeys;
         }
 
-        [HttpPut("revoke/received")]
-        public async Task<IActionResult> RevokeReceivedKey([FromBody] int userId)
+        [HttpPut("revoke/received/{userId}")]
+        public async Task<IActionResult> RevokeReceivedKey([FromRoute] int userId)
         {
             try
             {
@@ -38,9 +38,9 @@ namespace webapi.Controllers.Admin.Manage_Encryption_Keys
             }
         }
 
-        [HttpPut("revoke/internal")]
+        [HttpPut("revoke/internal/{userId}")]
         [Authorize(Roles = "HighestAdmin")]
-        public async Task<IActionResult> RevokeInternal([FromBody] int userId)
+        public async Task<IActionResult> RevokeInternal([FromRoute] int userId)
         {
             try
             {
@@ -59,9 +59,9 @@ namespace webapi.Controllers.Admin.Manage_Encryption_Keys
             }
         }
 
-        [HttpPut("revoke/private")]
+        [HttpPut("revoke/private/{userId}")]
         [Authorize(Roles = "HighestAdmin")]
-        public async Task<IActionResult> RevokePrivate([FromBody] int userId)
+        public async Task<IActionResult> RevokePrivate([FromRoute] int userId)
         {
             try
             {

@@ -57,12 +57,12 @@ namespace webapi.Controllers.Core
             }
         }
 
-        [HttpGet("one/{id}")]
-        public async Task<IActionResult> GetOneFile([FromRoute] int id)
+        [HttpGet("{fileId}")]
+        public async Task<IActionResult> GetOneFile([FromRoute] int fileId)
         {
             try
             {
-                var file = await _readFile.ReadById(id, null);
+                var file = await _readFile.ReadById(fileId, null);
 
                 return StatusCode(200, new { file });
             }
@@ -72,8 +72,8 @@ namespace webapi.Controllers.Core
             }
         }
 
-        [HttpGet("all/{byAscending}")]
-        public async Task<IActionResult> GetAllFiles([FromRoute] bool byAscending)
+        [HttpGet("all")]
+        public async Task<IActionResult> GetAllFiles([FromQuery] bool byAscending)
         {
             var query = _dbContext.Files.Where(f => f.user_id == _userInfo.UserId).AsQueryable();
 
