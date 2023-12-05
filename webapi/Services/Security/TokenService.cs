@@ -90,8 +90,7 @@ namespace webapi.Services.Security
 
         public string HashingToken(string token)
         {
-            using SHA512 sha = SHA512.Create();
-            byte[] hashBytes = sha.ComputeHash(Encoding.UTF8.GetBytes(token));
+            byte[] hashBytes = SHA512.HashData(Encoding.UTF8.GetBytes(token));
 
             return Convert.ToBase64String(hashBytes);
         }
