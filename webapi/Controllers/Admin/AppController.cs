@@ -1,6 +1,7 @@
 ﻿using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 using webapi.Interfaces.Redis;
+using webapi.Services;
 
 namespace webapi.Controllers.Admin
 {
@@ -23,11 +24,11 @@ namespace webapi.Controllers.Admin
         {
             if (flag && time.HasValue)
             {
-                await _redisCache.CacheData(_redisKeys.ServiceFreezeFlag, "true", time.Value);
+                await _redisCache.CacheData(Constants.SERVICE_FREEZE_FLAG, "true", time.Value);
                 return StatusCode(200, new { message = $"Service freezed until {DateTime.UtcNow + time}" });
             }
 
-            await _redisCache.DeleteCache(_redisKeys.ServiceFreezeFlag);
+            await _redisCache.DeleteCache(Constants.SERVICE_FREEZE_FLAG);
             return StatusCode(200, new { message = "Service unfreezed" });
         }
     }

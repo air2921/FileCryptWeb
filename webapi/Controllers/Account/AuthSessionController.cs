@@ -8,6 +8,7 @@ using webapi.Interfaces.Services;
 using webapi.Interfaces.SQL;
 using webapi.Localization;
 using webapi.Models;
+using webapi.Services;
 
 namespace webapi.Controllers.Account
 {
@@ -63,19 +64,18 @@ namespace webapi.Controllers.Account
                 };
 
                 string refreshToken = _tokenService.GenerateRefreshToken();
-                string jwtToken = _tokenService.GenerateJwtToken(newUserModel, 20);
 
                 var tokenModel = new TokenModel
                 {
                     user_id = user.id,
                     refresh_token = _tokenService.HashingToken(refreshToken),
-                    expiry_date = DateTime.UtcNow.AddDays(90)
+                    expiry_date = DateTime.UtcNow.AddDays(Constants.REFRESH_EXPIRY)
                 };
 
                 await _update.Update(tokenModel, true);
 
-                Response.Cookies.Append("JwtToken", jwtToken, _tokenService.SetCookieOptions(TimeSpan.FromMinutes(20)));
-                Response.Cookies.Append("RefreshToken", refreshToken, _tokenService.SetCookieOptions(TimeSpan.FromDays(90)));
+                Response.Cookies.Append(Constants.JWT_COOKIE_KEY, _tokenService.GenerateJwtToken(newUserModel, Constants.JWT_EXPIRY), _tokenService.SetCookieOptions(TimeSpan.FromMinutes(Constants.JWT_EXPIRY)));
+                Response.Cookies.Append(Constants.REFRESH_COOKIE_KEY, refreshToken, _tokenService.SetCookieOptions(TimeSpan.FromDays(Constants.REFRESH_EXPIRY)));
 
                 return StatusCode(200);
             }

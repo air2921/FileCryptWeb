@@ -1,5 +1,4 @@
-﻿using MongoDB.Libmongocrypt;
-using webapi.Exceptions;
+﻿using webapi.Exceptions;
 using webapi.Interfaces.Cryptography;
 using webapi.Interfaces.Redis;
 using webapi.Models;
