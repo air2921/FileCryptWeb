@@ -17,7 +17,7 @@ const Register: React.FC = () => {
                 email: email,
                 password_hash: password,
                 username: username
-            });
+            }, { withCredentials: true });
 
             if (response.status === 200) {
                 setStatusCode(true);

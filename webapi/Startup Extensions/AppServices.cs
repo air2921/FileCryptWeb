@@ -22,27 +22,29 @@ namespace webapi
             services.AddEndpointsApiExplorer();
             services.AddSwaggerGen();
 
-            services.AddDistributedMemoryCache();
-            services.AddAuthorization();
-
             services.AddCors(options =>
             {
                 options.AddPolicy("AllowSpecificOrigin", builder =>
                 {
                     builder.WithOrigins("https://localhost:5173")
                            .AllowAnyHeader()
-                           .AllowAnyMethod();
+                           .AllowAnyMethod()
+                           .AllowCredentials();
                 });
             });
 
+            services.AddDistributedMemoryCache();
+
             services.AddSession(session =>
             {
-                session.IOTimeout = TimeSpan.FromMinutes(15);
+                session.IdleTimeout = TimeSpan.FromMinutes(15);
                 session.Cookie.HttpOnly = true;
-                session.Cookie.SameSite = SameSiteMode.Lax;
+                session.Cookie.SameSite = SameSiteMode.None;
                 session.Cookie.IsEssential = true;
                 session.Cookie.SecurePolicy = CookieSecurePolicy.Always;
             });
+
+            services.AddAuthorization();
 
             services.AddAuthentication(auth =>
             {
