@@ -1,4 +1,4 @@
-import React, { FormEvent, useState } from 'react';
+﻿import React, { FormEvent, useState } from 'react';
 import axios from 'axios';
 import Verify from './Verify';
 
@@ -21,14 +21,19 @@ const Register: React.FC = () => {
 
             if (response.status === 200) {
                 setStatusCode(true);
-            }
-            else {
-                setErrorMessage(response.data.message);
+            } else {
+                const errorMessage = response.data && response.data.message ? response.data.message : 'Unknown error';
+                setErrorMessage(errorMessage);
             }
 
-        } catch (error) {
+        } catch (error: any) {
             console.error(error);
-            setErrorMessage('Unknown error');
+            if (error.response) {
+                const errorMessage = error.response.data && error.response.data.message ? error.response.data.message : 'Unknown error';
+                setErrorMessage(errorMessage);
+            } else {
+                setErrorMessage('Unknown error');
+            }
         }
     };
 
@@ -38,10 +43,10 @@ const Register: React.FC = () => {
                 <Verify onSuccess={() => console.log('Verification success!')} />
             ) : (
                 <div>
-                    <p className="welcome-text">Welcome to FileCrypt. Let's start here</p>
+                    <p className="welcome-text">Welcome to FileCrypt. Let's start our adventure here</p>
                     <form onSubmit={handleSubmit}>
                         <div className="form-group">
-                            <label htmlFor="email">Email*</label>
+                            <label htmlFor="email">email</label>
                             <input
                                 type="email"
                                 id="email"
@@ -52,7 +57,7 @@ const Register: React.FC = () => {
                             />
                         </div>
                         <div className="form-group">
-                            <label htmlFor="password">Password*</label>
+                            <label htmlFor="password">password</label>
                             <input
                                 type="password"
                                 id="password"
@@ -63,7 +68,7 @@ const Register: React.FC = () => {
                             />
                         </div>
                         <div className="form-group">
-                            <label htmlFor="username">Username*</label>
+                            <label htmlFor="username">username</label>
                             <input
                                 type="text"
                                 id="username"
@@ -75,7 +80,7 @@ const Register: React.FC = () => {
                         </div>
                         <div className="form-actions">
                             <button type="submit">
-                                Continue
+                                continue
                             </button>
                         </div>
                     </form>

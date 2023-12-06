@@ -1,6 +1,6 @@
 import React, { FormEvent, useState } from 'react';
 import axios from 'axios';
-import { useNavigate } from 'react-router-dom';
+import { redirect } from 'react-router-dom';
 
 const Verify: React.FC<{ onSuccess: () => void }> = ({ onSuccess }) => {
     const [code, setCode] = useState(0);
@@ -11,17 +11,21 @@ const Verify: React.FC<{ onSuccess: () => void }> = ({ onSuccess }) => {
 
         try {
             const response = await axios.post(`https://localhost:7067/api/auth/verify?code=${code}`, null, { withCredentials: true })
-            const navigate = useNavigate();
 
             if (response.status === 201) {
-                navigate('/');
+                return redirect("/");
             }
             else {
                 setErrorMessage(response.data.message)
             }
-        } catch (error) {
+        } catch (error: any) {
             console.error(error);
-            setErrorMessage('Unknown error');
+            if (error.response) {
+                const errorMessage = error.response.data && error.response.data.message ? error.response.data.message : 'Unknown error';
+                setErrorMessage(errorMessage);
+            } else {
+                setErrorMessage('Unknown error');
+            }
         }
     };
 
@@ -30,7 +34,7 @@ const Verify: React.FC<{ onSuccess: () => void }> = ({ onSuccess }) => {
             <p className="welcome-text">A confirmation code has been sent to your email address</p>
             <form onSubmit={handleSubmit}>
                 <div className="form-group">
-                    <label htmlFor="code">Code*</label>
+                    <label htmlFor="code">code</label>
                     <input
                         type="number"
                         id="code"
