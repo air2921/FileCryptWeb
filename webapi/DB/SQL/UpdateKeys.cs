@@ -29,7 +29,7 @@ namespace webapi.DB.SQL
             _validation = validation;
             _configuration = configuration;
             _encrypt = encrypt;
-            secretKey = Convert.FromBase64String(_configuration["FileCryptKey"]!);
+            secretKey = Convert.FromBase64String(_configuration[App.appKey]!);
         }
 
         public async Task CleanReceivedInternalKey(int id)

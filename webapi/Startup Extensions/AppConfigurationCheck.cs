@@ -16,17 +16,16 @@ namespace webapi
             string keyPattern = Validation.EncryptionKey;
             string emailPattern = Validation.Email;
 
-            string? secretKey = configuration["SecretKey"];
-            string? emailPassword = configuration["EmailPassword"];
-            string? emailAdress = configuration["Email"];
-            string? FileCryptKey = configuration["FileCryptKey"];
-            string? redisServer = configuration.GetConnectionString("RedisConnection");
-            string? mongoDb = configuration.GetConnectionString("MongoDbConnection");
-            string? postgres = configuration.GetConnectionString("PostgresConnection");
+            string? secretKey = configuration[App.appSecretKey];
+            string? emailPassword = configuration[App.appEmailPassword];
+            string? emailAdress = configuration[App.appEmail];
+            string? FileCryptKey = configuration[App.appKey];
+            string? redisServer = configuration.GetConnectionString(App.RedisDb);
+            string? postgres = configuration.GetConnectionString(App.MainDb);
 
             bool InvalidConfiguration =
                  string.IsNullOrWhiteSpace(secretKey) || string.IsNullOrWhiteSpace(emailPassword) ||
-                 string.IsNullOrWhiteSpace(redisServer) || string.IsNullOrWhiteSpace(mongoDb) || string.IsNullOrWhiteSpace(postgres) ||
+                 string.IsNullOrWhiteSpace(redisServer) || string.IsNullOrWhiteSpace(postgres) ||
                  string.IsNullOrWhiteSpace(emailAdress) || string.IsNullOrWhiteSpace(FileCryptKey) ||
                  !Regex.IsMatch(emailAdress, emailPattern) || !Regex.IsMatch(FileCryptKey, keyPattern);
 

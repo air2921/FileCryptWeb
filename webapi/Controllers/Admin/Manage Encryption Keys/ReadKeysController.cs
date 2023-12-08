@@ -6,6 +6,7 @@ using webapi.Exceptions;
 using webapi.Interfaces.Cryptography;
 using webapi.Interfaces.SQL;
 using webapi.Models;
+using webapi.Services;
 
 namespace webapi.Controllers.Admin.Manage_Encryption_Keys
 {
@@ -33,7 +34,7 @@ namespace webapi.Controllers.Admin.Manage_Encryption_Keys
             _configuration = configuration;
             _logger = logger;
             _dbContext = dbContext;
-            secretKey = Convert.FromBase64String(_configuration["FileCryptKey"]!);
+            secretKey = Convert.FromBase64String(_configuration[App.appKey]!);
         }
 
         [HttpGet("all/{userId}")]

@@ -4,6 +4,7 @@ using Microsoft.EntityFrameworkCore;
 using Microsoft.IdentityModel.Tokens;
 using System.Text;
 using webapi.DB;
+using webapi.Services;
 
 namespace webapi
 {
@@ -15,7 +16,7 @@ namespace webapi
                 .AddUserSecrets<AppServices>()
                 .Build();
 
-            services.AddDbContext<FileCryptDbContext>(options => options.UseNpgsql(configuration.GetConnectionString("PostgresConnection")));
+            services.AddDbContext<FileCryptDbContext>(options => options.UseNpgsql(configuration.GetConnectionString(App.MainDb)));
 
             services.AddControllers();
             services.AddLogging();
@@ -60,7 +61,7 @@ namespace webapi
                     ValidateIssuerSigningKey = true,
                     ValidateIssuer = true,
                     ValidateAudience = true,
-                    IssuerSigningKey = new SymmetricSecurityKey(Encoding.ASCII.GetBytes(configuration["SecretKey"]!)),
+                    IssuerSigningKey = new SymmetricSecurityKey(Encoding.ASCII.GetBytes(configuration[App.appSecretKey]!)),
                     ValidIssuer = "FileCrypt",
                     ValidAudience = "User",
                     ClockSkew = TimeSpan.Zero

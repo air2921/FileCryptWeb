@@ -17,8 +17,8 @@ namespace webapi.Services.Third_Party_Services
 
         public async Task SendMessage(UserModel user, string messageHeader, string message)
         {
-            string Email = _configuration["Email"]!;
-            string Password = _configuration["EmailPassword"]!;
+            string Email = _configuration[App.appEmail]!;
+            string Password = _configuration[App.appEmailPassword]!;
 
             var emailMessage = new MimeMessage();
             emailMessage.From.Add(new MailboxAddress("FileCrypt", Email));
