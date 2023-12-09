@@ -1,26 +1,21 @@
-﻿import React, { FormEvent, useState } from 'react';
 import axios from 'axios';
-import Verify from '../components/Verify';
+import React, { FormEvent, useState } from 'react';
 
-const Register: React.FC = () => {
+const Login = () => {
     const [email, setEmail] = useState('');
     const [password, setPassword] = useState('');
-    const [username, setUsername] = useState('');
-    const [successStatusCode, setStatusCode] = useState(false);
     const [errorMessage, setErrorMessage] = useState<string | null>(null);
 
     const handleSubmit = async (e: FormEvent) => {
         e.preventDefault();
 
         try {
-            const response = await axios.post('https://localhost:7067/api/auth/register', {
+            const response = await axios.post('https://localhost:7067/api/auth/login', {
                 email: email,
                 password_hash: password,
-                username: username
             }, { withCredentials: true });
 
             if (response.status === 200) {
-                setStatusCode(true);
             } else {
                 const errorMessage = response.data && response.data.message ? response.data.message : 'Unknown error';
                 setErrorMessage(errorMessage);
@@ -38,12 +33,10 @@ const Register: React.FC = () => {
     };
 
     return (
-        <div>
-            {successStatusCode ? (
-                <Verify endpoint='https://localhost:7067/api/auth/verify' />
-            ) : (
-                <div>
-                    <p className="welcome-text">Welcome to FileCrypt. Let's start our adventure here</p>
+        <div className="content">
+            <div className="login-signup-container">
+                <div className="login-container">
+                    <p className="welcome-text"></p>
                     <form onSubmit={handleSubmit}>
                         <div className="form-group">
                             <label htmlFor="email">email</label>
@@ -67,32 +60,22 @@ const Register: React.FC = () => {
                                 required
                             />
                         </div>
-                        <div className="form-group">
-                            <label htmlFor="username">username</label>
-                            <input
-                                type="text"
-                                id="username"
-                                value={username}
-                                onChange={(e) => setUsername(e.target.value)}
-                                className="form-control"
-                                required
-                            />
-                        </div>
-                        <div className="form-actions">
-                            <button type="submit">
-                                continue
-                            </button>
-                        </div>
+                        <button type="submit" className="btn btn-primary btn-disabled">
+                            Sign In
+                        </button>
                     </form>
-                    <div>
-                        <p>
-                            {errorMessage && <span className="error">{errorMessage}</span>}
-                        </p>
-                    </div>
                 </div>
-            )}
+                <div className="signup-container">
+                    <p>No? <a href="/signup">Create an account</a>And try sign in, after it.</p>
+                </div>
+            </div>
+            <div>
+                <p>
+                    {errorMessage && <span className="error">{errorMessage}</span>}
+                </p>
+            </div>
         </div>
     );
-}
+};
 
-export default Register;
+export default Login;
