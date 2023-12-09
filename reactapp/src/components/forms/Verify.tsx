@@ -2,7 +2,11 @@ import React, { FormEvent, useState } from 'react';
 import axios from 'axios';
 import { redirect } from 'react-router-dom';
 
-const Verify: React.FC<{ onSuccess: () => void }> = ({ onSuccess }) => {
+interface VerifyProps {
+    endpoint: string;
+}
+
+const Verify: React.FC<VerifyProps> = ({ endpoint }) => {
     const [code, setCode] = useState(0);
     const [errorMessage, setErrorMessage] = useState('');
 
@@ -10,7 +14,7 @@ const Verify: React.FC<{ onSuccess: () => void }> = ({ onSuccess }) => {
         e.preventDefault();
 
         try {
-            const response = await axios.post(`https://localhost:7067/api/auth/verify?code=${code}`, null, { withCredentials: true })
+            const response = await axios.post(`${endpoint}?code=${code}`, null, { withCredentials: true })
 
             if (response.status === 201) {
                 return redirect("/");

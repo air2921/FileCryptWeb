@@ -13,6 +13,5 @@
   <ItemGroup>
     <Folder Include="src\components\api\" />
     <Folder Include="src\components\forms\" />
-    <Folder Include="src\pages\" />
   </ItemGroup>
 </Project>

@@ -24,6 +24,7 @@ namespace webapi
                 app.UseSwaggerUI();
             }
 
+            app.UseLog();
             app.UseFreeze();
             app.UseAPI();
             app.UseHttpsRedirection();
@@ -34,7 +35,6 @@ namespace webapi
             app.UseBearer();
             app.UseAuthentication();
             app.UseAuthorization();
-            app.UseLog();
 
             app.UseEndpoints(endpoint =>
             {

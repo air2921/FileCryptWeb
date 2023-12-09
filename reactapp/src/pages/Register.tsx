@@ -1,6 +1,6 @@
 ﻿import React, { FormEvent, useState } from 'react';
 import axios from 'axios';
-import Verify from './Verify';
+import Verify from '../components/forms/Verify';
 
 const Register: React.FC = () => {
     const [email, setEmail] = useState('');
@@ -40,7 +40,7 @@ const Register: React.FC = () => {
     return (
         <div>
             {successStatusCode ? (
-                <Verify onSuccess={() => console.log('Verification success!')} />
+                <Verify endpoint='https://localhost:7067/api/auth/verify' />
             ) : (
                 <div>
                     <p className="welcome-text">Welcome to FileCrypt. Let's start our adventure here</p>
