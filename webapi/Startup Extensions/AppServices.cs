@@ -32,6 +32,16 @@ namespace webapi
                            .AllowAnyMethod()
                            .AllowCredentials();
                 });
+
+                options.AddPolicy("AllowOriginAPI", builder =>
+                {
+                    builder.AllowAnyOrigin().WithMethods("POST").WithHeaders("x-Encryption_Key", "x-API_Key")
+                    .SetIsOriginAllowed(origin =>
+                    origin.EndsWith("api/public/cryptography/private/decryption") ||
+                    origin.EndsWith("api/public/cryptography/internal/decryption") ||
+                    origin.EndsWith("api/public/cryptography/received/decryption")
+                    );
+                });
             });
 
             services.AddDistributedMemoryCache();
