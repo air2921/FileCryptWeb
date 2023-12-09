@@ -16,7 +16,7 @@ const Verify: React.FC<VerifyProps> = ({ endpoint }) => {
         try {
             const response = await axios.post(`${endpoint}?code=${code}`, null, { withCredentials: true })
 
-            if (response.status === 201) {
+            if (response.status === 201 || response.status === 206) {
                 return redirect("/");
             }
             else {

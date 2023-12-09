@@ -83,7 +83,7 @@ namespace webapi.Controllers.Account.Edit
             if (!code.Equals(correctCode))
                 return StatusCode(401, new { message = AccountErrorMessage.CodeIncorrect });
 
-            return StatusCode(200, new { message = AccountSuccessMessage.OldEmailConfirmed });
+            return StatusCode(201, new { message = AccountSuccessMessage.OldEmailConfirmed });
         }
 
         [HttpPost("new")]
@@ -129,7 +129,7 @@ namespace webapi.Controllers.Account.Edit
                 HttpContext.Session.Remove(_userInfo.UserId.ToString());
                 HttpContext.Session.Remove(EMAIL);
 
-                return StatusCode(200);
+                return StatusCode(201);
             }
             catch (UserException ex)
             {
