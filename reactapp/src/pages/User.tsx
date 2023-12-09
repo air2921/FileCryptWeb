@@ -53,7 +53,7 @@ const User = () => {
                             Private Key
                         </span>
                         <span className="has-key">
-                            {keys.private ? <i className="material-icons-sharp">check</i> : <i className="material-icons-sharp">close</i>}
+                            {keys.privateKey ? <i className="material-icons-sharp">check</i> : <i className="material-icons-sharp">close</i>}
                         </span>
                     </div>
                     <div className="internal-key">
@@ -61,7 +61,7 @@ const User = () => {
                             Internal Key
                         </span>
                         <span className="has-key">
-                            {keys.internal ? <i className="material-icons-sharp">check</i> : <i className="material-icons-sharp">close</i>}
+                            {keys.internalKey ? <i className="material-icons-sharp">check</i> : <i className="material-icons-sharp">close</i>}
                         </span>
                     </div>
                     <div className="received-key">
@@ -69,7 +69,7 @@ const User = () => {
                             Received Key
                         </span>
                         <span className="has-key">
-                            {keys.received ? <i className="material-icons-sharp">check</i> : <i className="material-icons-sharp">close</i>}
+                            {keys.receivedKey ? <i className="material-icons-sharp">check</i> : <i className="material-icons-sharp">close</i>}
                         </span>
                     </div>
                 </div>
