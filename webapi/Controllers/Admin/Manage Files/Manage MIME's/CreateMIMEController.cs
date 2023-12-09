@@ -28,8 +28,8 @@ namespace webapi.Controllers.Admin.Manage_Files.Manage_MIME_s
             return StatusCode(201, new { message = SuccessMessage.SuccessCreatedNewMime });
         }
 
-        [HttpPost("add/{secure}")]
-        public async Task<IActionResult> CreateSecureBaseMIMICollection([FromRoute] bool secure)
+        [HttpPost("add")]
+        public async Task<IActionResult> CreateSecureBaseMIMICollection([FromQuery] bool secure)
         {
             await _insertBase.DBInsertBase(null, secure);
 

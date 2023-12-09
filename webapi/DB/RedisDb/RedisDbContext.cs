@@ -1,5 +1,6 @@
 ﻿using StackExchange.Redis;
 using webapi.Interfaces.Redis;
+using webapi.Services;
 
 namespace webapi.DB.RedisDb
 {
@@ -13,7 +14,7 @@ namespace webapi.DB.RedisDb
         {
             _configuration = configuration;
 
-            string connectionString = _configuration.GetConnectionString("RedisConnection")!;
+            string connectionString = _configuration.GetConnectionString(App.RedisDb)!;
 
             _redis = ConnectionMultiplexer.Connect(connectionString);
 

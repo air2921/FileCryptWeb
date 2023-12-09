@@ -64,8 +64,8 @@ namespace webapi.Controllers.Account
             return StatusCode(201, new { message = AccountSuccessMessage.EmailSendedRecovery });
         }
 
-        [HttpPost("{token}")]
-        public async Task<IActionResult> RecoveryAccountByToken([FromBody] string password, [FromRoute] string token)
+        [HttpPost("account")]
+        public async Task<IActionResult> RecoveryAccountByToken([FromBody] string password, [FromQuery] string token)
         {
             try
             {

@@ -11,6 +11,7 @@
     <BuildOutputFolder>$(MSBuildProjectDirectory)\dist</BuildOutputFolder>
   </PropertyGroup>
   <ItemGroup>
+    <Folder Include="src\components\api\" />
     <Folder Include="src\components\forms\" />
   </ItemGroup>
 </Project>

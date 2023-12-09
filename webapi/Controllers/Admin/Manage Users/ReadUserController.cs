@@ -16,12 +16,12 @@ namespace webapi.Controllers.Admin.Manage_Users
             _read = read;
         }
 
-        [HttpGet("one")]
-        public async Task<IActionResult> ReadUser([FromBody] int id)
+        [HttpGet("{userId}")]
+        public async Task<IActionResult> ReadUser([FromRoute] int userId)
         {
             try
             {
-                var user = await _read.ReadById(id, null);
+                var user = await _read.ReadById(userId, null);
 
                 return StatusCode(200, new { user });
             }

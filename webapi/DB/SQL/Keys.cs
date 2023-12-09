@@ -5,6 +5,7 @@ using webapi.Interfaces.Services;
 using webapi.Interfaces.SQL;
 using webapi.Localization.Exceptions;
 using webapi.Models;
+using webapi.Services;
 
 namespace webapi.DB.SQL
 {
@@ -26,7 +27,7 @@ namespace webapi.DB.SQL
             _generateKey = generateKey;
             _encrypt = encrypt;
             _configuration = configuration;
-            secretKey = Convert.FromBase64String(_configuration["FileCryptKey"]!);
+            secretKey = Convert.FromBase64String(_configuration[App.appKey]!);
         }
 
         public async Task Create(KeyModel keyModel)

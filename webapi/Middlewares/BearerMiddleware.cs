@@ -2,6 +2,7 @@
 using webapi.DB;
 using webapi.Interfaces.Services;
 using webapi.Models;
+using webapi.Services;
 
 namespace webapi.Middlewares
 {
@@ -17,7 +18,7 @@ namespace webapi.Middlewares
 
         public async Task Invoke(HttpContext context, FileCryptDbContext dbContext, ITokenService tokenService)
         {
-            if (context.Request.Cookies.TryGetValue("JwtToken", out string? jwt))
+            if (context.Request.Cookies.TryGetValue(Constants.JWT_COOKIE_KEY, out string? jwt))
             {
                 context.Request.Headers.Add("Authorization", $"Bearer {jwt}");
                 await _next(context);
@@ -25,7 +26,7 @@ namespace webapi.Middlewares
             }
             else
             {
-                if (context.Request.Cookies.TryGetValue("RefreshToken", out string? refresh))
+                if (context.Request.Cookies.TryGetValue(Constants.REFRESH_COOKIE_KEY, out string? refresh))
                 {
                     var userAndToken = await dbContext.Tokens
                         .Where(t => t.refresh_token == tokenService.HashingToken(refresh))
@@ -44,10 +45,10 @@ namespace webapi.Middlewares
                                 role = userAndToken.user.role
                             };
 
-                            string createdJWT = tokenService.GenerateJwtToken(userModel, 20);
-                            var jwtCookieOptions = tokenService.SetCookieOptions(TimeSpan.FromMinutes(20));
+                            string createdJWT = tokenService.GenerateJwtToken(userModel, Constants.JWT_EXPIRY);
+                            var jwtCookieOptions = tokenService.SetCookieOptions(TimeSpan.FromMinutes(Constants.JWT_EXPIRY));
 
-                            context.Response.Cookies.Append("JwtToken", createdJWT, jwtCookieOptions);
+                            context.Response.Cookies.Append(Constants.JWT_COOKIE_KEY, createdJWT, jwtCookieOptions);
 
                             context.Request.Headers.Add("Authorization", $"Bearer {createdJWT}");
                         }

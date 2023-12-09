@@ -42,21 +42,5 @@ namespace webapi.DB.RedisDb
                 return _receivedInternalKey ??= "receivedInternalKey#" + _userInfo.UserId;
             }
         }
-
-        public string ServiceFreezeFlag
-        {
-            get
-            {
-                return _serviceFreezeFlag ??= "serviceFreezed";
-            }
-        }
-
-        public string MimeCollection
-        {
-            get
-            {
-                return _mimeCollection ??= "MIME_Collection";
-            }
-        }
     }
 }

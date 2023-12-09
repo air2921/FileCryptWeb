@@ -19,12 +19,12 @@ namespace webapi.Controllers.Admin.Manage_Notifications
             _deleteNotification = deleteNotification;
         }
 
-        [HttpDelete("one")]
-        public async Task<IActionResult> DeleteNotification([FromBody] int id)
+        [HttpDelete("{notificationId}")]
+        public async Task<IActionResult> DeleteNotification([FromRoute] int notificationId)
         {
             try
             {
-                await _deleteNotification.DeleteById(id);
+                await _deleteNotification.DeleteById(notificationId);
 
                 return StatusCode(200, new { message = SuccessMessage.SuccessDeletedNotification });
             }

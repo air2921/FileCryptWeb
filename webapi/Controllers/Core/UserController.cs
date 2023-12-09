@@ -23,11 +23,11 @@ namespace webapi.Controllers.Core
             _tokenService = tokenService;
         }
 
-        [HttpGet("{id}")]
-        public async Task<IActionResult> GetUser([FromRoute] int id)
+        [HttpGet("{userId}")]
+        public async Task<IActionResult> GetUser([FromRoute] int userId)
         {
             var user_keys_files = await _dbContext.Users
-                .Where(u => u.id == id)
+                .Where(u => u.id == userId)
                 .GroupJoin(
                     _dbContext.Keys,
                     user => user.id,
@@ -42,7 +42,7 @@ namespace webapi.Controllers.Core
 
             if (!user_keys_files.Any())
             {
-                if (id.Equals(_userInfo.UserId))
+                if (userId.Equals(_userInfo.UserId))
                 {
                     _tokenService.DeleteTokens();
                 }
@@ -56,7 +56,7 @@ namespace webapi.Controllers.Core
             string? internalKey = keys.person_internal_key is not null ? "hidden" : null;
             string? receivedKey = keys.received_internal_key is not null ? "hidden" : null;
 
-            if (id.Equals(_userInfo.UserId))
+            if (userId.Equals(_userInfo.UserId))
             {
                 var user = user_keys_files.Select(u => new { u.user.id, u.user.username, u.user.role, u.user.email }).FirstOrDefault();
 

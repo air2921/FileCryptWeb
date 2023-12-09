@@ -23,19 +23,19 @@ namespace webapi.Controllers.Admin.Manage_Users
             _delete = delete;
         }
 
-        [HttpDelete("one")]
-        public async Task<IActionResult> DeleteUser([FromBody] int id)
+        [HttpDelete("{userId}")]
+        public async Task<IActionResult> DeleteUser([FromRoute] int userId)
         {
             try
             {
-                var target = await _read.ReadById(id, null);
+                var target = await _read.ReadById(userId, null);
 
                 if (User.IsInRole(Role.HighestAdmin.ToString()))
                 {
                     if (target.role == Role.HighestAdmin.ToString())
                         return StatusCode(403, new { message = ErrorMessage.HighestRoleError });
 
-                    await _delete.DeleteById(id);
+                    await _delete.DeleteById(userId);
                     return StatusCode(204, new { message = SuccessMessage.SuccessDeletedUser });
                 }
                 else
@@ -43,7 +43,7 @@ namespace webapi.Controllers.Admin.Manage_Users
                     if (target.role == Role.Admin.ToString() || target.role == Role.HighestAdmin.ToString())
                         return StatusCode(403, new { message = ErrorMessage.AdminCannotDelete });
 
-                    await _delete.DeleteById(id);
+                    await _delete.DeleteById(userId);
                     return StatusCode(200, new { message = SuccessMessage.SuccessDeletedUser });
                 }
             }

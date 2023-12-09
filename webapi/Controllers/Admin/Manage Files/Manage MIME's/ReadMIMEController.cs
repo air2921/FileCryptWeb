@@ -18,14 +18,14 @@ namespace webapi.Controllers.Admin.Manage_Files.Manage_MIME_s
             _readMime = readMime;
         }
 
-        [HttpGet("one")]
-        public async Task<IActionResult> ReadOneMime([FromBody] int id)
+        [HttpGet("{mimeId}")]
+        public async Task<IActionResult> ReadOneMime([FromRoute] int mimeId)
         {
             try
             {
-                var mime = await _readMime.ReadById(id, null);
+                var mime = await _readMime.ReadById(mimeId, null);
 
-                return StatusCode(200, new { type = mime });
+                return StatusCode(200, new { mime });
             }
             catch (MimeException ex)
             {
@@ -40,7 +40,7 @@ namespace webapi.Controllers.Admin.Manage_Files.Manage_MIME_s
             {
                 var mimes = await _readMime.ReadAll();
 
-                return StatusCode(200, new { types = mimes });
+                return StatusCode(200, new { mimes });
             }
             catch (MimeException ex)
             {

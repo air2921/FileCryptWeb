@@ -6,6 +6,7 @@ using webapi.Exceptions;
 using webapi.Interfaces.Cryptography;
 using webapi.Interfaces.SQL;
 using webapi.Models;
+using webapi.Services;
 
 namespace webapi.Controllers.Admin.Manage_Encryption_Keys
 {
@@ -33,11 +34,11 @@ namespace webapi.Controllers.Admin.Manage_Encryption_Keys
             _configuration = configuration;
             _logger = logger;
             _dbContext = dbContext;
-            secretKey = Convert.FromBase64String(_configuration["FileCryptKey"]!);
+            secretKey = Convert.FromBase64String(_configuration[App.appKey]!);
         }
 
-        [HttpGet("all")]
-        public async Task<IActionResult> AllKeys([FromBody] int userId)
+        [HttpGet("all/{userId}")]
+        public async Task<IActionResult> AllKeys([FromRoute] int userId)
         {
             try
             {
@@ -67,7 +68,7 @@ namespace webapi.Controllers.Admin.Manage_Encryption_Keys
                         continue;
                     }
                 }
-                return StatusCode(200, new { keys = decryptedKeys.ToArray() });
+                return StatusCode(200, new { keys = decryptedKeys });
             }
             catch (UserException ex)
             {

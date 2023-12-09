@@ -1,7 +1,5 @@
-﻿using Microsoft.AspNetCore.Builder;
-using Microsoft.AspNetCore.Http;
-using System.Threading.Tasks;
-using webapi.Interfaces.Redis;
+﻿using webapi.Interfaces.Redis;
+using webapi.Services;
 
 namespace webapi.Middlewares
 {
@@ -15,13 +13,13 @@ namespace webapi.Middlewares
             _next = next;
         }
 
-        public async Task Invoke(HttpContext context, IRedisCache redisCache, IRedisKeys redisKeys)
+        public async Task Invoke(HttpContext context, IRedisCache redisCache)
         {
             try
             {
                 if (!IsAdminEndpoint(context.Request.Path))
                 {
-                    var freezed = await IsServiceFreeze(redisCache, redisKeys);
+                    var freezed = await IsServiceFreeze(redisCache);
                     if (freezed)
                     {
                         context.Response.StatusCode = 503;
@@ -50,11 +48,11 @@ namespace webapi.Middlewares
             return endpointPath.Value!.Contains("admin", StringComparison.OrdinalIgnoreCase);
         }
 
-        private static async Task<bool> IsServiceFreeze(IRedisCache redisCache, IRedisKeys redisKeys)
+        private static async Task<bool> IsServiceFreeze(IRedisCache redisCache)
         {
             try
             {
-                var stringFlag = await redisCache.GetCachedData(redisKeys.ServiceFreezeFlag);
+                var stringFlag = await redisCache.GetCachedData(Constants.SERVICE_FREEZE_FLAG);
                 return bool.Parse(stringFlag);
             }
             catch (KeyNotFoundException)

@@ -1,8 +1,8 @@
-﻿using MongoDB.Libmongocrypt;
-using webapi.Exceptions;
+﻿using webapi.Exceptions;
 using webapi.Interfaces.Cryptography;
 using webapi.Interfaces.Redis;
 using webapi.Models;
+using webapi.Services;
 
 namespace webapi.DB.RedisDb
 {
@@ -27,7 +27,7 @@ namespace webapi.DB.RedisDb
             _configuration = configuration;
             _logger = logger;
             _decrypt = decrypt;
-            secretKey = Convert.FromBase64String(_configuration["FileCryptKey"]!);
+            secretKey = Convert.FromBase64String(_configuration[App.appKey]!);
         }
 
         public async Task<string> CacheKey(string key, Func<Task<KeyModel>> readKeyFunction)

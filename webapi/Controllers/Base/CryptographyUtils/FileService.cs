@@ -6,6 +6,7 @@ using webapi.Models;
 using Newtonsoft.Json;
 using webapi.Interfaces.Controllers;
 using webapi.Localization;
+using webapi.Services;
 
 namespace webapi.Controllers.Base.CryptographyUtils
 {
@@ -80,7 +81,7 @@ namespace webapi.Controllers.Base.CryptographyUtils
         {
             try
             {
-                var mimes = await _redisCache.GetCachedData(_redisKeys.MimeCollection);
+                var mimes = await _redisCache.GetCachedData(Constants.MIME_COLLECTION);
 
                 string[] mimesArray = JsonConvert.DeserializeObject<string[]>(mimes);
 
@@ -95,7 +96,7 @@ namespace webapi.Controllers.Base.CryptographyUtils
 
                     var mimesJson = JsonConvert.SerializeObject(mimesArray);
 
-                    await _redisCache.CacheData(_redisKeys.MimeCollection, mimesJson, TimeSpan.FromDays(3));
+                    await _redisCache.CacheData(Constants.MIME_COLLECTION, mimesJson, TimeSpan.FromDays(3));
 
                     return mimesArray.Contains(Mime);
                 }

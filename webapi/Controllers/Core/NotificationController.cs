@@ -28,12 +28,12 @@ namespace webapi.Controllers.Core
             _deleteNotification = deleteNotification;
         }
 
-        [HttpGet("{id}")]
-        public async Task<IActionResult> GetNotification([FromRoute] int id)
+        [HttpGet("{notificationId}")]
+        public async Task<IActionResult> GetNotification([FromRoute] int notificationId)
         {
             try
             {
-                var notification = await _readNotification.ReadById(id, null);
+                var notification = await _readNotification.ReadById(notificationId, null);
 
                 return StatusCode(200, new { notification });
             }
@@ -43,8 +43,8 @@ namespace webapi.Controllers.Core
             }
         }
 
-        [HttpGet("all/{received}")]
-        public async Task<IActionResult> GetAll([FromRoute] bool received)
+        [HttpGet("all")]
+        public async Task<IActionResult> GetAll([FromQuery] bool received)
         {
             var query = _dbContext.Notifications.OrderByDescending(n => n.send_time).AsQueryable();
             var notifications = new List<NotificationModel>();
@@ -65,12 +65,12 @@ namespace webapi.Controllers.Core
             return StatusCode(200, new { notifications });
         }
 
-        [HttpDelete("{id}")]
-        public async Task<IActionResult> DeleteNotification([FromRoute] int id)
+        [HttpDelete("{notificationId}")]
+        public async Task<IActionResult> DeleteNotification([FromRoute] int notificationId)
         {
             try
             {
-                await _deleteNotification.DeleteById(id);
+                await _deleteNotification.DeleteById(notificationId);
 
                 return StatusCode(200);
             }

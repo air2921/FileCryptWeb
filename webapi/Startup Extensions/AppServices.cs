@@ -4,6 +4,7 @@ using Microsoft.EntityFrameworkCore;
 using Microsoft.IdentityModel.Tokens;
 using System.Text;
 using webapi.DB;
+using webapi.Services;
 
 namespace webapi
 {
@@ -15,24 +16,36 @@ namespace webapi
                 .AddUserSecrets<AppServices>()
                 .Build();
 
-            services.AddDbContext<FileCryptDbContext>(options => options.UseNpgsql(configuration.GetConnectionString("PostgresConnection")));
+            services.AddDbContext<FileCryptDbContext>(options => options.UseNpgsql(configuration.GetConnectionString(App.MainDb)));
 
             services.AddControllers();
             services.AddLogging();
             services.AddEndpointsApiExplorer();
             services.AddSwaggerGen();
 
+            services.AddCors(options =>
+            {
+                options.AddPolicy("AllowSpecificOrigin", builder =>
+                {
+                    builder.WithOrigins("https://localhost:5173")
+                           .AllowAnyHeader()
+                           .AllowAnyMethod()
+                           .AllowCredentials();
+                });
+            });
+
             services.AddDistributedMemoryCache();
-            services.AddAuthorization();
 
             services.AddSession(session =>
             {
-                session.IOTimeout = TimeSpan.FromMinutes(15);
+                session.IdleTimeout = TimeSpan.FromMinutes(15);
                 session.Cookie.HttpOnly = true;
-                session.Cookie.SameSite = SameSiteMode.Strict;
+                session.Cookie.SameSite = SameSiteMode.None;
                 session.Cookie.IsEssential = true;
                 session.Cookie.SecurePolicy = CookieSecurePolicy.Always;
             });
+
+            services.AddAuthorization();
 
             services.AddAuthentication(auth =>
             {
@@ -48,7 +61,7 @@ namespace webapi
                     ValidateIssuerSigningKey = true,
                     ValidateIssuer = true,
                     ValidateAudience = true,
-                    IssuerSigningKey = new SymmetricSecurityKey(Encoding.ASCII.GetBytes(configuration["SecretKey"]!)),
+                    IssuerSigningKey = new SymmetricSecurityKey(Encoding.ASCII.GetBytes(configuration[App.appSecretKey]!)),
                     ValidIssuer = "FileCrypt",
                     ValidAudience = "User",
                     ClockSkew = TimeSpan.Zero
