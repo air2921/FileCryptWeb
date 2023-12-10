@@ -1,4 +1,5 @@
-﻿using Microsoft.AspNetCore.Mvc;
+﻿using Microsoft.AspNetCore.Cors;
+using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
 using webapi.DB;
 using webapi.Exceptions;
@@ -8,6 +9,7 @@ using webapi.Interfaces.Cryptography;
 namespace webapi.Controllers.Public_API
 {
     [ApiController]
+    [EnableCors("AllowOriginAPI")]
     [Route("api/public/cryptography/{type}/decryption")]
     public class API_DecryptController : ControllerBase
     {
