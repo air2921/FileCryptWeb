@@ -1,5 +1,6 @@
 import axios from 'axios';
 import React, { FormEvent, useState } from 'react';
+import Error from '../components/Errors/Error';
 
 const Login = () => {
     const [email, setEmail] = useState('');
@@ -69,11 +70,7 @@ const Login = () => {
                     <p>No? <a href="/signup">Create an account</a>And try sign in, after it.</p>
                 </div>
             </div>
-            <div>
-                <p>
-                    {errorMessage && <span className="error">{errorMessage}</span>}
-                </p>
-            </div>
+            {errorMessage && <Error errorMessage={errorMessage} errorFont={'error'} />}
         </div>
     );
 };

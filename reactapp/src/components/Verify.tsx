@@ -1,6 +1,7 @@
 import React, { FormEvent, useState } from 'react';
 import axios from 'axios';
 import { redirect } from 'react-router-dom';
+import Error from '../components/Errors/Error';
 
 interface VerifyProps {
     endpoint: string;
@@ -54,11 +55,7 @@ const Verify: React.FC<VerifyProps> = ({ endpoint }) => {
                     </button>
                 </div>
             </form>
-            <div>
-                <div>
-                    {errorMessage && <span className="error">{errorMessage}</span>}
-                </div>
-            </div>
+            {errorMessage && <Error errorMessage={errorMessage} errorFont={'error'} />}
         </div>
     );
 }
