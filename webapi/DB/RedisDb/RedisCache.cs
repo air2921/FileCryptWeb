@@ -102,29 +102,6 @@ namespace webapi.DB.RedisDb
             throw new KeyNotFoundException("Data was not found");
         }
 
-        public async Task<string> CacheDbData(string key, Func<Task<string>> read, TimeSpan expire)
-        {
-            try
-            {
-                var db = _context.GetDatabase();
-                var redisValue = await db.StringGetAsync(key);
-                if (redisValue.HasValue)
-                {
-                    return redisValue;
-                }
-
-                var data = await read();
-                await db.StringSetAsync(key, data, expire);
-
-                return data;
-            }
-            catch (Exception ex)
-            {
-                _logger.LogCritical(ex.ToString(), nameof(CacheDbData));
-                throw;
-            }
-        }
-
         public async Task DeleteCache(string key)
         {
             var db = _context.GetDatabase();
