@@ -1,7 +1,7 @@
-import React, { useEffect, useState } from 'react';
+﻿import React, { useEffect, useState } from 'react';
 import axios from 'axios';
 import { useParams } from 'react-router-dom';
-import Error from '../components/Errors/Error';
+import Error from '../components/Error/Error';
 
 const User = () => {
     const { userId } = useParams();
@@ -35,7 +35,9 @@ const User = () => {
         return <div className="error">{errorMessage || 'Loading...'}</div>;
     }
 
-    const { user, keys, files } = userData as { user: any, keys: any, files:any[] };
+    const { user, isOwner, keys, files } = userData as {
+        user: any, isOwner: boolean, keys: any, files: any[]
+    };
 
     return (
         <div className="main-container">
@@ -43,6 +45,7 @@ const User = () => {
                 <div>
                     <span className="username">
                         {`${user.username}#${user.id}`}
+                        {isOwner && <button>Edit</button>}
                     </span>
                     <span className="role">
                         {user.role}
@@ -51,6 +54,7 @@ const User = () => {
                 <div>
                     <span className="email">
                         {user.email}
+                        {isOwner && <button>Edit</button>}
                     </span>
                 </div>
                 <div className="keys-container">
@@ -60,6 +64,7 @@ const User = () => {
                         </span>
                         <span className="has-key">
                             {keys.privateKey ? <i className="material-icons-sharp">check</i> : <i className="material-icons-sharp">close</i>}
+                            {isOwner && <button>Change</button>}
                         </span>
                     </div>
                     <div className="internal-key">
@@ -68,6 +73,7 @@ const User = () => {
                         </span>
                         <span className="has-key">
                             {keys.internalKey ? <i className="material-icons-sharp">check</i> : <i className="material-icons-sharp">close</i>}
+                            {isOwner && <button>Change</button>}
                         </span>
                     </div>
                     <div className="received-key">
@@ -76,6 +82,7 @@ const User = () => {
                         </span>
                         <span className="has-key">
                             {keys.receivedKey ? <i className="material-icons-sharp">check</i> : <i className="material-icons-sharp">close</i>}
+                            {isOwner && <button>Change</button>}
                         </span>
                     </div>
                 </div>
@@ -107,6 +114,7 @@ const User = () => {
                                             </div>
                                         </div>
                                     </div>
+                                    {isOwner && <button>Delete</button>}
                                 </li>
                             ))
                     ) : (

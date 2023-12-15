@@ -1,28 +1,20 @@
 import React, { FormEvent, useState } from 'react';
 import axios from 'axios';
-import { redirect } from 'react-router-dom';
-import Error from '../components/Errors/Error';
-
-interface VerifyProps {
-    endpoint: string;
-}
+import { useNavigate } from 'react-router-dom';
+import Error from '../Error/Error';
 
 const Verify: React.FC<VerifyProps> = ({ endpoint }) => {
     const [code, setCode] = useState(0);
     const [errorMessage, setErrorMessage] = useState('');
+    const navigate = useNavigate();
 
     const handleSubmit = async (e: FormEvent) => {
         e.preventDefault();
 
         try {
             const response = await axios.post(`${endpoint}?code=${code}`, null, { withCredentials: true })
+            navigate("/");
 
-            if (response.status === 201 || response.status === 206) {
-                return redirect("/");
-            }
-            else {
-                setErrorMessage(response.data.message)
-            }
         } catch (error: any) {
             console.error(error);
             if (error.response) {

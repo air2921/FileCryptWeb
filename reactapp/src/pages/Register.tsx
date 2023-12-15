@@ -1,7 +1,7 @@
 ﻿import React, { FormEvent, useState } from 'react';
 import axios from 'axios';
-import Verify from '../components/Verify';
-import Error from '../components/Errors/Error';
+import Verify from '../components/Verify/Verify';
+import Error from '../components/Error/Error';
 
 const Register: React.FC = () => {
     const [email, setEmail] = useState('');
