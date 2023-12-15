@@ -20,10 +20,7 @@ namespace webapi.Services.Third_Party_Services
                 clam.MaxStreamSize = 75 * 1024 * 1024;
 
                 var scanResult = await clam.SendAndScanFileAsync(fileStream);
-                if (scanResult.Result == ClamScanResults.Clean)
-                    return true;
-
-                return false;
+                return scanResult.Result == ClamScanResults.Clean;
             }
             catch (Exception ex)
             {

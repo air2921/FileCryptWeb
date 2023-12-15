@@ -32,7 +32,6 @@ namespace webapi.Services.Cryptography
             }
             catch (Exception ex)
             {
-                _logger.LogCritical(ex.ToString());
                 throw;
             }
         }
@@ -51,12 +50,9 @@ namespace webapi.Services.Cryptography
 
                 return new CryptographyResult { Success = true };
             }
-            catch (CryptographicException)
+            catch (Exception ex)
             {
-                return new CryptographyResult { Success = false };
-            }
-            catch (Exception)
-            {
+                _logger.LogCritical(ex.ToString());
                 return new CryptographyResult { Success = false };
             }
         }
