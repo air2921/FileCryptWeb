@@ -21,14 +21,6 @@ namespace webapi.Services.DataManager
             return totalSize;
         }
 
-        public double GetFolderSizeInMb(string folderPath)
-        {
-            long totalSizeBytes = GetFolderSize(folderPath);
-            double totalSizeMB = (double)totalSizeBytes / (1024 * 1024);
-
-            return totalSizeMB;
-        }
-
         public double GetFileSizeInMb<T>(T file)
         {
             switch (file)
