@@ -62,14 +62,17 @@ namespace webapi.Controllers.Account
             string messageBody = EmailMessage.VerifyEmailBody + code;
 
             string password = _passwordManager.HashingPassword(userModel.password_hash);
+            _logger.LogInformation("Password was hashed");
 
             HttpContext.Session.SetString(EMAIL, email);
             HttpContext.Session.SetString(PASSWORD, password);
             HttpContext.Session.SetString(USERNAME, userModel.username);
             HttpContext.Session.SetString(ROLE, Role.User.ToString());
             HttpContext.Session.SetInt32(email, code);
+            _logger.LogInformation("Data was saved in user session");
 
             await _email.SendMessage(userModel, messageHeader, messageBody);
+            _logger.LogInformation($"Email was sended on {email} (1-st step)");
 
             return StatusCode(200, new { message = AccountSuccessMessage.EmailSended });
         }
@@ -86,6 +89,8 @@ namespace webapi.Controllers.Account
             if (email is null || password is null || username is null || role is null)
                 return StatusCode(422, new { message = AccountErrorMessage.NullUserData });
 
+            _logger.LogInformation("User data was succesfully received from session (not null anything)");
+
             try
             {
                 if (!_validation.IsSixDigit(correctCode))
@@ -96,8 +101,10 @@ namespace webapi.Controllers.Account
 
                 var userModel = new UserModel { email = email, password_hash = password, username = username, role = role };
                 await _userCreate.Create(userModel);
+                _logger.LogInformation("User was added in db");
 
                 DeleteSessionData(email);
+                _logger.LogInformation("User data from deleted from session");
 
                 return StatusCode(201, new { userModel });
             }
@@ -105,6 +112,7 @@ namespace webapi.Controllers.Account
             {
                 _logger.LogCritical(ex.ToString());
                 DeleteSessionData(email);
+                _logger.LogInformation("User data from deleted from session");
 
                 return StatusCode(500, new { message = AccountErrorMessage.Error });
             }
