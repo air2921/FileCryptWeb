@@ -2,7 +2,9 @@
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
 using webapi.DB;
+using webapi.DB.SQL;
 using webapi.Exceptions;
+using webapi.Interfaces.Services;
 using webapi.Interfaces.SQL;
 using webapi.Localization.Exceptions;
 using webapi.Models;
@@ -15,11 +17,19 @@ namespace webapi.Controllers.Admin.Manage_Notifications
     public class ReadNotificationsController : ControllerBase
     {
         private readonly FileCryptDbContext _dbContext;
+        private readonly IUserInfo _userInfo;
+        private readonly ILogger<DeleteNotificationController> _logger;
         private readonly IRead<NotificationModel> _read;
 
-        public ReadNotificationsController(FileCryptDbContext dbContext, IRead<NotificationModel> read)
+        public ReadNotificationsController(
+            FileCryptDbContext dbContext,
+            IUserInfo userInfo,
+            ILogger<DeleteNotificationController> logger,
+            IRead<NotificationModel> read)
         {
             _dbContext = dbContext;
+            _userInfo = userInfo;
+            _logger = logger;
             _read = read;
         }
 
@@ -29,6 +39,7 @@ namespace webapi.Controllers.Admin.Manage_Notifications
             try
             {
                 var notification = await _read.ReadById(notificationId, null);
+                _logger.LogInformation($"{_userInfo.Username}#{_userInfo.UserId} requested notification information #{notificationId}");
 
                 return StatusCode(200, new { notification });
             }
@@ -44,6 +55,7 @@ namespace webapi.Controllers.Admin.Manage_Notifications
             try
             {
                 var notification = await _read.ReadAll();
+                _logger.LogInformation($"{_userInfo.Username}#{_userInfo.UserId} requested information about all notifications");
 
                 return StatusCode(200, new { notification });
             }
@@ -59,12 +71,14 @@ namespace webapi.Controllers.Admin.Manage_Notifications
             try
             {
                 var notifications = await _dbContext.Notifications
-                    .Where(n => n.sender_id == userId && n.receiver_id == userId)
+                    .Where(n => n.sender_id == userId || n.receiver_id == userId)
                     .OrderByDescending(n => n.send_time)
                     .ToListAsync();
 
                 if (notifications is null)
                     return StatusCode(404, new { message = ExceptionNotificationMessages.NoOneNotificationNotFound });
+
+                _logger.LogInformation($"{_userInfo.Username}#{_userInfo.UserId} requested information about all notifications user#{userId}");
 
                 return StatusCode(200, new { notifications });
             }

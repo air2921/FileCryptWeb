@@ -66,26 +66,30 @@ namespace webapi.Services.Security
 
         public async Task UpdateJwtToken()
         {
-            if (!_context.HttpContext.Request.Cookies.TryGetValue(Constants.REFRESH_COOKIE_KEY, out string? RefreshToken))
+            if (!_context.HttpContext.Request.Cookies.TryGetValue(Constants.REFRESH_COOKIE_KEY, out string? refresh))
                 throw new UnauthorizedAccessException("Refresh Token was not found");
 
-            var token = await _dbContext.Tokens.FirstOrDefaultAsync(t => t.refresh_token == HashingToken(RefreshToken)) ??
-                throw new UnauthorizedAccessException("User was not found");
+            var userAndToken = await _dbContext.Tokens
+                .Where(t => t.refresh_token == HashingToken(refresh))
+                .Join(_dbContext.Users, token => token.user_id, user => user.id, (token, user) => new { token, user })
+                .FirstOrDefaultAsync() ?? throw new UnauthorizedAccessException("User was not found");
 
-            if ((DateTime)token.expiry_date! < DateTime.UtcNow)
+            if (userAndToken.token.expiry_date < DateTime.UtcNow)
                 throw new UnauthorizedAccessException("Refresh Token timed out");
 
             if (_context.HttpContext.Request.Cookies.ContainsKey(Constants.JWT_COOKIE_KEY))
                 _context.HttpContext.Response.Cookies.Delete(Constants.JWT_COOKIE_KEY);
 
-            var user = await _dbContext.Users.FirstOrDefaultAsync(u => u.id == token.user_id) ??
-                throw new UnauthorizedAccessException("User was not found");
+            var userModel = new UserModel
+            { 
+                id = userAndToken.user.id,
+                username = userAndToken.user.username,
+                email = userAndToken.user.email,
+                role = userAndToken.user.role
+            };
 
-            var userModel = new UserModel { id = user.id, username = user.username, email = user.email, role = user.role };
-
-            string NewJwtToken = GenerateJwtToken(userModel, Constants.JWT_EXPIRY);
-            var JwtCookieOptions = SetCookieOptions(TimeSpan.FromMinutes(Constants.JWT_EXPIRY));
-            _context.HttpContext.Response.Cookies.Append(Constants.JWT_COOKIE_KEY, NewJwtToken, JwtCookieOptions);
+            string jwt = GenerateJwtToken(userModel, Constants.JWT_EXPIRY);
+            _context.HttpContext.Response.Cookies.Append(Constants.JWT_COOKIE_KEY, jwt, SetCookieOptions(TimeSpan.FromMinutes(Constants.JWT_EXPIRY)));
         }
 
         public string HashingToken(string token)

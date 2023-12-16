@@ -24,10 +24,7 @@ namespace webapi.DB.SQL
             {
                 user_id = apiModel.user_id,
                 api_key = Guid.NewGuid().ToString("N") + Guid.NewGuid().ToString(),
-                remote_ip = apiModel.remote_ip,
-                is_tracking_ip = true,
                 is_allowed_requesting = true,
-                is_allowed_unknown_ip = false,
             };
 
             await _dbContext.AddAsync(newApiModel);
@@ -64,17 +61,9 @@ namespace webapi.DB.SQL
                 if (!string.IsNullOrWhiteSpace(apiModel.api_key))
                     api.api_key = apiModel.api_key;
 
-                if (apiModel.remote_ip is not null)
-                    api.remote_ip = apiModel.remote_ip;
-
-                if (apiModel.is_tracking_ip is not null)
-                    api.is_tracking_ip = apiModel.is_tracking_ip;
-
                 if (apiModel.is_allowed_requesting is not null)
                     api.is_allowed_requesting = apiModel.is_allowed_requesting;
 
-                if (apiModel.is_allowed_unknown_ip is not null)
-                    api.is_allowed_unknown_ip = apiModel.is_allowed_unknown_ip;
 
                 await _redisCache.DeleteCache(api.api_key);
             }
@@ -86,17 +75,8 @@ namespace webapi.DB.SQL
                 if (!string.IsNullOrWhiteSpace(apiModel.api_key))
                     api.api_key = apiModel.api_key;
 
-                if (apiModel.remote_ip is not null)
-                    api.remote_ip = apiModel.remote_ip;
-
-                if (apiModel.is_tracking_ip is not null)
-                    api.is_tracking_ip = apiModel.is_tracking_ip;
-
                 if (apiModel.is_allowed_requesting is not null)
                     api.is_allowed_requesting = apiModel.is_allowed_requesting;
-
-                if (apiModel.is_allowed_unknown_ip is not null)
-                    api.is_allowed_unknown_ip = apiModel.is_allowed_unknown_ip;
 
                 await _redisCache.DeleteCache(api.api_key);
             }

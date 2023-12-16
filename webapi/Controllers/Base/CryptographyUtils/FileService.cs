@@ -58,18 +58,19 @@ namespace webapi.Controllers.Base.CryptographyUtils
 
         public async Task<bool> CheckFile(IFormFile? file)
         {
-            bool fileGood = true;
-
             if (file is null || file.Length == 0)
-                fileGood = false;
+                return false;
 
-            bool isAllowedMIME = await CheckMIME(file!.ContentType);
+            if (file.ContentType is null)
+                return false;
+
+            bool isAllowedMIME = await CheckMIME(file.ContentType);
             bool isClean = await _virusCheck.GetResultScan(file);
 
             if (!isAllowedMIME || !isClean)
-                fileGood = false;
+                return false;
 
-            return fileGood;
+            return true;
         }
 
         public bool CheckSize(IFormFile file)
@@ -122,7 +123,7 @@ namespace webapi.Controllers.Base.CryptographyUtils
             }
             catch (Exception ex)
             {
-                _logger.LogCritical(ex.ToString());
+                _logger.LogError(ex.ToString());
             }
         }
 

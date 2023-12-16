@@ -144,7 +144,7 @@ namespace webapi.Controllers.Core
                     break;
 
                 default:
-                    offers = await query.Where(o => o.sender_id == _userInfo.UserId && o.receiver_id == _userInfo.UserId).ToListAsync();
+                    offers = await query.Where(o => o.sender_id == _userInfo.UserId || o.receiver_id == _userInfo.UserId).ToListAsync();
                     break;
             }
 

@@ -4,6 +4,7 @@ using System.Security.Cryptography;
 using webapi.DB;
 using webapi.Exceptions;
 using webapi.Interfaces.Cryptography;
+using webapi.Interfaces.Services;
 using webapi.Interfaces.SQL;
 using webapi.Models;
 using webapi.Services;
@@ -15,6 +16,7 @@ namespace webapi.Controllers.Admin.Manage_Encryption_Keys
     [Authorize(Roles = "HighestAdmin")]
     public class ReadKeysController : ControllerBase
     {
+        private readonly IUserInfo _userInfo;
         private readonly IRead<KeyModel> _read;
         private readonly IDecryptKey _decryptKey;
         private readonly IConfiguration _configuration;
@@ -23,12 +25,14 @@ namespace webapi.Controllers.Admin.Manage_Encryption_Keys
         private readonly byte[] secretKey;
 
         public ReadKeysController(
+            IUserInfo userInfo,
             IRead<KeyModel> read,
             IDecryptKey decryptKey,
             IConfiguration configuration,
             ILogger<ReadKeysController> logger,
             FileCryptDbContext dbContext)
         {
+            _userInfo = userInfo;
             _read = read;
             _decryptKey = decryptKey;
             _configuration = configuration;
@@ -68,10 +72,12 @@ namespace webapi.Controllers.Admin.Manage_Encryption_Keys
                         continue;
                     }
                 }
+                _logger.LogInformation($"{_userInfo.Username}#{_userInfo.UserId} get keys user#{userId}");
                 return StatusCode(200, new { keys = decryptedKeys });
             }
             catch (UserException ex)
             {
+                _logger.LogWarning($"user#{userId} not exists");
                 return StatusCode(404, new { message = ex.Message });
             }
         }

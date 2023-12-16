@@ -13,14 +13,7 @@ namespace webapi.Models
 
         public string? api_key { get; set; }
 
-        [JsonIgnore(Condition = JsonIgnoreCondition.WhenWritingNull)]
-        public IPAddress? remote_ip { get; set; }
-
-        public bool? is_tracking_ip { get; set; }
-
         public bool? is_allowed_requesting { get; set; }
-
-        public bool? is_allowed_unknown_ip { get; set; }
 
         [ForeignKey("user_id")]
         public int user_id { get; set; }

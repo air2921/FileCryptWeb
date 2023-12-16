@@ -31,9 +31,8 @@ namespace webapi.Services.Cryptography
                 using CryptoStream cryptoStream = new(source, aes.CreateDecryptor(), CryptoStreamMode.Read);
                 await cryptoStream.CopyToAsync(target, cancellationToken);
             }
-            catch (Exception ex)
+            catch (Exception)
             {
-                _logger.LogCritical(ex.ToString());
                 throw;
             }
         }
@@ -52,12 +51,9 @@ namespace webapi.Services.Cryptography
 
                 return new CryptographyResult { Success = true };
             }
-            catch (CryptographicException)
+            catch (Exception ex)
             {
-                return new CryptographyResult { Success = false };
-            }
-            catch (Exception)
-            {
+                _logger.LogCritical(ex.ToString());
                 return new CryptographyResult { Success = false };
             }
         }

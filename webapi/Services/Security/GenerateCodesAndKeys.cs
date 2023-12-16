@@ -9,9 +9,7 @@ namespace webapi.Services.Security
 
         public int GenerateSixDigitCode()
         {
-            int code = _random.Next(100000, 999999);
-
-            return code;
+            return _random.Next(100000, 999999);
         }
 
         public string GenerateKey()

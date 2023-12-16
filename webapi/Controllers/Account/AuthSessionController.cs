@@ -17,6 +17,7 @@ namespace webapi.Controllers.Account
     public class AuthSessionController : ControllerBase
     {
         private readonly FileCryptDbContext _dbContext;
+        private readonly ILogger<AuthSessionController> _logger;
         private readonly IUserInfo _userInfo;
         private readonly IRedisCache _redisCache;
         private readonly IRedisKeys _redisKeys;
@@ -26,6 +27,7 @@ namespace webapi.Controllers.Account
 
         public AuthSessionController(
             FileCryptDbContext dbContext,
+            ILogger<AuthSessionController> logger,
             IUserInfo userInfo,
             IRedisCache redisCache,
             IRedisKeys redisKeys,
@@ -34,6 +36,7 @@ namespace webapi.Controllers.Account
             IUpdate<TokenModel> update)
         {
             _dbContext = dbContext;
+            _logger = logger;
             _userInfo = userInfo;
             _redisCache = redisCache;
             _redisKeys = redisKeys;
@@ -73,15 +76,19 @@ namespace webapi.Controllers.Account
                 };
 
                 await _update.Update(tokenModel, true);
+                _logger.LogInformation("Refresh token was updated in db");
 
                 Response.Cookies.Append(Constants.JWT_COOKIE_KEY, _tokenService.GenerateJwtToken(newUserModel, Constants.JWT_EXPIRY), _tokenService.SetCookieOptions(TimeSpan.FromMinutes(Constants.JWT_EXPIRY)));
                 Response.Cookies.Append(Constants.REFRESH_COOKIE_KEY, refreshToken, _tokenService.SetCookieOptions(TimeSpan.FromDays(Constants.REFRESH_EXPIRY)));
+                _logger.LogInformation("Jwt and refresh was sended to client");
 
                 return StatusCode(200);
             }
             catch (UserException)
             {
+                _logger.LogCritical("When trying to update the data, the user was deleted");
                 _tokenService.DeleteTokens();
+                _logger.LogDebug("Tokens was deleted");
                 return StatusCode(404);
             }
         }
@@ -95,13 +102,20 @@ namespace webapi.Controllers.Account
                 var tokenModel = new TokenModel() { user_id = _userInfo.UserId, refresh_token = null, expiry_date = DateTime.UtcNow.AddYears(-100) };
 
                 await _update.Update(tokenModel, true);
+                _logger.LogInformation($"{_userInfo.Username}#{_userInfo.UserId} refresh token was revoked");
+
                 _tokenService.DeleteTokens();
+                _logger.LogInformation("Tokens was revoked from client");
 
                 return StatusCode(200);
             }
             catch (UserException ex)
             {
+                _logger.LogCritical("When trying to update the data, the user was deleted");
+
                 _tokenService.DeleteTokens();
+                _logger.LogDebug("Tokens was deleted");
+
                 return StatusCode(404, new { message = ex.Message });
             }
             finally
@@ -109,6 +123,8 @@ namespace webapi.Controllers.Account
                 await _redisCache.DeleteCache(_redisKeys.PrivateKey);
                 await _redisCache.DeleteCache(_redisKeys.PersonalInternalKey);
                 await _redisCache.DeleteCache(_redisKeys.ReceivedInternalKey);
+
+                _logger.LogInformation("Encryption keys was deleted from cache");
             }
         }
     }

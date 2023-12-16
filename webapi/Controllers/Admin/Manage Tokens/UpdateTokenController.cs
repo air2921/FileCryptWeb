@@ -7,6 +7,9 @@ using Microsoft.AspNetCore.Authorization;
 using Microsoft.EntityFrameworkCore;
 using webapi.Localization;
 using webapi.Localization.Exceptions;
+using webapi.Controllers.Admin.Manage_Notifications;
+using webapi.Interfaces.Services;
+using webapi.DB.SQL;
 
 namespace webapi.Controllers.Admin.Manage_Tokens
 {
@@ -15,11 +18,19 @@ namespace webapi.Controllers.Admin.Manage_Tokens
     [Authorize(Roles = "HighestAdmin,Admin")]
     public class UpdateTokenController : ControllerBase
     {
+        private readonly IUserInfo _userInfo;
+        private readonly ILogger<DeleteNotificationController> _logger;
         private readonly IUpdate<TokenModel> _update;
         private readonly FileCryptDbContext _dbContext;
 
-        public UpdateTokenController(IUpdate<TokenModel> update, FileCryptDbContext dbContext)
+        public UpdateTokenController(
+            IUserInfo userInfo,
+            ILogger<DeleteNotificationController> logger,
+            IUpdate<TokenModel> update,
+            FileCryptDbContext dbContext)
         {
+            _userInfo = userInfo;
+            _logger = logger;
             _update = update;
             _dbContext = dbContext;
         }
@@ -38,6 +49,8 @@ namespace webapi.Controllers.Admin.Manage_Tokens
 
                 if (!User.IsInRole("HighestAdmin") && targetUser.role == "HighestAdmin")
                     return StatusCode(403, new { message = ErrorMessage.HighestRoleError });
+
+                _logger.LogCritical($"{_userInfo.Username}#{_userInfo.UserId} revoked refresh token from user#{userId}");
 
                 await _update.Update(tokenModel, true);
 
