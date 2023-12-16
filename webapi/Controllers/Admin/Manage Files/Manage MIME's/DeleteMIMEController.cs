@@ -3,8 +3,11 @@ using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
 using webapi.DB;
 using webapi.Exceptions;
+using webapi.Interfaces.Redis;
+using webapi.Interfaces.Services;
 using webapi.Interfaces.SQL;
 using webapi.Models;
+using webapi.Services;
 
 namespace webapi.Controllers.Admin.Manage_Files.Manage_MIME_s
 {
@@ -14,12 +17,24 @@ namespace webapi.Controllers.Admin.Manage_Files.Manage_MIME_s
     public class DeleteMIMEController : ControllerBase
     {
         private readonly FileCryptDbContext _dbContext;
+        private readonly IUserInfo _userInfo;
+        private readonly ILogger<DeleteMIMEController> _logger;
+        private readonly IRedisCache _redisCache;
         private readonly IDelete<FileMimeModel> _deleteMime;
         private readonly IDeleteByName<FileMimeModel> _deleteMimeByName;
 
-        public DeleteMIMEController(FileCryptDbContext dbContext, IDelete<FileMimeModel> deleteMime, IDeleteByName<FileMimeModel> deleteMimeByName)
+        public DeleteMIMEController(
+            FileCryptDbContext dbContext,
+            IUserInfo userInfo,
+            ILogger<DeleteMIMEController> logger,
+            IRedisCache redisCache,
+            IDelete<FileMimeModel> deleteMime,
+            IDeleteByName<FileMimeModel> deleteMimeByName)
         {
             _dbContext = dbContext;
+            _userInfo = userInfo;
+            _logger = logger;
+            _redisCache = redisCache;
             _deleteMime = deleteMime;
             _deleteMimeByName = deleteMimeByName;
         }
@@ -32,11 +47,13 @@ namespace webapi.Controllers.Admin.Manage_Files.Manage_MIME_s
                 if(byID)
                 {
                     await _deleteMime.DeleteById(mimeModel.mime_id);
+                    _logger.LogWarning($"{_userInfo.Username}#{_userInfo.UserId} deleted MIME type: #{mimeModel.mime_id} from db and cache");
 
                     return StatusCode(200);
                 }
 
                 await _deleteMimeByName.DeleteByName(mimeModel.mime_name);
+                await _redisCache.DeleteCache(Constants.MIME_COLLECTION);
 
                 return StatusCode(200);
             }
@@ -53,6 +70,8 @@ namespace webapi.Controllers.Admin.Manage_Files.Manage_MIME_s
 
             _dbContext.RemoveRange(mimes);
             await _dbContext.SaveChangesAsync();
+            await _redisCache.DeleteCache(Constants.MIME_COLLECTION);
+            _logger.LogWarning($"{_userInfo.Username}#{_userInfo.UserId} deleted all MIME collection from db and cache");
 
             return StatusCode(200);
         }

@@ -1,8 +1,11 @@
 ﻿using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
+using Microsoft.EntityFrameworkCore.Metadata;
+using webapi.Controllers.Admin.Manage_Notifications;
 using webapi.DB;
 using webapi.Exceptions;
+using webapi.Interfaces.Services;
 using webapi.Interfaces.SQL;
 using webapi.Models;
 
@@ -14,22 +17,29 @@ namespace webapi.Controllers.Admin.Manage_User_s_API
     public class ReadAPIController : ControllerBase
     {
         private readonly IRead<ApiModel> _read;
+        private readonly IUserInfo _userInfo;
+        private readonly ILogger<DeleteNotificationController> _logger;
         private readonly FileCryptDbContext _dbContext;
 
-        public ReadAPIController(IRead<ApiModel> read, FileCryptDbContext dbContext)
+        public ReadAPIController(
+            IRead<ApiModel> read,
+            IUserInfo userInfo,
+            ILogger<DeleteNotificationController> logger,
+            FileCryptDbContext dbContext)
         {
             _read = read;
+            _userInfo = userInfo;
+            _logger = logger;
             _dbContext = dbContext;
         }
 
-        [HttpGet("settings")]
-        public async Task<IActionResult> GetApiSettings([FromBody] int id, [FromQuery] bool ByRelation)
+        [HttpGet("{id}")]
+        public async Task<IActionResult> GetApiSettings([FromRoute] int id, [FromQuery] bool ByRelation)
         {
             try
             {
-                var api = new ApiModel();
-
-                api = await _read.ReadById(id, ByRelation);
+                var api = await _read.ReadById(id, ByRelation);
+                _logger.LogWarning($"{_userInfo.Username}#{_userInfo.UserId} requested API settings from user#{id}");
 
                 return StatusCode(200, new { api });
             }
@@ -39,13 +49,15 @@ namespace webapi.Controllers.Admin.Manage_User_s_API
             }
         }
 
-        [HttpGet("user")]
+        [HttpGet("key")]
         public async Task<IActionResult> GetApiByApiKey([FromQuery] string apiKey)
         {
             var api = await _dbContext.API.FirstOrDefaultAsync(a => a.api_key == apiKey);
 
             if (api is null)
                 return StatusCode(404, new { message = "API key doesn't exists" });
+
+            _logger.LogWarning($"{_userInfo.Username}#{_userInfo.UserId} requested API settings by key value: '{apiKey}'");
 
             return StatusCode(200, new { api });
         }

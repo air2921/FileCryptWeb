@@ -14,6 +14,7 @@ namespace webapi.Controllers.Account
     public class RecoveryController : ControllerBase
     {
         private readonly FileCryptDbContext _dbContext;
+        private readonly ILogger<RecoveryController> _logger;
         private readonly IEmailSender<UserModel> _emailSender;
         private readonly ICreate<LinkModel> _createLink;
         private readonly IUpdate<UserModel> _updateUser;
@@ -23,6 +24,7 @@ namespace webapi.Controllers.Account
 
         public RecoveryController(
             FileCryptDbContext dbContext,
+            ILogger<RecoveryController> logger,
             IEmailSender<UserModel> emailSender,
             ICreate<LinkModel> createLink,
             IUpdate<UserModel> updateUser,
@@ -31,6 +33,7 @@ namespace webapi.Controllers.Account
             IGenerateKey generateKey)
         {
             _dbContext = dbContext;
+            _logger = logger;
             _emailSender = emailSender;
             _createLink = createLink;
             _updateUser = updateUser;
@@ -52,7 +55,7 @@ namespace webapi.Controllers.Account
             {
                 user_id = user.id,
                 u_token = token,
-                expiry_date = DateTime.UtcNow.AddHours(12),
+                expiry_date = DateTime.UtcNow.AddHours(3),
                 is_used = false,
                 created_at = DateTime.UtcNow
             };
@@ -60,6 +63,7 @@ namespace webapi.Controllers.Account
             var userModel = new UserModel { email = user.email, username = user.username };
             await _emailSender.SendMessage(userModel, EmailMessage.RecoveryAccountHeader, EmailMessage.RecoveryAccountBody + token);
             await _createLink.Create(linkModel);
+            _logger.LogInformation($"Created new token for {user.username}#{user.id} with life time for 3 hours");
 
             return StatusCode(201, new { message = AccountSuccessMessage.EmailSendedRecovery });
         }
@@ -70,13 +74,25 @@ namespace webapi.Controllers.Account
             try
             {
                 var link = await _dbContext.Links.FirstOrDefaultAsync(l => l.u_token == token);
-                if (link is null || link.expiry_date < DateTime.UtcNow)
-                    return StatusCode(400, new { message = AccountErrorMessage.InvalidToken });
+                if (link is null)
+                    return StatusCode(404, new { message = AccountErrorMessage.InvalidToken });
+
+                if (link.expiry_date < DateTime.UtcNow)
+                {
+                    _logger.LogWarning($"Token: {token} is expired, it will be delete from db");
+                    await _deleteByName.DeleteByName(token);
+                    _logger.LogInformation("Expired token was deleted");
+                    return StatusCode(422, new { message = AccountErrorMessage.InvalidToken });
+                }
+
+                _logger.LogInformation($"Token: '{token}' is not expired");
 
                 var userModel = new UserModel { id = link.user_id, password_hash = _passwordManager.HashingPassword(password) };
                 await _updateUser.Update(userModel, null);
+                _logger.LogInformation($"Password was updated for user with id: {link.user_id}");
 
                 await _deleteByName.DeleteByName(token);
+                _logger.LogInformation($"Token: {token} was deleted");
 
                 return StatusCode(200, new { message = AccountSuccessMessage.PasswordUpdated });
             }

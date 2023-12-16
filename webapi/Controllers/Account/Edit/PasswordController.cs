@@ -18,6 +18,7 @@ namespace webapi.Controllers.Account.Edit
     public class PasswordController : ControllerBase
     {
         private readonly IUpdate<UserModel> _update;
+        private readonly ILogger<PasswordController> _logger;
         private readonly IPasswordManager _passwordManager;
         private readonly ITokenService _tokenService;
         private readonly IUserInfo _userInfo;
@@ -25,12 +26,14 @@ namespace webapi.Controllers.Account.Edit
 
         public PasswordController(
             IUpdate<UserModel> update,
+            ILogger<PasswordController> logger,
             IPasswordManager passwordManager,
             ITokenService tokenService,
             IUserInfo userInfo,
             FileCryptDbContext dbContext)
         {
             _update = update;
+            _logger = logger;
             _passwordManager = passwordManager;
             _tokenService = tokenService;
             _userInfo = userInfo;
@@ -43,7 +46,9 @@ namespace webapi.Controllers.Account.Edit
             var user = await _dbContext.Users.FirstOrDefaultAsync(u => u.email == _userInfo.Email);
             if (user is null)
             {
+                _logger.LogWarning($"Non-existent user {_userInfo.Username}#{_userInfo.UserId} was requested to authorized endpoint.\nTrying delete tokens from cookie");
                 _tokenService.DeleteTokens();
+                _logger.LogWarning("Tokens was deleted");
                 return StatusCode(404, new { message = AccountErrorMessage.UserNotFound });
             }
 
@@ -51,9 +56,8 @@ namespace webapi.Controllers.Account.Edit
             if (!IsCorrect)
                 return StatusCode(401, new { message = AccountErrorMessage.PasswordIncorrect });
 
-            HttpContext.Session.SetString($"code:{_userInfo.UserId}", Guid.NewGuid().ToString()); 
-
-            return StatusCode(307);
+            _logger.LogInformation($"{_userInfo.Username}#{_userInfo.UserId} Password is correct, action is allowed");
+            return StatusCode(200);
         }
 
         [HttpPut("new")]
@@ -61,22 +65,20 @@ namespace webapi.Controllers.Account.Edit
         {
             try
             {
-                string? validateCode = HttpContext.Session.GetString($"code:{_userInfo.UserId}");
-
-                if (string.IsNullOrWhiteSpace(validateCode))
-                    return StatusCode(403, new { message = AccountErrorMessage.Forbidden });
-
                 if (!Regex.IsMatch(userModel.password_hash, Validation.Password))
                     return StatusCode(422, new { message = AccountErrorMessage.InvalidFormatPassword });
 
                 var newUserModel = new UserModel { id = _userInfo.UserId, password_hash = _passwordManager.HashingPassword(userModel.password_hash) };
                 await _update.Update(userModel, null);
 
+                _logger.LogInformation("Password was hashed andd updated in db");
                 return StatusCode(200, new { message = AccountSuccessMessage.PasswordUpdated });
             }
             catch (UserException ex)
             {
+                _logger.LogWarning($"Non-existent user {_userInfo.Username}#{_userInfo.UserId} was requested to authorized endpoint.\nTrying delete tokens from cookie");
                 _tokenService.DeleteTokens();
+                _logger.LogWarning("Tokens was deleted");
                 return StatusCode(404, new { message = ex.Message });
             }
         }

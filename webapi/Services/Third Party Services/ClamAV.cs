@@ -24,7 +24,7 @@ namespace webapi.Services.Third_Party_Services
             }
             catch (Exception ex)
             {
-                _logger.LogCritical(ex.ToString());
+                _logger.LogError(ex.ToString());
 
                 return false;
             }

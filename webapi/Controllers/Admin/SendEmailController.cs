@@ -15,12 +15,14 @@ namespace webapi.Controllers.Admin
     [Authorize(Roles = "HighestAdmin,Admin")]
     public class SendEmailController : ControllerBase
     {
+        private readonly ILogger<SendEmailController> _logger;
         private readonly IEmailSender<UserModel> _emailSender;
         private readonly ICreate<NotificationModel> _createNotification;
         private readonly IUserInfo _userInfo;
 
-        public SendEmailController(IEmailSender<UserModel> emailSender, ICreate<NotificationModel> createNotification, IUserInfo userInfo)
+        public SendEmailController(ILogger<SendEmailController> logger, IEmailSender<UserModel> emailSender, ICreate<NotificationModel> createNotification, IUserInfo userInfo)
         {
+            _logger = logger;
             _emailSender = emailSender;
             _createNotification = createNotification;
             _userInfo = userInfo;
@@ -34,6 +36,7 @@ namespace webapi.Controllers.Admin
                 var userModel = new UserModel { username = username, email = email };
 
                 await _emailSender.SendMessage(userModel, notificationModel.message_header, notificationModel.message);
+                
 
                 var newNotificationModel = new NotificationModel
                 {
@@ -46,21 +49,24 @@ namespace webapi.Controllers.Admin
                     is_checked = false
                 };
 
+                _logger.LogWarning($"{_userInfo.Username}#{_userInfo.UserId} sent message via work email to {username}#{notificationModel.receiver_id} on {email}");
+
                 await _createNotification.Create(newNotificationModel);
+                _logger.LogInformation($"Created notification. Sender: {_userInfo.Username}#{_userInfo.UserId}. Receiver:{username}#{notificationModel.receiver_id} ");
 
                 return StatusCode(201, new { message = SuccessMessage.SuccessEmailSendedAndCreatedNotification, sended_notification = newNotificationModel });
-            }
-            catch (AuthenticationException ex)
-            {
-                return StatusCode(500, new { message = AccountErrorMessage.Error, log = ex.ToString() });
-            }
-            catch (SocketException ex)
-            {
-                return StatusCode(500, new { message = AccountErrorMessage.Error, log = ex.ToString() });
             }
             catch (UserException ex)
             {
                 return StatusCode(404, new { message = ex.Message });
+            }
+            catch (AuthenticationException)
+            {
+                return StatusCode(500, new { message = AccountErrorMessage.Error });
+            }
+            catch (SocketException)
+            {
+                return StatusCode(500, new { message = AccountErrorMessage.Error });
             }
         }
     }

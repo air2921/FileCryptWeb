@@ -60,7 +60,7 @@ namespace webapi.Controllers.Base
                 var fileStream = new FileStream(filePath, FileMode.Open, FileAccess.Read,
                     FileShare.None, 4096, FileOptions.DeleteOnClose);
 
-                return File(fileStream, file.ContentType ?? "application/octet-stream", filename);
+                return File(fileStream, file.ContentType, filename);
             }
             catch (FormatException ex)
             {
@@ -77,13 +77,13 @@ namespace webapi.Controllers.Base
                 }
                 catch (Exception exc)
                 {
-                    _logger.LogCritical(exc.ToString());
+                    _logger.LogError(exc.ToString());
                     return StatusCode(400, new { message = ex.Message });
                 }
             }
             catch (Exception ex)
             {
-                _logger.LogCritical(ex.ToString());
+                _logger.LogError(ex.ToString());
                 return StatusCode(400, new { message = "Unexpected error" });
             }
         }

@@ -1,6 +1,9 @@
 ﻿using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
+using Microsoft.EntityFrameworkCore.Metadata;
+using webapi.Controllers.Admin.Manage_Notifications;
 using webapi.Exceptions;
+using webapi.Interfaces.Services;
 using webapi.Interfaces.SQL;
 using webapi.Localization;
 using webapi.Models;
@@ -12,13 +15,15 @@ namespace webapi.Controllers.Admin.Manage_Users
     [Authorize(Roles = "HighestAdmin,Admin")]
     public class DeleteUserController : ControllerBase
     {
-        private readonly IUpdate<UserModel> _update;
+        private readonly IUserInfo _userInfo;
+        private readonly ILogger<DeleteUserController> _logger;
         private readonly IRead<UserModel> _read;
         private readonly IDelete<UserModel> _delete;
 
-        public DeleteUserController(IUpdate<UserModel> update, IRead<UserModel> read, IDelete<UserModel> delete)
+        public DeleteUserController(IUserInfo userInfo, ILogger<DeleteUserController> logger, IRead<UserModel> read, IDelete<UserModel> delete)
         {
-            _update = update;
+            _userInfo = userInfo;
+            _logger = logger;
             _read = read;
             _delete = delete;
         }
@@ -36,6 +41,8 @@ namespace webapi.Controllers.Admin.Manage_Users
                         return StatusCode(403, new { message = ErrorMessage.HighestRoleError });
 
                     await _delete.DeleteById(userId);
+                    _logger.LogWarning($"{_userInfo.Username}#{_userInfo.UserId} deleted user#{userId}");
+
                     return StatusCode(204, new { message = SuccessMessage.SuccessDeletedUser });
                 }
                 else
@@ -44,6 +51,8 @@ namespace webapi.Controllers.Admin.Manage_Users
                         return StatusCode(403, new { message = ErrorMessage.AdminCannotDelete });
 
                     await _delete.DeleteById(userId);
+                    _logger.LogWarning($"{_userInfo.Username}#{_userInfo.UserId} deleted user#{userId}");
+
                     return StatusCode(200, new { message = SuccessMessage.SuccessDeletedUser });
                 }
             }

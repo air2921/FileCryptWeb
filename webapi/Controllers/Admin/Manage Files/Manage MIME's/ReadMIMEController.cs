@@ -1,6 +1,7 @@
 ﻿using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 using webapi.Exceptions;
+using webapi.Interfaces.Services;
 using webapi.Interfaces.SQL;
 using webapi.Models;
 
@@ -11,10 +12,14 @@ namespace webapi.Controllers.Admin.Manage_Files.Manage_MIME_s
     [Authorize(Roles = "HighestAdmin,Admin")]
     public class ReadMIMEController : ControllerBase
     {
+        private readonly IUserInfo _userInfo;
+        private readonly ILogger<ReadMIMEController> _logger;
         private readonly IRead<FileMimeModel> _readMime;
 
-        public ReadMIMEController(IRead<FileMimeModel> readMime)
+        public ReadMIMEController(IUserInfo userInfo, ILogger<ReadMIMEController> logger, IRead<FileMimeModel> readMime)
         {
+            _userInfo = userInfo;
+            _logger = logger;
             _readMime = readMime;
         }
 
@@ -24,6 +29,7 @@ namespace webapi.Controllers.Admin.Manage_Files.Manage_MIME_s
             try
             {
                 var mime = await _readMime.ReadById(mimeId, null);
+                _logger.LogInformation($"{_userInfo.Username}#{_userInfo.UserId} requested MIME type #{mimeId}");
 
                 return StatusCode(200, new { mime });
             }
@@ -39,6 +45,7 @@ namespace webapi.Controllers.Admin.Manage_Files.Manage_MIME_s
             try
             {
                 var mimes = await _readMime.ReadAll();
+                _logger.LogInformation($"{_userInfo.Username}#{_userInfo.UserId} requsted MIME collection");
 
                 return StatusCode(200, new { mimes });
             }

@@ -20,6 +20,7 @@ namespace webapi.Controllers.Account.Edit
         private readonly FileCryptDbContext _dbContext;
         private readonly IUpdate<UserModel> _update;
         private readonly IEmailSender<UserModel> _email;
+        private readonly ILogger<EmailController> _logger;
         private readonly IPasswordManager _passwordManager;
         private readonly IGenerateSixDigitCode _generateCode;
         private readonly ITokenService _tokenService;
@@ -30,6 +31,7 @@ namespace webapi.Controllers.Account.Edit
             FileCryptDbContext dbContext,
             IUpdate<UserModel> update,
             IEmailSender<UserModel> email,
+            ILogger<EmailController> logger,
             IPasswordManager passwordManager,
             IGenerateSixDigitCode generateCode,
             ITokenService tokenService,
@@ -39,6 +41,7 @@ namespace webapi.Controllers.Account.Edit
             _dbContext = dbContext;
             _update = update;
             _email = email;
+            _logger = logger;
             _passwordManager = passwordManager;
             _generateCode = generateCode;
             _tokenService = tokenService;
@@ -52,7 +55,9 @@ namespace webapi.Controllers.Account.Edit
             var user = await _dbContext.Users.FirstOrDefaultAsync(u => u.email == _userInfo.Email);
             if (user is null)
             {
+                _logger.LogWarning($"Non-existent user {_userInfo.Username}#{_userInfo.UserId} was requested to authorized endpoint.\nTrying delete tokens from cookie");
                 _tokenService.DeleteTokens();
+                _logger.LogWarning("Tokens was deleted");
                 return StatusCode(404);
             }
 
@@ -68,7 +73,9 @@ namespace webapi.Controllers.Account.Edit
             await _email.SendMessage(newUserModel, messageHeader, message);
 
             HttpContext.Session.SetInt32(_userInfo.Email, code);
+            _logger.LogInformation($"Code was saved in user session {_userInfo.Username}#{_userInfo.UserId}");
 
+            _logger.LogInformation($"Email to {_userInfo.Username}#{_userInfo.UserId} was sended on {_userInfo.Email} (1-st step)");
             return StatusCode(200, new { message = AccountSuccessMessage.EmailSended });
         }
 
@@ -76,6 +83,7 @@ namespace webapi.Controllers.Account.Edit
         public IActionResult ConfirmOldEmail([FromQuery] int code)
         {
             int correctCode = (int)HttpContext.Session.GetInt32(_userInfo.Email);
+            _logger.LogInformation($"Code were received from user session {_userInfo.Username}#{_userInfo.UserId}. code: {correctCode}");
 
             if (!_validation.IsSixDigit(correctCode))
                 return StatusCode(500, new { message = AccountErrorMessage.Error });
@@ -83,6 +91,7 @@ namespace webapi.Controllers.Account.Edit
             if (!code.Equals(correctCode))
                 return StatusCode(401, new { message = AccountErrorMessage.CodeIncorrect });
 
+            _logger.LogInformation($"User {_userInfo.Username}#{_userInfo.UserId} confirmed code (2-nd step)");
             return StatusCode(201, new { message = AccountSuccessMessage.OldEmailConfirmed });
         }
 
@@ -102,9 +111,12 @@ namespace webapi.Controllers.Account.Edit
             var newUserModel = new UserModel { username = _userInfo.Username, email = email };
             await _email.SendMessage(newUserModel, messageHeader, message);
 
+
             HttpContext.Session.SetInt32(_userInfo.UserId.ToString(), code);
             HttpContext.Session.SetString(EMAIL, email);
+            _logger.LogInformation($"Code and email was saved in user session {_userInfo.Username}#{_userInfo.UserId}");
 
+            _logger.LogInformation($"Email to {_userInfo.Username}#{_userInfo.UserId} was sended on {email} (3-rd step)");
             return StatusCode(200, new { message = AccountSuccessMessage.EmailSended });
         }
 
@@ -115,6 +127,7 @@ namespace webapi.Controllers.Account.Edit
             {
                 int correctCode = (int)HttpContext.Session.GetInt32(_userInfo.UserId.ToString());
                 string? email = HttpContext.Session.GetString(EMAIL);
+                _logger.LogInformation($"Code and email were received from user session {_userInfo.Username}#{_userInfo.UserId}. code: {correctCode}, email: {email}");
 
                 if (email is null || !_validation.IsSixDigit(correctCode))
                     return StatusCode(500, new { message = AccountErrorMessage.Error });
@@ -124,21 +137,29 @@ namespace webapi.Controllers.Account.Edit
 
                 var newUserModel = new UserModel { id = _userInfo.UserId, email = email };
                 await _update.Update(newUserModel, null);
+                _logger.LogInformation("Email was was updated in db");
+
                 await _tokenService.UpdateJwtToken();
+                _logger.LogInformation("jwt with a new claims was updated");
 
                 HttpContext.Session.Remove(_userInfo.UserId.ToString());
                 HttpContext.Session.Remove(EMAIL);
+                _logger.LogInformation($"User session {_userInfo.Username}#{_userInfo.UserId} has been cleared");
 
                 return StatusCode(201);
             }
             catch (UserException ex)
             {
+                _logger.LogWarning($"Non-existent user {_userInfo.Username}#{_userInfo.UserId} was requested to authorized endpoint.\nTrying delete tokens from cookie");
                 _tokenService.DeleteTokens();
+                _logger.LogWarning("Tokens was deleted");
                 return StatusCode(409, new { message = ex.Message });
             }
             catch (UnauthorizedAccessException ex)
             {
+                _logger.LogWarning("Error when trying to update jwt.\nTrying delete tokens");
                 _tokenService.DeleteTokens();
+                _logger.LogWarning("Tokens was deleted");
                 return StatusCode(206, new { message = ex.Message });
             }
         }
