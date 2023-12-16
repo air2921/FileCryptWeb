@@ -1,0 +1,3 @@
+interface VerifyProps {
+    endpoint: string;
+}

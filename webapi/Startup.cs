@@ -24,7 +24,10 @@ namespace webapi
                 app.UseSwaggerUI();
             }
 
+            // If you need to receive logs from authorized requests, and receive information about who the request came from,
+            // you need to move this middleware to after the UseAuthorization middleware
             app.UseLog();
+
             app.UseFreeze();
             app.UseAPI();
             app.UseHttpsRedirection();
@@ -35,6 +38,7 @@ namespace webapi
             app.UseBearer();
             app.UseAuthentication();
             app.UseAuthorization();
+            // u can call 'UseLog' here
 
             app.UseEndpoints(endpoint =>
             {

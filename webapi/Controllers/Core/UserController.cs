@@ -52,6 +52,7 @@ namespace webapi.Controllers.Core
             var keys = user_keys_files.Select(u => u.keys.FirstOrDefault()).FirstOrDefault();
             var files = user_keys_files.Select(u => u.files).ToList();
 
+            bool IsOwner = userId.Equals(_userInfo.UserId);
             string? privateKey = keys.private_key is not null ? "hidden" : null;
             string? internalKey = keys.person_internal_key is not null ? "hidden" : null;
             string? receivedKey = keys.received_internal_key is not null ? "hidden" : null;
@@ -60,13 +61,13 @@ namespace webapi.Controllers.Core
             {
                 var user = user_keys_files.Select(u => new { u.user.id, u.user.username, u.user.role, u.user.email }).FirstOrDefault();
 
-                return StatusCode(200, new { user, keys = new { privateKey, internalKey, receivedKey }, files });
+                return StatusCode(200, new { user, IsOwner, keys = new { privateKey, internalKey, receivedKey }, files });
             }
             else
             {
                 var user = user_keys_files.Select(u => new { u.user.id, u.user.username, u.user.role }).FirstOrDefault();
 
-                return StatusCode(206, new { user, keys = new { privateKey, internalKey, receivedKey }, files });
+                return StatusCode(206, new { user, IsOwner, keys = new { privateKey, internalKey, receivedKey }, files });
             }
         }
     }

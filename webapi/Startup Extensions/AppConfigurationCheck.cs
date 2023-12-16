@@ -37,6 +37,8 @@ namespace webapi
                 if (!isConnected || InvalidConfiguration)
                     throw new InvalidConfigurationException();
             }).GetAwaiter().GetResult();
+
+            Console.WriteLine("Configuration is valid\n");
         }
     }
 }
