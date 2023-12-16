@@ -81,7 +81,7 @@ namespace webapi.DB.SQL
                 user.password_hash = userModel.password_hash;
 
             if (userModel.role is not null)
-                user.role = userModel.password_hash;
+                user.role = userModel.role;
 
             await _dbContext.SaveChangesAsync();
         }

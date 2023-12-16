@@ -28,7 +28,6 @@ namespace webapi.Middlewares
             }
 
             string? apiKey = context.Request.Headers["x-API_Key"];
-            var remoteIP = context.Connection.RemoteIpAddress;
             if (apiKey is null)
             {
                 await _next(context);
@@ -37,21 +36,10 @@ namespace webapi.Middlewares
 
             try
             {
-                var apiUserCacheData = await redisCache.GetCachedData(apiKey);
+                var isAllowRequest = await redisCache.GetCachedData(apiKey);
+                bool isAllowed = bool.Parse(isAllowRequest);
 
-                var JsonApidata = JObject.Parse(apiUserCacheData);
-
-                var ip = JsonApidata["ip"].ToString();
-                var isAllowRequest = bool.Parse(JsonApidata["isAllowRequest"].ToString());
-                var isAllowUnknownIp = bool.Parse(JsonApidata["isAllowUnknowIP"].ToString());
-                var isTracking = bool.Parse(JsonApidata["isTracking"].ToString());
-
-                if (isAllowRequest == false)
-                {
-                    context.Response.StatusCode = 403;
-                    return;
-                }
-                if (isAllowUnknownIp == false && !ip.Equals(remoteIP.ToString()))
+                if (isAllowed == false)
                 {
                     context.Response.StatusCode = 403;
                     return;
@@ -64,32 +52,38 @@ namespace webapi.Middlewares
             {
                 try
                 {
-                    await CheckAndCacheData(context, redisCache, dbContext, apiKey, remoteIP);
-
-                    await _next(context);
+                    var isAllowed = await CheckAndCacheData(context, redisCache, dbContext, apiKey);
+                    
+                    if(isAllowed)
+                    {
+                        await _next(context);
+                        return;
+                    }
+                    else
+                    {
+                        context.Response.StatusCode = 403;
+                        return;
+                    }
                 }
                 catch (InvalidOperationException ex)
                 {
                     context.Response.StatusCode = int.Parse(ex.Message);
                     return;
                 }
-                finally
-                {
-
-                }
             }
             catch (Exception ex)
             {
                 _logger.LogCritical(ex.ToString(), nameof(ApiMiddleware));
+                context.Response.StatusCode = 500;
+                return;
             }
         }
 
-        private async Task CheckAndCacheData(
+        private async Task<bool> CheckAndCacheData(
             HttpContext context,
             IRedisCache redisCache,
             FileCryptDbContext dbContext,
-            string apiKey,
-            IPAddress? remoteIP)
+            string apiKey)
         {
 
             var api = await dbContext.API.FirstOrDefaultAsync(a => a.api_key == apiKey);
@@ -101,31 +95,13 @@ namespace webapi.Middlewares
             }
             if (api.is_allowed_requesting == false)
             {
+                await redisCache.CacheData(apiKey, false.ToString(), TimeSpan.FromDays(1));
                 context.Response.StatusCode = 403;
                 throw new InvalidOperationException("403");
             }
-            if (api.is_allowed_unknown_ip == false && !api.remote_ip.Equals(remoteIP))
-            {
-                context.Response.StatusCode = 403;
-                throw new InvalidOperationException("403");
-            }
-            if (api.remote_ip is null && api.is_tracking_ip == true)
-            {
-                api.remote_ip = remoteIP;
-                await dbContext.SaveChangesAsync();
-            }
 
-            var apiUserCacheData = new
-            {
-                ip = api.remote_ip.ToString(),
-                isAllowRequest = api.is_allowed_requesting,
-                isAllowUnknowIP = api.is_allowed_unknown_ip,
-                isTracking = api.is_tracking_ip
-            };
-
-            var serializedAPIData = JsonConvert.SerializeObject(apiUserCacheData);
-
-            await redisCache.CacheData(apiKey, serializedAPIData, TimeSpan.FromDays(1));
+            await redisCache.CacheData(apiKey, true.ToString(), TimeSpan.FromDays(1));
+            return true;
         }
     }
 

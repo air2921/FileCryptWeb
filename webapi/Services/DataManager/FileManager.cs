@@ -12,17 +12,16 @@ namespace webapi.Services.DataManager
 
             try
             {
-                using (var reader = new StreamReader(filePath))
-                using (var csv = new CsvReader(reader, CultureInfo.InvariantCulture))
-                {
-                    csv.Read();
-                    csv.ReadHeader();
+                using var reader = new StreamReader(filePath);
+                using var csv = new CsvReader(reader, CultureInfo.InvariantCulture);
 
-                    while (csv.Read())
-                    {
-                        string mimeValue = csv.GetField<string>(1);
-                        mimes.Add(mimeValue);
-                    }
+                csv.Read();
+                csv.ReadHeader();
+
+                while (csv.Read())
+                {
+                    string mimeValue = csv.GetField<string>(1);
+                    mimes.Add(mimeValue);
                 }
             }
             catch (FileNotFoundException)

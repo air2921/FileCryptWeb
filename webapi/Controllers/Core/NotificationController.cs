@@ -59,7 +59,7 @@ namespace webapi.Controllers.Core
                     break;
             }
 
-            if (notifications is null || notifications.Count == 0)
+            if (notifications is null)
                 return StatusCode(404, new { message = ExceptionNotificationMessages.NoOneNotificationNotFound });
 
             return StatusCode(200, new { notifications });

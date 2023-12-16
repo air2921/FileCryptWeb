@@ -1,6 +1,7 @@
 ﻿import React, { FormEvent, useState } from 'react';
 import axios from 'axios';
-import Verify from '../components/Verify';
+import Verify from '../components/Verify/Verify';
+import Error from '../components/Error/Error';
 
 const Register: React.FC = () => {
     const [email, setEmail] = useState('');
@@ -84,11 +85,7 @@ const Register: React.FC = () => {
                             </button>
                         </div>
                     </form>
-                    <div>
-                        <p>
-                            {errorMessage && <span className="error">{errorMessage}</span>}
-                        </p>
-                    </div>
+                    {errorMessage && <Error errorMessage={errorMessage} errorFont={'error'} />}
                 </div>
             )}
         </div>

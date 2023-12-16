@@ -1,10 +1,13 @@
 import axios from 'axios';
 import React, { FormEvent, useState } from 'react';
+import { useNavigate } from 'react-router-dom'
+import Error from '../components/Error/Error';
 
 const Login = () => {
     const [email, setEmail] = useState('');
     const [password, setPassword] = useState('');
     const [errorMessage, setErrorMessage] = useState<string | null>(null);
+    const navigate = useNavigate();
 
     const handleSubmit = async (e: FormEvent) => {
         e.preventDefault();
@@ -15,11 +18,7 @@ const Login = () => {
                 password_hash: password,
             }, { withCredentials: true });
 
-            if (response.status === 200) {
-            } else {
-                const errorMessage = response.data && response.data.message ? response.data.message : 'Unknown error';
-                setErrorMessage(errorMessage);
-            }
+            navigate("/")
 
         } catch (error: any) {
             console.error(error);
@@ -69,11 +68,7 @@ const Login = () => {
                     <p>No? <a href="/signup">Create an account</a>And try sign in, after it.</p>
                 </div>
             </div>
-            <div>
-                <p>
-                    {errorMessage && <span className="error">{errorMessage}</span>}
-                </p>
-            </div>
+            {errorMessage && <Error errorMessage={errorMessage} errorFont={'error'} />}
         </div>
     );
 };

@@ -1,21 +1,26 @@
 ﻿using Microsoft.EntityFrameworkCore;
+using System.Reflection.Metadata;
 using webapi.Exceptions;
+using webapi.Interfaces.Redis;
 using webapi.Interfaces.Services;
 using webapi.Interfaces.SQL;
 using webapi.Localization.Exceptions;
 using webapi.Models;
+using webapi.Services;
 
 namespace webapi.DB.SQL
 {
     public class Mimes : ICreate<FileMimeModel>, IRead<FileMimeModel>, IDelete<FileMimeModel>, IDeleteByName<FileMimeModel>, IInsertBase<FileMimeModel>
     {
+        private readonly IRedisCache _redisCache;
         private readonly FileCryptDbContext _dbContext;
         private readonly ILogger<Mimes> _logger;
         private readonly IWebHostEnvironment _webHostEnvironment;
         private readonly IFileManager _fileManager;
 
-        public Mimes(FileCryptDbContext dbContext, ILogger<Mimes> logger, IWebHostEnvironment webHostEnvironment, IFileManager fileManager)
+        public Mimes(IRedisCache redisCache, FileCryptDbContext dbContext, ILogger<Mimes> logger, IWebHostEnvironment webHostEnvironment, IFileManager fileManager)
         {
+            _redisCache = redisCache;
             _dbContext = dbContext;
             _logger = logger;
             _webHostEnvironment = webHostEnvironment;
@@ -115,6 +120,7 @@ namespace webapi.DB.SQL
             }
 
             await _dbContext.SaveChangesAsync();
+            await _redisCache.DeleteCache(Constants.MIME_COLLECTION);
         }
 
         public async Task<FileMimeModel> ReadById(int id, bool? byForeign)
@@ -136,6 +142,7 @@ namespace webapi.DB.SQL
 
             _dbContext.Mimes.Remove(mime);
             await _dbContext.SaveChangesAsync();
+            await _redisCache.DeleteCache(Constants.MIME_COLLECTION);
         }
 
         public async Task DeleteByName(string mime_name)
@@ -145,6 +152,7 @@ namespace webapi.DB.SQL
 
             _dbContext.Mimes.Remove(mime);
             await _dbContext.SaveChangesAsync();
+            await _redisCache.DeleteCache(Constants.MIME_COLLECTION);
         }
     }
 }

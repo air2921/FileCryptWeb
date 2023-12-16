@@ -60,13 +60,13 @@ namespace webapi.Middlewares
                 }
             };
 
-            _logger.LogWarning(requestData.ToString());
+            _logger.LogInformation(requestData.ToString());
 
             await _next(context);
 
             var statusCode = context.Response.StatusCode;
 
-            _logger.LogWarning($"Status Code: {statusCode}");
+            _logger.LogInformation($"Status Code: {statusCode}");
         }
     }
 
