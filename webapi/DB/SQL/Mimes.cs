@@ -120,7 +120,6 @@ namespace webapi.DB.SQL
             }
 
             await _dbContext.SaveChangesAsync();
-            await _redisCache.DeleteCache(Constants.MIME_COLLECTION);
         }
 
         public async Task<FileMimeModel> ReadById(int id, bool? byForeign)
@@ -142,7 +141,6 @@ namespace webapi.DB.SQL
 
             _dbContext.Mimes.Remove(mime);
             await _dbContext.SaveChangesAsync();
-            await _redisCache.DeleteCache(Constants.MIME_COLLECTION);
         }
 
         public async Task DeleteByName(string mime_name)
@@ -152,7 +150,6 @@ namespace webapi.DB.SQL
 
             _dbContext.Mimes.Remove(mime);
             await _dbContext.SaveChangesAsync();
-            await _redisCache.DeleteCache(Constants.MIME_COLLECTION);
         }
     }
 }
