@@ -104,7 +104,7 @@ namespace webapi.Controllers.Account
                 _logger.LogInformation("User was added in db");
 
                 DeleteSessionData(email);
-                _logger.LogInformation("User data from deleted from session");
+                _logger.LogInformation("User data deleted from session");
 
                 return StatusCode(201, new { userModel });
             }
@@ -112,7 +112,7 @@ namespace webapi.Controllers.Account
             {
                 _logger.LogCritical(ex.ToString());
                 DeleteSessionData(email);
-                _logger.LogInformation("User data from deleted from session");
+                _logger.LogInformation("User data deleted from session");
 
                 return StatusCode(500, new { message = AccountErrorMessage.Error });
             }
