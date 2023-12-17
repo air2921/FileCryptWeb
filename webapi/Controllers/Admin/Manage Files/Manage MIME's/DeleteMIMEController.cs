@@ -47,6 +47,7 @@ namespace webapi.Controllers.Admin.Manage_Files.Manage_MIME_s
                 if(byID)
                 {
                     await _deleteMime.DeleteById(mimeModel.mime_id);
+                    await _redisCache.DeleteCache(Constants.MIME_COLLECTION);
                     _logger.LogWarning($"{_userInfo.Username}#{_userInfo.UserId} deleted MIME type: #{mimeModel.mime_id} from db and cache");
 
                     return StatusCode(200);
