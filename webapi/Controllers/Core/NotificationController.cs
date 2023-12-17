@@ -55,7 +55,7 @@ namespace webapi.Controllers.Core
                     notifications = await query.Where(n => n.receiver_id == _userInfo.UserId).ToListAsync();
                     break;
                 case false:
-                    notifications = await query.Where(n => n.receiver_id == _userInfo.UserId && n.sender_id == _userInfo.UserId).ToListAsync();
+                    notifications = await query.Where(n => n.receiver_id == _userInfo.UserId || n.sender_id == _userInfo.UserId).ToListAsync();
                     break;
             }
 
