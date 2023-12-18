@@ -2,7 +2,7 @@ import React from 'react';
 
 function About() {
     return (
-        <div className="main-container">
+        <div className="about">
             <div className="head-container">
                 <h1>About Us</h1>
                 <h3>Welcome to FileCryptWeb. Your reliable partner in securing your files !</h3>

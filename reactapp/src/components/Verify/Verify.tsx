@@ -1,7 +1,7 @@
 import React, { FormEvent, useState } from 'react';
-import axios from 'axios';
 import { useNavigate } from 'react-router-dom';
 import Error from '../Error/Error';
+import AxiosRequest from '../../api/AxiosRequest';
 
 const Verify: React.FC<VerifyProps> = ({ endpoint }) => {
     const [code, setCode] = useState(0);
@@ -11,18 +11,13 @@ const Verify: React.FC<VerifyProps> = ({ endpoint }) => {
     const handleSubmit = async (e: FormEvent) => {
         e.preventDefault();
 
-        try {
-            const response = await axios.post(`${endpoint}?code=${code}`, null, { withCredentials: true })
-            navigate("/");
+        const response = await AxiosRequest({ endpoint: `${endpoint}?code=${code}`, method: 'POST', withCookie: true, requestBody: null });
 
-        } catch (error: any) {
-            console.error(error);
-            if (error.response) {
-                const errorMessage = error.response.data && error.response.data.message ? error.response.data.message : 'Unknown error';
-                setErrorMessage(errorMessage);
-            } else {
-                setErrorMessage('Unknown error');
-            }
+        if (response.isSuccess) {
+            navigate('/');
+        }
+        else {
+            setErrorMessage(response.data);
         }
     };
 

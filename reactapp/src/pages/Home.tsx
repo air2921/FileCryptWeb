@@ -2,7 +2,7 @@ import React from 'react';
 
 function Home() {
     return (
-        <div className="main-container">
+        <div className="home">
             <div className="head-container">
                 <div className="description">
                     <p>Key Features:</p>

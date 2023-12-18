@@ -1,7 +1,7 @@
 ﻿import React, { FormEvent, useState } from 'react';
-import axios from 'axios';
 import Verify from '../components/Verify/Verify';
 import Error from '../components/Error/Error';
+import AxiosRequest from '../api/AxiosRequest';
 
 const Register: React.FC = () => {
     const [email, setEmail] = useState('');
@@ -13,35 +13,20 @@ const Register: React.FC = () => {
     const handleSubmit = async (e: FormEvent) => {
         e.preventDefault();
 
-        try {
-            const response = await axios.post('https://localhost:7067/api/auth/register', {
-                email: email,
-                password_hash: password,
-                username: username
-            }, { withCredentials: true });
+        const response = await AxiosRequest({ endpoint: 'api/auth/register', method: 'POST', withCookie: true, requestBody: { email: email, password_hash: password, username: username } });
 
-            if (response.status === 200) {
-                setStatusCode(true);
-            } else {
-                const errorMessage = response.data && response.data.message ? response.data.message : 'Unknown error';
-                setErrorMessage(errorMessage);
-            }
-
-        } catch (error: any) {
-            console.error(error);
-            if (error.response) {
-                const errorMessage = error.response.data && error.response.data.message ? error.response.data.message : 'Unknown error';
-                setErrorMessage(errorMessage);
-            } else {
-                setErrorMessage('Unknown error');
-            }
+        if (response.isSuccess) {
+            setStatusCode(true);
+        }
+        else {
+            setErrorMessage(response.data);
         }
     };
 
     return (
         <div>
             {successStatusCode ? (
-                <Verify endpoint='https://localhost:7067/api/auth/verify' />
+                <Verify endpoint='api/auth/verify' />
             ) : (
                 <div>
                     <p className="welcome-text">Welcome to FileCrypt. Let's start our adventure here</p>

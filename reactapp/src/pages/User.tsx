@@ -1,7 +1,7 @@
 ﻿import React, { useEffect, useState } from 'react';
-import axios from 'axios';
 import { useParams } from 'react-router-dom';
 import Error from '../components/Error/Error';
+import AxiosRequest from '../api/AxiosRequest';
 
 const User = () => {
     const { userId } = useParams();
@@ -10,20 +10,15 @@ const User = () => {
     const [errorMessage, setErrorMessage] = useState('');
 
     const fetchData = async () => {
-        try {
-            const response = await axios.get(`https://localhost:7067/api/core/users/${userId}`, { withCredentials: true });
+
+        const response = await AxiosRequest({ endpoint: `api/core/users/${userId}`, method: 'GET', withCookie: true, requestBody: null })
+
+        if (response.isSuccess) {
             setUserData(response.data);
             setStatusCode(true);
-
-        } catch (error: any) {
-            console.error(error);
-            setStatusCode(false);
-            if (error.response) {
-                const errorMessage = error.response.data && error.response.data.message ? error.response.data.message : 'Unknown error';
-                setErrorMessage(errorMessage);
-            } else {
-                setErrorMessage('Unknown error');
-            }
+        }
+        else {
+            setErrorMessage(response.data);
         }
     };
 
@@ -40,7 +35,7 @@ const User = () => {
     };
 
     return (
-        <div className="main-container">
+        <div className="profile">
             <div className="user-container">
                 <div>
                     <span className="username">

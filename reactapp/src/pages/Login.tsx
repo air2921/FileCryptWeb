@@ -1,7 +1,7 @@
-import axios from 'axios';
 import React, { FormEvent, useState } from 'react';
 import { useNavigate } from 'react-router-dom'
 import Error from '../components/Error/Error';
+import AxiosRequest from '../api/AxiosRequest';
 
 const Login = () => {
     const [email, setEmail] = useState('');
@@ -12,27 +12,18 @@ const Login = () => {
     const handleSubmit = async (e: FormEvent) => {
         e.preventDefault();
 
-        try {
-            const response = await axios.post('https://localhost:7067/api/auth/login', {
-                email: email,
-                password_hash: password,
-            }, { withCredentials: true });
+        const response = await AxiosRequest({ endpoint: 'api/auth/login', method: 'POST', withCookie: true, requestBody: { email: email, password_hash: password, } });
 
-            navigate("/")
-
-        } catch (error: any) {
-            console.error(error);
-            if (error.response) {
-                const errorMessage = error.response.data && error.response.data.message ? error.response.data.message : 'Unknown error';
-                setErrorMessage(errorMessage);
-            } else {
-                setErrorMessage('Unknown error');
-            }
+        if (response.isSuccess) {
+            navigate('/')
+        }
+        else {
+            setErrorMessage(response.data);
         }
     };
 
     return (
-        <div className="content">
+        <div className="login">
             <div className="login-signup-container">
                 <div className="login-container">
                     <p className="welcome-text"></p>
