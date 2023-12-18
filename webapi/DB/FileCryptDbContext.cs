@@ -63,6 +63,10 @@ namespace webapi.DB
                 .HasForeignKey<TokenModel>(t => t.user_id)
                 .OnDelete(DeleteBehavior.Cascade);
 
+            modelBuilder.Entity<TokenModel>()
+                .HasIndex(t => t.refresh_token)
+                .IsUnique();
+
             modelBuilder.Entity<UserModel>()
                 .HasOne(u => u.API)
                 .WithOne(a => a.User)
@@ -78,6 +82,10 @@ namespace webapi.DB
                 .WithMany(l => l.Links)
                 .HasForeignKey(l => l.user_id)
                 .OnDelete(DeleteBehavior.Cascade);
+
+            modelBuilder.Entity<LinkModel>()
+                .HasIndex(l => l.u_token)
+                .IsUnique();
         }
     }
 }

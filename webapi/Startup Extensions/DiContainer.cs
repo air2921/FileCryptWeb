@@ -1,6 +1,4 @@
-﻿using webapi.Controllers.Base.CryptographyUtils;
-using webapi.Controllers.Base;
-using webapi.DB.RedisDb;
+﻿using webapi.DB.RedisDb;
 using webapi.DB.SQL;
 using webapi.Interfaces.Controllers;
 using webapi.Interfaces.Cryptography;
@@ -13,6 +11,8 @@ using webapi.Services.Cryptography;
 using webapi.Services.Security;
 using webapi.Services.Third_Party_Services;
 using webapi.Services.DataManager;
+using webapi.Controllers.Base;
+using webapi.Controllers.Base.CryptographyUtils;
 
 namespace webapi
 {
@@ -70,8 +70,8 @@ namespace webapi
             services.AddScoped<IRead<ApiModel>, Api>();
             services.AddScoped<IUpdate<ApiModel>, Api>();
 
-            services.AddScoped<ICryptographyControllerBase, CryptographyControllerBase>();
-            services.AddScoped<ICryptographyParamsProvider, CryptographyParamsProvider>();
+            services.AddScoped<ICryptographyControllerBase, CryptographyHelper>();
+            services.AddScoped<ICryptographyParamsProvider, CryptographyHelper>();
             services.AddScoped<IFileService, FileService>();
             services.AddScoped<IVirusCheck, ClamAV>();
             services.AddScoped<IUserInfo, UserData>();

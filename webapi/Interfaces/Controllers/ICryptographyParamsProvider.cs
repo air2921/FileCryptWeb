@@ -1,4 +1,4 @@
-﻿using webapi.Controllers.Base.CryptographyUtils;
+﻿using webapi.Controllers.Base;
 
 namespace webapi.Interfaces.Controllers
 {

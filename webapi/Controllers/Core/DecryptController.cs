@@ -7,7 +7,7 @@ using webapi.Interfaces.Services;
 
 namespace webapi.Controllers.Encryption
 {
-    [Route("api/cryptography/{type}")]
+    [Route("api/core/cryptography/{type}")]
     [ApiController]
     [Authorize]
     public class DecryptController : ControllerBase
