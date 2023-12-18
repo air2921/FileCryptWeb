@@ -15,7 +15,6 @@ namespace webapi.Controllers.Base.CryptographyUtils
         private readonly IGetSize _getSize;
         private readonly IVirusCheck _virusCheck;
         private readonly IRedisCache _redisCache;
-        private readonly IRedisKeys _redisKeys;
         private readonly IRead<FileMimeModel> _read;
         private readonly ICreate<FileModel> _createFile;
         private readonly ILogger<FileService> _logger;
@@ -24,7 +23,6 @@ namespace webapi.Controllers.Base.CryptographyUtils
             IGetSize getSize,
             IVirusCheck virusCheck,
             IRedisCache redisCache,
-            IRedisKeys redisKeys,
             IRead<FileMimeModel> read,
             ICreate<FileModel> createFile,
             ILogger<FileService> logger)
@@ -32,7 +30,6 @@ namespace webapi.Controllers.Base.CryptographyUtils
             _getSize = getSize;
             _virusCheck = virusCheck;
             _redisCache = redisCache;
-            _redisKeys = redisKeys;
             _read = read;
             _createFile = createFile;
             _logger = logger;
@@ -64,10 +61,10 @@ namespace webapi.Controllers.Base.CryptographyUtils
             if (file.ContentType is null)
                 return false;
 
-            bool isAllowedMIME = await CheckMIME(file.ContentType);
-            bool isClean = await _virusCheck.GetResultScan(file);
+            if (!await _virusCheck.GetResultScan(file))
+                return false;
 
-            if (!isAllowedMIME || !isClean)
+            if (!await CheckMIME(file.ContentType))
                 return false;
 
             return true;

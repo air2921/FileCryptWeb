@@ -1,26 +1,49 @@
 ﻿using Microsoft.AspNetCore.Mvc;
 using System.Text.RegularExpressions;
+using webapi.Exceptions;
 using webapi.Interfaces.Controllers;
+using webapi.Interfaces.Redis;
 using webapi.Interfaces.Services;
+using webapi.Interfaces.SQL;
 using webapi.Localization;
+using webapi.Models;
 using webapi.Services;
 using webapi.Services.Cryptography;
 
 namespace webapi.Controllers.Base
 {
-    public class CryptographyControllerBase : ControllerBase, ICryptographyControllerBase
+    public class CryptographyHelper : ControllerBase, ICryptographyControllerBase, ICryptographyParamsProvider
     {
-        public const string DEFAULT_FOLDER = "C:\\FileCryptWeb";
+        private const string DEFAULT_FOLDER = "C:\\FileCryptWeb";
+
+        private readonly string privateType = FileType.PrivateType.ToLowerInvariant();
+        private readonly string internalType = FileType.InternalType.ToLowerInvariant();
+        private readonly string receivedType = FileType.ReceivedType.ToLowerInvariant();
 
         private readonly IFileService _fileService;
-        private readonly ILogger<CryptographyControllerBase> _logger;
+        private readonly ILogger<CryptographyHelper> _logger;
         private readonly IValidation _validation;
+        private readonly IRedisCache _redisCache;
+        private readonly IRedisKeys _redisKeys;
+        private readonly IRead<KeyModel> _readKeys;
+        private readonly IUserInfo _userInfo;
 
-        public CryptographyControllerBase(IFileService fileService, ILogger<CryptographyControllerBase> logger, IValidation validation)
+        public CryptographyHelper(
+            IFileService fileService,
+            ILogger<CryptographyHelper> logger,
+            IValidation validation,
+            IRedisCache redisCache,
+            IRedisKeys redisKeys,
+            IRead<KeyModel> readKeys,
+            IUserInfo userInfo)
         {
             _fileService = fileService;
             _logger = logger;
             _validation = validation;
+            _redisCache = redisCache;
+            _redisKeys = redisKeys;
+            _readKeys = readKeys;
+            _userInfo = userInfo;
         }
 
         public async Task<IActionResult> EncryptFile(
@@ -128,5 +151,37 @@ namespace webapi.Controllers.Base
                 throw new InvalidOperationException("Unexpected error");
             }
         }
+
+        public async Task<CryptographyParams> GetCryptographyParams(string fileType)
+        {
+            string lowerFileType = fileType.ToLowerInvariant();
+
+            try
+            {
+                if (lowerFileType == privateType)
+                {
+                    return new CryptographyParams(await _redisCache.CacheKey(_redisKeys.PrivateKey, () => _readKeys.ReadById(_userInfo.UserId, true)));
+                }
+                else if (lowerFileType == internalType)
+                {
+                    return new CryptographyParams(await _redisCache.CacheKey(_redisKeys.PersonalInternalKey, () => _readKeys.ReadById(_userInfo.UserId, true)));
+                }
+                else if (lowerFileType == receivedType)
+                {
+                    return new CryptographyParams(await _redisCache.CacheKey(_redisKeys.ReceivedInternalKey, () => _readKeys.ReadById(_userInfo.UserId, true)));
+                }
+                throw new InvalidRouteException();
+            }
+            catch (UserException)
+            {
+                throw;
+            }
+            catch (KeyException)
+            {
+                throw;
+            }
+        }
     }
+
+    public record CryptographyParams(string? EncryptionKey);
 }
