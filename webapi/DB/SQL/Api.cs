@@ -84,7 +84,7 @@ namespace webapi.DB.SQL
             await _dbContext.SaveChangesAsync();
         }
 
-        public async Task DeleteById(int id)
+        public async Task DeleteById(int id, int? user_id)
         {
             var api = await _dbContext.API.FirstOrDefaultAsync(a => a.user_id == id) ??
                 throw new ApiException(ExceptionApiMessages.ApiNotFound);
@@ -95,9 +95,9 @@ namespace webapi.DB.SQL
             await _dbContext.SaveChangesAsync();
         }
 
-        public async Task DeleteByName(string apiKey)
+        public async Task DeleteByName(string apiKey, int? user_id)
         {
-            var api = await _dbContext.API.FirstOrDefaultAsync(a => a.api_key == apiKey) ??
+            var api = await _dbContext.API.FirstOrDefaultAsync(a => a.api_key == apiKey && a.user_id == user_id) ??
                 throw new ApiException(ExceptionApiMessages.ApiNotFound);
 
             await _redisCache.DeleteCache(api.api_key);

@@ -2,6 +2,6 @@
 {
     public interface IDeleteByName<TModel>
     {
-        Task DeleteByName(string name);
+        Task DeleteByName(string name, int? user_id);
     }
 }

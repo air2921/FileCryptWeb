@@ -80,7 +80,7 @@ namespace webapi.Controllers.Account
                 if (link.expiry_date < DateTime.UtcNow)
                 {
                     _logger.LogWarning($"Token: {token} is expired, it will be delete from db");
-                    await _deleteByName.DeleteByName(token);
+                    await _deleteByName.DeleteByName(token, null);
                     _logger.LogInformation("Expired token was deleted");
                     return StatusCode(422, new { message = AccountErrorMessage.InvalidToken });
                 }
@@ -91,7 +91,7 @@ namespace webapi.Controllers.Account
                 await _updateUser.Update(userModel, null);
                 _logger.LogInformation($"Password was updated for user with id: {link.user_id}");
 
-                await _deleteByName.DeleteByName(token);
+                await _deleteByName.DeleteByName(token, null);
                 _logger.LogInformation($"Token: {token} was deleted");
 
                 return StatusCode(200, new { message = AccountSuccessMessage.PasswordUpdated });

@@ -48,11 +48,11 @@ namespace webapi.Controllers.Core
             _tokenService = tokenService;
         }
 
-        [HttpPost("{receiverId}")]
+        [HttpPost("new/{receiverId}")]
         public async Task<IActionResult> CreateOneOffer([FromRoute] int receiverId)
         {
             if (_userInfo.UserId == receiverId)
-                return StatusCode(409, new { message = "You send a trade offer to yourself, are you kidding)?" });
+                return StatusCode(409, new { message = "You want send a trade offer to yourself, are you kidding)?" });
 
             var receiver = await _readUser.ReadById(receiverId, null);
             if (receiver is null)
@@ -75,7 +75,8 @@ namespace webapi.Controllers.Core
                 offer_type = "Encryption key trade offer",
                 is_accepted = false,
                 sender_id = _userInfo.UserId,
-                receiver_id = receiverId
+                receiver_id = receiverId,
+                created_at = DateTime.UtcNow
             };
 
             var notificationModel = new NotificationModel
@@ -95,12 +96,15 @@ namespace webapi.Controllers.Core
             return StatusCode(201, new { offerModel });
         }
 
-        [HttpPut("{offerId}")]
+        [HttpPut("accept/{offerId}")]
         public async Task<IActionResult> AcceptOffer([FromRoute] int offerId)
         {
             var offer = await _dbContext.Offers.FirstOrDefaultAsync(o => o.offer_id == offerId && o.receiver_id == _userInfo.UserId);
             if (offer is null)
                 return StatusCode(404);
+
+            if (offer.is_accepted == true)
+                return StatusCode(409, new { message = ExceptionOfferMessages.OfferIsAccepted });
 
             var receiver = await _dbContext.Keys.FirstOrDefaultAsync(u => u.user_id == _userInfo.UserId);
 
@@ -112,12 +116,15 @@ namespace webapi.Controllers.Core
             return StatusCode(200, new { message = SuccessMessage.SuccessOfferAccepted });
         }
 
-        [HttpGet("{id}")]
-        public async Task<IActionResult> GetOneOffer([FromRoute] int id)
+        [HttpGet("{offerId}")]
+        public async Task<IActionResult> GetOneOffer([FromRoute] int offerId)
         {
             try
             {
-                var offer = await _readOffer.ReadById(id, false);
+                var offer = await _readOffer.ReadById(offerId, false);
+
+                if (offer.sender_id != _userInfo.UserId || offer.receiver_id != _userInfo.UserId)
+                    return StatusCode(404);
 
                 return StatusCode(200, new { offer });
             }
@@ -159,7 +166,7 @@ namespace webapi.Controllers.Core
         {
             try
             {
-                await _deleteOffer.DeleteById(offerId);
+                await _deleteOffer.DeleteById(offerId, _userInfo.UserId);
 
                 return StatusCode(200, new { message = SuccessMessage.SuccessOfferDeleted });
             }

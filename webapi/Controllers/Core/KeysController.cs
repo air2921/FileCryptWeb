@@ -58,7 +58,7 @@ namespace webapi.Controllers.Core
         {
             try
             {
-                HashSet<string> decryptedKeys = new();
+                List<string> decryptedKeys = new();
 
                 var userKeys = await _readKeys.ReadById(_userInfo.UserId, true);
 
@@ -134,7 +134,7 @@ namespace webapi.Controllers.Core
         }
 
         [HttpPut("internal/own")]
-        public async Task<IActionResult> UpdatePersonalInternalKeyToYourOwn(KeyModel keyModel)
+        public async Task<IActionResult> UpdatePersonalInternalKeyToYourOwn([FromBody] KeyModel keyModel)
         {
             try
             {
@@ -156,7 +156,7 @@ namespace webapi.Controllers.Core
         }
 
         [HttpPut("private/own")]
-        public async Task<IActionResult> UpdatePrivateKeyToYourOwn(KeyModel keyModel)
+        public async Task<IActionResult> UpdatePrivateKeyToYourOwn([FromBody] KeyModel keyModel)
         {
             try
             {

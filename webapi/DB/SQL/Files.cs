@@ -33,18 +33,18 @@ namespace webapi.DB.SQL
                 throw new FileException(ExceptionFileMessages.NoOneFileNotFound);
         }
 
-        public async Task DeleteById(int id)
+        public async Task DeleteById(int id, int? user_id)
         {
-            var file = await _dbContext.Files.FirstOrDefaultAsync(f => f.file_id == id) ??
+            var file = await _dbContext.Files.FirstOrDefaultAsync(f => f.file_id == id && f.user_id == user_id) ??
                 throw new FileException(ExceptionFileMessages.FileNotFound);
 
             _dbContext.Remove(file);
             await _dbContext.SaveChangesAsync();
         }
 
-        public async Task DeleteByName(string fileName)
+        public async Task DeleteByName(string fileName, int? user_id)
         {
-            var file = await _dbContext.Files.FirstOrDefaultAsync(f => f.file_name == fileName) ??
+            var file = await _dbContext.Files.FirstOrDefaultAsync(f => f.file_name == fileName && f.user_id == user_id) ??
                 throw new FileException(ExceptionFileMessages.FileNotFound);
 
             _dbContext.Remove(file);

@@ -40,7 +40,7 @@ namespace webapi.Controllers.Admin.Manage_Users
                     if (target.role == Role.HighestAdmin.ToString())
                         return StatusCode(403, new { message = ErrorMessage.HighestRoleError });
 
-                    await _delete.DeleteById(userId);
+                    await _delete.DeleteById(userId, null);
                     _logger.LogWarning($"{_userInfo.Username}#{_userInfo.UserId} deleted user#{userId}");
 
                     return StatusCode(204, new { message = SuccessMessage.SuccessDeletedUser });
@@ -50,7 +50,7 @@ namespace webapi.Controllers.Admin.Manage_Users
                     if (target.role == Role.Admin.ToString() || target.role == Role.HighestAdmin.ToString())
                         return StatusCode(403, new { message = ErrorMessage.AdminCannotDelete });
 
-                    await _delete.DeleteById(userId);
+                    await _delete.DeleteById(userId, null);
                     _logger.LogWarning($"{_userInfo.Username}#{_userInfo.UserId} deleted user#{userId}");
 
                     return StatusCode(200, new { message = SuccessMessage.SuccessDeletedUser });

@@ -46,14 +46,14 @@ namespace webapi.Controllers.Admin.Manage_Files.Manage_MIME_s
             {
                 if(byID)
                 {
-                    await _deleteMime.DeleteById(mimeModel.mime_id);
+                    await _deleteMime.DeleteById(mimeModel.mime_id, null);
                     await _redisCache.DeleteCache(Constants.MIME_COLLECTION);
                     _logger.LogWarning($"{_userInfo.Username}#{_userInfo.UserId} deleted MIME type: #{mimeModel.mime_id} from db and cache");
 
                     return StatusCode(200);
                 }
 
-                await _deleteMimeByName.DeleteByName(mimeModel.mime_name);
+                await _deleteMimeByName.DeleteByName(mimeModel.mime_name, null);
                 await _redisCache.DeleteCache(Constants.MIME_COLLECTION);
 
                 return StatusCode(200);

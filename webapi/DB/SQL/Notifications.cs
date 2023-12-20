@@ -18,7 +18,7 @@ namespace webapi.DB.SQL
 
         public async Task Create(NotificationModel notificationModel)
         {
-            var users = await _dbContext.Users.Select(u => u.id).ToArrayAsync();
+            var users = await _dbContext.Users.Select(n => n.id).ToArrayAsync();
             bool bothExist = users.Contains(notificationModel.sender_id) && users.Contains(notificationModel.receiver_id);
             if (!bothExist)
                 throw new UserException(AccountErrorMessage.UserNotFound);
@@ -29,7 +29,7 @@ namespace webapi.DB.SQL
 
         public async Task<NotificationModel> ReadById(int id, bool? byForeign)
         {
-            var notification = await _dbContext.Notifications.FirstOrDefaultAsync(u => u.notification_id == id) ??
+            var notification = await _dbContext.Notifications.FirstOrDefaultAsync(n => n.notification_id == id) ??
                 throw new NotificationException(ExceptionNotificationMessages.NotificationNotFound);
 
             notification.is_checked = true;
@@ -44,9 +44,9 @@ namespace webapi.DB.SQL
                 throw new NotificationException(ExceptionNotificationMessages.NoOneNotificationNotFound);
         }
 
-        public async Task DeleteById(int id)
+        public async Task DeleteById(int id, int? user_id)
         {
-            var notification = await _dbContext.Notifications.FirstOrDefaultAsync(u => u.notification_id == id) ??
+            var notification = await _dbContext.Notifications.FirstOrDefaultAsync(n => n.notification_id == id && (n.sender_id == user_id || n.receiver_id == user_id)) ??
                 throw new NotificationException(ExceptionNotificationMessages.NotificationNotFound);
 
             _dbContext.Notifications.Remove(notification);

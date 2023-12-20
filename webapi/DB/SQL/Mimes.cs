@@ -134,7 +134,7 @@ namespace webapi.DB.SQL
                 throw new MimeException(ExceptionMimeMessages.MimesNotFound);
         }
 
-        public async Task DeleteById(int id)
+        public async Task DeleteById(int id, int? user_id)
         {
             var mime = await _dbContext.Mimes.FirstOrDefaultAsync(m => m.mime_id == id) ??
                 throw new MimeException(ExceptionMimeMessages.MimeNotFound);
@@ -143,7 +143,7 @@ namespace webapi.DB.SQL
             await _dbContext.SaveChangesAsync();
         }
 
-        public async Task DeleteByName(string mime_name)
+        public async Task DeleteByName(string mime_name, int? user_id)
         {
             var mime = await _dbContext.Mimes.FirstOrDefaultAsync(m => m.mime_name == mime_name) ??
                 throw new MimeException(ExceptionMimeMessages.MimeNotFound);
