@@ -48,33 +48,40 @@ namespace webapi.Controllers.Account
         [HttpPost("register")]
         public async Task<IActionResult> Registration([FromBody] UserModel userModel)
         {
-            var email = userModel.email.ToLowerInvariant();
+            try
+            {
+                var email = userModel.email.ToLowerInvariant();
 
-            var user = await _dbContext.Users.FirstOrDefaultAsync(u => u.email == email);
-            if (user is not null)
-                return StatusCode(409, new { message = AccountErrorMessage.UserExists });
+                var user = await _dbContext.Users.FirstOrDefaultAsync(u => u.email == email);
+                if (user is not null)
+                    return StatusCode(409, new { message = AccountErrorMessage.UserExists });
 
-            if (!Regex.IsMatch(userModel.password_hash, Validation.Password))
-                return StatusCode(400, new { message = AccountErrorMessage.InvalidFormatPassword });
+                if (!Regex.IsMatch(userModel.password_hash, Validation.Password))
+                    return StatusCode(400, new { message = AccountErrorMessage.InvalidFormatPassword });
 
-            int code = _generateCode.GenerateSixDigitCode();
-            string messageHeader = EmailMessage.VerifyEmailHeader;
-            string messageBody = EmailMessage.VerifyEmailBody + code;
+                int code = _generateCode.GenerateSixDigitCode();
+                string messageHeader = EmailMessage.VerifyEmailHeader;
+                string messageBody = EmailMessage.VerifyEmailBody + code;
 
-            string password = _passwordManager.HashingPassword(userModel.password_hash);
-            _logger.LogInformation("Password was hashed");
+                string password = _passwordManager.HashingPassword(userModel.password_hash);
+                _logger.LogInformation("Password was hashed");
 
-            HttpContext.Session.SetString(EMAIL, email);
-            HttpContext.Session.SetString(PASSWORD, password);
-            HttpContext.Session.SetString(USERNAME, userModel.username);
-            HttpContext.Session.SetString(ROLE, Role.User.ToString());
-            HttpContext.Session.SetInt32(email, code);
-            _logger.LogInformation("Data was saved in user session");
+                HttpContext.Session.SetString(EMAIL, email);
+                HttpContext.Session.SetString(PASSWORD, password);
+                HttpContext.Session.SetString(USERNAME, userModel.username);
+                HttpContext.Session.SetString(ROLE, Role.User.ToString());
+                HttpContext.Session.SetInt32(email, code);
+                _logger.LogInformation("Data was saved in user session");
 
-            await _email.SendMessage(userModel, messageHeader, messageBody);
-            _logger.LogInformation($"Email was sended on {email} (1-st step)");
+                await _email.SendMessage(userModel, messageHeader, messageBody);
+                _logger.LogInformation($"Email was sended on {email} (1-st step)");
 
-            return StatusCode(200, new { message = AccountSuccessMessage.EmailSended });
+                return StatusCode(200, new { message = AccountSuccessMessage.EmailSended });
+            }
+            catch (Exception)
+            {
+                return StatusCode(500);
+            }
         }
 
         [HttpPost("verify")]

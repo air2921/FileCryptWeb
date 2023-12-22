@@ -21,6 +21,8 @@ namespace webapi.Middlewares
             if (context.Request.Cookies.TryGetValue(Constants.JWT_COOKIE_KEY, out string? jwt))
             {
                 context.Request.Headers.Add("Authorization", $"Bearer {jwt}");
+                AddSecurityHeaders(context);
+
                 await _next(context);
                 return;
             }
@@ -51,12 +53,20 @@ namespace webapi.Middlewares
                             context.Response.Cookies.Append(Constants.JWT_COOKIE_KEY, createdJWT, jwtCookieOptions);
 
                             context.Request.Headers.Add("Authorization", $"Bearer {createdJWT}");
+                            AddSecurityHeaders(context);
                         }
                     }
                 }
             }
             await _next(context);
             return;
+        }
+
+        private void AddSecurityHeaders(HttpContext context)
+        {
+            context.Response.Headers.Add("X-Content-Type-Options", "nosniff");
+            context.Response.Headers.Add("X-Xss-Protection", "1");
+            context.Response.Headers.Add("X-Frame-Options", "DENY");
         }
     }
 

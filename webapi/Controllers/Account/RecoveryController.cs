@@ -1,6 +1,7 @@
 ﻿using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
 using webapi.DB;
+using webapi.DB.SQL;
 using webapi.Exceptions;
 using webapi.Interfaces.Services;
 using webapi.Interfaces.SQL;
@@ -18,6 +19,7 @@ namespace webapi.Controllers.Account
         private readonly IEmailSender<UserModel> _emailSender;
         private readonly ICreate<LinkModel> _createLink;
         private readonly IUpdate<UserModel> _updateUser;
+        private readonly IUpdate<TokenModel> _updateToken;
         private readonly IPasswordManager _passwordManager;
         private readonly IDeleteByName<LinkModel> _deleteByName;
         private readonly IGenerateKey _generateKey;
@@ -28,6 +30,7 @@ namespace webapi.Controllers.Account
             IEmailSender<UserModel> emailSender,
             ICreate<LinkModel> createLink,
             IUpdate<UserModel> updateUser,
+            IUpdate<TokenModel> updateToken,
             IPasswordManager passwordManager,
             IDeleteByName<LinkModel> deleteByName,
             IGenerateKey generateKey)
@@ -37,6 +40,7 @@ namespace webapi.Controllers.Account
             _emailSender = emailSender;
             _createLink = createLink;
             _updateUser = updateUser;
+            _updateToken = updateToken;
             _passwordManager = passwordManager;
             _deleteByName = deleteByName;
             _generateKey = generateKey;
@@ -45,27 +49,34 @@ namespace webapi.Controllers.Account
         [HttpPost("create/unique/token")]
         public async Task<IActionResult> RecoveryAccount(string email)
         {
-            var user = await _dbContext.Users.FirstOrDefaultAsync(u => u.email == email.ToLowerInvariant());
-            if (user is null)
-                return StatusCode(404, new { message = AccountErrorMessage.UserNotFound });
-
-            string token = Guid.NewGuid().ToString("N") + Guid.NewGuid().ToString() + _generateKey.GenerateKey();
-
-            var linkModel = new LinkModel
+            try
             {
-                user_id = user.id,
-                u_token = token,
-                expiry_date = DateTime.UtcNow.AddHours(3),
-                is_used = false,
-                created_at = DateTime.UtcNow
-            };
+                var user = await _dbContext.Users.FirstOrDefaultAsync(u => u.email == email.ToLowerInvariant());
+                if (user is null)
+                    return StatusCode(404, new { message = AccountErrorMessage.UserNotFound });
 
-            var userModel = new UserModel { email = user.email, username = user.username };
-            await _emailSender.SendMessage(userModel, EmailMessage.RecoveryAccountHeader, EmailMessage.RecoveryAccountBody + token);
-            await _createLink.Create(linkModel);
-            _logger.LogInformation($"Created new token for {user.username}#{user.id} with life time for 3 hours");
+                string token = Guid.NewGuid().ToString("N") + Guid.NewGuid().ToString() + _generateKey.GenerateKey();
 
-            return StatusCode(201, new { message = AccountSuccessMessage.EmailSendedRecovery });
+                var linkModel = new LinkModel
+                {
+                    user_id = user.id,
+                    u_token = token,
+                    expiry_date = DateTime.UtcNow.AddMinutes(30),
+                    is_used = false,
+                    created_at = DateTime.UtcNow
+                };
+
+                var userModel = new UserModel { email = user.email, username = user.username };
+                await _emailSender.SendMessage(userModel, EmailMessage.RecoveryAccountHeader, EmailMessage.RecoveryAccountBody + token);
+                await _createLink.Create(linkModel);
+                _logger.LogInformation($"Created new token for {user.username}#{user.id} with life time for 30 minutes");
+
+                return StatusCode(201, new { message = AccountSuccessMessage.EmailSendedRecovery });
+            }
+            catch (Exception)
+            {
+                return StatusCode(500);
+            }
         }
 
         [HttpPost("account")]
@@ -93,6 +104,14 @@ namespace webapi.Controllers.Account
 
                 await _deleteByName.DeleteByName(token, null);
                 _logger.LogInformation($"Token: {token} was deleted");
+
+
+                await _updateToken.Update(new TokenModel
+                {
+                    user_id = link.user_id,
+                    refresh_token = null,
+                    expiry_date = DateTime.UtcNow.AddYears(-100)
+                }, true);
 
                 return StatusCode(200, new { message = AccountSuccessMessage.PasswordUpdated });
             }
