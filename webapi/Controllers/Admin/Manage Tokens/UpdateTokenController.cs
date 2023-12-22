@@ -16,6 +16,7 @@ namespace webapi.Controllers.Admin.Manage_Tokens
     [Route("api/admin/tokens")]
     [ApiController]
     [Authorize(Roles = "HighestAdmin,Admin")]
+    [ValidateAntiForgeryToken]
     public class UpdateTokenController : ControllerBase
     {
         private readonly IUserInfo _userInfo;

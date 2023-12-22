@@ -1,4 +1,4 @@
-import axios from "axios";
+import Interceptor from './AxiosRequestInterceptor';
 
 const BASE_URL = 'https://localhost:7067/';
 
@@ -8,16 +8,16 @@ const AxiosRequest = async ({ endpoint, method, withCookie, requestBody }: Reque
 
         switch (method) {
             case 'POST':
-                response = await axios.post(`${BASE_URL + endpoint}`, requestBody, { withCredentials: withCookie });
+                response = await Interceptor.post(`${BASE_URL + endpoint}`, requestBody, { withCredentials: withCookie });
                 break;
             case 'GET':
-                response = await axios.get(`${BASE_URL + endpoint}`, { withCredentials: withCookie });
+                response = await Interceptor.get(`${BASE_URL + endpoint}`, { withCredentials: withCookie });
                 break;
             case 'PUT':
-                response = await axios.put(`${BASE_URL + endpoint}`, requestBody, { withCredentials: withCookie });
+                response = await Interceptor.put(`${BASE_URL + endpoint}`, requestBody, { withCredentials: withCookie });
                 break;
             case 'DELETE':
-                response = await axios.delete(`${BASE_URL + endpoint}`, { withCredentials: withCookie });
+                response = await Interceptor.delete(`${BASE_URL + endpoint}`, { withCredentials: withCookie });
                 break;
             default:
                 throw new Error('Invalid request method');

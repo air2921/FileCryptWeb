@@ -38,6 +38,7 @@ namespace webapi
             app.UseBearer();
             app.UseAuthentication();
             app.UseAuthorization();
+            app.UseXSRF();
             // u can call 'UseLog' here
 
             app.UseEndpoints(endpoint =>

@@ -1,7 +1,4 @@
 ﻿using Microsoft.EntityFrameworkCore;
-using Newtonsoft.Json;
-using Newtonsoft.Json.Linq;
-using System.Net;
 using webapi.DB;
 using webapi.Interfaces.Redis;
 

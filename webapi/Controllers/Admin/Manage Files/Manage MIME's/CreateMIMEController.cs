@@ -11,6 +11,7 @@ namespace webapi.Controllers.Admin.Manage_Files.Manage_MIME_s
     [Route("api/admin/mime")]
     [ApiController]
     [Authorize(Roles = "HighestAdmin")]
+    [ValidateAntiForgeryToken]
     public class CreateMIMEController : ControllerBase
     {
         private readonly ILogger<CreateMIMEController> _logger;

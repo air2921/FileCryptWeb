@@ -78,6 +78,9 @@ namespace webapi
                 };
             });
 
+            services.AddAntiforgery(options => { options.HeaderName = "X-XSRF-TOKEN"; });
+            services.AddMvc();
+
             services.Configure<KestrelServerOptions>(options =>
             {
                 options.Limits.MaxRequestBodySize = 75 * 1024 * 1024;

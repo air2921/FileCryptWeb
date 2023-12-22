@@ -72,6 +72,7 @@ namespace webapi.Controllers.Core
         }
 
         [HttpDelete("{notificationId}")]
+        [ValidateAntiForgeryToken]
         public async Task<IActionResult> DeleteNotification([FromRoute] int notificationId)
         {
             try

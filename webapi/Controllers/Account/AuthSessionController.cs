@@ -14,6 +14,7 @@ namespace webapi.Controllers.Account
 {
     [Route("api/auth")]
     [ApiController]
+    [ValidateAntiForgeryToken]
     public class AuthSessionController : ControllerBase
     {
         private readonly FileCryptDbContext _dbContext;

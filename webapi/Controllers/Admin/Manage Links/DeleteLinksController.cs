@@ -14,6 +14,7 @@ namespace webapi.Controllers.Admin.Manage_Links
     [Route("api/admin/links")]
     [ApiController]
     [Authorize(Roles = "HighestAdmin,Admin")]
+    [ValidateAntiForgeryToken]
     public class DeleteLinksController : ControllerBase
     {
         private readonly FileCryptDbContext _dbContext;

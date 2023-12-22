@@ -13,6 +13,7 @@ namespace webapi.Controllers.Admin.Manage_Users
     [Route("api/admin/users")]
     [ApiController]
     [Authorize(Roles = "HighestAdmin,Admin")]
+    [ValidateAntiForgeryToken]
     public class DeleteUserController : ControllerBase
     {
         private readonly IUserInfo _userInfo;

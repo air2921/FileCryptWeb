@@ -14,6 +14,7 @@ namespace webapi.Controllers.Admin.Manage_Encryption_Keys
     [Route("api/admin/keys")]
     [ApiController]
     [Authorize(Roles = "HighestAdmin")]
+    [ValidateAntiForgeryToken]
     public class UpdateKeysController : ControllerBase
     {
         private readonly FileCryptDbContext _dbContext;

@@ -49,6 +49,7 @@ namespace webapi.Controllers.Core
         }
 
         [HttpPost("new/{receiverId}")]
+        [ValidateAntiForgeryToken]
         public async Task<IActionResult> CreateOneOffer([FromRoute] int receiverId)
         {
             try
@@ -102,6 +103,7 @@ namespace webapi.Controllers.Core
         }
 
         [HttpPut("accept/{offerId}")]
+        [ValidateAntiForgeryToken]
         public async Task<IActionResult> AcceptOffer([FromRoute] int offerId)
         {
             var offer = await _dbContext.Offers.FirstOrDefaultAsync(o => o.offer_id == offerId && o.receiver_id == _userInfo.UserId);
@@ -167,6 +169,7 @@ namespace webapi.Controllers.Core
         }
 
         [HttpDelete("{offerId}")]
+        [ValidateAntiForgeryToken]
         public async Task<IActionResult> DeleteOneOffer([FromRoute] int offerId)
         {
             try

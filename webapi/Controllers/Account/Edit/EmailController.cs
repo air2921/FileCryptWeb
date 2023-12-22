@@ -13,6 +13,7 @@ namespace webapi.Controllers.Account.Edit
     [Route("api/account/edit/email")]
     [ApiController]
     [Authorize]
+    [ValidateAntiForgeryToken]
     public class EmailController : ControllerBase
     {
         private const string EMAIL = "Email";

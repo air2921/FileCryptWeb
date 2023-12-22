@@ -15,6 +15,7 @@ namespace webapi.Controllers.Account.Edit
     [Route("api/account/edit/password")]
     [ApiController]
     [Authorize]
+    [ValidateAntiForgeryToken]
     public class PasswordController : ControllerBase
     {
         private readonly IUpdate<UserModel> _update;

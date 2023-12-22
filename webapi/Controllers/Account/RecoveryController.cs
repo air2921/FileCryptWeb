@@ -12,6 +12,7 @@ namespace webapi.Controllers.Account
 {
     [Route("api/recovery")]
     [ApiController]
+    [ValidateAntiForgeryToken]
     public class RecoveryController : ControllerBase
     {
         private readonly FileCryptDbContext _dbContext;

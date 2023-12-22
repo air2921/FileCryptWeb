@@ -94,6 +94,7 @@ namespace webapi.Controllers.Core
         }
 
         [HttpPut("private/auto")]
+        [ValidateAntiForgeryToken]
         public async Task<IActionResult> UpdatePrivateKey()
         {
             try
@@ -114,6 +115,7 @@ namespace webapi.Controllers.Core
         }
 
         [HttpPut("internal/auto")]
+        [ValidateAntiForgeryToken]
         public async Task<IActionResult> UpdatePersonalInternalKey()
         {
             try
@@ -134,6 +136,7 @@ namespace webapi.Controllers.Core
         }
 
         [HttpPut("internal/own")]
+        [ValidateAntiForgeryToken]
         public async Task<IActionResult> UpdatePersonalInternalKeyToYourOwn([FromBody] KeyModel keyModel)
         {
             try
@@ -156,6 +159,7 @@ namespace webapi.Controllers.Core
         }
 
         [HttpPut("private/own")]
+        [ValidateAntiForgeryToken]
         public async Task<IActionResult> UpdatePrivateKeyToYourOwn([FromBody] KeyModel keyModel)
         {
             try
@@ -178,6 +182,7 @@ namespace webapi.Controllers.Core
         }
 
         [HttpPut("received/clean")]
+        [ValidateAntiForgeryToken]
         public async Task<IActionResult> CleanReceivedInternalKey()
         {
             try

@@ -9,6 +9,7 @@ namespace webapi.Controllers.Admin
     [Route("api/admin/service")]
     [ApiController]
     [Authorize(Roles = "HighestAdmin")]
+    [ValidateAntiForgeryToken]
     public class AppController : ControllerBase
     {
         private readonly IUserInfo _userInfo;

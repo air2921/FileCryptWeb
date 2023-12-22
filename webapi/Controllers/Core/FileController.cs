@@ -36,6 +36,7 @@ namespace webapi.Controllers.Core
         }
 
         [HttpDelete("one")]
+        [ValidateAntiForgeryToken]
         public async Task<IActionResult> DeleteFileFromHistory([FromBody] FileModel fileModel, [FromQuery] bool byID)
         {
             try

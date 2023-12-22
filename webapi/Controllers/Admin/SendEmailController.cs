@@ -13,6 +13,7 @@ namespace webapi.Controllers.Admin
     [Route("api/admin/email/and/notification")]
     [ApiController]
     [Authorize(Roles = "HighestAdmin,Admin")]
+    [ValidateAntiForgeryToken]
     public class SendEmailController : ControllerBase
     {
         private readonly ILogger<SendEmailController> _logger;

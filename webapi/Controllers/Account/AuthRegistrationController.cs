@@ -12,6 +12,7 @@ namespace webapi.Controllers.Account
 {
     [Route("api/auth")]
     [ApiController]
+    [ValidateAntiForgeryToken]
     public class AuthRegistrationController : ControllerBase
     {
         private const string EMAIL = "Email";
