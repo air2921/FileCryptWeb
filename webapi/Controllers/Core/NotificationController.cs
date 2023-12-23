@@ -29,11 +29,14 @@ namespace webapi.Controllers.Core
         }
 
         [HttpGet("{notificationId}")]
-        public async Task<IActionResult> GetNotification([FromRoute] int notificationId)
+        public async Task<IActionResult> GetNotification([FromQuery] int notificationId)
         {
             try
             {
                 var notification = await _readNotification.ReadById(notificationId, null);
+
+                if (notification.sender_id != _userInfo.UserId || notification.receiver_id != _userInfo.UserId)
+                    return StatusCode(404);
 
                 return StatusCode(200, new { notification });
             }
@@ -44,17 +47,20 @@ namespace webapi.Controllers.Core
         }
 
         [HttpGet("all")]
-        public async Task<IActionResult> GetAll([FromQuery] bool received)
+        public async Task<IActionResult> GetAll([FromQuery] bool? sended = null)
         {
             var query = _dbContext.Notifications.OrderByDescending(n => n.send_time).AsQueryable();
             var notifications = new List<NotificationModel>();
 
-            switch (received)
+            switch (sended)
             {
                 case true:
-                    notifications = await query.Where(n => n.receiver_id == _userInfo.UserId).ToListAsync();
+                    notifications = await query.Where(n => n.sender_id == _userInfo.UserId).ToListAsync();
                     break;
                 case false:
+                    notifications = await query.Where(n => n.receiver_id == _userInfo.UserId).ToListAsync();
+                    break;
+                default:
                     notifications = await query.Where(n => n.receiver_id == _userInfo.UserId || n.sender_id == _userInfo.UserId).ToListAsync();
                     break;
             }
@@ -66,11 +72,12 @@ namespace webapi.Controllers.Core
         }
 
         [HttpDelete("{notificationId}")]
+        [ValidateAntiForgeryToken]
         public async Task<IActionResult> DeleteNotification([FromRoute] int notificationId)
         {
             try
             {
-                await _deleteNotification.DeleteById(notificationId);
+                await _deleteNotification.DeleteById(notificationId, _userInfo.UserId);
 
                 return StatusCode(200);
             }

@@ -29,7 +29,7 @@ namespace webapi.Controllers.Core
             _readAPI = readAPI;
         }
 
-        [HttpPost("new")]
+        [HttpPost]
         public async Task<IActionResult> CreateNewAPI()
         {
             var apiModel = new ApiModel { user_id = _userInfo.UserId };
@@ -39,7 +39,7 @@ namespace webapi.Controllers.Core
             return StatusCode(201);
         }
 
-        [HttpGet]
+        [HttpGet("user")]
         public async Task<IActionResult> GetAPI()
         {
             try
@@ -54,12 +54,12 @@ namespace webapi.Controllers.Core
             }
         }
 
-        [HttpDelete("revoke")]
+        [HttpDelete("revoke/user")]
         public async Task<IActionResult> RevokeAPI()
         {
             try
             {
-                await _deleteAPI.DeleteById(_userInfo.UserId);
+                await _deleteAPI.DeleteById(_userInfo.UserId, null);
 
                 return StatusCode(200);
             }

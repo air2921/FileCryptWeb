@@ -29,7 +29,7 @@ namespace webapi.Services.Security
             _context = context;
         }
 
-        public string GenerateJwtToken(UserModel userModel, int lifetimeInMin)
+        public string GenerateJwtToken(UserModel userModel, TimeSpan expiry)
         {
             SymmetricSecurityKey key = new SymmetricSecurityKey(Encoding.ASCII.GetBytes(_configuration[App.appSecretKey]!));
             var credentials = new SigningCredentials(key, SecurityAlgorithms.HmacSha256);
@@ -46,7 +46,7 @@ namespace webapi.Services.Security
                 issuer: "FileCrypt",
                 audience: "User",
                 claims: claims,
-                expires: DateTime.UtcNow.AddMinutes(lifetimeInMin),
+                expires: DateTime.UtcNow + expiry,
                 signingCredentials: credentials);
 
             return new JwtSecurityTokenHandler().WriteToken(token);
@@ -56,12 +56,12 @@ namespace webapi.Services.Security
         {
             var str = Guid.NewGuid().ToString("N") + "_" + _generateKey.GenerateKey() + "_" + Guid.NewGuid().ToString();
 
-            return InsertRandomChars(str, 15);
+            return InsertRandomChars(str, 75);
         }
 
         public CookieOptions SetCookieOptions(TimeSpan expireTime)
         {
-            return new CookieOptions { HttpOnly = true, Expires = DateTime.UtcNow.Add(expireTime), Secure = true, SameSite = SameSiteMode.None };
+            return new CookieOptions { HttpOnly = true, MaxAge = expireTime, Secure = true, SameSite = SameSiteMode.None };
         }
 
         public async Task UpdateJwtToken()
@@ -88,8 +88,8 @@ namespace webapi.Services.Security
                 role = userAndToken.user.role
             };
 
-            string jwt = GenerateJwtToken(userModel, Constants.JWT_EXPIRY);
-            _context.HttpContext.Response.Cookies.Append(Constants.JWT_COOKIE_KEY, jwt, SetCookieOptions(TimeSpan.FromMinutes(Constants.JWT_EXPIRY)));
+            string jwt = GenerateJwtToken(userModel, Constants.JwtExpiry);
+            _context.HttpContext.Response.Cookies.Append(Constants.JWT_COOKIE_KEY, jwt, SetCookieOptions(Constants.JwtExpiry));
         }
 
         public string HashingToken(string token)

@@ -35,19 +35,20 @@ namespace webapi.Controllers.Core
             _readFile = readFile;
         }
 
-        [HttpDelete("one/{byID}")]
-        public async Task<IActionResult> DeleteFileFromHistory([FromBody] FileModel fileModel, [FromRoute] bool byID)
+        [HttpDelete("one")]
+        [ValidateAntiForgeryToken]
+        public async Task<IActionResult> DeleteFileFromHistory([FromBody] FileModel fileModel, [FromQuery] bool byID)
         {
             try
             {
                 if (byID)
                 {
-                    await _deleteFileById.DeleteById(fileModel.file_id);
+                    await _deleteFileById.DeleteById(fileModel.file_id, _userInfo.UserId);
 
                     return StatusCode(200);
                 }
 
-                await _deleteFileByName.DeleteByName(fileModel.file_name);
+                await _deleteFileByName.DeleteByName(fileModel.file_name, _userInfo.UserId);
 
                 return StatusCode(200);
             }
@@ -63,6 +64,9 @@ namespace webapi.Controllers.Core
             try
             {
                 var file = await _readFile.ReadById(fileId, null);
+
+                if (file.user_id != _userInfo.UserId)
+                    return StatusCode(404);
 
                 return StatusCode(200, new { file });
             }
@@ -82,7 +86,6 @@ namespace webapi.Controllers.Core
                 case true:
                     query = query.OrderByDescending(f => f.operation_date).AsQueryable();
                     break;
-
                 case false:
                     query = query.OrderBy(f => f.operation_date).AsQueryable();
                     break;

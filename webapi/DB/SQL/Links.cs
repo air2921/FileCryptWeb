@@ -33,7 +33,7 @@ namespace webapi.DB.SQL
                 throw new LinkException(ExceptionLinkMessages.NoOneLinkNotFound);
         }
 
-        public async Task DeleteById(int id)
+        public async Task DeleteById(int id, int? user_id)
         {
             var link = await _dbContext.Links.FirstOrDefaultAsync(l => l.link_id == id) ??
                 throw new LinkException(ExceptionLinkMessages.LinkNotFound);
@@ -42,7 +42,7 @@ namespace webapi.DB.SQL
             await _dbContext.SaveChangesAsync();
         }
 
-        public async Task DeleteByName(string token)
+        public async Task DeleteByName(string token, int? user_id)
         {
             var link = await _dbContext.Links.FirstOrDefaultAsync(l => l.u_token == token) ??
                 throw new LinkException(ExceptionLinkMessages.LinkNotFound);

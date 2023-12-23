@@ -42,7 +42,7 @@ namespace webapi.DB.SQL
             }
         }
 
-        public async Task DeleteById(int id)
+        public async Task DeleteById(int id, int? user_id)
         {
             var user = await _dbContext.Users.FirstOrDefaultAsync(u => u.id == id) ??
                 throw new UserException(ExceptionUserMessages.UserNotFound);

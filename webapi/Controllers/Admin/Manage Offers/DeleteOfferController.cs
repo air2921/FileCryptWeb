@@ -13,6 +13,7 @@ namespace webapi.Controllers.Admin.Manage_Offers
     [Route("api/admin/offers")]
     [ApiController]
     [Authorize(Roles = "HighestAdmin,Admin")]
+    [ValidateAntiForgeryToken]
     public class DeleteOfferController : ControllerBase
     {
         private readonly IUserInfo _userInfo;
@@ -26,12 +27,12 @@ namespace webapi.Controllers.Admin.Manage_Offers
             _deleteOffer = deleteOffer;
         }
 
-        [HttpDelete("{offerId}")]
-        public async Task<IActionResult> DeleteOffer([FromRoute] int offerId)
+        [HttpDelete("{userId}/{offerId}")]
+        public async Task<IActionResult> DeleteOffer([FromRoute] int userId, [FromRoute] int offerId)
         {
             try
             {
-                await _deleteOffer.DeleteById(offerId);
+                await _deleteOffer.DeleteById(offerId, userId);
                 _logger.LogWarning($"{_userInfo.Username}#{_userInfo.UserId} deleted offer #{offerId} from db");
 
                 return StatusCode(200, new { message = SuccessMessage.SuccessOfferDeleted });

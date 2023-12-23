@@ -11,6 +11,7 @@ namespace webapi.Controllers.Account.Edit
     [Route("api/account/edit/username")]
     [ApiController]
     [Authorize]
+    [ValidateAntiForgeryToken]
     public class UsernameController : ControllerBase
     {
         private readonly IUpdate<UserModel> _update;

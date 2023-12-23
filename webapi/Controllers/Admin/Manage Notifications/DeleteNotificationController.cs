@@ -24,12 +24,12 @@ namespace webapi.Controllers.Admin.Manage_Notifications
             _deleteNotification = deleteNotification;
         }
 
-        [HttpDelete("{notificationId}")]
-        public async Task<IActionResult> DeleteNotification([FromRoute] int notificationId)
+        [HttpDelete("{userId}/{notificationId}")]
+        public async Task<IActionResult> DeleteNotification([FromRoute] int userId, [FromRoute] int notificationId)
         {
             try
             {
-                await _deleteNotification.DeleteById(notificationId);
+                await _deleteNotification.DeleteById(notificationId, userId);
                 _logger.LogWarning($"{_userInfo.Username}#{_userInfo.UserId} deleted notification #{notificationId} from db");
 
                 return StatusCode(200, new { message = SuccessMessage.SuccessDeletedNotification });

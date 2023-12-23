@@ -27,9 +27,9 @@ namespace webapi.DB.SQL
             await _dbContext.SaveChangesAsync();
         }
 
-        public async Task DeleteById(int id)
+        public async Task DeleteById(int id, int? user_id)
         {
-            var offer = await _dbContext.Offers.FirstOrDefaultAsync(o => o.offer_id == id) ??
+            var offer = await _dbContext.Offers.FirstOrDefaultAsync(o => o.offer_id == id && (o.sender_id == user_id || o.receiver_id == user_id)) ??
                 throw new OfferException(ExceptionOfferMessages.OfferNotFound);
 
             _dbContext.Offers.Remove(offer);

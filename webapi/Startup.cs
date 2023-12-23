@@ -26,7 +26,6 @@ namespace webapi
 
             // If you need to receive logs from authorized requests, and receive information about who the request came from,
             // you need to move this middleware to after the UseAuthorization middleware
-            app.UseLog();
 
             app.UseFreeze();
             app.UseAPI();
@@ -37,7 +36,9 @@ namespace webapi
             app.UseCors("AllowSpecificOrigin");
             app.UseBearer();
             app.UseAuthentication();
+            app.UseLog();
             app.UseAuthorization();
+            app.UseXSRF();
             // u can call 'UseLog' here
 
             app.UseEndpoints(endpoint =>

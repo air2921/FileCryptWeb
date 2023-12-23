@@ -48,59 +48,70 @@ namespace webapi.Controllers.Core
             _tokenService = tokenService;
         }
 
-        [HttpPost("{receiverId}")]
+        [HttpPost("new/{receiverId}")]
+        [ValidateAntiForgeryToken]
         public async Task<IActionResult> CreateOneOffer([FromRoute] int receiverId)
         {
-            if (_userInfo.UserId == receiverId)
-                return StatusCode(409, new { message = "You send a trade offer to yourself, are you kidding)?" });
-
-            var receiver = await _readUser.ReadById(receiverId, null);
-            if (receiver is null)
-                return StatusCode(404, new { message = ExceptionUserMessages.UserNotFound });
-
-            var keys = await _readKeys.ReadById(_userInfo.UserId, true);
-            if (keys is null)
+            try
             {
-                _tokenService.DeleteTokens();
-                return StatusCode(404);
+                if (_userInfo.UserId == receiverId)
+                    return StatusCode(409, new { message = "You want send a trade offer to yourself, are you kidding)?" });
+
+                var receiver = await _readUser.ReadById(receiverId, null);
+
+                var keys = await _readKeys.ReadById(_userInfo.UserId, true);
+                if (keys is null)
+                {
+                    _tokenService.DeleteTokens();
+                    return StatusCode(404);
+                }
+
+                if (keys.person_internal_key is null)
+                    return StatusCode(404, new { message = "You don't have a internal key for create an offer" });
+
+                var offerModel = new OfferModel
+                {
+                    offer_header = $"Proposal to accept an encryption key from a user: {_userInfo.Username}#{_userInfo.UserId}",
+                    offer_body = keys.person_internal_key,
+                    offer_type = "Encryption key trade offer",
+                    is_accepted = false,
+                    sender_id = _userInfo.UserId,
+                    receiver_id = receiverId,
+                    created_at = DateTime.UtcNow
+                };
+
+                var notificationModel = new NotificationModel
+                {
+                    message_header = "New offer",
+                    message = $"You got a new offer from {_userInfo.Username}#{_userInfo.UserId}",
+                    priority = Priority.trade.ToString(),
+                    send_time = DateTime.UtcNow,
+                    is_checked = false,
+                    sender_id = _userInfo.UserId,
+                    receiver_id = receiverId
+                };
+
+                await _createOffer.Create(offerModel);
+                await _createNotification.Create(notificationModel);
+
+                return StatusCode(201, new { offerModel });
             }
-
-            if (keys.person_internal_key is null)
-                return StatusCode(404, new { message = "You don't have a internal key for create an offer" });
-
-            var offerModel = new OfferModel
+            catch (UserException ex)
             {
-                offer_header = $"Proposal to accept an encryption key from a user: {_userInfo.Username}#{_userInfo.UserId}",
-                offer_body = keys.person_internal_key,
-                offer_type = "Encryption key trade offer",
-                is_accepted = false,
-                sender_id = _userInfo.UserId,
-                receiver_id = receiverId
-            };
-
-            var notificationModel = new NotificationModel
-            {
-                message_header = "New offer",
-                message = $"You got a new offer from {_userInfo.Username}#{_userInfo.UserId}",
-                priority = Priority.trade.ToString(),
-                send_time = DateTime.UtcNow,
-                is_checked = false,
-                sender_id = _userInfo.UserId,
-                receiver_id = receiverId
-            };
-
-            await _createOffer.Create(offerModel);
-            await _createNotification.Create(notificationModel);
-
-            return StatusCode(201, new { offerModel });
+                return StatusCode(404, new { message = ex.Message });
+            }
         }
 
-        [HttpPut("{offerId}")]
+        [HttpPut("accept/{offerId}")]
+        [ValidateAntiForgeryToken]
         public async Task<IActionResult> AcceptOffer([FromRoute] int offerId)
         {
             var offer = await _dbContext.Offers.FirstOrDefaultAsync(o => o.offer_id == offerId && o.receiver_id == _userInfo.UserId);
             if (offer is null)
                 return StatusCode(404);
+
+            if (offer.is_accepted == true)
+                return StatusCode(409, new { message = ExceptionOfferMessages.OfferIsAccepted });
 
             var receiver = await _dbContext.Keys.FirstOrDefaultAsync(u => u.user_id == _userInfo.UserId);
 
@@ -112,12 +123,15 @@ namespace webapi.Controllers.Core
             return StatusCode(200, new { message = SuccessMessage.SuccessOfferAccepted });
         }
 
-        [HttpGet("{id}")]
-        public async Task<IActionResult> GetOneOffer([FromRoute] int id)
+        [HttpGet("{offerId}")]
+        public async Task<IActionResult> GetOneOffer([FromRoute] int offerId)
         {
             try
             {
-                var offer = await _readOffer.ReadById(id, false);
+                var offer = await _readOffer.ReadById(offerId, false);
+
+                if (offer.sender_id != _userInfo.UserId || offer.receiver_id != _userInfo.UserId)
+                    return StatusCode(404);
 
                 return StatusCode(200, new { offer });
             }
@@ -155,11 +169,12 @@ namespace webapi.Controllers.Core
         }
 
         [HttpDelete("{offerId}")]
+        [ValidateAntiForgeryToken]
         public async Task<IActionResult> DeleteOneOffer([FromRoute] int offerId)
         {
             try
             {
-                await _deleteOffer.DeleteById(offerId);
+                await _deleteOffer.DeleteById(offerId, _userInfo.UserId);
 
                 return StatusCode(200, new { message = SuccessMessage.SuccessOfferDeleted });
             }

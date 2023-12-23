@@ -14,6 +14,7 @@ namespace webapi.Controllers.Admin.Manage_Links
     [Route("api/admin/links")]
     [ApiController]
     [Authorize(Roles = "HighestAdmin,Admin")]
+    [ValidateAntiForgeryToken]
     public class DeleteLinksController : ControllerBase
     {
         private readonly FileCryptDbContext _dbContext;
@@ -41,7 +42,7 @@ namespace webapi.Controllers.Admin.Manage_Links
         {
             try
             {
-                await _deleteById.DeleteById(tokenId);
+                await _deleteById.DeleteById(tokenId, null);
                 _logger.LogWarning($"{_userInfo.Username}#{_userInfo.UserId} deleted recovery link #{tokenId} from db");
 
                 return StatusCode(200);
@@ -57,7 +58,7 @@ namespace webapi.Controllers.Admin.Manage_Links
         {
             try
             {
-                await _deleteByName.DeleteByName(token);
+                await _deleteByName.DeleteByName(token, null);
                 _logger.LogWarning($"{_userInfo.Username}#{_userInfo.UserId} delete recovery link by name: '{token}' from db");
 
                 return StatusCode(200);

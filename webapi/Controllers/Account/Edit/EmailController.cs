@@ -13,6 +13,7 @@ namespace webapi.Controllers.Account.Edit
     [Route("api/account/edit/email")]
     [ApiController]
     [Authorize]
+    [ValidateAntiForgeryToken]
     public class EmailController : ControllerBase
     {
         private const string EMAIL = "Email";
@@ -52,31 +53,38 @@ namespace webapi.Controllers.Account.Edit
         [HttpPost("old")]
         public async Task<IActionResult> StartEmailChangeProcess([FromBody] UserModel userModel)
         {
-            var user = await _dbContext.Users.FirstOrDefaultAsync(u => u.email == _userInfo.Email);
-            if (user is null)
+            try
             {
-                _logger.LogWarning($"Non-existent user {_userInfo.Username}#{_userInfo.UserId} was requested to authorized endpoint.\nTrying delete tokens from cookie");
-                _tokenService.DeleteTokens();
-                _logger.LogWarning("Tokens was deleted");
-                return StatusCode(404);
+                var user = await _dbContext.Users.FirstOrDefaultAsync(u => u.email == _userInfo.Email);
+                if (user is null)
+                {
+                    _logger.LogWarning($"Non-existent user {_userInfo.Username}#{_userInfo.UserId} was requested to authorized endpoint.\nTrying delete tokens from cookie");
+                    _tokenService.DeleteTokens();
+                    _logger.LogWarning("Tokens was deleted");
+                    return StatusCode(404);
+                }
+
+                bool IsCorrect = _passwordManager.CheckPassword(userModel.password_hash, user.password_hash);
+                if (!IsCorrect)
+                    return StatusCode(401, new { message = AccountErrorMessage.PasswordIncorrect });
+
+                int code = _generateCode.GenerateSixDigitCode();
+                string messageHeader = EmailMessage.ConfirmOldEmailHeader;
+                string message = EmailMessage.ConfirmOldEmailBody + code;
+
+                var newUserModel = new UserModel { username = _userInfo.Username, email = _userInfo.Email };
+                await _email.SendMessage(newUserModel, messageHeader, message);
+
+                HttpContext.Session.SetInt32(_userInfo.Email, code);
+                _logger.LogInformation($"Code was saved in user session {_userInfo.Username}#{_userInfo.UserId}");
+
+                _logger.LogInformation($"Email to {_userInfo.Username}#{_userInfo.UserId} was sended on {_userInfo.Email} (1-st step)");
+                return StatusCode(200, new { message = AccountSuccessMessage.EmailSended });
             }
-
-            bool IsCorrect = _passwordManager.CheckPassword(userModel.password_hash, user.password_hash);
-            if (!IsCorrect)
-                return StatusCode(401, new { message = AccountErrorMessage.PasswordIncorrect });
-
-            int code = _generateCode.GenerateSixDigitCode();
-            string messageHeader = EmailMessage.ConfirmOldEmailHeader;
-            string message = EmailMessage.ConfirmOldEmailBody + code;
-
-            var newUserModel = new UserModel { username = _userInfo.Username, email = _userInfo.Email };
-            await _email.SendMessage(newUserModel, messageHeader, message);
-
-            HttpContext.Session.SetInt32(_userInfo.Email, code);
-            _logger.LogInformation($"Code was saved in user session {_userInfo.Username}#{_userInfo.UserId}");
-
-            _logger.LogInformation($"Email to {_userInfo.Username}#{_userInfo.UserId} was sended on {_userInfo.Email} (1-st step)");
-            return StatusCode(200, new { message = AccountSuccessMessage.EmailSended });
+            catch (Exception)
+            {
+                return StatusCode(500);
+            }
         }
 
         [HttpPost("confirm/old")]
@@ -98,26 +106,33 @@ namespace webapi.Controllers.Account.Edit
         [HttpPost("new")]
         public async Task<IActionResult> SendEmailVerificationCode([FromBody] UserModel userModel)
         {
-            string email = userModel.email.ToLowerInvariant();
+            try
+            {
+                string email = userModel.email.ToLowerInvariant();
 
-            var user = await _dbContext.Users.FirstOrDefaultAsync(u => u.email == email);
-            if (user is not null)
-                return StatusCode(409, new { message = AccountErrorMessage.UserExists });
+                var user = await _dbContext.Users.FirstOrDefaultAsync(u => u.email == email);
+                if (user is not null)
+                    return StatusCode(409, new { message = AccountErrorMessage.UserExists });
 
-            int code = _generateCode.GenerateSixDigitCode();
-            string messageHeader = EmailMessage.ConfirmNewEmailHeader;
-            string message = EmailMessage.ConfirmNewEmailBody + code;
+                int code = _generateCode.GenerateSixDigitCode();
+                string messageHeader = EmailMessage.ConfirmNewEmailHeader;
+                string message = EmailMessage.ConfirmNewEmailBody + code;
 
-            var newUserModel = new UserModel { username = _userInfo.Username, email = email };
-            await _email.SendMessage(newUserModel, messageHeader, message);
+                var newUserModel = new UserModel { username = _userInfo.Username, email = email };
+                await _email.SendMessage(newUserModel, messageHeader, message);
 
 
-            HttpContext.Session.SetInt32(_userInfo.UserId.ToString(), code);
-            HttpContext.Session.SetString(EMAIL, email);
-            _logger.LogInformation($"Code and email was saved in user session {_userInfo.Username}#{_userInfo.UserId}");
+                HttpContext.Session.SetInt32(_userInfo.UserId.ToString(), code);
+                HttpContext.Session.SetString(EMAIL, email);
+                _logger.LogInformation($"Code and email was saved in user session {_userInfo.Username}#{_userInfo.UserId}");
 
-            _logger.LogInformation($"Email to {_userInfo.Username}#{_userInfo.UserId} was sended on {email} (3-rd step)");
-            return StatusCode(200, new { message = AccountSuccessMessage.EmailSended });
+                _logger.LogInformation($"Email to {_userInfo.Username}#{_userInfo.UserId} was sended on {email} (3-rd step)");
+                return StatusCode(200, new { message = AccountSuccessMessage.EmailSended });
+            }
+            catch (Exception)
+            {
+                return StatusCode(500);
+            }
         }
 
         [HttpPut("confirm/new")]

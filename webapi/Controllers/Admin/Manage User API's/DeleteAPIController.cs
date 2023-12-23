@@ -13,6 +13,7 @@ namespace webapi.Controllers.Admin.Manage_User_s_API
     [Route("api/admin/api")]
     [ApiController]
     [Authorize(Roles = "HighestAdmin")]
+    [ValidateAntiForgeryToken]
     public class DeleteAPIController : ControllerBase
     {
         private readonly IUserInfo _userInfo;
@@ -39,13 +40,13 @@ namespace webapi.Controllers.Admin.Manage_User_s_API
             {
                 if (byID)
                 {
-                    await _deleteAPIById.DeleteById(apiModel.user_id);
+                    await _deleteAPIById.DeleteById(apiModel.user_id, null);
                     _logger.LogWarning($"{_userInfo.Username}#{_userInfo.UserId} revoked API key from user#{apiModel.user_id}");
 
                     return StatusCode(200, new { message = SuccessMessage.SuccessApiRevoked });
                 }
 
-                await _deleteAPIByName.DeleteByName(apiModel.api_key);
+                await _deleteAPIByName.DeleteByName(apiModel.api_key, apiModel.user_id);
                 _logger.LogWarning($"{_userInfo.Username}#{_userInfo.UserId} revoked API key #{apiModel.api_key}");
 
                 return StatusCode(200, new { message = SuccessMessage.SuccessApiRevoked });

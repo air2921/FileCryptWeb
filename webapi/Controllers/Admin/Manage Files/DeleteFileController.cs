@@ -32,12 +32,12 @@ namespace webapi.Controllers.Admin.Manage_Files
             {
                 if (byID)
                 {
-                    await _deleteById.DeleteById(fileModel.file_id);
+                    await _deleteById.DeleteById(fileModel.file_id, fileModel.user_id);
                     _logger.LogInformation($"{_userInfo.Username}#{_userInfo.UserId} deleted file from history #{fileModel.file_id}");
                     return StatusCode(200);
                 }
 
-                await _deleteByName.DeleteByName(fileModel.file_name);
+                await _deleteByName.DeleteByName(fileModel.file_name, fileModel.user_id);
                 _logger.LogInformation($"{_userInfo.Username}#{_userInfo.UserId} deleted file from history by name: '{fileModel.file_name}'");
                 return StatusCode(200);
             }
