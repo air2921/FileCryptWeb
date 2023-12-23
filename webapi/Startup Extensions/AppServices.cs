@@ -78,7 +78,7 @@ namespace webapi
                 };
             });
 
-            services.AddAntiforgery(options => { options.HeaderName = "X-XSRF-TOKEN"; });
+            services.AddAntiforgery(options => { options.HeaderName = Constants.XSRF_HEADER_NAME; });
             services.AddMvc();
 
             services.Configure<KestrelServerOptions>(options =>

@@ -73,14 +73,14 @@ namespace webapi.Controllers.Account
                 {
                     user_id = user.id,
                     refresh_token = _tokenService.HashingToken(refreshToken),
-                    expiry_date = DateTime.UtcNow.AddDays(Constants.REFRESH_EXPIRY)
+                    expiry_date = DateTime.UtcNow + Constants.RefreshExpiry
                 };
 
                 await _update.Update(tokenModel, true);
                 _logger.LogInformation("Refresh token was updated in db");
 
-                Response.Cookies.Append(Constants.JWT_COOKIE_KEY, _tokenService.GenerateJwtToken(newUserModel, Constants.JWT_EXPIRY), _tokenService.SetCookieOptions(TimeSpan.FromMinutes(Constants.JWT_EXPIRY)));
-                Response.Cookies.Append(Constants.REFRESH_COOKIE_KEY, refreshToken, _tokenService.SetCookieOptions(TimeSpan.FromDays(Constants.REFRESH_EXPIRY)));
+                Response.Cookies.Append(Constants.JWT_COOKIE_KEY, _tokenService.GenerateJwtToken(newUserModel, Constants.JwtExpiry), _tokenService.SetCookieOptions(Constants.JwtExpiry));
+                Response.Cookies.Append(Constants.REFRESH_COOKIE_KEY, refreshToken, _tokenService.SetCookieOptions(Constants.RefreshExpiry));
                 _logger.LogInformation("Jwt and refresh was sended to client");
 
                 return StatusCode(200);

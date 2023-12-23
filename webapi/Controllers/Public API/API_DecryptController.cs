@@ -5,6 +5,7 @@ using webapi.DB;
 using webapi.Exceptions;
 using webapi.Interfaces.Controllers;
 using webapi.Interfaces.Cryptography;
+using webapi.Services;
 
 namespace webapi.Controllers.Public_API
 {
@@ -30,8 +31,8 @@ namespace webapi.Controllers.Public_API
         [HttpPost("decrypt")]
         [RequestSizeLimit(75 * 1024 * 1024)]
         public async Task<IActionResult> DecryptFiles(
-            [FromHeader(Name = "x-Encryption_Key")] string encryptionKey,
-            [FromHeader(Name = "x-API_Key")] string apiKey,
+            [FromHeader(Name = Constants.ENCRYPTION_KEY_HEADER_NAME)] string encryptionKey,
+            [FromHeader(Name = Constants.API_HEADER_NAME)] string apiKey,
             IFormFile file,
             [FromRoute] string type)
         {

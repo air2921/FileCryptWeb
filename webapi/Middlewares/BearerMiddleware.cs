@@ -30,32 +30,38 @@ namespace webapi.Middlewares
             {
                 if (context.Request.Cookies.TryGetValue(Constants.REFRESH_COOKIE_KEY, out string? refresh))
                 {
+                    if (string.IsNullOrWhiteSpace(refresh))
+                    {
+                        await _next(context);
+                        return;
+                    }
+
                     var userAndToken = await dbContext.Tokens
                         .Where(t => t.refresh_token == tokenService.HashingToken(refresh))
                         .Join(dbContext.Users, token => token.user_id, user => user.id, (token, user) => new { token, user })
                         .FirstOrDefaultAsync();
 
-                    if (userAndToken is not null && userAndToken.token.expiry_date.HasValue)
+                    if (userAndToken is null || userAndToken.token.expiry_date.HasValue || userAndToken.token.expiry_date < DateTime.UtcNow)
                     {
-                        if (userAndToken.token.expiry_date > DateTime.UtcNow)
-                        {
-                            var userModel = new UserModel
-                            {
-                                id = userAndToken.user.id,
-                                username = userAndToken.user.username,
-                                email = userAndToken.user.email,
-                                role = userAndToken.user.role
-                            };
-
-                            string createdJWT = tokenService.GenerateJwtToken(userModel, Constants.JWT_EXPIRY);
-                            var jwtCookieOptions = tokenService.SetCookieOptions(TimeSpan.FromMinutes(Constants.JWT_EXPIRY));
-
-                            context.Response.Cookies.Append(Constants.JWT_COOKIE_KEY, createdJWT, jwtCookieOptions);
-
-                            context.Request.Headers.Add("Authorization", $"Bearer {createdJWT}");
-                            AddSecurityHeaders(context);
-                        }
+                        await _next(context);
+                        return;
                     }
+
+                    var userModel = new UserModel
+                    {
+                        id = userAndToken.user.id,
+                        username = userAndToken.user.username,
+                        email = userAndToken.user.email,
+                        role = userAndToken.user.role
+                    };
+
+                    string createdJWT = tokenService.GenerateJwtToken(userModel, Constants.JwtExpiry);
+                    var jwtCookieOptions = tokenService.SetCookieOptions(Constants.JwtExpiry);
+
+                    context.Response.Cookies.Append(Constants.JWT_COOKIE_KEY, createdJWT, jwtCookieOptions);
+
+                    context.Request.Headers.Add("Authorization", $"Bearer {createdJWT}");
+                    AddSecurityHeaders(context);
                 }
             }
             await _next(context);
