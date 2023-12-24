@@ -10,7 +10,6 @@ namespace webapi.Controllers.Core
     [Route("api/core/cryptography/{type}")]
     [ApiController]
     [Authorize]
-    [ValidateAntiForgeryToken]
     public class CryptographyController : ControllerBase
     {
         private readonly ICryptographyControllerBase _cryptographyController;

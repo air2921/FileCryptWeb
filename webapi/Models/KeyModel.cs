@@ -16,7 +16,6 @@ namespace webapi.Models
 
         public string? received_internal_key { get; set; }
 
-        [JsonIgnore]
         public int user_id { get; set; }
 
         [JsonIgnore]
