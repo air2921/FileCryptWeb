@@ -23,7 +23,6 @@ namespace webapi.Models
         public DateTime? operation_date { get; set; }
 
         [ForeignKey("user_id")]
-        [JsonIgnore]
         public int user_id { get; set; }
 
         [JsonIgnore]

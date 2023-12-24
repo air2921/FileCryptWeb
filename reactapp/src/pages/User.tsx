@@ -1,6 +1,9 @@
 ﻿import React, { useEffect, useState } from 'react';
 import { useParams } from 'react-router-dom';
-import Error from '../components/Error/Error';
+
+import UserData from '../components/User/UserData';
+import UserKeys from '../components/User/UserKeys';
+import FileList from '../components/FileList/FileList';
 import AxiosRequest from '../api/AxiosRequest';
 
 const User = () => {
@@ -37,87 +40,11 @@ const User = () => {
     return (
         <div className="profile">
             <div className="user-container">
-                <div>
-                    <span className="username">
-                        {`${user.username}#${user.id}`}
-                        {isOwner && <button>Edit</button>}
-                    </span>
-                    <span className="role">
-                        {user.role}
-                    </span>
-                </div>
-                <div>
-                    <span className="email">
-                        {user.email}
-                        {isOwner && <button>Edit</button>}
-                    </span>
-                </div>
-                <div className="keys-container">
-                    <div className="private-key">
-                        <span className="private-key-name">
-                            Private Key
-                        </span>
-                        <span className="has-key">
-                            {keys.privateKey ? <i className="material-icons-sharp">check</i> : <i className="material-icons-sharp">close</i>}
-                            {isOwner && <button>Change</button>}
-                        </span>
-                    </div>
-                    <div className="internal-key">
-                        <span className="internal-key-name">
-                            Internal Key
-                        </span>
-                        <span className="has-key">
-                            {keys.internalKey ? <i className="material-icons-sharp">check</i> : <i className="material-icons-sharp">close</i>}
-                            {isOwner && <button>Change</button>}
-                        </span>
-                    </div>
-                    <div className="received-key">
-                        <span className="received-key-name">
-                            Received Key
-                        </span>
-                        <span className="has-key">
-                            {keys.receivedKey ? <i className="material-icons-sharp">check</i> : <i className="material-icons-sharp">close</i>}
-                            {isOwner && <button>Change</button>}
-                        </span>
-                    </div>
-                </div>
+                <UserData user={user} isOwner={isOwner} />
+                <UserKeys keys={keys} isOwner={isOwner} />
             </div>
             <div className="files-container">
-                <ul>
-                    {files && files.some(file => file !== null) ? (
-                        files
-                            .filter(file => file !== null)
-                            .map((file) => (
-                                <li key={file.file_id} className="file">
-                                    <div className="file_header">
-                                        <div className="file-name-type">
-                                            <span className="file-Name">
-                                                {file.file_name}
-                                            </span>
-                                        </div>
-                                    </div>
-                                    <div className="file-details">
-                                        <div className="time">
-                                            {file.operation_date}
-                                        </div>
-                                        <div className="brief-File-Info">
-                                            <div className="file-Type">
-                                                {file.type}
-                                            </div>
-                                            <div className="file-id">
-                                                #{file.file_id}
-                                            </div>
-                                        </div>
-                                    </div>
-                                    {isOwner && <button>Delete</button>}
-                                </li>
-                            ))
-                    ) : (
-                            <div>
-                                {<Error errorMessage={'No encrypted files here'} errorFont={'home_storage'} />}
-                            </div>
-                    )}
-                </ul>
+                <FileList files={files} isOwner={isOwner} />
             </div>
         </div>
     );

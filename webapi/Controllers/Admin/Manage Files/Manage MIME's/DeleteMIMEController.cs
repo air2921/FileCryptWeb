@@ -41,21 +41,25 @@ namespace webapi.Controllers.Admin.Manage_Files.Manage_MIME_s
         }
 
         [HttpDelete("one")]
-        public async Task<IActionResult> DeleteOneMime([FromBody] FileMimeModel mimeModel, [FromQuery] bool byID)
+        public async Task<IActionResult> DeleteOneMime([FromQuery] int? mimeId, [FromQuery] string? mime)
         {
             try
             {
-                if(byID)
+                if(mimeId.HasValue)
                 {
-                    await _deleteMime.DeleteById(mimeModel.mime_id, null);
+                    await _deleteMime.DeleteById(mimeId.Value, null);
                     await _redisCache.DeleteCache(Constants.MIME_COLLECTION);
-                    _logger.LogWarning($"{_userInfo.Username}#{_userInfo.UserId} deleted MIME type: #{mimeModel.mime_id} from db and cache");
+                    _logger.LogWarning($"{_userInfo.Username}#{_userInfo.UserId} deleted MIME type: #{mimeId} from db and cache");
 
                     return StatusCode(200);
                 }
 
-                await _deleteMimeByName.DeleteByName(mimeModel.mime_name, null);
+                if (string.IsNullOrWhiteSpace(mime))
+                    return StatusCode(400);
+
+                await _deleteMimeByName.DeleteByName(mime, null);
                 await _redisCache.DeleteCache(Constants.MIME_COLLECTION);
+                _logger.LogWarning($"{_userInfo.Username}#{_userInfo.UserId} deleted MIME: {mime}, from db and cache");
 
                 return StatusCode(200);
             }

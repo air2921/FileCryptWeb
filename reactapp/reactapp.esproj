@@ -12,5 +12,6 @@
   </PropertyGroup>
   <ItemGroup>
     <Folder Include="src\components\Modal\" />
+    <Folder Include="src\components\FileList\" />
   </ItemGroup>
 </Project>

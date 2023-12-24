@@ -10,7 +10,6 @@ namespace webapi.Controllers.Core
     [Route("api/core/cryptography/{type}")]
     [ApiController]
     [Authorize]
-    [ValidateAntiForgeryToken]
     public class CryptographyController : ControllerBase
     {
         private readonly ICryptographyControllerBase _cryptographyController;
@@ -41,7 +40,7 @@ namespace webapi.Controllers.Core
             {
                 var param = await _cryptographyParams.GetCryptographyParams(type);
 
-                return await _cryptographyController.EncryptFile(_encrypt.EncryptFileAsync, param.EncryptionKey!, file, _userInfo.UserId, type);
+                return await _cryptographyController.EncryptFile(_encrypt.EncryptFileAsync, param.EncryptionKey, file, _userInfo.UserId, type);
             }
             catch (UserException ex)
             {
@@ -65,7 +64,7 @@ namespace webapi.Controllers.Core
             {
                 var param = await _cryptographyParams.GetCryptographyParams(type);
 
-                return await _cryptographyController.EncryptFile(_decrypt.DecryptFileAsync, param.EncryptionKey!, file, _userInfo.UserId, type);
+                return await _cryptographyController.EncryptFile(_decrypt.DecryptFileAsync, param.EncryptionKey, file, _userInfo.UserId, type);
             }
             catch (UserException ex)
             {
