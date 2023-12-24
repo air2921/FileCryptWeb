@@ -183,5 +183,5 @@ namespace webapi.Controllers.Base
         }
     }
 
-    public record CryptographyParams(string? EncryptionKey);
+    public record CryptographyParams(string EncryptionKey);
 }

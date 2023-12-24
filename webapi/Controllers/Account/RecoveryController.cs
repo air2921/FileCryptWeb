@@ -48,7 +48,7 @@ namespace webapi.Controllers.Account
         }
 
         [HttpPost("create/unique/token")]
-        public async Task<IActionResult> RecoveryAccount(string email)
+        public async Task<IActionResult> RecoveryAccount([FromBody] string email)
         {
             try
             {

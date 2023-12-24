@@ -54,7 +54,7 @@ namespace webapi.Controllers.Core
             }
         }
 
-        [HttpDelete("revoke/user")]
+        [HttpDelete("revoke")]
         public async Task<IActionResult> RevokeAPI()
         {
             try

@@ -37,18 +37,22 @@ namespace webapi.Controllers.Core
 
         [HttpDelete("one")]
         [ValidateAntiForgeryToken]
-        public async Task<IActionResult> DeleteFileFromHistory([FromBody] FileModel fileModel, [FromQuery] bool byID)
+        public async Task<IActionResult> DeleteFileFromHistory([FromQuery] int? fileId, [FromQuery] string? filename)
         {
             try
             {
-                if (byID)
+                if (fileId.HasValue)
                 {
-                    await _deleteFileById.DeleteById(fileModel.file_id, _userInfo.UserId);
+                    await _deleteFileById.DeleteById(fileId.Value, _userInfo.UserId);
 
                     return StatusCode(200);
                 }
 
-                await _deleteFileByName.DeleteByName(fileModel.file_name, _userInfo.UserId);
+                if (string.IsNullOrWhiteSpace(filename))
+                    return StatusCode(400);
+
+
+                await _deleteFileByName.DeleteByName(filename, _userInfo.UserId);
 
                 return StatusCode(200);
             }

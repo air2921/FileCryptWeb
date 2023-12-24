@@ -41,7 +41,7 @@ namespace webapi.Controllers.Core
             {
                 var param = await _cryptographyParams.GetCryptographyParams(type);
 
-                return await _cryptographyController.EncryptFile(_encrypt.EncryptFileAsync, param.EncryptionKey!, file, _userInfo.UserId, type);
+                return await _cryptographyController.EncryptFile(_encrypt.EncryptFileAsync, param.EncryptionKey, file, _userInfo.UserId, type);
             }
             catch (UserException ex)
             {
@@ -65,7 +65,7 @@ namespace webapi.Controllers.Core
             {
                 var param = await _cryptographyParams.GetCryptographyParams(type);
 
-                return await _cryptographyController.EncryptFile(_decrypt.DecryptFileAsync, param.EncryptionKey!, file, _userInfo.UserId, type);
+                return await _cryptographyController.EncryptFile(_decrypt.DecryptFileAsync, param.EncryptionKey, file, _userInfo.UserId, type);
             }
             catch (UserException ex)
             {

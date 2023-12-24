@@ -34,20 +34,23 @@ namespace webapi.Controllers.Admin.Manage_User_s_API
         }
 
         [HttpDelete("revoke/apikey")]
-        public async Task<IActionResult> RevokeAPI([FromBody] ApiModel apiModel, [FromQuery] bool byID)
+        public async Task<IActionResult> RevokeAPI([FromQuery] int userId, [FromQuery] int? apiId, [FromQuery] string? apikey )
         {
             try
             {
-                if (byID)
+                if (apiId.HasValue)
                 {
-                    await _deleteAPIById.DeleteById(apiModel.user_id, null);
-                    _logger.LogWarning($"{_userInfo.Username}#{_userInfo.UserId} revoked API key from user#{apiModel.user_id}");
+                    await _deleteAPIById.DeleteById(apiId.Value, null);
+                    _logger.LogWarning($"{_userInfo.Username}#{_userInfo.UserId} revoked API key from user#{userId}");
 
                     return StatusCode(200, new { message = SuccessMessage.SuccessApiRevoked });
                 }
 
-                await _deleteAPIByName.DeleteByName(apiModel.api_key, apiModel.user_id);
-                _logger.LogWarning($"{_userInfo.Username}#{_userInfo.UserId} revoked API key #{apiModel.api_key}");
+                if (string.IsNullOrWhiteSpace(apikey))
+                    return StatusCode(400);
+
+                await _deleteAPIByName.DeleteByName(apikey, userId);
+                _logger.LogWarning($"{_userInfo.Username}#{_userInfo.UserId} revoked API key #{apikey}");
 
                 return StatusCode(200, new { message = SuccessMessage.SuccessApiRevoked });
             }
