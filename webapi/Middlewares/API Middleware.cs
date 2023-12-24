@@ -1,6 +1,7 @@
 ﻿using Microsoft.EntityFrameworkCore;
 using webapi.DB;
 using webapi.Interfaces.Redis;
+using webapi.Services;
 
 namespace webapi.Middlewares
 {
@@ -24,7 +25,7 @@ namespace webapi.Middlewares
                 return;
             }
 
-            string? apiKey = context.Request.Headers["x-API_Key"];
+            string? apiKey = context.Request.Headers[Constants.API_HEADER_NAME];
             if (apiKey is null)
             {
                 await _next(context);

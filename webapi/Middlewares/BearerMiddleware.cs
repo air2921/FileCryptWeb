@@ -10,10 +10,14 @@ namespace webapi.Middlewares
     public class BearerMiddleware
     {
         private readonly RequestDelegate _next;
+        private readonly ILogger<BearerMiddleware> _logger;
+        private readonly IWebHostEnvironment _env;
 
-        public BearerMiddleware(RequestDelegate next)
+        public BearerMiddleware(RequestDelegate next, ILogger<BearerMiddleware> logger, IWebHostEnvironment env)
         {
             _next = next;
+            _logger = logger;
+            _env = env;
         }
 
         public async Task Invoke(HttpContext context, FileCryptDbContext dbContext, ITokenService tokenService)
@@ -36,12 +40,17 @@ namespace webapi.Middlewares
                         return;
                     }
 
+                    if (_env.IsDevelopment())
+                    {
+                        _logger.LogWarning(tokenService.HashingToken(refresh));
+                    }
+
                     var userAndToken = await dbContext.Tokens
                         .Where(t => t.refresh_token == tokenService.HashingToken(refresh))
                         .Join(dbContext.Users, token => token.user_id, user => user.id, (token, user) => new { token, user })
                         .FirstOrDefaultAsync();
 
-                    if (userAndToken is null || userAndToken.token.expiry_date.HasValue || userAndToken.token.expiry_date < DateTime.UtcNow)
+                    if (userAndToken is null || !userAndToken.token.expiry_date.HasValue || userAndToken.token.expiry_date < DateTime.UtcNow)
                     {
                         await _next(context);
                         return;

@@ -24,8 +24,6 @@ namespace webapi.Middlewares
 
             var path = context.Request.Path.ToString();
             var method = context.Request.Method.ToString();
-            var headers = context.Request.Headers.ToString();
-            var remoteIP = context.Connection.RemoteIpAddress.ToString();
 
             if (user.Identity.IsAuthenticated)
             {
@@ -54,9 +52,7 @@ namespace webapi.Middlewares
                 request = new
                 {
                     path,
-                    ip = remoteIP,
                     method,
-                    headers
                 }
             };
 
