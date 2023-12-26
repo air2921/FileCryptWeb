@@ -8,12 +8,11 @@ All values must be added to the secret store. The expected configuration setting
 
 | Variable           | Expected Key                           | Expected Value Format                                                              |
 |--------------------|--------------------------------------- |------------------------------------------------------------------------------------|
-| secretKey          | "SecretKey"                            | String 128 bits long                                                                                |
+| secretKey          | "SecretKey"                            | String 128 bits long                                                               |
 | emailPassword      | "EmailPassword"                        | Any                                                                                |
 | emailAdress        | "Email"                                | "FileCryptWeb@email.com"                                                           |
 | fileCryptKey       | "FileCryptKey"                         | 256-bit byte array encoded in Base64String                                         |
 | redisServer        | "ConnectionStrings:RedisConnection"    | "localhost:6379,abortConnect=false"                                                |
-| mongoDb            | "ConnectionStrings:MongoDbConnection"  | "mongodb://localhost:27017"                                                        |
 | postgres           | "ConnectionStrings:PostgresConnection" | "Host=YourHost;Port=5432;Username=Username;Password=YourPassword;Database=YourDB;" |
 
 ## Additional setup
