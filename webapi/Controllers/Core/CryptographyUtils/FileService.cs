@@ -39,9 +39,9 @@ namespace webapi.Controllers.Base.CryptographyUtils
         {
             string lowerType = type.ToLowerInvariant();
 
-            string privateType = FileType.PrivateType;
-            string internalType = FileType.InternalType;
-            string receivedType = FileType.ReceivedType;
+            string privateType = FileType.Received.ToString().ToLowerInvariant();
+            string internalType = FileType.Received.ToString().ToLowerInvariant();
+            string receivedType = FileType.Received.ToString().ToLowerInvariant();
 
             string[] typesArray = new string[]
             {

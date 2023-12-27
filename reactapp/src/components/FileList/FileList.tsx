@@ -1,7 +1,9 @@
 import React from 'react';
 import Error from '../Error/Error';
+import DateComponent from '../Date/Date';
 
 function FileList({ files, isOwner }: FileListProps) {
+
     if (!files || files.every(file => file === null)) {
         return <div><Error errorMessage={'No encrypted files here'} errorFont={'home_storage'} /></div>;
     }
@@ -18,7 +20,7 @@ function FileList({ files, isOwner }: FileListProps) {
                             </div>
                         </div>
                         <div className="file-details">
-                            <div className="time">{file.operation_date}</div>
+                            <div className="time"><DateComponent date={file.operation_date} /></div>
                             <div className="brief-file-info">
                                 <div className="file-Type">{file.type}</div>
                                 <div className="file-id">FID#{file.file_id}</div>

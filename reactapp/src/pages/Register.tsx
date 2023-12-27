@@ -1,6 +1,7 @@
 ﻿import React, { FormEvent, useState } from 'react';
 import Verify from '../components/Verify/Verify';
 import Error from '../components/Error/Error';
+import Input from '../components/Input/Input';
 import AxiosRequest from '../api/AxiosRequest';
 
 const Register: React.FC = () => {
@@ -28,41 +29,20 @@ const Register: React.FC = () => {
             {successStatusCode ? (
                 <Verify endpoint='api/auth/verify' />
             ) : (
-                <div>
+                <div className="register-container">
                     <p className="welcome-text">Welcome to FileCrypt. Let's start our adventure here</p>
                     <form onSubmit={handleSubmit}>
                         <div className="form-group">
                             <label htmlFor="email">email</label>
-                            <input
-                                type="email"
-                                id="email"
-                                value={email}
-                                onChange={(e) => setEmail(e.target.value)}
-                                className="form-control"
-                                required
-                            />
+                            <Input type="email" id="email" value={email} onChange={(e) => setEmail(e.target.value)} />
                         </div>
                         <div className="form-group">
                             <label htmlFor="password">password</label>
-                            <input
-                                type="password"
-                                id="password"
-                                value={password}
-                                onChange={(e) => setPassword(e.target.value)}
-                                className="form-control"
-                                required
-                            />
+                            <Input type="password" id="password" value={password} onChange={(e) => setPassword(e.target.value)} />
                         </div>
                         <div className="form-group">
                             <label htmlFor="username">username</label>
-                            <input
-                                type="text"
-                                id="username"
-                                value={username}
-                                onChange={(e) => setUsername(e.target.value)}
-                                className="form-control"
-                                required
-                            />
+                            <Input type="text" id="username" value={username} onChange={(e) => setUsername(e.target.value)} />
                         </div>
                         <div className="form-actions">
                             <button type="submit">

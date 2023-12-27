@@ -28,4 +28,11 @@ namespace webapi.Models
         [JsonIgnore]
         public UserModel? User { get; set; }
     }
+
+    public enum FileType
+    {
+        Private,
+        Internal,
+        Received
+    }
 }

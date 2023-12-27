@@ -8,7 +8,7 @@ function UserKeys({ keys, isOwner }: UserKeysProps) {
                     Private Key
                 </span>
                 <span className="has-key">
-                    {keys.privateKey ? <i className="material-icons-sharp">check</i> : <i className="material-icons-sharp">close</i>}
+                    {keys.privateKey ? <i className="material-icons-sharp">check_small</i> : <i className="material-icons-sharp">close_small</i>}
                     {isOwner && <button>Change</button>}
                 </span>
             </div>
@@ -17,7 +17,7 @@ function UserKeys({ keys, isOwner }: UserKeysProps) {
                     Internal Key
                 </span>
                 <span className="has-key">
-                    {keys.internalKey ? <i className="material-icons-sharp">check</i> : <i className="material-icons-sharp">close</i>}
+                    {keys.internalKey ? <i className="material-icons-sharp">check_small</i> : <i className="material-icons-sharp">close_small</i>}
                     {isOwner && <button>Change</button>}
                 </span>
             </div>
@@ -26,7 +26,7 @@ function UserKeys({ keys, isOwner }: UserKeysProps) {
                     Received Key
                 </span>
                 <span className="has-key">
-                    {keys.receivedKey ? <i className="material-icons-sharp">check</i> : <i className="material-icons-sharp">close</i>}
+                    {keys.receivedKey ? <i className="material-icons-sharp">check_small</i> : <i className="material-icons-sharp">close_small</i>}
                     {isOwner && <button>Change</button>}
                 </span>
             </div>

@@ -16,9 +16,9 @@ namespace webapi.Controllers.Base
     {
         private const string DEFAULT_FOLDER = "C:\\FileCryptWeb";
 
-        private readonly string privateType = FileType.PrivateType.ToLowerInvariant();
-        private readonly string internalType = FileType.InternalType.ToLowerInvariant();
-        private readonly string receivedType = FileType.ReceivedType.ToLowerInvariant();
+        private readonly string privateType = FileType.Received.ToString().ToLowerInvariant();
+        private readonly string internalType = FileType.Received.ToString().ToLowerInvariant();
+        private readonly string receivedType = FileType.Received.ToString().ToLowerInvariant();
 
         private readonly IFileService _fileService;
         private readonly ILogger<CryptographyHelper> _logger;

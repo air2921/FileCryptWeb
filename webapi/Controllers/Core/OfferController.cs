@@ -73,7 +73,7 @@ namespace webapi.Controllers.Core
                 {
                     offer_header = $"Proposal to accept an encryption key from a user: {_userInfo.Username}#{_userInfo.UserId}",
                     offer_body = keys.person_internal_key,
-                    offer_type = "Encryption key trade offer",
+                    offer_type = TradeType.Key.ToString(),
                     is_accepted = false,
                     sender_id = _userInfo.UserId,
                     receiver_id = receiverId,
@@ -84,7 +84,7 @@ namespace webapi.Controllers.Core
                 {
                     message_header = "New offer",
                     message = $"You got a new offer from {_userInfo.Username}#{_userInfo.UserId}",
-                    priority = Priority.trade.ToString(),
+                    priority = Priority.Trade.ToString(),
                     send_time = DateTime.UtcNow,
                     is_checked = false,
                     sender_id = _userInfo.UserId,

@@ -4,6 +4,7 @@ import { useParams } from 'react-router-dom';
 import UserData from '../components/User/UserData';
 import UserKeys from '../components/User/UserKeys';
 import FileList from '../components/FileList/FileList';
+import OfferList from '../components/OfferList/OfferList';
 import AxiosRequest from '../api/AxiosRequest';
 
 const User = () => {
@@ -33,8 +34,8 @@ const User = () => {
         return <div className="error">{errorMessage || 'Loading...'}</div>;
     }
 
-    const { user, isOwner, keys, files } = userData as {
-        user: any, isOwner: boolean, keys: any, files: any[]
+    const { user, isOwner, keys, files, offers } = userData as {
+        user: any, isOwner: boolean, keys: any, files: any[], offers: any[]
     };
 
     return (
@@ -43,8 +44,9 @@ const User = () => {
                 <UserData user={user} isOwner={isOwner} />
                 <UserKeys keys={keys} isOwner={isOwner} />
             </div>
-            <div className="files-container">
+            <div className="container">
                 <FileList files={files} isOwner={isOwner} />
+                <OfferList offers={offers} isOwner={isOwner} />
             </div>
         </div>
     );

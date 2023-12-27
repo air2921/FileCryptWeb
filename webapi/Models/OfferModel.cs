@@ -34,4 +34,9 @@ namespace webapi.Models
         [JsonIgnore]
         public virtual UserModel? Receiver { get; set; }
     }
+
+    public enum TradeType
+    {
+        Key
+    }
 }

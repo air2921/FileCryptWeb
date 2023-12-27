@@ -35,9 +35,9 @@ namespace webapi.Models
 
     public enum Priority
     {
-        trade,
-        info,
-        warning,
-        security
+        Trade,
+        Info,
+        Warning,
+        Security
     }
 }
