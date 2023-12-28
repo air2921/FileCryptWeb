@@ -1,7 +1,7 @@
 import React, { FormEvent, useState } from 'react';
 import { useNavigate } from 'react-router-dom';
-import Error from '../Error/Error';
 import AxiosRequest from '../../api/AxiosRequest';
+import Message from '../Message/Message';
 
 const Verify: React.FC<VerifyProps> = ({ endpoint }) => {
     const [code, setCode] = useState(0);
@@ -42,7 +42,7 @@ const Verify: React.FC<VerifyProps> = ({ endpoint }) => {
                     </button>
                 </div>
             </form>
-            {errorMessage && <Error errorMessage={errorMessage} errorFont={'error'} />}
+            {errorMessage && <Message message={errorMessage} font='error' />}
         </div>
     );
 }

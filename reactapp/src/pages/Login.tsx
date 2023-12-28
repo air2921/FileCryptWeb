@@ -1,8 +1,8 @@
 import React, { FormEvent, useState } from 'react';
 import { useNavigate } from 'react-router-dom'
-import Error from '../components/Error/Error';
 import AxiosRequest from '../api/AxiosRequest';
 import Input from '../components/Input/Input';
+import Message from '../components/Message/Message';
 
 const Login = () => {
     const [email, setEmail] = useState('');
@@ -44,7 +44,7 @@ const Login = () => {
             <div className="signup-container">
                 <p>No? <a href="/signup">Create an account</a>And try sign in, after it.</p>
             </div>
-            {errorMessage && <Error errorMessage={errorMessage} errorFont={'error'} />}
+            {errorMessage && <Message message={errorMessage} font='error' />}
         </div>
     );
 };
