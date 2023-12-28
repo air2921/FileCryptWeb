@@ -4,18 +4,17 @@ function UserData({ user, isOwner }: UserDataProps) {
     return (
         <div className="user-data-container">
             <div>
-                <span className="username">
+                <div className="username">
                     {`${user.username}#${user.id}`}
-                    {isOwner && <button>Edit</button>}
-                </span>
-                <span className="role">{user.role}</span>
+                </div>
+                <div className="role">
+                    {user.role}
+                </div>
             </div>
-            <div>
-                <span className="email">
-                    {user.email}
-                    {isOwner && <button>Edit</button>}
-                </span>
+            <div className="email">
+                {user.email}
             </div>
+            {isOwner && <button>Edit</button>}
         </div>
     );
 };

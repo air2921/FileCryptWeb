@@ -17,9 +17,9 @@ function OfferList({ offers, isOwner }: OfferListProps) {
                         <div className="offer_header">
                             <span>{offer.offer_type} trade #{offer.offer_id}</span>
                             {offer.is_accepted ? (
-                                <span className="material-icons-sharp">check_small</span>
+                                <i className="material-icons-sharp">check_small</i>
                             ) : (
-                                <span className="material-icons-sharp">close_small</span>
+                                <i className="material-icons-sharp">close_small</i>
                             )}
                         </div>
                         <div className="offer-details">

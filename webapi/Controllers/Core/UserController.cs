@@ -36,9 +36,10 @@ namespace webapi.Controllers.Core
                 .SelectMany(
                     combined => _dbContext.Files
                         .Where(file => combined.keys.Select(k => k.user_id).Contains(file.user_id))
-                        .Take(5)
                         .DefaultIfEmpty(),
                     (combined, files) => new { combined.user, combined.keys, files })
+                .OrderByDescending(combined => combined.files.operation_date)
+                .Take(5)
                 .ToListAsync();
 
             var offers = await _dbContext.Offers
