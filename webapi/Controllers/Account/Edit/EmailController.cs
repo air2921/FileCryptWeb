@@ -50,7 +50,7 @@ namespace webapi.Controllers.Account.Edit
             _validation = validation;
         }
 
-        [HttpPost("old")]
+        [HttpPost("start")]
         public async Task<IActionResult> StartEmailChangeProcess([FromBody] UserModel userModel)
         {
             try
@@ -88,33 +88,31 @@ namespace webapi.Controllers.Account.Edit
         }
 
         [HttpPost("confirm/old")]
-        public IActionResult ConfirmOldEmail([FromQuery] int code)
-        {
-            int correctCode = (int)HttpContext.Session.GetInt32(_userInfo.Email);
-            _logger.LogInformation($"Code were received from user session {_userInfo.Username}#{_userInfo.UserId}. code: {correctCode}");
-
-            if (!_validation.IsSixDigit(correctCode))
-                return StatusCode(500, new { message = AccountErrorMessage.Error });
-
-            if (!code.Equals(correctCode))
-                return StatusCode(401, new { message = AccountErrorMessage.CodeIncorrect });
-
-            _logger.LogInformation($"User {_userInfo.Username}#{_userInfo.UserId} confirmed code (2-nd step)");
-            return StatusCode(201, new { message = AccountSuccessMessage.OldEmailConfirmed });
-        }
-
-        [HttpPost("new")]
-        public async Task<IActionResult> SendEmailVerificationCode([FromBody] UserModel userModel)
+        public async Task<IActionResult> ConfirmOldEmail([FromBody] UserModel userModel, [FromQuery] int code)
         {
             try
             {
+                int correctCode = (int)HttpContext.Session.GetInt32(_userInfo.Email);
+                _logger.LogInformation($"Code were received from user session {_userInfo.Username}#{_userInfo.UserId}. code: {correctCode}");
+
+                if (!_validation.IsSixDigit(correctCode))
+                    return StatusCode(500, new { message = AccountErrorMessage.Error });
+
+                if (!code.Equals(correctCode))
+                    return StatusCode(401, new { message = AccountErrorMessage.CodeIncorrect });
+
+                _logger.LogInformation($"User {_userInfo.Username}#{_userInfo.UserId} confirmed code (2-nd step)");
+
+                //Here is 2 steps in single endpoint, for best user experience,
+                //if this doesn't fit your business logic, you can split that logic into two different endpoints
+
                 string email = userModel.email.ToLowerInvariant();
 
                 var user = await _dbContext.Users.FirstOrDefaultAsync(u => u.email == email);
                 if (user is not null)
                     return StatusCode(409, new { message = AccountErrorMessage.UserExists });
 
-                int code = _generateCode.GenerateSixDigitCode();
+                int newcode = _generateCode.GenerateSixDigitCode();
                 string messageHeader = EmailMessage.ConfirmNewEmailHeader;
                 string message = EmailMessage.ConfirmNewEmailBody + code;
 
@@ -122,7 +120,7 @@ namespace webapi.Controllers.Account.Edit
                 await _email.SendMessage(newUserModel, messageHeader, message);
 
 
-                HttpContext.Session.SetInt32(_userInfo.UserId.ToString(), code);
+                HttpContext.Session.SetInt32(_userInfo.UserId.ToString(), newcode);
                 HttpContext.Session.SetString(EMAIL, email);
                 _logger.LogInformation($"Code and email was saved in user session {_userInfo.Username}#{_userInfo.UserId}");
 

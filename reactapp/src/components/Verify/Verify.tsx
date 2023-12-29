@@ -2,8 +2,9 @@ import React, { FormEvent, useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import AxiosRequest from '../../api/AxiosRequest';
 import Message from '../Message/Message';
+import Input from '../Input/Input';
 
-const Verify: React.FC<VerifyProps> = ({ endpoint }) => {
+const Verify: React.FC<VerifyProps> = ({ endpoint, method }) => {
     const [code, setCode] = useState(0);
     const [errorMessage, setErrorMessage] = useState('');
     const navigate = useNavigate();
@@ -11,7 +12,7 @@ const Verify: React.FC<VerifyProps> = ({ endpoint }) => {
     const handleSubmit = async (e: FormEvent) => {
         e.preventDefault();
 
-        const response = await AxiosRequest({ endpoint: `${endpoint}?code=${code}`, method: 'POST', withCookie: true, requestBody: null });
+        const response = await AxiosRequest({ endpoint: `${endpoint}?code=${code}`, method: method, withCookie: true, requestBody: null });
 
         if (response.isSuccess) {
             navigate('/');
@@ -23,24 +24,14 @@ const Verify: React.FC<VerifyProps> = ({ endpoint }) => {
 
     return (
         <div>
-            <p className="welcome-text">A confirmation code has been sent to your email address</p>
             <form onSubmit={handleSubmit}>
                 <div className="form-group">
-                    <label htmlFor="code">code</label>
-                    <input
-                        type="number"
-                        id="code"
-                        value={code}
-                        onChange={(e) => setCode(parseInt(e.target.value, 10))}
-                        className="form-control"
-                        required
-                    />
+                    <label htmlFor="code">Enter code</label>
+                    <Input type="number" id="code" value={code} onChange={(e) => setCode(parseInt(e.target.value, 10))} />
                 </div>
-                <div className="form-actions">
-                    <button type="submit">
-                        Confirm
-                    </button>
-                </div>
+                <button type="submit">
+                    Confirm
+                </button>
             </form>
             {errorMessage && <Message message={errorMessage} font='error' />}
         </div>

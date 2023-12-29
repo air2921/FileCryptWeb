@@ -90,7 +90,14 @@ namespace webapi.Controllers.Core
         {
             try
             {
-                var user = await _readUser.ReadById(_userInfo.UserId, null);
+                var originalUser = await _readUser.ReadById(_userInfo.UserId, null);
+                var user = new
+                {
+                    id = originalUser.id,
+                    username = originalUser.username,
+                    role = originalUser.role,
+                    email = originalUser.email
+                };
 
                 return StatusCode(200, new { user });
             }

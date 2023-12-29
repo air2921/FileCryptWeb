@@ -3,7 +3,7 @@ import Input from '../Input/Input';
 import AxiosRequest from '../../api/AxiosRequest';
 import Message from '../Message/Message';
 
-function Username() {
+const Username = () => {
 
     const [username, setUsername] = useState('');
 
@@ -13,7 +13,7 @@ function Username() {
     const handleSubmit = async (e: FormEvent) => {
         e.preventDefault();
 
-        const response = await AxiosRequest({ endpoint: `api/account/edit/username/new`, method: 'PUT', withCookie: true, requestBody: { username: username } })
+        const response = await AxiosRequest({ endpoint: `api/account/edit/username?username=${username}`, method: 'PUT', withCookie: true, requestBody: { username: username } })
 
         if (response.isSuccess) {
             setSuccessMessage(response.data.message);
@@ -27,15 +27,15 @@ function Username() {
         <div className="username">
             <form onSubmit={handleSubmit}>
                 <div className="form-group">
-                    <label htmlFor="email">email</label>
+                    <label htmlFor="username">Username</label>
                     <Input type="text" id="username" value={username} onChange={(e) => setUsername(e.target.value)} />
                 </div>
                 <button type="submit" className="btn btn-primary btn-disabled">
-                    Sign In
+                    Update username
                 </button>
             </form>
-            <Message message={successMessage} font='done' />
-            <Message message={errorMessage} font='error' />
+            {successMessage && <Message message={successMessage} font='done' />}
+            {errorMessage && <Message message={errorMessage} font='error' />}
         </div>
     );
 }

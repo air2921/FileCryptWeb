@@ -2,13 +2,10 @@ import React, { useEffect, useState } from 'react';
 import AxiosRequest from '../api/AxiosRequest';
 import UserData from '../components/User/UserData';
 import Username from '../components/Settings/Username';
+import Password from '../components/Settings/Password';
+import Email from '../components/Settings/Email';
 
-const Settings = async () => {
-
-    useEffect(() => {
-        fetchData();
-    }, []);
-
+const Settings = () => {
 
     const [userData, setUserData] = useState(null); 
 
@@ -27,16 +24,25 @@ const Settings = async () => {
         }
     }
 
+    useEffect(() => {
+        fetchData();
+    }, []);
+
     if (!successStatusCode || !userData) {
         return <div className="error">{errorMessage || 'Loading...'}</div>;
     }
 
     const { user } = userData as { user: any };
+    console.log(user);
 
     return (
         <div className="container">
             <UserData user={user} isOwner={true} />
             <Username />
+            <div className="auth-data-container">
+                <Password />
+                <Email />
+            </div>
         </div>
     );
 }

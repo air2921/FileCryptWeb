@@ -27,31 +27,31 @@ const Register: React.FC = () => {
     return (
         <div>
             {successStatusCode ? (
-                <Verify endpoint='api/auth/verify' />
+                <Verify endpoint='api/auth/verify' method='POST' />
             ) : (
-                <div className="register-container">
-                    <p className="welcome-text">Welcome to FileCrypt. Let's start our adventure here</p>
-                    <form onSubmit={handleSubmit}>
-                        <div className="form-group">
-                            <label htmlFor="email">email</label>
-                            <Input type="email" id="email" value={email} onChange={(e) => setEmail(e.target.value)} />
-                        </div>
-                        <div className="form-group">
-                            <label htmlFor="password">password</label>
-                            <Input type="password" id="password" value={password} onChange={(e) => setPassword(e.target.value)} />
-                        </div>
-                        <div className="form-group">
-                            <label htmlFor="username">username</label>
-                            <Input type="text" id="username" value={username} onChange={(e) => setUsername(e.target.value)} />
-                        </div>
-                        <div className="form-actions">
-                            <button type="submit">
-                                continue
-                            </button>
-                        </div>
-                    </form>
-                    {errorMessage && <Message message={errorMessage} font={'error'} />}
-                </div>
+                    <div className="register-container">
+                        <p className="welcome-text">Welcome to FileCrypt. Let's start our adventure here</p>
+                        <form onSubmit={handleSubmit}>
+                            <div className="form-group">
+                                <label htmlFor="email">email</label>
+                                <Input type="email" id="email" value={email} onChange={(e) => setEmail(e.target.value)} />
+                            </div>
+                            <div className="form-group">
+                                <label htmlFor="password">password</label>
+                                <Input type="password" id="password" value={password} onChange={(e) => setPassword(e.target.value)} />
+                            </div>
+                            <div className="form-group">
+                                <label htmlFor="username">username</label>
+                                <Input type="text" id="username" value={username} onChange={(e) => setUsername(e.target.value)} />
+                            </div>
+                            <div className="form-actions">
+                                <button type="submit">
+                                    continue
+                                </button>
+                            </div>
+                        </form>
+                        {errorMessage && <Message message={errorMessage} font={'error'} />}
+                    </div>
             )}
         </div>
     );

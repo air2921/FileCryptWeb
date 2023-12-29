@@ -3,6 +3,7 @@ using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
 using System.Text.RegularExpressions;
 using webapi.DB;
+using webapi.DTO;
 using webapi.Exceptions;
 using webapi.Interfaces.Services;
 using webapi.Interfaces.SQL;
@@ -41,38 +42,33 @@ namespace webapi.Controllers.Account.Edit
             _dbContext = dbContext;
         }
 
-        [HttpPost("validate")]
-        public async Task<IActionResult> CheckPassword(UserModel userModel)
-        {
-            var user = await _dbContext.Users.FirstOrDefaultAsync(u => u.email == _userInfo.Email);
-            if (user is null)
-            {
-                _logger.LogWarning($"Non-existent user {_userInfo.Username}#{_userInfo.UserId} was requested to authorized endpoint.\nTrying delete tokens from cookie");
-                _tokenService.DeleteTokens();
-                _logger.LogWarning("Tokens was deleted");
-                return StatusCode(404, new { message = AccountErrorMessage.UserNotFound });
-            }
-
-            bool IsCorrect = _passwordManager.CheckPassword(userModel.password_hash, user.password_hash);
-            if (!IsCorrect)
-                return StatusCode(401, new { message = AccountErrorMessage.PasswordIncorrect });
-
-            _logger.LogInformation($"{_userInfo.Username}#{_userInfo.UserId} Password is correct, action is allowed");
-            return StatusCode(200);
-        }
-
-        [HttpPut("new")]
-        public async Task<IActionResult> UpdatePassword(UserModel userModel)
+        [HttpPut]
+        public async Task<IActionResult> UpdatePassword([FromBody] PasswordDto passwordDto)
         {
             try
             {
-                if (!Regex.IsMatch(userModel.password_hash, Validation.Password))
+                if (!Regex.IsMatch(passwordDto.NewPassword, Validation.Password))
                     return StatusCode(422, new { message = AccountErrorMessage.InvalidFormatPassword });
 
-                var newUserModel = new UserModel { id = _userInfo.UserId, password_hash = _passwordManager.HashingPassword(userModel.password_hash) };
-                await _update.Update(userModel, null);
+                var user = await _dbContext.Users.FirstOrDefaultAsync(u => u.email == _userInfo.Email);
+                if (user is null)
+                {
+                    _logger.LogWarning($"Non-existent user {_userInfo.Username}#{_userInfo.UserId} was requested to authorized endpoint.\nTrying delete tokens from cookie");
+                    _tokenService.DeleteTokens();
+                    _logger.LogWarning("Tokens was deleted");
+                    return StatusCode(404, new { message = AccountErrorMessage.UserNotFound });
+                }
 
-                _logger.LogInformation("Password was hashed andd updated in db");
+                bool IsCorrect = _passwordManager.CheckPassword(passwordDto.OldPassword, user.password_hash);
+                if (!IsCorrect)
+                    return StatusCode(401, new { message = AccountErrorMessage.PasswordIncorrect });
+
+                _logger.LogInformation($"{_userInfo.Username}#{_userInfo.UserId} Password is correct, action is allowed");
+
+                var newUserModel = new UserModel { id = _userInfo.UserId, password_hash = _passwordManager.HashingPassword(passwordDto.NewPassword) };
+                await _update.Update(newUserModel, null);
+
+                _logger.LogInformation("Password was hashed and updated in db");
                 return StatusCode(200, new { message = AccountSuccessMessage.PasswordUpdated });
             }
             catch (UserException ex)
@@ -80,6 +76,7 @@ namespace webapi.Controllers.Account.Edit
                 _logger.LogWarning($"Non-existent user {_userInfo.Username}#{_userInfo.UserId} was requested to authorized endpoint.\nTrying delete tokens from cookie");
                 _tokenService.DeleteTokens();
                 _logger.LogWarning("Tokens was deleted");
+
                 return StatusCode(404, new { message = ex.Message });
             }
         }
