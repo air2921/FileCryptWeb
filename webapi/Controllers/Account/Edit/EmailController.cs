@@ -112,15 +112,15 @@ namespace webapi.Controllers.Account.Edit
                 if (user is not null)
                     return StatusCode(409, new { message = AccountErrorMessage.UserExists });
 
-                int newcode = _generateCode.GenerateSixDigitCode();
+                int confirmationCode = _generateCode.GenerateSixDigitCode();
                 string messageHeader = EmailMessage.ConfirmNewEmailHeader;
-                string message = EmailMessage.ConfirmNewEmailBody + code;
+                string message = EmailMessage.ConfirmNewEmailBody + confirmationCode;
 
                 var newUserModel = new UserModel { username = _userInfo.Username, email = email };
                 await _email.SendMessage(newUserModel, messageHeader, message);
 
 
-                HttpContext.Session.SetInt32(_userInfo.UserId.ToString(), newcode);
+                HttpContext.Session.SetInt32(_userInfo.UserId.ToString(), confirmationCode);
                 HttpContext.Session.SetString(EMAIL, email);
                 _logger.LogInformation($"Code and email was saved in user session {_userInfo.Username}#{_userInfo.UserId}");
 

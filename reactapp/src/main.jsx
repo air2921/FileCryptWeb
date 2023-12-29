@@ -11,3 +11,6 @@ ReactDOM.createRoot(document.getElementById('root')).render(
         </BrowserRouter>
     </React.StrictMode>,
 )
+
+//Remove StrictMode, if you need once server calling.
+//StrictMode calling useEffect twice.

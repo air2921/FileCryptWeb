@@ -44,11 +44,9 @@ const Register: React.FC = () => {
                                 <label htmlFor="username">username</label>
                                 <Input type="text" id="username" value={username} onChange={(e) => setUsername(e.target.value)} />
                             </div>
-                            <div className="form-actions">
-                                <button type="submit">
-                                    continue
-                                </button>
-                            </div>
+                            <button type="submit">
+                                continue
+                            </button>
                         </form>
                         {errorMessage && <Message message={errorMessage} font={'error'} />}
                     </div>

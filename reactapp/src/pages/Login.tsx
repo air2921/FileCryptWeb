@@ -40,11 +40,11 @@ const Login = () => {
                         Sign In
                     </button>
                 </form>
+                {errorMessage && <Message message={errorMessage} font='error' />}
             </div>
             <div className="signup-container">
                 <p>No? <a href="/signup">Create an account</a>And try sign in, after it.</p>
             </div>
-            {errorMessage && <Message message={errorMessage} font='error' />}
         </div>
     );
 };
