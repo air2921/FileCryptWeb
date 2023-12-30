@@ -35,14 +35,8 @@ const Password = () => {
     return (
         <div className="password">
             <form onSubmit={handleSubmit}>
-                <div className="form-group">
-                    <label htmlFor="old-password">Old Password</label>
-                    <Input type="password" id="old" value={oldPassword} onChange={(e) => setOld(e.target.value)} />
-                </div>
-                <div className="form-group">
-                    <label htmlFor="new-password">New Password</label>
-                    <Input type="password" id="new" value={newPassword} onChange={(e) => setNew(e.target.value)} />
-                </div>
+                <Input type="password" id="old" value={oldPassword} onChange={(e) => setOld(e.target.value)} />
+                <Input type="password" id="new" value={newPassword} onChange={(e) => setNew(e.target.value)} />
                 <button type="submit" className="btn btn-primary btn-disabled">
                     Update password
                 </button>

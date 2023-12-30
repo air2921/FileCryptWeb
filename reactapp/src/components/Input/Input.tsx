@@ -10,14 +10,18 @@ interface InputProps {
 
 function Input({ type, id, value, onChange, className }: InputProps) {
     return (
-        <input
-            type={type}
-            id={id}
-            value={value}
-            onChange={onChange}
-            className={`form-control ${className}`}
-            required
-        />
+        <div className="form-group">
+            <label htmlFor={id}>
+                <input
+                    type={type}
+                    id={id}
+                    value={value}
+                    onChange={onChange}
+                    className={`form-control ${className}`}
+                    required
+                />
+            </label>
+        </div>
     );
 }
 

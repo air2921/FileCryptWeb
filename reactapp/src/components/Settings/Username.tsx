@@ -26,10 +26,7 @@ const Username = () => {
     return (
         <div className="username">
             <form onSubmit={handleSubmit}>
-                <div className="form-group">
-                    <label htmlFor="username">Username</label>
-                    <Input type="text" id="username" value={username} onChange={(e) => setUsername(e.target.value)} />
-                </div>
+                <Input type="text" id="username" value={username} onChange={(e) => setUsername(e.target.value)} />
                 <button type="submit" className="btn btn-primary btn-disabled">
                     Update username
                 </button>

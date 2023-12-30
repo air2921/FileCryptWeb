@@ -28,14 +28,8 @@ const Login = () => {
             <div className="login-container">
                 <p className="welcome-text"></p>
                 <form onSubmit={handleSubmit}>
-                    <div className="form-group">
-                        <label htmlFor="email">email</label>
-                        <Input type="email" id="email" value={email} onChange={(e) => setEmail(e.target.value)} />
-                    </div>
-                    <div className="form-group">
-                        <label htmlFor="password">password</label>
-                        <Input type="password" id="password" value={password} onChange={(e) => setPassword(e.target.value)} />
-                    </div>
+                    <Input type="email" id="email" value={email} onChange={(e) => setEmail(e.target.value)} />
+                    <Input type="password" id="password" value={password} onChange={(e) => setPassword(e.target.value)} />
                     <button type="submit" className="btn btn-primary btn-disabled">
                         Sign In
                     </button>

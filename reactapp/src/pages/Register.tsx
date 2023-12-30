@@ -32,23 +32,14 @@ const Register: React.FC = () => {
                     <div className="register-container">
                         <p className="welcome-text">Welcome to FileCrypt. Let's start our adventure here</p>
                         <form onSubmit={handleSubmit}>
-                            <div className="form-group">
-                                <label htmlFor="email">email</label>
-                                <Input type="email" id="email" value={email} onChange={(e) => setEmail(e.target.value)} />
-                            </div>
-                            <div className="form-group">
-                                <label htmlFor="password">password</label>
-                                <Input type="password" id="password" value={password} onChange={(e) => setPassword(e.target.value)} />
-                            </div>
-                            <div className="form-group">
-                                <label htmlFor="username">username</label>
-                                <Input type="text" id="username" value={username} onChange={(e) => setUsername(e.target.value)} />
-                            </div>
+                            <Input type="text" id="username" value={username} onChange={(e) => setUsername(e.target.value)} />
+                            <Input type="email" id="email" value={email} onChange={(e) => setEmail(e.target.value)} />
+                            <Input type="password" id="password" value={password} onChange={(e) => setPassword(e.target.value)} />
                             <button type="submit">
                                 continue
                             </button>
                         </form>
-                        {errorMessage && <Message message={errorMessage} font={'error'} />}
+                        {errorMessage && <Message message={errorMessage} font='error' />}
                     </div>
             )}
         </div>
