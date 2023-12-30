@@ -1,6 +1,5 @@
 ﻿using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
-using System.Security.Cryptography;
 using webapi.Exceptions;
 using webapi.Interfaces.Cryptography;
 using webapi.Interfaces.Redis;
@@ -58,33 +57,17 @@ namespace webapi.Controllers.Core
         {
             try
             {
-                List<string> decryptedKeys = new();
-
                 var userKeys = await _readKeys.ReadById(_userInfo.UserId, true);
 
-                string?[] encryptionKeys =
+                string? privateKey = await _decryptKey.DecryptionKeyAsync(userKeys.private_key, secretKey);
+                string? receivedKey = userKeys.received_internal_key is not null ? "hidden" : null;
+                string? internalKey = null;
+                if(userKeys.person_internal_key is not null)
                 {
-                    userKeys.private_key,
-                    userKeys.person_internal_key,
-                    userKeys.received_internal_key
-                };
-
-                foreach (string? encryptedKey in encryptionKeys)
-                {
-                    try
-                    {
-                        if (encryptedKey is null)
-                            continue;
-
-                        decryptedKeys.Add(await _decryptKey.DecryptionKeyAsync(encryptedKey, secretKey));
-                    }
-                    catch (CryptographicException ex)
-                    {
-                        _logger.LogCritical(ex.ToString(), nameof(GetAllKeys));
-                        continue;
-                    }
+                    internalKey = await _decryptKey.DecryptionKeyAsync(userKeys.person_internal_key, secretKey);
                 }
-                return StatusCode(200, new { decryptedKeys });
+
+                return StatusCode(200, new { keys = new { privateKey, internalKey, receivedKey }});
             }
             catch (UserException ex)
             {
@@ -93,16 +76,26 @@ namespace webapi.Controllers.Core
             }
         }
 
-        [HttpPut("private/auto")]
+        [HttpPut("private")]
         [ValidateAntiForgeryToken]
-        public async Task<IActionResult> UpdatePrivateKey()
+        public async Task<IActionResult> UpdatePrivateKey([FromBody] KeyModel? keyModel, [FromQuery] bool auto)
         {
             try
             {
-                string key = _generateKey.GenerateKey();
-                var keyModel = new KeyModel { user_id = _userInfo.UserId, private_key = key };
+                string key = null;
 
-                await _updateKeys.UpdatePrivateKey(keyModel);
+                if(auto)
+                {
+                    key = _generateKey.GenerateKey();
+                }
+                else
+                {
+                    key = keyModel.private_key;
+                }
+
+                var newKeyModel = new KeyModel { user_id = _userInfo.UserId, private_key = key };
+
+                await _updateKeys.UpdatePrivateKey(newKeyModel);
                 await _redisCaching.DeleteCache(_redisKeys.PrivateKey);
 
                 return StatusCode(200, new { message = AccountSuccessMessage.KeyUpdated, private_key = key });
@@ -112,63 +105,35 @@ namespace webapi.Controllers.Core
                 _tokenService.DeleteTokens();
                 return StatusCode(404, new { message = ex.Message });
             }
-        }
-
-        [HttpPut("internal/auto")]
-        [ValidateAntiForgeryToken]
-        public async Task<IActionResult> UpdatePersonalInternalKey()
-        {
-            try
-            {
-                string key = _generateKey.GenerateKey();
-                var keyModel = new KeyModel { user_id = _userInfo.UserId, person_internal_key = key };
-
-                await _updateKeys.UpdatePersonalInternalKey(keyModel);
-                await _redisCaching.DeleteCache(_redisKeys.PersonalInternalKey);
-
-                return StatusCode(200, new { message = AccountSuccessMessage.KeyUpdated, internal_key = key });
-            }
-            catch (UserException ex)
-            {
-                _tokenService.DeleteTokens();
-                return StatusCode(404, new { message = ex.Message });
-            }
-        }
-
-        [HttpPut("internal/own")]
-        [ValidateAntiForgeryToken]
-        public async Task<IActionResult> UpdatePersonalInternalKeyToYourOwn([FromBody] KeyModel keyModel)
-        {
-            try
-            {
-                var newKeyModel = new KeyModel { user_id = _userInfo.UserId, person_internal_key = keyModel.person_internal_key };
-                await _updateKeys.UpdatePersonalInternalKey(newKeyModel);
-                await _redisCaching.DeleteCache(_redisKeys.PersonalInternalKey);
-
-                return StatusCode(200, new { message = AccountSuccessMessage.KeyUpdated, your_internal_key = keyModel.person_internal_key });
-            }
-            catch (UserException)
-            {
-                _tokenService.DeleteTokens();
-                return StatusCode(404);
-            }
             catch (ArgumentException ex)
             {
                 return StatusCode(422, new { message = ex.Message });
             }
         }
 
-        [HttpPut("private/own")]
+        [HttpPut("internal")]
         [ValidateAntiForgeryToken]
-        public async Task<IActionResult> UpdatePrivateKeyToYourOwn([FromBody] KeyModel keyModel)
+        public async Task<IActionResult> UpdatePersonalInternalKey([FromBody] KeyModel? keyModel, [FromQuery] bool auto)
         {
             try
             {
-                var newKeyModel = new KeyModel { user_id = _userInfo.UserId, private_key = keyModel.private_key };
-                await _updateKeys.UpdatePrivateKey(newKeyModel);
-                await _redisCaching.DeleteCache(_redisKeys.PrivateKey);
+                string key = null;
 
-                return StatusCode(200, new { message = AccountSuccessMessage.KeyUpdated, your_private_key = keyModel.private_key });
+                if (auto)
+                {
+                    key = _generateKey.GenerateKey();
+                }
+                else
+                {
+                    key = keyModel.private_key;
+                }
+
+                var newKeyModel = new KeyModel { user_id = _userInfo.UserId, person_internal_key = key };
+
+                await _updateKeys.UpdatePersonalInternalKey(newKeyModel);
+                await _redisCaching.DeleteCache(_redisKeys.PersonalInternalKey);
+
+                return StatusCode(200, new { message = AccountSuccessMessage.KeyUpdated, internal_key = key });
             }
             catch (UserException ex)
             {

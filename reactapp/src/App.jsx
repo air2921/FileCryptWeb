@@ -6,7 +6,8 @@ import Login from './pages/Login'
 import Home from './pages/no_logic/Home';
 import About from './pages/no_logic/About';
 import User from './pages/User';
-import Settings from './pages/Settings'
+import UserSettings from './pages/UserSettings'
+import KeySetting from './pages/KeySettings'
 
 function App() {
     return (
@@ -15,7 +16,8 @@ function App() {
                 <Route path="/" element={<Home />} />
                 <Route path="/about" element={<About />} />
                 <Route path="/user/:userId" element={<User />} />
-                <Route path="/user/settings" element={<Settings />} />
+                <Route path="/settings" element={<UserSettings />} />
+                <Route path="/settings/keys" element={<KeySetting />} />
                 <Route path="/auth/signin" element={<Login />} />
                 <Route path="/auth/signup" element={ <Register /> } />
             </Routes>

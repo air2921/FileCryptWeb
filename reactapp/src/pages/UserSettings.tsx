@@ -5,7 +5,7 @@ import Username from '../components/Settings/Username';
 import Password from '../components/Settings/Password';
 import Email from '../components/Settings/Email';
 
-const Settings = () => {
+const UserSettings = () => {
 
     const [userData, setUserData] = useState(null); 
 
@@ -47,4 +47,4 @@ const Settings = () => {
     );
 }
 
-export default Settings;
+export default UserSettings;
