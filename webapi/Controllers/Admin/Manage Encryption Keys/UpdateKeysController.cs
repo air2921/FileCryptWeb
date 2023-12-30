@@ -65,7 +65,7 @@ namespace webapi.Controllers.Admin.Manage_Encryption_Keys
                 if (key is null)
                     return StatusCode(404, new { ExceptionUserMessages.UserNotFound });
 
-                key.person_internal_key = null;
+                key.internal_key = null;
                 await _dbContext.SaveChangesAsync();
                 await _redisCache.DeleteCache("personalInternalKey#" + userId);
                 _logger.LogInformation($"{_userInfo.Username}#{_userInfo.UserId} revoked internal key from user#{userId}");

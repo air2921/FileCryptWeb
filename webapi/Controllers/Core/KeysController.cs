@@ -60,11 +60,11 @@ namespace webapi.Controllers.Core
                 var userKeys = await _readKeys.ReadById(_userInfo.UserId, true);
 
                 string? privateKey = await _decryptKey.DecryptionKeyAsync(userKeys.private_key, secretKey);
-                string? receivedKey = userKeys.received_internal_key is not null ? "hidden" : null;
+                string? receivedKey = userKeys.received_key is not null ? "hidden" : null;
                 string? internalKey = null;
-                if(userKeys.person_internal_key is not null)
+                if(userKeys.internal_key is not null)
                 {
-                    internalKey = await _decryptKey.DecryptionKeyAsync(userKeys.person_internal_key, secretKey);
+                    internalKey = await _decryptKey.DecryptionKeyAsync(userKeys.internal_key, secretKey);
                 }
 
                 return StatusCode(200, new { keys = new { privateKey, internalKey, receivedKey }});
@@ -128,7 +128,7 @@ namespace webapi.Controllers.Core
                     key = keyModel.private_key;
                 }
 
-                var newKeyModel = new KeyModel { user_id = _userInfo.UserId, person_internal_key = key };
+                var newKeyModel = new KeyModel { user_id = _userInfo.UserId, internal_key = key };
 
                 await _updateKeys.UpdatePersonalInternalKey(newKeyModel);
                 await _redisCaching.DeleteCache(_redisKeys.PersonalInternalKey);

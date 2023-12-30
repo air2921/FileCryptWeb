@@ -66,13 +66,13 @@ namespace webapi.Controllers.Core
                     return StatusCode(404);
                 }
 
-                if (keys.person_internal_key is null)
+                if (keys.internal_key is null)
                     return StatusCode(404, new { message = "You don't have a internal key for create an offer" });
 
                 var offerModel = new OfferModel
                 {
                     offer_header = $"Proposal to accept an encryption key from a user: {_userInfo.Username}#{_userInfo.UserId}",
-                    offer_body = keys.person_internal_key,
+                    offer_body = keys.internal_key,
                     offer_type = TradeType.Key.ToString(),
                     is_accepted = false,
                     sender_id = _userInfo.UserId,
@@ -115,7 +115,7 @@ namespace webapi.Controllers.Core
 
             var receiver = await _dbContext.Keys.FirstOrDefaultAsync(u => u.user_id == _userInfo.UserId);
 
-            receiver.received_internal_key = offer.offer_body;
+            receiver.received_key = offer.offer_body;
             offer.is_accepted = true;
 
             await _dbContext.SaveChangesAsync();

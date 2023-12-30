@@ -31,10 +31,7 @@ const Email = () => {
             ) : (
                     <div className="email">
                         <form onSubmit={handleSubmit}>
-                            <div className="form-group">
-                                <label htmlFor="old-password">Confirm Password</label>
-                                <Input type="password" id="password" value={password} onChange={(e) => setPassword(e.target.value)} />
-                            </div>
+                            <Input type="password" id="password" value={password} onChange={(e) => setPassword(e.target.value)} />
                             <button type="submit" className="btn btn-primary btn-disabled">
                                 Confirm
                             </button>

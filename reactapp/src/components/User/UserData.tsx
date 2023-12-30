@@ -1,6 +1,6 @@
 import React from 'react';
 
-function UserData({ user, isOwner }: UserDataProps) {
+function UserData({ user }: UserDataProps) {
     return (
         <div className="user-data-container">
             <div>
@@ -14,7 +14,6 @@ function UserData({ user, isOwner }: UserDataProps) {
             <div className="email">
                 {user.email}
             </div>
-            {isOwner && <button>Edit</button>}
         </div>
     );
 };

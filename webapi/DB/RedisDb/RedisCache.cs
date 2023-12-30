@@ -53,11 +53,11 @@ namespace webapi.DB.RedisDb
                     }
                     else if (key == _redisKeys.PersonalInternalKey)
                     {
-                        encryptionKey = keys.person_internal_key;
+                        encryptionKey = keys.internal_key;
                     }
                     else if (key == _redisKeys.ReceivedInternalKey)
                     {
-                        encryptionKey = keys.received_internal_key;
+                        encryptionKey = keys.received_key;
                     }
                     else
                     {

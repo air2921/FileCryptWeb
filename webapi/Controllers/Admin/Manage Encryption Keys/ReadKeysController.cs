@@ -53,8 +53,8 @@ namespace webapi.Controllers.Admin.Manage_Encryption_Keys
                 string?[] encryptionKeys =
                 {
                     userKeys.private_key,
-                    userKeys.person_internal_key,
-                    userKeys.received_internal_key
+                    userKeys.internal_key,
+                    userKeys.received_key
                 };
 
                 foreach (string? encryptedKey in encryptionKeys)

@@ -68,8 +68,8 @@ namespace webapi.Controllers.Core
 
             bool IsOwner = userId.Equals(_userInfo.UserId);
             string? privateKey = keys?.private_key is not null ? "hidden" : null;
-            string? internalKey = keys?.person_internal_key is not null ? "hidden" : null;
-            string? receivedKey = keys?.received_internal_key is not null ? "hidden" : null;
+            string? internalKey = keys?.internal_key is not null ? "hidden" : null;
+            string? receivedKey = keys?.received_key is not null ? "hidden" : null;
 
             if (userId.Equals(_userInfo.UserId))
             {

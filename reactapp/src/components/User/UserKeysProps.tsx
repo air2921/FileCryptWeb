@@ -4,5 +4,4 @@ interface UserKeysProps {
         internalKey: boolean;
         receivedKey: boolean;
     };
-    isOwner: boolean;
 }

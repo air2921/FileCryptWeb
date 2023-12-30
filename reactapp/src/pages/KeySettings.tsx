@@ -88,7 +88,7 @@ const KeySettings = () => {
         }
         else {
             const response = await AxiosRequest({
-                endpoint: `api/core/keys/internal?auto=${isAutoInternal}`, method: 'PUT', withCookie: true, requestBody: { person_internal_key: internalKey }
+                endpoint: `api/core/keys/internal?auto=${isAutoInternal}`, method: 'PUT', withCookie: true, requestBody: { internal_key: internalKey }
             });
 
             if (response.isSuccess) {
