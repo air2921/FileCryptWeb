@@ -32,9 +32,9 @@ const Register: React.FC = () => {
                     <div className="register-container">
                         <p className="welcome-text">Welcome to FileCrypt. Let's start our adventure here</p>
                         <form onSubmit={handleSubmit}>
-                            <Input type="text" id="username" value={username} onChange={(e) => setUsername(e.target.value)} />
-                            <Input type="email" id="email" value={email} onChange={(e) => setEmail(e.target.value)} />
-                            <Input type="password" id="password" value={password} onChange={(e) => setPassword(e.target.value)} />
+                            <Input type="text" id="username" require={true} value={username} onChange={(e) => setUsername(e.target.value)} />
+                            <Input type="email" id="email" require={true} value={email} onChange={(e) => setEmail(e.target.value)} />
+                            <Input type="password" id="password" require={true} value={password} onChange={(e) => setPassword(e.target.value)} />
                             <button type="submit">
                                 continue
                             </button>

@@ -28,7 +28,7 @@ const KeySettings = () => {
             setStatus(true);
         }
         else {
-            setErrorMessage(errorMessage);
+            setErrorMessage(response.data);
         }
     }
 
@@ -39,6 +39,7 @@ const KeySettings = () => {
     if (!successStatus || !userKeys) {
         return <div className="error">{errorMessage || 'Loading...'}</div>;
     }
+
     const { keys } = userKeys as { keys: any };
 
     const handlePrivateCheckboxChange = (e: ChangeEvent<HTMLInputElement>) => {
@@ -50,77 +51,69 @@ const KeySettings = () => {
     };
 
 
-    const handleSubmitPrivate = async (e: FormEvent) => {
-        if (isAutoPrivate) {
-            const response = await AxiosRequest({ endpoint: `api/core/keys/private?auto=${isAutoPrivate}`, method: 'PUT', withCookie: true, requestBody: null });
+    const handleSubmit = async (e: FormEvent, keyType: string, isAuto: boolean, keyValue: string) => {
+        e.preventDefault();
 
+        const body = isAuto ? null : { [`${keyType.toLowerCase()}_key`]: keyValue };
+
+        const response = await AxiosRequest({
+            endpoint: `api/core/keys/${keyType.toLowerCase()}?auto=${isAuto}`,
+            method: 'PUT',
+            withCookie: true,
+            requestBody: body
+        });
+
+        if (keyType.toLowerCase() === 'private') {
             if (response.isSuccess) {
+                setPrivateErrorMessage('');
                 setPrivateSuccessMessage(response.data.message);
             }
             else {
+                setPrivateSuccessMessage('');
                 setPrivateErrorMessage(response.data);
             }
         }
-        else {
-            const response = await AxiosRequest({
-                endpoint: `api/core/keys/private?auto=${isAutoPrivate}`, method: 'PUT', withCookie: true, requestBody: { private_key: privateKey }
-            });
-
+        else if (keyType.toLowerCase() === 'internal') {
             if (response.isSuccess) {
-                setPrivateSuccessMessage(response.data.message);
-            }
-            else {
-                setPrivateErrorMessage(response.data);
-            }
-        }
-    }
-
-    const handleSubmitInternal = async (e: FormEvent) => {
-        if (isAutoInternal) {
-            const response = await AxiosRequest({ endpoint: `api/core/keys/internal?auto=${isAutoInternal}`, method: 'PUT', withCookie: true, requestBody: null });
-
-            if (response.isSuccess) {
+                setInternalErrorMessage('');
                 setInternalSuccessMessage(response.data.message);
             }
             else {
-                setInternalErrorMessage(response.data);
-            }
-        }
-        else {
-            const response = await AxiosRequest({
-                endpoint: `api/core/keys/internal?auto=${isAutoInternal}`, method: 'PUT', withCookie: true, requestBody: { internal_key: internalKey }
-            });
-
-            if (response.isSuccess) {
-                setInternalSuccessMessage(response.data.message);
-            }
-            else {
+                setInternalSuccessMessage('');
                 setInternalErrorMessage(response.data);
             }
         }
     }
+
+    const handlePrivateKeySubmit = (e: FormEvent) => {
+        handleSubmit(e, 'private', isAutoPrivate, privateKey);
+    };
+
+    const handleInternalKeySubmit = (e: FormEvent) => {
+        handleSubmit(e, 'internal', isAutoInternal, internalKey);
+    };
 
     return (
         <div>
             <UserKeys keys={keys} />
             <div className="keys">
                 <div className="private">
-                    <form onSubmit={handleSubmitPrivate}>
-                        <Input type="text" id="private" value={privateKey} onChange={(e) => setPrivateKey(e.target.value)} />
+                    <form onSubmit={handlePrivateKeySubmit}>
+                        <Input type="text" id="private" require={false} value={privateKey} onChange={(e) => setPrivateKey(e.target.value)} />
                         <CheckBox type="checkbox" id="auto-private" checked={isAutoPrivate} onChange={handlePrivateCheckboxChange} />
                         <button type="submit" className="btn btn-primary btn-disabled">
-                            Change private key
+                            Update private key
                         </button>
                     </form>
                     {privateSuccessMessage && <Message message={privateSuccessMessage} font='done' />}
                     {privateErrorMessage && <Message message={privateErrorMessage} font='error' />}
                 </div>
                 <div className="internal">
-                    <form onSubmit={handleSubmitInternal}>
-                        <Input type="text" id="internal" value={internalKey} onChange={(e) => setInternalKey(e.target.value)} />
+                    <form onSubmit={handleInternalKeySubmit}>
+                        <Input type="text" id="internal" require={false} value={internalKey} onChange={(e) => setInternalKey(e.target.value)} />
                         <CheckBox type="checkbox" id="auto-internal" checked={isAutoInternal} onChange={handleInternalCheckboxChange} />
                         <button type="submit" className="btn btn-primary btn-disabled">
-                            Change private key
+                            Update internal key
                         </button>
                     </form>
                     {internalSuccessMessage && <Message message={internalSuccessMessage} font='done' />}

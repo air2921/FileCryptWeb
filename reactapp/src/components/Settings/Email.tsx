@@ -31,7 +31,7 @@ const Email = () => {
             ) : (
                     <div className="email">
                         <form onSubmit={handleSubmit}>
-                            <Input type="password" id="password" value={password} onChange={(e) => setPassword(e.target.value)} />
+                            <Input type="password" id="password" require={true} value={password} onChange={(e) => setPassword(e.target.value)} />
                             <button type="submit" className="btn btn-primary btn-disabled">
                                 Confirm
                             </button>
@@ -71,8 +71,8 @@ const Confirm = () => {
             ) : (
                     <div className="email-and-code">
                         <form onSubmit={handleSubmit}>
-                            <Input type="email" id="email" value={email} onChange={(e) => setEmail(e.target.value)} />
-                            <Input type="number" id="code" value={code} onChange={(e) => setCode(parseInt(e.target.value, 10))} />
+                            <Input type="email" id="email" require={true} value={email} onChange={(e) => setEmail(e.target.value)} />
+                            <Input type="number" id="code" require={true} value={code} onChange={(e) => setCode(parseInt(e.target.value, 10))} />
                             <button type="submit" className="btn btn-primary btn-disabled">
                                 Confirm
                             </button>

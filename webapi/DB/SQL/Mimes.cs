@@ -1,12 +1,10 @@
 ﻿using Microsoft.EntityFrameworkCore;
-using System.Reflection.Metadata;
 using webapi.Exceptions;
 using webapi.Interfaces.Redis;
 using webapi.Interfaces.Services;
 using webapi.Interfaces.SQL;
 using webapi.Localization.Exceptions;
 using webapi.Models;
-using webapi.Services;
 
 namespace webapi.DB.SQL
 {
@@ -90,33 +88,26 @@ namespace webapi.DB.SQL
                 string[] dataFiles = Directory.GetFiles(basePath);
 
                 var allMimes = new HashSet<string>();
-                var allMimesFromCSV = new HashSet<string>();
 
                 foreach (var dataFile in dataFiles)
                 {
-                    try
-                    {
-                        allMimesFromCSV.UnionWith(_fileManager.GetMimesFromCsvFile(dataFile));
-                    }
-                    catch (IOException ex)
-                    {
-                        _logger.LogCritical(ex.ToString(), nameof(DBInsertBase));
-                    }
+                    allMimes.UnionWith(_fileManager.GetMimesFromCsvFile(dataFile));
                 }
 
-                var existingMimes = await _dbContext.Mimes.Select(m => m.mime_name).ToListAsync();
+                var existingMimes = (await _dbContext.Mimes.Select(m => m.mime_name).ToListAsync())
+                    .Where(mime => mime != null)
+                    .Select(mime => mime!)
+                    .ToHashSet();
 
-                var hashSetExistingMimes = existingMimes.ToHashSet();
+                allMimes.UnionWith(existingMimes);
 
-                var mimes = allMimesFromCSV.Where(mime => !hashSetExistingMimes.Contains(mime)).ToHashSet();
-
-                allMimes.UnionWith(mimes);
-
+                var mimeModels = new List<FileMimeModel>();
                 foreach (var newMime in allMimes)
                 {
-                    var mimeType = new FileMimeModel { mime_name = newMime };
-                    await _dbContext.AddAsync(mimeType);
+                    mimeModels.Add(new FileMimeModel { mime_name = newMime });
                 }
+
+                await _dbContext.AddRangeAsync(mimeModels);
             }
 
             await _dbContext.SaveChangesAsync();

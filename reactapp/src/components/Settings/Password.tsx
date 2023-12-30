@@ -25,9 +25,11 @@ const Password = () => {
         })
 
         if (response.isSuccess) {
+            setErrorMessage('');
             setSuccessMessage(response.data.message);
         }
         else {
+            setSuccessMessage('');
             setErrorMessage(response.data);
         }
     }
@@ -35,8 +37,8 @@ const Password = () => {
     return (
         <div className="password">
             <form onSubmit={handleSubmit}>
-                <Input type="password" id="old" value={oldPassword} onChange={(e) => setOld(e.target.value)} />
-                <Input type="password" id="new" value={newPassword} onChange={(e) => setNew(e.target.value)} />
+                <Input type="password" id="old" require={true} value={oldPassword} onChange={(e) => setOld(e.target.value)} />
+                <Input type="password" id="new" require={true} value={newPassword} onChange={(e) => setNew(e.target.value)} />
                 <button type="submit" className="btn btn-primary btn-disabled">
                     Update password
                 </button>

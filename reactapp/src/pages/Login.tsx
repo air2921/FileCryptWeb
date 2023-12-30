@@ -28,8 +28,8 @@ const Login = () => {
             <div className="login-container">
                 <p className="welcome-text"></p>
                 <form onSubmit={handleSubmit}>
-                    <Input type="email" id="email" value={email} onChange={(e) => setEmail(e.target.value)} />
-                    <Input type="password" id="password" value={password} onChange={(e) => setPassword(e.target.value)} />
+                    <Input type="email" id="email" require={true} value={email} onChange={(e) => setEmail(e.target.value)} />
+                    <Input type="password" id="password" require={true} value={password} onChange={(e) => setPassword(e.target.value)} />
                     <button type="submit" className="btn btn-primary btn-disabled">
                         Sign In
                     </button>

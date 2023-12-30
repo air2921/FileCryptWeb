@@ -25,7 +25,7 @@ const Verify: React.FC<VerifyProps> = ({ endpoint, method }) => {
     return (
         <div>
             <form onSubmit={handleSubmit}>
-                <Input type="number" id="code" value={code} onChange={(e) => setCode(parseInt(e.target.value, 10))} />
+                <Input type="number" id="code" require={true} value={code} onChange={(e) => setCode(parseInt(e.target.value, 10))} />
                 <button type="submit">
                     Confirm
                 </button>
