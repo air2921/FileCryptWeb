@@ -37,7 +37,7 @@ const UserSettings = () => {
 
     return (
         <div className="container">
-            <UserData user={user} isOwner={true} />
+            <UserData user={user} />
             <Username />
             <div className="auth-data-container">
                 <Password />

@@ -102,7 +102,7 @@ const KeySettings = () => {
 
     return (
         <div>
-            <UserKeys keys={keys} isOwner={true} />
+            <UserKeys keys={keys} />
             <div className="keys">
                 <div className="private">
                     <form onSubmit={handleSubmitPrivate}>
