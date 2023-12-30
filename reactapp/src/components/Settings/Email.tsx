@@ -69,23 +69,26 @@ const Confirm = () => {
 
     return (
         <div>
-            <div className="email-and-code">
-                <form onSubmit={handleSubmit}>
-                    <div className="form-group">
-                        <label htmlFor="email">Your new email</label>
-                        <Input type="email" id="email" value={email} onChange={(e) => setEmail(e.target.value)} />
+            {successStatus ? (
+                <Verify endpoint='api/account/edit/email/confirm/new' method='PUT' />
+            ) : (
+                    <div className="email-and-code">
+                        <form onSubmit={handleSubmit}>
+                            <div className="form-group">
+                                <label htmlFor="email">Your new email</label>
+                                <Input type="email" id="email" value={email} onChange={(e) => setEmail(e.target.value)} />
+                            </div>
+                            <div className="form-group">
+                                <label htmlFor="code">Enter your code</label>
+                                <Input type="number" id="code" value={code} onChange={(e) => setCode(parseInt(e.target.value, 10))} />
+                            </div>
+                            <button type="submit" className="btn btn-primary btn-disabled">
+                                Confirm
+                            </button>
+                        </form>
+                        {errorMessage && <Message message={errorMessage} font='error' />}
                     </div>
-                    <div className="form-group">
-                        <label htmlFor="code">Enter your code</label>
-                        <Input type="number" id="code" value={code} onChange={(e) => setCode(parseInt(e.target.value, 10))} />
-                    </div>
-                    <button type="submit" className="btn btn-primary btn-disabled">
-                        Confirm
-                    </button>
-                </form>
-                {errorMessage && <Message message={errorMessage} font='error' />}
-            </div>
-            {successStatus && <Verify endpoint='api/account/edit/email/confirm/new' method='PUT' />}
+            )}
         </div>
     );
 }

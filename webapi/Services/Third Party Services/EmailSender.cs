@@ -2,13 +2,12 @@
 using MailKit.Security;
 using MimeKit;
 using System.Net.Sockets;
+using webapi.DTO;
 using webapi.Interfaces.Services;
-using webapi.Localization;
-using webapi.Models;
 
 namespace webapi.Services.Third_Party_Services
 {
-    public class EmailSender : IEmailSender<UserModel>
+    public class EmailSender : IEmailSender
     {
         private readonly IConfiguration _configuration;
         private readonly ILogger<EmailSender> _logger;
@@ -19,7 +18,7 @@ namespace webapi.Services.Third_Party_Services
             _logger = logger;
         }
 
-        public async Task SendMessage(UserModel user, string messageHeader, string message)
+        public async Task SendMessage(EmailDto dto)
         {
             try
             {
@@ -28,11 +27,11 @@ namespace webapi.Services.Third_Party_Services
 
                 var emailMessage = new MimeMessage();
                 emailMessage.From.Add(new MailboxAddress("FileCrypt", Email));
-                emailMessage.To.Add(new MailboxAddress(user.username, user.email));
-                emailMessage.Subject = messageHeader;
+                emailMessage.To.Add(new MailboxAddress(dto.username, dto.email));
+                emailMessage.Subject = dto.subject;
                 emailMessage.Body = new TextPart(MimeKit.Text.TextFormat.Plain)
                 {
-                    Text = message
+                    Text = dto.message
                 };
 
                 using var client = new SmtpClient();

@@ -2,6 +2,7 @@
 using Microsoft.EntityFrameworkCore;
 using webapi.DB;
 using webapi.DB.SQL;
+using webapi.DTO;
 using webapi.Exceptions;
 using webapi.Interfaces.Services;
 using webapi.Interfaces.SQL;
@@ -17,7 +18,7 @@ namespace webapi.Controllers.Account
     {
         private readonly FileCryptDbContext _dbContext;
         private readonly ILogger<RecoveryController> _logger;
-        private readonly IEmailSender<UserModel> _emailSender;
+        private readonly IEmailSender _emailSender;
         private readonly ICreate<LinkModel> _createLink;
         private readonly IUpdate<UserModel> _updateUser;
         private readonly IUpdate<TokenModel> _updateToken;
@@ -28,7 +29,7 @@ namespace webapi.Controllers.Account
         public RecoveryController(
             FileCryptDbContext dbContext,
             ILogger<RecoveryController> logger,
-            IEmailSender<UserModel> emailSender,
+            IEmailSender emailSender,
             ICreate<LinkModel> createLink,
             IUpdate<UserModel> updateUser,
             IUpdate<TokenModel> updateToken,
@@ -68,7 +69,16 @@ namespace webapi.Controllers.Account
                 };
 
                 var userModel = new UserModel { email = user.email, username = user.username };
-                await _emailSender.SendMessage(userModel, EmailMessage.RecoveryAccountHeader, EmailMessage.RecoveryAccountBody + token);
+
+                var emailDto = new EmailDto
+                {
+                    username = user.username,
+                    email = user.email,
+                    subject = EmailMessage.RecoveryAccountHeader,
+                    message = EmailMessage.RecoveryAccountBody + token
+                };
+
+                await _emailSender.SendMessage(emailDto);
                 await _createLink.Create(linkModel);
                 _logger.LogInformation($"Created new token for {user.username}#{user.id} with life time for 30 minutes");
 

@@ -2,6 +2,7 @@
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
 using webapi.DB;
+using webapi.DTO;
 using webapi.Exceptions;
 using webapi.Interfaces.Services;
 using webapi.Interfaces.SQL;
@@ -20,7 +21,7 @@ namespace webapi.Controllers.Account.Edit
 
         private readonly FileCryptDbContext _dbContext;
         private readonly IUpdate<UserModel> _update;
-        private readonly IEmailSender<UserModel> _email;
+        private readonly IEmailSender _email;
         private readonly ILogger<EmailController> _logger;
         private readonly IPasswordManager _passwordManager;
         private readonly IGenerateSixDigitCode _generateCode;
@@ -31,7 +32,7 @@ namespace webapi.Controllers.Account.Edit
         public EmailController(
             FileCryptDbContext dbContext,
             IUpdate<UserModel> update,
-            IEmailSender<UserModel> email,
+            IEmailSender email,
             ILogger<EmailController> logger,
             IPasswordManager passwordManager,
             IGenerateSixDigitCode generateCode,
@@ -69,11 +70,16 @@ namespace webapi.Controllers.Account.Edit
                     return StatusCode(401, new { message = AccountErrorMessage.PasswordIncorrect });
 
                 int code = _generateCode.GenerateSixDigitCode();
-                string messageHeader = EmailMessage.ConfirmOldEmailHeader;
-                string message = EmailMessage.ConfirmOldEmailBody + code;
 
-                var newUserModel = new UserModel { username = _userInfo.Username, email = _userInfo.Email };
-                await _email.SendMessage(newUserModel, messageHeader, message);
+                var emailDto = new EmailDto
+                { 
+                    username = _userInfo.Username,
+                    email = _userInfo.Email,
+                    subject = EmailMessage.ConfirmOldEmailHeader,
+                    message = EmailMessage.ConfirmOldEmailBody + code
+                };
+
+                await _email.SendMessage(emailDto);
 
                 HttpContext.Session.SetInt32(_userInfo.Email, code);
                 _logger.LogInformation($"Code was saved in user session {_userInfo.Username}#{_userInfo.UserId}");
@@ -113,11 +119,16 @@ namespace webapi.Controllers.Account.Edit
                     return StatusCode(409, new { message = AccountErrorMessage.UserExists });
 
                 int confirmationCode = _generateCode.GenerateSixDigitCode();
-                string messageHeader = EmailMessage.ConfirmNewEmailHeader;
-                string message = EmailMessage.ConfirmNewEmailBody + confirmationCode;
 
-                var newUserModel = new UserModel { username = _userInfo.Username, email = email };
-                await _email.SendMessage(newUserModel, messageHeader, message);
+                var emailDto = new EmailDto
+                {
+                    username = _userInfo.Username,
+                    email = email,
+                    subject = EmailMessage.ConfirmNewEmailHeader,
+                    message = EmailMessage.ConfirmNewEmailBody + confirmationCode
+                };
+
+                await _email.SendMessage(emailDto);
 
 
                 HttpContext.Session.SetInt32(_userInfo.UserId.ToString(), confirmationCode);

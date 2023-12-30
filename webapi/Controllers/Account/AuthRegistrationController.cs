@@ -2,6 +2,7 @@
 using Microsoft.EntityFrameworkCore;
 using System.Text.RegularExpressions;
 using webapi.DB;
+using webapi.DTO;
 using webapi.Interfaces.Services;
 using webapi.Interfaces.SQL;
 using webapi.Localization;
@@ -23,7 +24,7 @@ namespace webapi.Controllers.Account
         private readonly ILogger<AuthRegistrationController> _logger;
         private readonly ICreate<UserModel> _userCreate;
         private readonly IGenerateSixDigitCode _generateCode;
-        private readonly IEmailSender<UserModel> _email;
+        private readonly IEmailSender _email;
         private readonly IPasswordManager _passwordManager;
         private readonly IValidation _validation;
         private readonly FileCryptDbContext _dbContext;
@@ -32,7 +33,7 @@ namespace webapi.Controllers.Account
             ILogger<AuthRegistrationController> logger,
             ICreate<UserModel> userCreate,
             IGenerateSixDigitCode generateCode,
-            IEmailSender<UserModel> email,
+            IEmailSender email,
             IPasswordManager passwordManager,
             IValidation validation,
             FileCryptDbContext dbContext)
@@ -61,8 +62,6 @@ namespace webapi.Controllers.Account
                     return StatusCode(400, new { message = AccountErrorMessage.InvalidFormatPassword });
 
                 int code = _generateCode.GenerateSixDigitCode();
-                string messageHeader = EmailMessage.VerifyEmailHeader;
-                string messageBody = EmailMessage.VerifyEmailBody + code;
 
                 string password = _passwordManager.HashingPassword(userModel.password_hash);
                 _logger.LogInformation("Password was hashed");
@@ -74,7 +73,15 @@ namespace webapi.Controllers.Account
                 HttpContext.Session.SetInt32(email, code);
                 _logger.LogInformation("Data was saved in user session");
 
-                await _email.SendMessage(userModel, messageHeader, messageBody);
+                var emailDto = new EmailDto
+                {
+                    username = userModel.username,
+                    email = userModel.email,
+                    subject = EmailMessage.VerifyEmailHeader,
+                    message = EmailMessage.VerifyEmailBody + code
+                };
+
+                await _email.SendMessage(emailDto);
                 _logger.LogInformation($"Email was sended on {email} (1-st step)");
 
                 return StatusCode(200, new { message = AccountSuccessMessage.EmailSended });
