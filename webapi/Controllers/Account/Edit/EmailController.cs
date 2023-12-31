@@ -1,6 +1,7 @@
 ﻿using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
+using UAParser;
 using webapi.DB;
 using webapi.DTO;
 using webapi.Exceptions;
@@ -20,6 +21,7 @@ namespace webapi.Controllers.Account.Edit
         private const string EMAIL = "Email";
 
         private readonly FileCryptDbContext _dbContext;
+        private readonly ICreate<NotificationModel> _createNotification;
         private readonly IUpdate<UserModel> _update;
         private readonly IEmailSender _email;
         private readonly ILogger<EmailController> _logger;
@@ -31,6 +33,7 @@ namespace webapi.Controllers.Account.Edit
 
         public EmailController(
             FileCryptDbContext dbContext,
+            ICreate<NotificationModel> createNotification,
             IUpdate<UserModel> update,
             IEmailSender email,
             ILogger<EmailController> logger,
@@ -41,6 +44,7 @@ namespace webapi.Controllers.Account.Edit
             IValidation validation)
         {
             _dbContext = dbContext;
+            _createNotification = createNotification;
             _update = update;
             _email = email;
             _logger = logger;
@@ -130,7 +134,6 @@ namespace webapi.Controllers.Account.Edit
 
                 await _email.SendMessage(emailDto);
 
-
                 HttpContext.Session.SetInt32(_userInfo.UserId.ToString(), confirmationCode);
                 HttpContext.Session.SetString(EMAIL, email);
                 _logger.LogInformation($"Code and email was saved in user session {_userInfo.Username}#{_userInfo.UserId}");
@@ -162,6 +165,24 @@ namespace webapi.Controllers.Account.Edit
                 var newUserModel = new UserModel { id = _userInfo.UserId, email = email };
                 await _update.Update(newUserModel, null);
                 _logger.LogInformation("Email was was updated in db");
+
+                var clientInfo = Parser.GetDefault().Parse(HttpContext.Request.Headers["User-Agent"].ToString());
+                var browser = clientInfo.UA.Family;
+                var browserVersion = clientInfo.UA.Major + "." + clientInfo.UA.Minor;
+                var os = clientInfo.OS.Family;
+
+                var notificationModel = new NotificationModel
+                {
+                    message_header = "Someone changed your account email/login",
+                    message = $"Someone changed your email at {DateTime.UtcNow} from {browser} {browserVersion} on OS {os}." +
+                    $"New email: '{email}'",
+                    priority = Priority.Security.ToString(),
+                    send_time = DateTime.UtcNow,
+                    is_checked = false,
+                    receiver_id = _userInfo.UserId
+                };
+
+                await _createNotification.Create(notificationModel);
 
                 await _tokenService.UpdateJwtToken();
                 _logger.LogInformation("jwt with a new claims was updated");

@@ -47,10 +47,8 @@ namespace webapi.Controllers.Admin
 
                 await _emailSender.SendMessage(emailDto);
                 
-
                 var newNotificationModel = new NotificationModel
                 {
-                    sender_id = _userInfo.UserId,
                     receiver_id = notificationModel.receiver_id,
                     message_header = "You have a notification from administrator",
                     message = notificationModel.message,

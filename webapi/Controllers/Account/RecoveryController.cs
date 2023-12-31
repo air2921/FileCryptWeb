@@ -1,5 +1,6 @@
 ﻿using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
+using UAParser;
 using webapi.DB;
 using webapi.DB.SQL;
 using webapi.DTO;
@@ -20,6 +21,7 @@ namespace webapi.Controllers.Account
         private readonly ILogger<RecoveryController> _logger;
         private readonly IEmailSender _emailSender;
         private readonly ICreate<LinkModel> _createLink;
+        private readonly ICreate<NotificationModel> _createNotification;
         private readonly IUpdate<UserModel> _updateUser;
         private readonly IUpdate<TokenModel> _updateToken;
         private readonly IPasswordManager _passwordManager;
@@ -31,6 +33,7 @@ namespace webapi.Controllers.Account
             ILogger<RecoveryController> logger,
             IEmailSender emailSender,
             ICreate<LinkModel> createLink,
+            ICreate<NotificationModel> createNotification,
             IUpdate<UserModel> updateUser,
             IUpdate<TokenModel> updateToken,
             IPasswordManager passwordManager,
@@ -41,6 +44,7 @@ namespace webapi.Controllers.Account
             _logger = logger;
             _emailSender = emailSender;
             _createLink = createLink;
+            _createNotification = createNotification;
             _updateUser = updateUser;
             _updateToken = updateToken;
             _passwordManager = passwordManager;
@@ -68,17 +72,32 @@ namespace webapi.Controllers.Account
                     created_at = DateTime.UtcNow
                 };
 
-                var userModel = new UserModel { email = user.email, username = user.username };
+                var clientInfo = Parser.GetDefault().Parse(HttpContext.Request.Headers["User-Agent"].ToString());
+                var browser = clientInfo.UA.Family;
+                var browserVersion = clientInfo.UA.Major + "." + clientInfo.UA.Minor;
+                var os = clientInfo.OS.Family;
+
+                var notificationModel = new NotificationModel
+                {
+                    message_header = "Someone trying recovery your account",
+                    message = $"Someone trying recovery your account {user.username}#{user.id} at {DateTime.UtcNow} from {browser} {browserVersion} on OS {os}." +
+                    $"Qnique token was sended on {user.email}",
+                    priority = Priority.Security.ToString(),
+                    send_time = DateTime.UtcNow,
+                    is_checked = false,
+                    receiver_id = user.id
+                };
 
                 var emailDto = new EmailDto
                 {
-                    username = user.username,
-                    email = user.email,
+                    username = user.username!,
+                    email = user.email!,
                     subject = EmailMessage.RecoveryAccountHeader,
                     message = EmailMessage.RecoveryAccountBody + token
                 };
 
                 await _emailSender.SendMessage(emailDto);
+                await _createNotification.Create(notificationModel);
                 await _createLink.Create(linkModel);
                 _logger.LogInformation($"Created new token for {user.username}#{user.id} with life time for 30 minutes");
 
@@ -113,9 +132,26 @@ namespace webapi.Controllers.Account
                 await _updateUser.Update(userModel, null);
                 _logger.LogInformation($"Password was updated for user with id: {link.user_id}");
 
+
+                var clientInfo = Parser.GetDefault().Parse(HttpContext.Request.Headers["User-Agent"].ToString());
+                var browser = clientInfo.UA.Family;
+                var browserVersion = clientInfo.UA.Major + "." + clientInfo.UA.Minor;
+                var os = clientInfo.OS.Family;
+
+                var notificationModel = new NotificationModel
+                {
+                    message_header = "Someone changed your password",
+                    message = $"Someone changed your password at {DateTime.UtcNow} from {browser} {browserVersion} on OS {os}.",
+                    priority = Priority.Security.ToString(),
+                    send_time = DateTime.UtcNow,
+                    is_checked = false,
+                    receiver_id = link.user_id
+                };
+
+                await _createNotification.Create(notificationModel);
+
                 await _deleteByName.DeleteByName(token, null);
                 _logger.LogInformation($"Token: {token} was deleted");
-
 
                 await _updateToken.Update(new TokenModel
                 {

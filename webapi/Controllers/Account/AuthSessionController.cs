@@ -1,6 +1,7 @@
 ﻿using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
+using UAParser;
 using webapi.DB;
 using webapi.Exceptions;
 using webapi.Interfaces.Redis;
@@ -24,7 +25,8 @@ namespace webapi.Controllers.Account
         private readonly IRedisKeys _redisKeys;
         private readonly IPasswordManager _passwordManager;
         private readonly ITokenService _tokenService;
-        private readonly IUpdate<TokenModel> _update;
+        private readonly IUpdate<TokenModel> _updateToken;
+        private readonly ICreate<NotificationModel> _createNotification;
 
         public AuthSessionController(
             FileCryptDbContext dbContext,
@@ -34,7 +36,8 @@ namespace webapi.Controllers.Account
             IRedisKeys redisKeys,
             IPasswordManager passwordManager,
             ITokenService tokenService,
-            IUpdate<TokenModel> update)
+            IUpdate<TokenModel> updateToken,
+            ICreate<NotificationModel> createNotification)
         {
             _dbContext = dbContext;
             _logger = logger;
@@ -43,7 +46,8 @@ namespace webapi.Controllers.Account
             _redisKeys = redisKeys;
             _passwordManager = passwordManager;
             _tokenService = tokenService;
-            _update = update;
+            _updateToken = updateToken;
+            _createNotification = createNotification;
         }
 
         [HttpPost("login")]
@@ -70,6 +74,21 @@ namespace webapi.Controllers.Account
                     role = user.role,
                 };
 
+                var clientInfo = Parser.GetDefault().Parse(HttpContext.Request.Headers["User-Agent"].ToString());
+                var browser = clientInfo.UA.Family;
+                var browserVersion = clientInfo.UA.Major + "." + clientInfo.UA.Minor;
+                var os = clientInfo.OS.Family;
+
+                var notificationModel = new NotificationModel
+                {
+                    message_header = "Someone has accessed your account",
+                    message = $"Someone signed in to your account {user.username}#{user.id} at {DateTime.UtcNow} from {browser} {browserVersion} on OS {os}",
+                    priority = Priority.Security.ToString(),
+                    send_time = DateTime.UtcNow,
+                    is_checked = false,
+                    receiver_id = user.id
+                };
+
                 string refreshToken = _tokenService.GenerateRefreshToken();
 
                 var tokenModel = new TokenModel
@@ -79,9 +98,12 @@ namespace webapi.Controllers.Account
                     expiry_date = DateTime.UtcNow + Constants.RefreshExpiry
                 };
 
-                await _update.Update(tokenModel, true);
+                await _updateToken.Update(tokenModel, true);
                 _logger.LogInformation("Refresh token was updated in db");
 
+                await _createNotification.Create(notificationModel);
+                _logger.LogInformation("Created notification about logged in account");
+                
                 Response.Cookies.Append(Constants.JWT_COOKIE_KEY, _tokenService.GenerateJwtToken(newUserModel, Constants.JwtExpiry), _tokenService.SetCookieOptions(Constants.JwtExpiry));
                 Response.Cookies.Append(Constants.REFRESH_COOKIE_KEY, refreshToken, _tokenService.SetCookieOptions(Constants.RefreshExpiry));
                 _logger.LogInformation("Jwt and refresh was sended to client");
@@ -105,7 +127,7 @@ namespace webapi.Controllers.Account
             {
                 var tokenModel = new TokenModel() { user_id = _userInfo.UserId, refresh_token = null, expiry_date = DateTime.UtcNow.AddYears(-100) };
 
-                await _update.Update(tokenModel, true);
+                await _updateToken.Update(tokenModel, true);
                 _logger.LogInformation($"{_userInfo.Username}#{_userInfo.UserId} refresh token was revoked");
 
                 _tokenService.DeleteTokens();
@@ -130,6 +152,13 @@ namespace webapi.Controllers.Account
 
                 _logger.LogInformation("Encryption keys was deleted from cache");
             }
+        }
+
+        [HttpGet("check")]
+        [Authorize]
+        public IActionResult AuthCheck()
+        {
+            return StatusCode(200);
         }
     }
 }

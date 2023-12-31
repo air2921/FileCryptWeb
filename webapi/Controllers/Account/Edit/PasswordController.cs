@@ -2,6 +2,7 @@
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
 using System.Text.RegularExpressions;
+using UAParser;
 using webapi.DB;
 using webapi.DTO;
 using webapi.Exceptions;
@@ -19,6 +20,7 @@ namespace webapi.Controllers.Account.Edit
     [ValidateAntiForgeryToken]
     public class PasswordController : ControllerBase
     {
+        private readonly ICreate<NotificationModel> _createNotification;
         private readonly IUpdate<UserModel> _update;
         private readonly ILogger<PasswordController> _logger;
         private readonly IPasswordManager _passwordManager;
@@ -27,6 +29,7 @@ namespace webapi.Controllers.Account.Edit
         private readonly FileCryptDbContext _dbContext;
 
         public PasswordController(
+            ICreate<NotificationModel> createNotification,
             IUpdate<UserModel> update,
             ILogger<PasswordController> logger,
             IPasswordManager passwordManager,
@@ -34,6 +37,7 @@ namespace webapi.Controllers.Account.Edit
             IUserInfo userInfo,
             FileCryptDbContext dbContext)
         {
+            _createNotification = createNotification;
             _update = update;
             _logger = logger;
             _passwordManager = passwordManager;
@@ -67,8 +71,25 @@ namespace webapi.Controllers.Account.Edit
 
                 var newUserModel = new UserModel { id = _userInfo.UserId, password_hash = _passwordManager.HashingPassword(passwordDto.NewPassword) };
                 await _update.Update(newUserModel, null);
-
                 _logger.LogInformation("Password was hashed and updated in db");
+
+                var clientInfo = Parser.GetDefault().Parse(HttpContext.Request.Headers["User-Agent"].ToString());
+                var browser = clientInfo.UA.Family;
+                var browserVersion = clientInfo.UA.Major + "." + clientInfo.UA.Minor;
+                var os = clientInfo.OS.Family;
+
+                var notificationModel = new NotificationModel
+                {
+                    message_header = "Someone changed your password",
+                    message = $"Someone changed your password at {DateTime.UtcNow} from {browser} {browserVersion} on OS {os}.",
+                    priority = Priority.Security.ToString(),
+                    send_time = DateTime.UtcNow,
+                    is_checked = false,
+                    receiver_id = _userInfo.UserId
+                };
+
+                await _createNotification.Create(notificationModel);
+
                 return StatusCode(200, new { message = AccountSuccessMessage.PasswordUpdated });
             }
             catch (UserException ex)
