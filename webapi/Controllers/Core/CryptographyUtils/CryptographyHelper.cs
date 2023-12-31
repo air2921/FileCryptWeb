@@ -164,11 +164,11 @@ namespace webapi.Controllers.Base
                 }
                 else if (lowerFileType == internalType)
                 {
-                    return new CryptographyParams(await _redisCache.CacheKey(_redisKeys.PersonalInternalKey, () => _readKeys.ReadById(_userInfo.UserId, true)));
+                    return new CryptographyParams(await _redisCache.CacheKey(_redisKeys.InternalKey, () => _readKeys.ReadById(_userInfo.UserId, true)));
                 }
                 else if (lowerFileType == receivedType)
                 {
-                    return new CryptographyParams(await _redisCache.CacheKey(_redisKeys.ReceivedInternalKey, () => _readKeys.ReadById(_userInfo.UserId, true)));
+                    return new CryptographyParams(await _redisCache.CacheKey(_redisKeys.ReceivedKey, () => _readKeys.ReadById(_userInfo.UserId, true)));
                 }
                 throw new InvalidRouteException();
             }

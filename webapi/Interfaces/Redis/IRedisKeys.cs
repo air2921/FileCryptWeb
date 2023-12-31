@@ -3,7 +3,7 @@
     public interface IRedisKeys
     {
         public string PrivateKey { get; }
-        public string PersonalInternalKey { get; }
-        public string ReceivedInternalKey { get; }
+        public string InternalKey { get; }
+        public string ReceivedKey { get; }
     }
 }

@@ -51,11 +51,14 @@ namespace webapi.Controllers.Account
         {
             try
             {
+                if (userModel.email is null || userModel.password_hash is null)
+                    return StatusCode(422, new { message = AccountErrorMessage.InvalidUserData });
+
                 var user = await _dbContext.Users.FirstOrDefaultAsync(u => u.email == userModel.email.ToLowerInvariant());
                 if (user is null)
                     return StatusCode(404, new { message = AccountErrorMessage.UserNotFound });
 
-                bool IsCorrect = _passwordManager.CheckPassword(userModel.password_hash, user.password_hash);
+                bool IsCorrect = _passwordManager.CheckPassword(userModel.password_hash, user.password_hash!);
                 if (!IsCorrect)
                     return StatusCode(401, new { message = AccountErrorMessage.PasswordIncorrect });
 
@@ -122,8 +125,8 @@ namespace webapi.Controllers.Account
             finally
             {
                 await _redisCache.DeleteCache(_redisKeys.PrivateKey);
-                await _redisCache.DeleteCache(_redisKeys.PersonalInternalKey);
-                await _redisCache.DeleteCache(_redisKeys.ReceivedInternalKey);
+                await _redisCache.DeleteCache(_redisKeys.InternalKey);
+                await _redisCache.DeleteCache(_redisKeys.ReceivedKey);
 
                 _logger.LogInformation("Encryption keys was deleted from cache");
             }

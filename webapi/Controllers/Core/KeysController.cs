@@ -24,7 +24,6 @@ namespace webapi.Controllers.Core
         private readonly IUserInfo _userInfo;
         private readonly ITokenService _tokenService;
         private readonly IDecryptKey _decryptKey;
-        private readonly ILogger<KeysController> _logger;
         private readonly byte[] secretKey;
 
         public KeysController(
@@ -36,8 +35,7 @@ namespace webapi.Controllers.Core
             IRedisKeys redisKeys,
             IUserInfo userInfo,
             ITokenService tokenService,
-            IDecryptKey decryptKey,
-            ILogger<KeysController> logger)
+            IDecryptKey decryptKey)
         {
             _configuration = configuration;
             _readKeys = readKeys;
@@ -48,7 +46,6 @@ namespace webapi.Controllers.Core
             _userInfo = userInfo;
             _tokenService = tokenService;
             _decryptKey = decryptKey;
-            _logger = logger;
             secretKey = Convert.FromBase64String(_configuration["FileCryptKey"]!);
         }
 
@@ -59,7 +56,7 @@ namespace webapi.Controllers.Core
             {
                 var userKeys = await _readKeys.ReadById(_userInfo.UserId, true);
 
-                string? privateKey = await _decryptKey.DecryptionKeyAsync(userKeys.private_key, secretKey);
+                string? privateKey = await _decryptKey.DecryptionKeyAsync(userKeys.private_key!, secretKey);
                 string? receivedKey = userKeys.received_key is not null ? "hidden" : null;
                 string? internalKey = null;
                 if(userKeys.internal_key is not null)
@@ -82,7 +79,7 @@ namespace webapi.Controllers.Core
         {
             try
             {
-                string key = null;
+                string? key = null;
 
                 if(auto)
                 {
@@ -90,6 +87,9 @@ namespace webapi.Controllers.Core
                 }
                 else
                 {
+                    if (keyModel is null)
+                        return StatusCode(400, new { message = "Client request error" });
+
                     key = keyModel.private_key;
                 }
 
@@ -117,7 +117,7 @@ namespace webapi.Controllers.Core
         {
             try
             {
-                string key = null;
+                string? key = null;
 
                 if (auto)
                 {
@@ -125,13 +125,16 @@ namespace webapi.Controllers.Core
                 }
                 else
                 {
+                    if (keyModel is null)
+                        return StatusCode(400, new { message = "Client request error" });
+
                     key = keyModel.private_key;
                 }
 
                 var newKeyModel = new KeyModel { user_id = _userInfo.UserId, internal_key = key };
 
                 await _updateKeys.UpdatePersonalInternalKey(newKeyModel);
-                await _redisCaching.DeleteCache(_redisKeys.PersonalInternalKey);
+                await _redisCaching.DeleteCache(_redisKeys.InternalKey);
 
                 return StatusCode(200, new { message = AccountSuccessMessage.KeyUpdated, internal_key = key });
             }
@@ -153,7 +156,7 @@ namespace webapi.Controllers.Core
             try
             {
                 await _updateKeys.CleanReceivedInternalKey(_userInfo.UserId);
-                await _redisCaching.DeleteCache(_redisKeys.ReceivedInternalKey);
+                await _redisCaching.DeleteCache(_redisKeys.ReceivedKey);
 
                 return StatusCode(200, new { message = AccountSuccessMessage.KeyRemoved });
             }
