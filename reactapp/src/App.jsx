@@ -3,9 +3,11 @@ import { Routes, Route, Link } from 'react-router-dom';
 
 import Register from './pages/Register';
 import Login from './pages/Login'
-import Home from './pages/Home';
-import About from './pages/About';
+import Home from './pages/no_logic/Home';
+import About from './pages/no_logic/About';
 import User from './pages/User';
+import UserSettings from './pages/UserSettings'
+import KeySetting from './pages/KeySettings'
 
 function App() {
     return (
@@ -14,6 +16,8 @@ function App() {
                 <Route path="/" element={<Home />} />
                 <Route path="/about" element={<About />} />
                 <Route path="/user/:userId" element={<User />} />
+                <Route path="/settings" element={<UserSettings />} />
+                <Route path="/settings/keys" element={<KeySetting />} />
                 <Route path="/auth/signin" element={<Login />} />
                 <Route path="/auth/signup" element={ <Register /> } />
             </Routes>

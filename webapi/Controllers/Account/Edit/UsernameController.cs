@@ -31,18 +31,18 @@ namespace webapi.Controllers.Account.Edit
             _tokenService = tokenService;
         }
 
-        [HttpPut("new")]
-        public async Task<IActionResult> UpdateUsername(UserModel userModel)
+        [HttpPut()]
+        public async Task<IActionResult> UpdateUsername([FromQuery] string username)
         {
             try
             {
-                if (userModel.username.Length > 30)
-                    return StatusCode(411, new { message = $"username {userModel.username} is too much large" });
+                if (username.Length > 30)
+                    return StatusCode(411, new { message = $"username {username} is too much large" });
 
-                var newUserModel = new UserModel { id = _userInfo.UserId, username = userModel.username };
+                var newUserModel = new UserModel { id = _userInfo.UserId, username = username };
 
                 await _update.Update(newUserModel, null);
-                _logger.LogInformation($"username was updated in db. {userModel.username}#{_userInfo.UserId}");
+                _logger.LogInformation($"username was updated in db. {username}#{_userInfo.UserId}");
 
                 await _tokenService.UpdateJwtToken();
                 _logger.LogInformation("jwt with a new claims was updated");

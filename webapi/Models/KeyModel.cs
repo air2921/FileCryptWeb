@@ -12,10 +12,11 @@ namespace webapi.Models
 
         public string? private_key { get; set; }
 
-        public string? person_internal_key { get; set; }
+        public string? internal_key { get; set; }
 
-        public string? received_internal_key { get; set; }
+        public string? received_key { get; set; }
 
+        [ForeignKey("user_id")]
         public int user_id { get; set; }
 
         [JsonIgnore]

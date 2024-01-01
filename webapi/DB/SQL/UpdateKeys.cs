@@ -37,22 +37,22 @@ namespace webapi.DB.SQL
             var existingUser = await _dbContext.Keys.FirstOrDefaultAsync(u => u.user_id == id) ??
                 throw new UserException(ExceptionUserMessages.UserNotFound);
 
-            existingUser.received_internal_key = null;
+            existingUser.received_key = null;
             await _dbContext.SaveChangesAsync();
         }
 
         public async Task UpdatePersonalInternalKey(KeyModel keyModel)
         {
-            if (string.IsNullOrEmpty(keyModel.person_internal_key))
+            if (string.IsNullOrEmpty(keyModel.internal_key))
                 throw new ArgumentException(ErrorMessage.InvalidKey);
 
-            if (Regex.IsMatch(keyModel.person_internal_key, Validation.EncryptionKey) && _validation.IsBase64String(keyModel.person_internal_key))
+            if (Regex.IsMatch(keyModel.internal_key, Validation.EncryptionKey) && _validation.IsBase64String(keyModel.internal_key))
             {
                 var existingUser = await _dbContext.Keys.FirstOrDefaultAsync(u => u.user_id == keyModel.user_id) ??
                     throw new UserException(ExceptionUserMessages.UserNotFound);
 
-                var internalKey = await _encrypt.EncryptionKeyAsync(keyModel.person_internal_key, secretKey);
-                existingUser.person_internal_key = internalKey;
+                var internalKey = await _encrypt.EncryptionKeyAsync(keyModel.internal_key, secretKey);
+                existingUser.internal_key = internalKey;
                 await _dbContext.SaveChangesAsync();
             }
             else

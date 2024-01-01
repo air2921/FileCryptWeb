@@ -1,6 +1,7 @@
 ﻿using webapi.Exceptions;
 using webapi.Interfaces.Cryptography;
 using webapi.Interfaces.Redis;
+using webapi.Localization.Exceptions;
 using webapi.Models;
 using webapi.Services;
 
@@ -11,7 +12,6 @@ namespace webapi.DB.RedisDb
         private readonly IRedisDbContext _context;
         private readonly IRedisKeys _redisKeys;
         private readonly IConfiguration _configuration;
-        private readonly ILogger<RedisCache> _logger;
         private readonly IDecryptKey _decrypt;
         private readonly byte[] secretKey;
 
@@ -19,13 +19,11 @@ namespace webapi.DB.RedisDb
             IRedisDbContext context,
             IRedisKeys redisKeys,
             IConfiguration configuration,
-            ILogger<RedisCache> logger,
             IDecryptKey decrypt)
         {
             _context = context;
             _redisKeys = redisKeys;
             _configuration = configuration;
-            _logger = logger;
             _decrypt = decrypt;
             secretKey = Convert.FromBase64String(_configuration[App.appKey]!);
         }
@@ -36,28 +34,39 @@ namespace webapi.DB.RedisDb
             {
                 var db = _context.GetDatabase();
                 var value = await db.StringGetAsync(key);
+
                 if (value.HasValue)
                 {
-                    var encryptionKey = await _decrypt.DecryptionKeyAsync(value, secretKey);
+                    var encryptionKey = await _decrypt.DecryptionKeyAsync(value!, secretKey);
 
                     return encryptionKey;
                 }
                 else
                 {
                     var keys = await readKeyFunction();
-                    string encryptionKey = null;
+
+                    string? encryptionKey = null;
 
                     if (key == _redisKeys.PrivateKey)
                     {
+                        if (string.IsNullOrEmpty(keys.internal_key))
+                            throw new KeyException(ExceptionKeyMessages.KeyNotFound);
+
                         encryptionKey = keys.private_key;
                     }
-                    else if (key == _redisKeys.PersonalInternalKey)
+                    else if (key == _redisKeys.InternalKey)
                     {
-                        encryptionKey = keys.person_internal_key;
+                        if (string.IsNullOrEmpty(keys.internal_key))
+                            throw new KeyException(ExceptionKeyMessages.KeyNotFound);
+
+                        encryptionKey = keys.internal_key;
                     }
-                    else if (key == _redisKeys.ReceivedInternalKey)
+                    else if (key == _redisKeys.ReceivedKey)
                     {
-                        encryptionKey = keys.received_internal_key;
+                        if (string.IsNullOrEmpty(keys.received_key))
+                            throw new KeyException(ExceptionKeyMessages.KeyNotFound);
+
+                        encryptionKey = keys.received_key;
                     }
                     else
                     {
@@ -66,15 +75,11 @@ namespace webapi.DB.RedisDb
 
                     await db.StringSetAsync(key, encryptionKey, TimeSpan.FromMinutes(30));
 
-                    var decryptedKey = await _decrypt.DecryptionKeyAsync(encryptionKey, secretKey);
+                    var decryptedKey = await _decrypt.DecryptionKeyAsync(encryptionKey!, secretKey);
                     return decryptedKey;
                 }
             }
             catch (UserException)
-            {
-                throw;
-            }
-            catch (KeyException)
             {
                 throw;
             }

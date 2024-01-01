@@ -39,7 +39,10 @@ namespace webapi
                     .SetIsOriginAllowed(origin =>
                     origin.EndsWith("api/public/cryptography/private/decryption") ||
                     origin.EndsWith("api/public/cryptography/internal/decryption") ||
-                    origin.EndsWith("api/public/cryptography/received/decryption")
+                    origin.EndsWith("api/public/cryptography/received/decryption") ||
+                    origin.EndsWith("api/public/cryptography/private/encryption") ||
+                    origin.EndsWith("api/public/cryptography/internal/encryption") ||
+                    origin.EndsWith("api/public/cryptography/received/encryption")
                     );
                 });
             });

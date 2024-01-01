@@ -66,13 +66,13 @@ namespace webapi.Controllers.Core
                     return StatusCode(404);
                 }
 
-                if (keys.person_internal_key is null)
+                if (keys.internal_key is null)
                     return StatusCode(404, new { message = "You don't have a internal key for create an offer" });
 
                 var offerModel = new OfferModel
                 {
                     offer_header = $"Proposal to accept an encryption key from a user: {_userInfo.Username}#{_userInfo.UserId}",
-                    offer_body = keys.person_internal_key,
+                    offer_body = keys.internal_key,
                     offer_type = TradeType.Key.ToString(),
                     is_accepted = false,
                     sender_id = _userInfo.UserId,
@@ -87,7 +87,6 @@ namespace webapi.Controllers.Core
                     priority = Priority.Trade.ToString(),
                     send_time = DateTime.UtcNow,
                     is_checked = false,
-                    sender_id = _userInfo.UserId,
                     receiver_id = receiverId
                 };
 
@@ -114,8 +113,13 @@ namespace webapi.Controllers.Core
                 return StatusCode(409, new { message = ExceptionOfferMessages.OfferIsAccepted });
 
             var receiver = await _dbContext.Keys.FirstOrDefaultAsync(u => u.user_id == _userInfo.UserId);
+            if (receiver is null)
+            {
+                _tokenService.DeleteTokens();
+                return StatusCode(404);
+            }
 
-            receiver.received_internal_key = offer.offer_body;
+            receiver.received_key = offer.offer_body;
             offer.is_accepted = true;
 
             await _dbContext.SaveChangesAsync();
@@ -142,7 +146,7 @@ namespace webapi.Controllers.Core
         }
 
         [HttpGet("all")]
-        public async Task<IActionResult> GetAll([FromQuery] bool? sended = null)
+        public async Task<IActionResult> GetAll([FromQuery] bool? sended = null, [FromQuery] bool? isAccepted = null)
         {
             var query = _dbContext.Offers.OrderByDescending(o => o.created_at).AsQueryable();
             var offers = new List<OfferModel>();
@@ -150,20 +154,34 @@ namespace webapi.Controllers.Core
             switch (sended)
             {
                 case true:
-                    offers = await query.Where(o => o.sender_id == _userInfo.UserId).ToListAsync();
+                    query = query.Where(o => o.sender_id == _userInfo.UserId);
                     break;
 
                 case false:
-                    offers = await query.Where(o => o.receiver_id == _userInfo.UserId).ToListAsync();
+                    query = query.Where(o => o.receiver_id == _userInfo.UserId);
                     break;
 
                 default:
-                    offers = await query.Where(o => o.sender_id == _userInfo.UserId || o.receiver_id == _userInfo.UserId).ToListAsync();
+                    query = query.Where(o => o.sender_id == _userInfo.UserId || o.receiver_id == _userInfo.UserId);
                     break;
             }
 
-            if (offers is null)
-                return StatusCode(404, new { message = ExceptionOfferMessages.NoOneOfferNotFound });
+            switch (isAccepted)
+            {
+                case true:
+                    query = query.Where(o => o.is_accepted == true);
+                    break;
+
+                case false:
+                    query = query.Where(o => o.is_accepted == false);
+                    break;
+
+                default:
+                    query = query.Where(o => o.is_accepted == true || o.is_accepted == false);
+                    break;
+            }
+
+            offers = await query.ToListAsync();;
 
             return StatusCode(200, new { offers });
         }

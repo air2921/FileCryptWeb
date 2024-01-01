@@ -18,9 +18,9 @@ namespace webapi.DB.SQL
 
         public async Task Create(NotificationModel notificationModel)
         {
-            var users = await _dbContext.Users.Select(n => n.id).ToArrayAsync();
-            bool bothExist = users.Contains(notificationModel.sender_id) && users.Contains(notificationModel.receiver_id);
-            if (!bothExist)
+            var user = await _dbContext.Users.FirstOrDefaultAsync(u => u.id == notificationModel.receiver_id);
+
+            if (user is null)
                 throw new UserException(AccountErrorMessage.UserNotFound);
 
             await _dbContext.AddAsync(notificationModel);
@@ -46,8 +46,11 @@ namespace webapi.DB.SQL
 
         public async Task DeleteById(int id, int? user_id)
         {
-            var notification = await _dbContext.Notifications.FirstOrDefaultAsync(n => n.notification_id == id && (n.sender_id == user_id || n.receiver_id == user_id)) ??
+            var notification = await _dbContext.Notifications.FirstOrDefaultAsync(n => n.notification_id == id && n.receiver_id == user_id) ??
                 throw new NotificationException(ExceptionNotificationMessages.NotificationNotFound);
+
+            if (notification.priority != Priority.Info.ToString())
+                throw new NotificationException(ExceptionNotificationMessages.CannotDelete);
 
             _dbContext.Notifications.Remove(notification);
             await _dbContext.SaveChangesAsync();

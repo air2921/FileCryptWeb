@@ -8,7 +8,6 @@ function About() {
                 <h3>Welcome to FileCryptWeb. Your reliable partner in securing your files !</h3>
                 <div className="mission-head">
                     <h2>Our Mission</h2>
-                    <br />
                     <div className="mission-body">
                         We aim to provide you with a highly efficient and confidential way to encrypt files of any type using the powerful AES algorithm.
                         At FileCryptWeb, we emphasize complete anonymity and the security of your data, ensuring that your content remains solely yours.

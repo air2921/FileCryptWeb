@@ -2,6 +2,7 @@
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 using System.Net.Sockets;
+using webapi.DTO;
 using webapi.Exceptions;
 using webapi.Interfaces.Services;
 using webapi.Interfaces.SQL;
@@ -17,11 +18,11 @@ namespace webapi.Controllers.Admin
     public class SendEmailController : ControllerBase
     {
         private readonly ILogger<SendEmailController> _logger;
-        private readonly IEmailSender<UserModel> _emailSender;
+        private readonly IEmailSender _emailSender;
         private readonly ICreate<NotificationModel> _createNotification;
         private readonly IUserInfo _userInfo;
 
-        public SendEmailController(ILogger<SendEmailController> logger, IEmailSender<UserModel> emailSender, ICreate<NotificationModel> createNotification, IUserInfo userInfo)
+        public SendEmailController(ILogger<SendEmailController> logger, IEmailSender emailSender, ICreate<NotificationModel> createNotification, IUserInfo userInfo)
         {
             _logger = logger;
             _emailSender = emailSender;
@@ -36,12 +37,18 @@ namespace webapi.Controllers.Admin
             {
                 var userModel = new UserModel { username = username, email = email };
 
-                await _emailSender.SendMessage(userModel, notificationModel.message_header, notificationModel.message);
-                
+                var emailDto = new EmailDto
+                {
+                    username = username,
+                    email = email,
+                    subject = notificationModel.message_header,
+                    message = notificationModel.message
+                };
 
+                await _emailSender.SendMessage(emailDto);
+                
                 var newNotificationModel = new NotificationModel
                 {
-                    sender_id = _userInfo.UserId,
                     receiver_id = notificationModel.receiver_id,
                     message_header = "You have a notification from administrator",
                     message = notificationModel.message,

@@ -34,12 +34,6 @@ namespace webapi.DB
                 .OnDelete(DeleteBehavior.Cascade);
 
             modelBuilder.Entity<NotificationModel>()
-                .HasOne(n => n.Sender)
-                .WithMany()
-                .HasForeignKey(n => n.sender_id)
-                .OnDelete(DeleteBehavior.Cascade);
-
-            modelBuilder.Entity<NotificationModel>()
                 .HasOne(n => n.Receiver)
                 .WithMany()
                 .HasForeignKey(n => n.receiver_id)

@@ -30,7 +30,7 @@ namespace webapi.Services.Cryptography
                 using CryptoStream cryptoStream = new(target, aes.CreateEncryptor(), CryptoStreamMode.Write);
                 await src.CopyToAsync(cryptoStream, cancellationToken);
             }
-            catch (Exception ex)
+            catch (Exception)
             {
                 throw;
             }

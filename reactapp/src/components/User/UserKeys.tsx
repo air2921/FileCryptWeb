@@ -1,6 +1,6 @@
 import React from 'react';
 
-function UserKeys({ keys, isOwner }: UserKeysProps) {
+function UserKeys({ keys }: UserKeysProps) {
     return (
         <div className="keys-container">
             <div className="private-key">
@@ -27,7 +27,6 @@ function UserKeys({ keys, isOwner }: UserKeysProps) {
                     {keys.receivedKey ? <i className="material-icons-sharp">check_small</i> : <i className="material-icons-sharp">close_small</i>}
                 </div>
             </div>
-            {isOwner && <button>Change</button>}
         </div>
     );
 }

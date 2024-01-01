@@ -71,7 +71,7 @@ namespace webapi.Controllers.Admin.Manage_Notifications
             try
             {
                 var notifications = await _dbContext.Notifications
-                    .Where(n => n.sender_id == userId || n.receiver_id == userId)
+                    .Where(n => n.receiver_id == userId)
                     .OrderByDescending(n => n.send_time)
                     .ToListAsync();
 

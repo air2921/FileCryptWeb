@@ -1,11 +1,11 @@
 import React from 'react';
-import Error from '../Error/Error';
 import DateComponent from '../Date/Date';
+import Message from '../Message/Message';
 
 function OfferList({ offers, isOwner }: OfferListProps) {
 
     if (!offers || offers.every(offer => offer === null)) {
-        return <div><Error errorMessage={'No sended or received offers'} errorFont={'home_storage'} /></div>;
+        return <div><Message message={'No sended or received offers'} font={'home_storage'} /></div>;
     }
 
     return (

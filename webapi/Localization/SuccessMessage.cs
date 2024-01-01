@@ -4,6 +4,7 @@
     {
         public const string ReceivedKeyRevoked = "Received key was revoked";
         public const string InternalKeyRevoked = "Internal key was revoked";
+        public const string PrivateKeyRevoked = "Last private key was revoked and excahnged to new";
         public const string SuccessDeletedNotification = "Notification was deleted";
         public const string SuccessDeletedUser = "User was deleted";
         public const string SuccessRoleUpdated = "Role was updated";

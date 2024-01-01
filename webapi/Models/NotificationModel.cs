@@ -20,14 +20,8 @@ namespace webapi.Models
 
         public bool? is_checked { get; set; }
 
-        [ForeignKey("sender_id")]
-        public int sender_id { get; set; }
-
         [ForeignKey("receiver_id")]
         public int receiver_id { get; set; }
-
-        [JsonIgnore]
-        public virtual UserModel? Sender { get; set; }
 
         [JsonIgnore]
         public virtual UserModel? Receiver { get; set; }

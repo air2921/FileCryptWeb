@@ -87,7 +87,7 @@ namespace webapi
             services.AddTransient<ITokenService, TokenService>();
             services.AddTransient<IEncryptKey, EncryptKey>();
             services.AddTransient<IDecryptKey, EncryptKey>();
-            services.AddTransient<IEmailSender<UserModel>, EmailSender>();
+            services.AddTransient<IEmailSender, EmailSender>();
         }
     }
 }

@@ -6,6 +6,13 @@ namespace webapi.Services.DataManager
 {
     public class FileManager : IFileManager
     {
+        private readonly ILogger<FileManager> _logger;
+
+        public FileManager(ILogger<FileManager> logger)
+        {
+            _logger = logger;
+        }
+
         public HashSet<string> GetMimesFromCsvFile(string filePath)
         {
             var mimes = new HashSet<string>();
@@ -21,12 +28,19 @@ namespace webapi.Services.DataManager
                 while (csv.Read())
                 {
                     string mimeValue = csv.GetField<string>(1);
-                    mimes.Add(mimeValue);
+                    if (!string.IsNullOrWhiteSpace(mimeValue))
+                        mimes.Add(mimeValue);
+                    else
+                        continue;
                 }
             }
-            catch (FileNotFoundException)
+            catch (IOException ex)
             {
-                throw;
+                _logger.LogCritical(ex.ToString(), nameof(GetMimesFromCsvFile));
+            }
+            catch (CsvHelperException ex)
+            {
+                _logger.LogCritical(ex.ToString(), nameof(GetMimesFromCsvFile));
             }
 
             return mimes;

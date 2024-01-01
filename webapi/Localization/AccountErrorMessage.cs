@@ -12,5 +12,6 @@
         public const string UserExists = "User already exists";
         public const string Forbidden = "Action prohibited";
         public const string InvalidToken = "Invalid token";
+        public const string InvalidUserData = "Login and password cannot be empty";
     }
 }

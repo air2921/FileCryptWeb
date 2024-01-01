@@ -1,5 +1,5 @@
-﻿using Microsoft.AspNetCore.Mvc;
-using webapi.DB.SQL;
+﻿using Microsoft.AspNetCore.Authorization;
+using Microsoft.AspNetCore.Mvc;
 using webapi.Exceptions;
 using webapi.Interfaces.Services;
 using webapi.Interfaces.SQL;
@@ -9,6 +9,7 @@ namespace webapi.Controllers.Admin.Manage_Users
 {
     [Route("api/admin/users")]
     [ApiController]
+    [Authorize(Roles = "HighestAdmin,Admin")]
     public class ReadUserController : ControllerBase
     {
         private readonly IUserInfo _userInfo;

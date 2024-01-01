@@ -2,8 +2,11 @@
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
 using webapi.DB;
+using webapi.Exceptions;
 using webapi.Interfaces.Services;
+using webapi.Interfaces.SQL;
 using webapi.Localization.Exceptions;
+using webapi.Models;
 
 namespace webapi.Controllers.Core
 {
@@ -15,12 +18,14 @@ namespace webapi.Controllers.Core
         private readonly FileCryptDbContext _dbContext;
         private readonly IUserInfo _userInfo;
         private readonly ITokenService _tokenService;
+        private readonly IRead<UserModel> _readUser;
 
-        public UserController(FileCryptDbContext dbContext, IUserInfo userInfo, ITokenService tokenService)
+        public UserController(FileCryptDbContext dbContext, IUserInfo userInfo, ITokenService tokenService, IRead<UserModel> readUser)
         {
             _dbContext = dbContext;
             _userInfo = userInfo;
             _tokenService = tokenService;
+            _readUser = readUser;
         }
 
         [HttpGet("{userId}")]
@@ -62,9 +67,9 @@ namespace webapi.Controllers.Core
             var files = user_keys_files.Select(u => u.files).ToList();
 
             bool IsOwner = userId.Equals(_userInfo.UserId);
-            string? privateKey = keys.private_key is not null ? "hidden" : null;
-            string? internalKey = keys.person_internal_key is not null ? "hidden" : null;
-            string? receivedKey = keys.received_internal_key is not null ? "hidden" : null;
+            string? privateKey = keys?.private_key is not null ? "hidden" : null;
+            string? internalKey = keys?.internal_key is not null ? "hidden" : null;
+            string? receivedKey = keys?.received_key is not null ? "hidden" : null;
 
             if (userId.Equals(_userInfo.UserId))
             {
@@ -77,6 +82,28 @@ namespace webapi.Controllers.Core
                 var user = user_keys_files.Select(u => new { u.user.id, u.user.username, u.user.role }).FirstOrDefault();
 
                 return StatusCode(206, new { user, IsOwner, keys = new { privateKey, internalKey, receivedKey }, files, offers });
+            }
+        }
+
+        [HttpGet("only")]
+        public async Task<IActionResult> GetOnlyUser()
+        {
+            try
+            {
+                var originalUser = await _readUser.ReadById(_userInfo.UserId, null);
+                var user = new
+                {
+                    id = originalUser.id,
+                    username = originalUser.username,
+                    role = originalUser.role,
+                    email = originalUser.email
+                };
+
+                return StatusCode(200, new { user });
+            }
+            catch (UserException ex)
+            {
+                return StatusCode(404, new { message = ex.Message });
             }
         }
     }

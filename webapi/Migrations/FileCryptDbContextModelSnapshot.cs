@@ -104,13 +104,13 @@ namespace webapi.Migrations
 
                     NpgsqlPropertyBuilderExtensions.UseIdentityByDefaultColumn(b.Property<int>("key_id"));
 
-                    b.Property<string>("person_internal_key")
+                    b.Property<string>("internal_key")
                         .HasColumnType("text");
 
                     b.Property<string>("private_key")
                         .HasColumnType("text");
 
-                    b.Property<string>("received_internal_key")
+                    b.Property<string>("received_key")
                         .HasColumnType("text");
 
                     b.Property<int>("user_id")
@@ -184,14 +184,9 @@ namespace webapi.Migrations
                     b.Property<DateTime?>("send_time")
                         .HasColumnType("timestamp with time zone");
 
-                    b.Property<int>("sender_id")
-                        .HasColumnType("integer");
-
                     b.HasKey("notification_id");
 
                     b.HasIndex("receiver_id");
-
-                    b.HasIndex("sender_id");
 
                     b.ToTable("notifications");
                 });
@@ -339,15 +334,7 @@ namespace webapi.Migrations
                         .OnDelete(DeleteBehavior.Cascade)
                         .IsRequired();
 
-                    b.HasOne("webapi.Models.UserModel", "Sender")
-                        .WithMany()
-                        .HasForeignKey("sender_id")
-                        .OnDelete(DeleteBehavior.Cascade)
-                        .IsRequired();
-
                     b.Navigation("Receiver");
-
-                    b.Navigation("Sender");
                 });
 
             modelBuilder.Entity("webapi.Models.OfferModel", b =>

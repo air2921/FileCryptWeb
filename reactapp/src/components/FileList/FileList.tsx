@@ -1,11 +1,11 @@
 import React from 'react';
-import Error from '../Error/Error';
 import DateComponent from '../Date/Date';
+import Message from '../Message/Message';
 
 function FileList({ files, isOwner }: FileListProps) {
 
     if (!files || files.every(file => file === null)) {
-        return <div><Error errorMessage={'No encrypted files here'} errorFont={'home_storage'} /></div>;
+        return <div><Message message={'No encrypted files here'} font='home_storage' /></div>;
     }
 
     return (

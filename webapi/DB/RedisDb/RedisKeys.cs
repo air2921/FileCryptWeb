@@ -7,12 +7,9 @@ namespace webapi.DB.RedisDb
     {
         private readonly IUserInfo _userInfo;
 
-        private string _privatekey;
-        private string _personalInternalKey;
-        private string _receivedInternalKey;
-
-        private string _serviceFreezeFlag;
-        private string _mimeCollection;
+        private string? _privatekey;
+        private string? _internalKey;
+        private string? _receivedKey;
 
         public RedisKeys(IUserInfo userInfo)
         {
@@ -27,19 +24,19 @@ namespace webapi.DB.RedisDb
             }
         }
 
-        public string PersonalInternalKey
+        public string InternalKey
         {
             get
             {
-                return _personalInternalKey ??= "personalInternalKey#" + _userInfo.UserId;
+                return _internalKey ??= "internalKey#" + _userInfo.UserId;
             }
         }
 
-        public string ReceivedInternalKey
+        public string ReceivedKey
         {
             get
             {
-                return _receivedInternalKey ??= "receivedInternalKey#" + _userInfo.UserId;
+                return _receivedKey ??= "receivedKey#" + _userInfo.UserId;
             }
         }
     }
