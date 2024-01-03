@@ -15,7 +15,7 @@ function OfferList({ offers, isOwner }: OfferListProps) {
                 .map(offer => (
                     <li key={offer.offer_id} className="offer">
                         <div className="offer_header">
-                            <span>{offer.offer_type} trade #{offer.offer_id}</span>
+                            <div>{offer.offer_type} trade #{offer.offer_id}</div>
                             {offer.is_accepted ? (
                                 <i className="material-icons-sharp">check_small</i>
                             ) : (

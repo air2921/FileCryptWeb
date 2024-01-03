@@ -93,7 +93,7 @@ namespace webapi.Controllers.Core
                 await _createOffer.Create(offerModel);
                 await _createNotification.Create(notificationModel);
 
-                return StatusCode(201, new { offerModel });
+                return StatusCode(201, new { message = SuccessMessage.SuccessOfferCreated });
             }
             catch (UserException ex)
             {
@@ -148,8 +148,9 @@ namespace webapi.Controllers.Core
         [HttpGet("all")]
         public async Task<IActionResult> GetAll([FromQuery] bool? sended = null, [FromQuery] bool? isAccepted = null)
         {
-            var query = _dbContext.Offers.OrderByDescending(o => o.created_at).AsQueryable();
-            var offers = new List<OfferModel>();
+            var query = _dbContext.Offers.OrderByDescending(o => o.created_at)
+                .Select(o => new { o.offer_id, o.sender_id, o.receiver_id, o.created_at, o.is_accepted, o.offer_type })
+                .AsQueryable();
 
             switch (sended)
             {
@@ -181,7 +182,7 @@ namespace webapi.Controllers.Core
                     break;
             }
 
-            offers = await query.ToListAsync();;
+            var offers = await query.ToListAsync();
 
             return StatusCode(200, new { offers });
         }

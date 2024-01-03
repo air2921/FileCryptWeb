@@ -67,9 +67,9 @@ namespace webapi.Controllers.Core
             var files = user_keys_files.Select(u => u.files).ToList();
 
             bool IsOwner = userId.Equals(_userInfo.UserId);
-            string? privateKey = keys?.private_key is not null ? "hidden" : null;
-            string? internalKey = keys?.internal_key is not null ? "hidden" : null;
-            string? receivedKey = keys?.received_key is not null ? "hidden" : null;
+            bool privateKey = keys?.private_key is not null;
+            bool internalKey = keys?.internal_key is not null;
+            bool receivedKey = keys?.received_key is not null;
 
             if (userId.Equals(_userInfo.UserId))
             {

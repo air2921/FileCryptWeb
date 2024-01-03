@@ -7,8 +7,8 @@ const Username = () => {
 
     const [username, setUsername] = useState('');
 
-    const [errorMessage, setErrorMessage] = useState('');
-    const [successMessage, setSuccessMessage] = useState('');
+    const [message, setMessage] = useState('');
+    const [font, setFont] = useState('')
 
     const handleSubmit = async (e: FormEvent) => {
         e.preventDefault();
@@ -16,12 +16,12 @@ const Username = () => {
         const response = await AxiosRequest({ endpoint: `api/account/edit/username?username=${username}`, method: 'PUT', withCookie: true, requestBody: { username: username } })
 
         if (response.isSuccess) {
-            setErrorMessage('');
-            setSuccessMessage(response.data.message);
+            setMessage(response.data.message);
+            setFont('done')
         }
         else {
-            setSuccessMessage('');
-            setErrorMessage(response.data);
+            setMessage(response.data);
+            setFont('error');
         }
     }
 
@@ -33,8 +33,7 @@ const Username = () => {
                     Update username
                 </button>
             </form>
-            {successMessage && <Message message={successMessage} font='done' />}
-            {errorMessage && <Message message={errorMessage} font='error' />}
+            {message && <Message message={message} font={font} />}
         </div>
     );
 }

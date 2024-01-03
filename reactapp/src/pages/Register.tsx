@@ -4,7 +4,7 @@ import Input from '../components/Input/Input';
 import AxiosRequest from '../api/AxiosRequest';
 import Message from '../components/Message/Message';
 
-const Register: React.FC = () => {
+const Register = () => {
     const [email, setEmail] = useState('');
     const [password, setPassword] = useState('');
     const [username, setUsername] = useState('');
@@ -36,7 +36,7 @@ const Register: React.FC = () => {
                             <Input type="email" id="email" require={true} value={email} onChange={(e) => setEmail(e.target.value)} />
                             <Input type="password" id="password" require={true} value={password} onChange={(e) => setPassword(e.target.value)} />
                             <button type="submit">
-                                continue
+                                Continue
                             </button>
                         </form>
                         {errorMessage && <Message message={errorMessage} font='error' />}

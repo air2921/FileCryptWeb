@@ -10,10 +10,10 @@ const KeySettings = () => {
     const [successStatus, setStatus] = useState(false);
     const [errorMessage, setErrorMessage] = useState('');
 
-    const [privateErrorMessage, setPrivateErrorMessage] = useState('');
-    const [privateSuccessMessage, setPrivateSuccessMessage] = useState('');
-    const [internalErrorMessage, setInternalErrorMessage] = useState('');
-    const [internalSuccessMessage, setInternalSuccessMessage] = useState('');
+    const [privateMessage, setPrivateMessage] = useState('');
+    const [internalMessage, setInternalMessage] = useState('');
+    const [privateFont, setPrivateFont] = useState('');
+    const [internalFont, setInternalFont] = useState('');
 
     const [privateKey, setPrivateKey] = useState('');
     const [internalKey, setInternalKey] = useState('');
@@ -65,22 +65,22 @@ const KeySettings = () => {
 
         if (keyType.toLowerCase() === 'private') {
             if (response.isSuccess) {
-                setPrivateErrorMessage('');
-                setPrivateSuccessMessage(response.data.message);
+                setPrivateMessage(response.data.message);
+                setPrivateFont('done');
             }
             else {
-                setPrivateSuccessMessage('');
-                setPrivateErrorMessage(response.data);
+                setPrivateMessage(response.data);
+                setPrivateFont('error');
             }
         }
         else if (keyType.toLowerCase() === 'internal') {
             if (response.isSuccess) {
-                setInternalErrorMessage('');
-                setInternalSuccessMessage(response.data.message);
+                setInternalMessage(response.data.message);
+                setInternalFont('done');
             }
             else {
-                setInternalSuccessMessage('');
-                setInternalErrorMessage(response.data);
+                setInternalMessage(response.data);
+                setInternalFont('error');
             }
         }
     }
@@ -105,8 +105,7 @@ const KeySettings = () => {
                             Update private key
                         </button>
                     </form>
-                    {privateSuccessMessage && <Message message={privateSuccessMessage} font='done' />}
-                    {privateErrorMessage && <Message message={privateErrorMessage} font='error' />}
+                    {privateMessage && <Message message={privateMessage} font={privateFont} />}
                 </div>
                 <div className="internal">
                     <form onSubmit={handleInternalKeySubmit}>
@@ -116,8 +115,7 @@ const KeySettings = () => {
                             Update internal key
                         </button>
                     </form>
-                    {internalSuccessMessage && <Message message={internalSuccessMessage} font='done' />}
-                    {internalErrorMessage && <Message message={internalErrorMessage} font='error' />}
+                    {internalMessage && <Message message={internalMessage} font={internalFont} />}
                 </div>
             </div>
         </div>

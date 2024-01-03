@@ -17,6 +17,7 @@
         public const string SuccessCreatedFoldderStruct = "Basic folder structure created";
         public const string SuccessOfferDeleted = "The offer was deleted";
         public const string SuccessOfferAccepted = "The offer was accepted";
+        public const string SuccessOfferCreated = "The offer was succesfully created and sent";
         public const string SuccessApiUpdated = "New API settings have been applied";
     }
 }

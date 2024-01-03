@@ -5,8 +5,8 @@ import Input from '../Input/Input';
 
 const Password = () => {
 
-    const [errorMessage, setErrorMessage] = useState('');
-    const [successMessage, setSuccessMessage] = useState('');
+    const [message, setMessage] = useState('');
+    const [font, setFont] = useState('')
 
     const [oldPassword, setOld] = useState('');
     const [newPassword, setNew] = useState('');
@@ -25,12 +25,12 @@ const Password = () => {
         })
 
         if (response.isSuccess) {
-            setErrorMessage('');
-            setSuccessMessage(response.data.message);
+            setMessage(response.data.message);
+            setFont('done')
         }
         else {
-            setSuccessMessage('');
-            setErrorMessage(response.data);
+            setMessage(response.data);
+            setFont('error');
         }
     }
 
@@ -43,8 +43,7 @@ const Password = () => {
                     Update password
                 </button>
             </form>
-            {successMessage && <Message message={successMessage} font='done' />}
-            {errorMessage && <Message message={errorMessage} font='error' />}
+            {message && <Message message={message} font={font} />}
         </div>
     );
 }
