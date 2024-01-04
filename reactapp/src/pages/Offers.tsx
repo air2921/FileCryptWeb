@@ -31,7 +31,8 @@ const Offers = () => {
 
         if (response.isSuccess) {
             setOffers(response.data);
-        } else {
+        }
+        else {
             setErrorMessage(response.data);
         }
     }
