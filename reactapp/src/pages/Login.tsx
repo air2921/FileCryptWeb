@@ -3,6 +3,7 @@ import { useNavigate } from 'react-router-dom'
 import AxiosRequest from '../api/AxiosRequest';
 import Input from '../components/Helpers/Input';
 import Message from '../components/Message/Message';
+import Button from '../components/Helpers/Button';
 
 const Login = () => {
     const [email, setEmail] = useState('');
@@ -26,13 +27,14 @@ const Login = () => {
     return (
         <div className="login">
             <div className="login-container">
-                <p className="welcome-text"></p>
+                <p className="welcome-text">
+                    Have an account ?
+                    Sign In
+                </p>
                 <form onSubmit={handleSubmit}>
                     <Input text='Login' type="email" id="email" require={true} value={email} onChange={(e) => setEmail(e.target.value)} />
                     <Input text='Password' type="password" id="password" require={true} value={password} onChange={(e) => setPassword(e.target.value)} />
-                    <button type="submit" className="btn btn-primary btn-disabled">
-                        Sign In
-                    </button>
+                    <Button>Sign In</Button>
                 </form>
                 {errorMessage && <Message message={errorMessage} font='error' />}
             </div>

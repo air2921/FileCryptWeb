@@ -3,6 +3,7 @@ import { useNavigate } from 'react-router-dom';
 import AxiosRequest from '../../api/AxiosRequest';
 import Message from '../Message/Message';
 import Input from '../Helpers/Input';
+import Button from '../Helpers/Button';
 
 const Verify: React.FC<VerifyProps> = ({ endpoint, method }) => {
     const [code, setCode] = useState(0);
@@ -26,9 +27,7 @@ const Verify: React.FC<VerifyProps> = ({ endpoint, method }) => {
         <div>
             <form onSubmit={handleSubmit}>
                 <Input text='Confirmation code' type="number" id="code" require={true} value={code} onChange={(e) => setCode(parseInt(e.target.value, 10))} />
-                <button type="submit">
-                    Confirm
-                </button>
+                <Button>Confirm Code</Button>
             </form>
             {errorMessage && <Message message={errorMessage} font='error' />}
         </div>

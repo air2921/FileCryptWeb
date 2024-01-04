@@ -2,6 +2,7 @@ import React, { FormEvent, useState } from 'react';
 import Input from '../Helpers/Input';
 import AxiosRequest from '../../api/AxiosRequest';
 import Message from '../Message/Message';
+import Button from '../Helpers/Button';
 
 const Username = () => {
 
@@ -29,9 +30,7 @@ const Username = () => {
         <div className="username">
             <form onSubmit={handleSubmit}>
                 <Input text='Your new username' type="text" id="username" require={true} value={username} onChange={(e) => setUsername(e.target.value)} />
-                <button type="submit" className="btn btn-primary btn-disabled">
-                    Save username
-                </button>
+                <Button>Save Username</Button>
             </form>
             {message && <Message message={message} font={font} />}
         </div>

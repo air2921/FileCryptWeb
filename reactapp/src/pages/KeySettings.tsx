@@ -4,6 +4,7 @@ import AxiosRequest from '../api/AxiosRequest';
 import Message from '../components/Message/Message';
 import Input from '../components/Helpers/Input';
 import CheckBox from '../components/Helpers/CheckBox';
+import Button from '../components/Helpers/Button';
 
 const KeySettings = () => {
     const [userKeys, setKeys] = useState(null);
@@ -101,9 +102,7 @@ const KeySettings = () => {
                     <form onSubmit={handlePrivateKeySubmit}>
                         <Input text='Set your new private key' type="text" id="private" require={false} value={privateKey} onChange={(e) => setPrivateKey(e.target.value)} />
                         <CheckBox text='Auto-generation key' type="checkbox" id="auto-private" checked={isAutoPrivate} onChange={handlePrivateCheckboxChange} />
-                        <button type="submit" className="btn btn-primary btn-disabled">
-                            Update private key
-                        </button>
+                        <Button>Update Private Key</Button>
                     </form>
                     {privateMessage && <Message message={privateMessage} font={privateFont} />}
                 </div>
@@ -111,9 +110,7 @@ const KeySettings = () => {
                     <form onSubmit={handleInternalKeySubmit}>
                         <Input text='Set your new internal key' type="text" id="internal" require={false} value={internalKey} onChange={(e) => setInternalKey(e.target.value)} />
                         <CheckBox text='Auto-generation key' type="checkbox" id="auto-internal" checked={isAutoInternal} onChange={handleInternalCheckboxChange} />
-                        <button type="submit" className="btn btn-primary btn-disabled">
-                            Update internal key
-                        </button>
+                        <Button>Update Internal Key</Button>
                     </form>
                     {internalMessage && <Message message={internalMessage} font={internalFont} />}
                 </div>

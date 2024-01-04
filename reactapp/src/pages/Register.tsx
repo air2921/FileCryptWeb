@@ -3,6 +3,7 @@ import Verify from '../components/Verify/Verify';
 import Input from '../components/Helpers/Input';
 import AxiosRequest from '../api/AxiosRequest';
 import Message from '../components/Message/Message';
+import Button from '../components/Helpers/Button';
 
 const Register = () => {
     const [email, setEmail] = useState('');
@@ -35,9 +36,7 @@ const Register = () => {
                             <Input text='Username' type="text" id="username" require={true} value={username} onChange={(e) => setUsername(e.target.value)} />
                             <Input text='Email' type="email" id="email" require={true} value={email} onChange={(e) => setEmail(e.target.value)} />
                             <Input text='Password' type="password" id="password" require={true} value={password} onChange={(e) => setPassword(e.target.value)} />
-                            <button type="submit">
-                                Continue
-                            </button>
+                            <Button>Continue</Button>
                         </form>
                         {errorMessage && <Message message={errorMessage} font='error' />}
                     </div>
