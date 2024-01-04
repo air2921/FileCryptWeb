@@ -19,5 +19,6 @@
         public const string SuccessOfferAccepted = "The offer was accepted";
         public const string SuccessOfferCreated = "The offer was succesfully created and sent";
         public const string SuccessApiUpdated = "New API settings have been applied";
+        public const string SuccessFileDeleted = "File was successfully deleted";
     }
 }

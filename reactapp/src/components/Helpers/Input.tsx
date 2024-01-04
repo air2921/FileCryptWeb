@@ -6,12 +6,14 @@ interface InputProps {
     value: any,
     onChange: (e: ChangeEvent<HTMLInputElement>) => void,
     require: boolean,
-    className?: string
+    className?: string,
+    text: string
 }
 
-function Input({ type, id, value, onChange, require, className }: InputProps) {
+function Input({ type, id, value, onChange, require, className, text }: InputProps) {
     return (
         <div className="form-group">
+            <p>{text}</p>
             <label htmlFor={id}>
                 <input
                     type={type}

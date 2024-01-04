@@ -1,7 +1,7 @@
 import React, { FormEvent, useState } from 'react';
 import { useNavigate } from 'react-router-dom'
 import AxiosRequest from '../api/AxiosRequest';
-import Input from '../components/Input/Input';
+import Input from '../components/Helpers/Input';
 import Message from '../components/Message/Message';
 
 const Login = () => {
@@ -28,8 +28,8 @@ const Login = () => {
             <div className="login-container">
                 <p className="welcome-text"></p>
                 <form onSubmit={handleSubmit}>
-                    <Input type="email" id="email" require={true} value={email} onChange={(e) => setEmail(e.target.value)} />
-                    <Input type="password" id="password" require={true} value={password} onChange={(e) => setPassword(e.target.value)} />
+                    <Input text='Login' type="email" id="email" require={true} value={email} onChange={(e) => setEmail(e.target.value)} />
+                    <Input text='Password' type="password" id="password" require={true} value={password} onChange={(e) => setPassword(e.target.value)} />
                     <button type="submit" className="btn btn-primary btn-disabled">
                         Sign In
                     </button>

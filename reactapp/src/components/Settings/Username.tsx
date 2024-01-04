@@ -1,5 +1,5 @@
 import React, { FormEvent, useState } from 'react';
-import Input from '../Input/Input';
+import Input from '../Helpers/Input';
 import AxiosRequest from '../../api/AxiosRequest';
 import Message from '../Message/Message';
 
@@ -28,9 +28,9 @@ const Username = () => {
     return (
         <div className="username">
             <form onSubmit={handleSubmit}>
-                <Input type="text" id="username" require={true} value={username} onChange={(e) => setUsername(e.target.value)} />
+                <Input text='Your new username' type="text" id="username" require={true} value={username} onChange={(e) => setUsername(e.target.value)} />
                 <button type="submit" className="btn btn-primary btn-disabled">
-                    Update username
+                    Save username
                 </button>
             </form>
             {message && <Message message={message} font={font} />}

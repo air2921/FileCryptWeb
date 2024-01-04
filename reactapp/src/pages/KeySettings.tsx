@@ -2,8 +2,8 @@
 import UserKeys from '../components/User/UserKeys';
 import AxiosRequest from '../api/AxiosRequest';
 import Message from '../components/Message/Message';
-import Input from '../components/Input/Input';
-import CheckBox from '../components/Input/CheckBox';
+import Input from '../components/Helpers/Input';
+import CheckBox from '../components/Helpers/CheckBox';
 
 const KeySettings = () => {
     const [userKeys, setKeys] = useState(null);
@@ -99,8 +99,8 @@ const KeySettings = () => {
             <div className="keys">
                 <div className="private">
                     <form onSubmit={handlePrivateKeySubmit}>
-                        <Input type="text" id="private" require={false} value={privateKey} onChange={(e) => setPrivateKey(e.target.value)} />
-                        <CheckBox type="checkbox" id="auto-private" checked={isAutoPrivate} onChange={handlePrivateCheckboxChange} />
+                        <Input text='Set your new private key' type="text" id="private" require={false} value={privateKey} onChange={(e) => setPrivateKey(e.target.value)} />
+                        <CheckBox text='Auto-generation key' type="checkbox" id="auto-private" checked={isAutoPrivate} onChange={handlePrivateCheckboxChange} />
                         <button type="submit" className="btn btn-primary btn-disabled">
                             Update private key
                         </button>
@@ -109,8 +109,8 @@ const KeySettings = () => {
                 </div>
                 <div className="internal">
                     <form onSubmit={handleInternalKeySubmit}>
-                        <Input type="text" id="internal" require={false} value={internalKey} onChange={(e) => setInternalKey(e.target.value)} />
-                        <CheckBox type="checkbox" id="auto-internal" checked={isAutoInternal} onChange={handleInternalCheckboxChange} />
+                        <Input text='Set your new internal key' type="text" id="internal" require={false} value={internalKey} onChange={(e) => setInternalKey(e.target.value)} />
+                        <CheckBox text='Auto-generation key' type="checkbox" id="auto-internal" checked={isAutoInternal} onChange={handleInternalCheckboxChange} />
                         <button type="submit" className="btn btn-primary btn-disabled">
                             Update internal key
                         </button>
