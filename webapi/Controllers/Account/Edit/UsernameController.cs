@@ -31,7 +31,7 @@ namespace webapi.Controllers.Account.Edit
             _tokenService = tokenService;
         }
 
-        [HttpPut()]
+        [HttpPut]
         public async Task<IActionResult> UpdateUsername([FromQuery] string username)
         {
             try

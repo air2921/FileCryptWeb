@@ -13,7 +13,7 @@ const UserSettings = () => {
     const [successStatusCode, setStatus] = useState(false);
 
     const fetchData = async () => {
-        const response = await AxiosRequest({ endpoint: `api/core/users/only`, method: 'GET', withCookie: true, requestBody: null })
+        const response = await AxiosRequest({ endpoint: `api/core/users/data/only`, method: 'GET', withCookie: true, requestBody: null })
 
         if (response.isSuccess) {
             setUserData(response.data)

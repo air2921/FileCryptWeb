@@ -85,7 +85,7 @@ namespace webapi.Controllers.Core
             }
         }
 
-        [HttpGet("only")]
+        [HttpGet("data/only")]
         public async Task<IActionResult> GetOnlyUser()
         {
             try

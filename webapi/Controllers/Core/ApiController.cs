@@ -39,7 +39,7 @@ namespace webapi.Controllers.Core
             return StatusCode(201);
         }
 
-        [HttpGet("user")]
+        [HttpGet]
         public async Task<IActionResult> GetAPI()
         {
             try
