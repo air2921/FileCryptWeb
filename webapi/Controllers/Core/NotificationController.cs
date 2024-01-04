@@ -50,9 +50,8 @@ namespace webapi.Controllers.Core
         public async Task<IActionResult> GetAll()
         {
             var query = _dbContext.Notifications.OrderByDescending(n => n.send_time).AsQueryable();
-            var notifications = new List<NotificationModel>();
 
-            query = query.Where(n => n.receiver_id == _userInfo.UserId);
+            var notifications = await query.Where(n => n.receiver_id == _userInfo.UserId).ToListAsync();
 
             return StatusCode(200, new { notifications });
         }

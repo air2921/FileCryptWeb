@@ -23,6 +23,8 @@ namespace webapi.Middlewares
                     if (freezed)
                     {
                         context.Response.StatusCode = 503;
+                        context.Response.ContentType = "application/json";
+                        await context.Response.WriteAsJsonAsync(new { message = "The service was frozen for technical work. We'll finish as quickly as we can" });
                         return;
                     }
                     await _next(context);

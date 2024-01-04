@@ -1,8 +1,9 @@
 import React, { FormEvent, useState } from 'react';
 import Message from '../Message/Message';
-import Input from '../Input/Input';
+import Input from '../Helpers/Input';
 import AxiosRequest from '../../api/AxiosRequest';
 import Verify from '../Verify/Verify';
+import Button from '../Helpers/Button';
 
 const Email = () => {
 
@@ -31,10 +32,8 @@ const Email = () => {
             ) : (
                     <div className="email">
                         <form onSubmit={handleSubmit}>
-                            <Input type="password" id="password" require={true} value={password} onChange={(e) => setPassword(e.target.value)} />
-                            <button type="submit" className="btn btn-primary btn-disabled">
-                                Confirm
-                            </button>
+                            <Input text='Confirm password' type="password" id="password" require={true} value={password} onChange={(e) => setPassword(e.target.value)} />
+                            <Button>Confirm</Button>
                         </form>
                         {errorMessage && <Message message={errorMessage} font='error' />}
                     </div>
@@ -71,11 +70,9 @@ const Confirm = () => {
             ) : (
                     <div className="email-and-code">
                         <form onSubmit={handleSubmit}>
-                            <Input type="email" id="email" require={true} value={email} onChange={(e) => setEmail(e.target.value)} />
-                            <Input type="number" id="code" require={true} value={code} onChange={(e) => setCode(parseInt(e.target.value, 10))} />
-                            <button type="submit" className="btn btn-primary btn-disabled">
-                                Confirm
-                            </button>
+                            <Input text='Your new email' type="email" id="email" require={true} value={email} onChange={(e) => setEmail(e.target.value)} />
+                            <Input text='Confirmation code' type="number" id="code" require={true} value={code} onChange={(e) => setCode(parseInt(e.target.value, 10))} />
+                            <Button>Confirm</Button>
                         </form>
                         {errorMessage && <Message message={errorMessage} font='error' />}
                     </div>

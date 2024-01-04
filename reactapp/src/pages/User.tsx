@@ -44,9 +44,13 @@ const User = () => {
                 <UserData user={user} />
                 <UserKeys keys={keys} />
             </div>
-            <div className="container">
-                <FileList files={files} isOwner={isOwner} />
-                <OfferList offers={offers} isOwner={isOwner} />
+            <div className="file-offer-container">
+                <div className="files">
+                    <FileList files={files} isOwner={isOwner} />
+                </div>
+                <div className="offers">
+                    <OfferList offers={offers} isOwner={isOwner} />
+                </div>
             </div>
         </div>
     );

@@ -1,4 +1,5 @@
-﻿using System.Security.Claims;
+﻿using Org.BouncyCastle.Asn1.Ocsp;
+using System.Security.Claims;
 
 namespace webapi.Middlewares
 {
@@ -16,7 +17,7 @@ namespace webapi.Middlewares
 
         public async Task Invoke(HttpContext context)
         {
-            var user = context.User;
+            var userContext = context.User;
 
             string? claimsUsername = null;
             string? claimId = null;
@@ -25,38 +26,38 @@ namespace webapi.Middlewares
             var path = context.Request.Path.ToString();
             var method = context.Request.Method.ToString();
 
-            if (user.Identity.IsAuthenticated)
+            if (userContext.Identity.IsAuthenticated)
             {
-                if (user.HasClaim(u => u.Type == ClaimTypes.Name))
+                if (userContext.HasClaim(u => u.Type == ClaimTypes.Name))
                 {
-                    claimsUsername = user.FindFirstValue(ClaimTypes.Name);
+                    claimsUsername = userContext.FindFirstValue(ClaimTypes.Name);
                 }
-                if (user.HasClaim(u => u.Type == ClaimTypes.NameIdentifier))
+                if (userContext.HasClaim(u => u.Type == ClaimTypes.NameIdentifier))
                 {
-                    claimId = user.FindFirstValue(ClaimTypes.NameIdentifier);
+                    claimId = userContext.FindFirstValue(ClaimTypes.NameIdentifier);
                 }
-                if (user.HasClaim(u => u.Type == ClaimTypes.Role))
+                if (userContext.HasClaim(u => u.Type == ClaimTypes.Role))
                 {
-                    claimRole = user.FindFirstValue(ClaimTypes.Role);
+                    claimRole = userContext.FindFirstValue(ClaimTypes.Role);
                 }
             }
 
-            var requestData = new
+            var user = new
             {
-                user = new
-                {
-                    username = claimsUsername,
-                    id = claimId,
-                    role = claimRole,
-                },
-                request = new
-                {
-                    path,
-                    method,
-                }
+                username = claimsUsername,
+                id = claimId,
+                role = claimRole,
             };
 
-            _logger.LogInformation(requestData.ToString());
+            var request = new
+            {
+                path,
+                method,
+            };
+
+            var requestData = $"{user} {request}";
+
+            _logger.LogInformation(requestData);
 
             await _next(context);
 

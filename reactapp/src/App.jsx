@@ -8,6 +8,7 @@ import About from './pages/no_logic/About';
 import User from './pages/User';
 import UserSettings from './pages/UserSettings'
 import KeySetting from './pages/KeySettings'
+import Offers from './pages/Offers'
 
 function App() {
     return (
@@ -18,6 +19,7 @@ function App() {
                 <Route path="/user/:userId" element={<User />} />
                 <Route path="/settings" element={<UserSettings />} />
                 <Route path="/settings/keys" element={<KeySetting />} />
+                <Route path="/offers" element={< Offers />} />
                 <Route path="/auth/signin" element={<Login />} />
                 <Route path="/auth/signup" element={ <Register /> } />
             </Routes>

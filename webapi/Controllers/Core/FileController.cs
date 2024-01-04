@@ -5,6 +5,7 @@ using webapi.DB;
 using webapi.Exceptions;
 using webapi.Interfaces.Services;
 using webapi.Interfaces.SQL;
+using webapi.Localization;
 using webapi.Localization.Exceptions;
 using webapi.Models;
 
@@ -35,26 +36,25 @@ namespace webapi.Controllers.Core
             _readFile = readFile;
         }
 
-        [HttpDelete("one")]
+        [HttpDelete]
         [ValidateAntiForgeryToken]
-        public async Task<IActionResult> DeleteFileFromHistory([FromQuery] int? fileId, [FromQuery] string? filename)
+        public async Task<IActionResult> DeleteFileFromHistory([FromQuery] int? fileId, [FromQuery] string? filename, [FromQuery] bool byId)
         {
             try
             {
-                if (fileId.HasValue)
+                if (fileId.HasValue && byId)
                 {
                     await _deleteFileById.DeleteById(fileId.Value, _userInfo.UserId);
 
-                    return StatusCode(200);
+                    return StatusCode(200, new { message = SuccessMessage.SuccessFileDeleted});
                 }
 
                 if (string.IsNullOrWhiteSpace(filename))
                     return StatusCode(400);
 
-
                 await _deleteFileByName.DeleteByName(filename, _userInfo.UserId);
 
-                return StatusCode(200);
+                return StatusCode(200, new { message = SuccessMessage.SuccessFileDeleted });
             }
             catch (FileException ex)
             {

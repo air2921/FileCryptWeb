@@ -1,14 +1,15 @@
 import React, { FormEvent, useState } from 'react';
-import Input from '../Input/Input';
+import Input from '../Helpers/Input';
 import AxiosRequest from '../../api/AxiosRequest';
 import Message from '../Message/Message';
+import Button from '../Helpers/Button';
 
 const Username = () => {
 
     const [username, setUsername] = useState('');
 
-    const [errorMessage, setErrorMessage] = useState('');
-    const [successMessage, setSuccessMessage] = useState('');
+    const [message, setMessage] = useState('');
+    const [font, setFont] = useState('')
 
     const handleSubmit = async (e: FormEvent) => {
         e.preventDefault();
@@ -16,25 +17,22 @@ const Username = () => {
         const response = await AxiosRequest({ endpoint: `api/account/edit/username?username=${username}`, method: 'PUT', withCookie: true, requestBody: { username: username } })
 
         if (response.isSuccess) {
-            setErrorMessage('');
-            setSuccessMessage(response.data.message);
+            setMessage(response.data.message);
+            setFont('done')
         }
         else {
-            setSuccessMessage('');
-            setErrorMessage(response.data);
+            setMessage(response.data);
+            setFont('error');
         }
     }
 
     return (
         <div className="username">
             <form onSubmit={handleSubmit}>
-                <Input type="text" id="username" require={true} value={username} onChange={(e) => setUsername(e.target.value)} />
-                <button type="submit" className="btn btn-primary btn-disabled">
-                    Update username
-                </button>
+                <Input text='Your new username' type="text" id="username" require={true} value={username} onChange={(e) => setUsername(e.target.value)} />
+                <Button>Save Username</Button>
             </form>
-            {successMessage && <Message message={successMessage} font='done' />}
-            {errorMessage && <Message message={errorMessage} font='error' />}
+            {message && <Message message={message} font={font} />}
         </div>
     );
 }

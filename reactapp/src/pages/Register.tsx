@@ -1,10 +1,11 @@
 ﻿import React, { FormEvent, useState } from 'react';
 import Verify from '../components/Verify/Verify';
-import Input from '../components/Input/Input';
+import Input from '../components/Helpers/Input';
 import AxiosRequest from '../api/AxiosRequest';
 import Message from '../components/Message/Message';
+import Button from '../components/Helpers/Button';
 
-const Register: React.FC = () => {
+const Register = () => {
     const [email, setEmail] = useState('');
     const [password, setPassword] = useState('');
     const [username, setUsername] = useState('');
@@ -32,12 +33,10 @@ const Register: React.FC = () => {
                     <div className="register-container">
                         <p className="welcome-text">Welcome to FileCrypt. Let's start our adventure here</p>
                         <form onSubmit={handleSubmit}>
-                            <Input type="text" id="username" require={true} value={username} onChange={(e) => setUsername(e.target.value)} />
-                            <Input type="email" id="email" require={true} value={email} onChange={(e) => setEmail(e.target.value)} />
-                            <Input type="password" id="password" require={true} value={password} onChange={(e) => setPassword(e.target.value)} />
-                            <button type="submit">
-                                continue
-                            </button>
+                            <Input text='Username' type="text" id="username" require={true} value={username} onChange={(e) => setUsername(e.target.value)} />
+                            <Input text='Email' type="email" id="email" require={true} value={email} onChange={(e) => setEmail(e.target.value)} />
+                            <Input text='Password' type="password" id="password" require={true} value={password} onChange={(e) => setPassword(e.target.value)} />
+                            <Button>Continue</Button>
                         </form>
                         {errorMessage && <Message message={errorMessage} font='error' />}
                     </div>

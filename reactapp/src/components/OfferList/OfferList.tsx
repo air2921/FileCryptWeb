@@ -1,8 +1,9 @@
 import React from 'react';
 import DateComponent from '../Date/Date';
 import Message from '../Message/Message';
+import Button from '../Helpers/Button';
 
-function OfferList({ offers, isOwner }: OfferListProps) {
+function OfferList({ offers, isOwner, deleteOffer, acceptOffer, error }: OfferListProps) {
 
     if (!offers || offers.every(offer => offer === null)) {
         return <div><Message message={'No sended or received offers'} font={'home_storage'} /></div>;
@@ -15,7 +16,7 @@ function OfferList({ offers, isOwner }: OfferListProps) {
                 .map(offer => (
                     <li key={offer.offer_id} className="offer">
                         <div className="offer_header">
-                            <span>{offer.offer_type} trade #{offer.offer_id}</span>
+                            <div>{offer.offer_type} trade #{offer.offer_id}</div>
                             {offer.is_accepted ? (
                                 <i className="material-icons-sharp">check_small</i>
                             ) : (
@@ -29,7 +30,13 @@ function OfferList({ offers, isOwner }: OfferListProps) {
                                 <div className="receiver">Receiver#{offer.receiver_id}</div>
                             </div>
                         </div>
-                        {isOwner && <button>Delete</button>}
+                        {!offer.is_accepted && acceptOffer && (
+                            <Button onClick={() => acceptOffer(offer.offer_id)}>Accept</Button>
+                        )}
+                        {isOwner && deleteOffer && (
+                            <Button onClick={() => deleteOffer(offer.offer_id)}>Delete</Button>
+                        )}
+                        {error && <Message message={error} font={'error'} />}
                     </li>
                 ))}
         </ul>

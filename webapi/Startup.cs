@@ -24,13 +24,13 @@ namespace webapi
                 app.UseSwaggerUI();
             }
 
-            app.UseFreeze();
             app.UseAPI();
             app.UseHttpsRedirection();
             app.UseStaticFiles();
             app.UseRouting();
             app.UseSession();
             app.UseCors("AllowSpecificOrigin");
+            app.UseFreeze();
             app.UseBearer();
             app.UseAuthentication();
             app.UseLog();

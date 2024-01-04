@@ -13,7 +13,7 @@
   <ItemGroup>
     <Folder Include="src\components\Modal\" />
     <Folder Include="src\components\FileList\" />
-    <Folder Include="src\components\Input\" />
+    <Folder Include="src\components\Helpers\" />
     <Folder Include="src\components\Date\" />
     <Folder Include="src\components\Settings\" />
     <Folder Include="src\components\OfferList\" />
