@@ -33,7 +33,10 @@ namespace webapi
             app.UseFreeze();
             app.UseBearer();
             app.UseAuthentication();
-            app.UseLog();
+
+            if (env.IsDevelopment())
+                app.UseLog();
+
             app.UseAuthorization();
             app.UseXSRF();
 

@@ -2,13 +2,13 @@ import Interceptor from './AxiosRequestInterceptor';
 
 const BASE_URL = 'https://localhost:7067/';
 
-const AxiosRequest = async ({ endpoint, method, withCookie, requestBody }: RequestProps) => {
+const AxiosRequest = async ({ endpoint, method, withCookie, requestBody, responseType }: RequestProps) => {
     try {
         var response;
 
         switch (method) {
             case 'POST':
-                response = await Interceptor.post(`${BASE_URL + endpoint}`, requestBody, { withCredentials: withCookie });
+                response = await Interceptor.post(`${BASE_URL + endpoint}`, requestBody, { withCredentials: withCookie, responseType: responseType });
                 break;
             case 'GET':
                 response = await Interceptor.get(`${BASE_URL + endpoint}`, { withCredentials: withCookie });
@@ -31,7 +31,6 @@ const AxiosRequest = async ({ endpoint, method, withCookie, requestBody }: Reque
         if (error.response) {
             errorMessage = error.response.data && error.response.data.message ? error.response.data.message : 'Unknown error';
         }
-
         return { isSuccess: false, data: errorMessage };
     }
 }

@@ -5,13 +5,16 @@ using webapi.Interfaces.SQL;
 using webapi.Models;
 using Newtonsoft.Json;
 using webapi.Interfaces.Controllers;
-using webapi.Localization;
 using webapi.Services;
 
 namespace webapi.Controllers.Base.CryptographyUtils
 {
     public class FileService : IFileService
     {
+        private readonly string privateType = FileType.Private.ToString().ToLowerInvariant();
+        private readonly string internalType = FileType.Internal.ToString().ToLowerInvariant();
+        private readonly string receivedType = FileType.Received.ToString().ToLowerInvariant();
+
         private readonly IGetSize _getSize;
         private readonly IVirusCheck _virusCheck;
         private readonly IRedisCache _redisCache;
@@ -38,10 +41,6 @@ namespace webapi.Controllers.Base.CryptographyUtils
         public bool CheckFileType(string type)
         {
             string lowerType = type.ToLowerInvariant();
-
-            string privateType = FileType.Received.ToString().ToLowerInvariant();
-            string internalType = FileType.Received.ToString().ToLowerInvariant();
-            string receivedType = FileType.Received.ToString().ToLowerInvariant();
 
             string[] typesArray = new string[]
             {
