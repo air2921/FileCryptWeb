@@ -2,6 +2,7 @@ import React from 'react';
 import DateComponent from '../Date/Date';
 import Button from '../Helpers/Button';
 import Message from '../Message/Message';
+import Font from '../Font/Font';
 
 function NotificationList({ notifications, deleteNotification, error }: NotificationListProps) {
 
@@ -11,6 +12,7 @@ function NotificationList({ notifications, deleteNotification, error }: Notifica
 
     return (
         <ul>
+            <Message message={'Your Notifications'} font='storage' />
             {notifications
                 .filter(notification => notification !== null)
                 .map(notification => (
@@ -39,7 +41,9 @@ function NotificationList({ notifications, deleteNotification, error }: Notifica
                             <div className="time"><DateComponent date={notification.send_time} /></div>
                         </div>
                         {notification.priority == 'Info' && deleteNotification && (
-                            <Button onClick={() => deleteNotification(notification.notification_id)}>Delete</Button>
+                            <Button onClick={() => deleteNotification(notification.notification_id)}>
+                                <Font font={'delete'} />
+                            </Button>
                         )}
                         {error && <Message message={error} font={'error'} />}
                     </li>

@@ -129,7 +129,7 @@ const KeySettings = () => {
                 </div>
                 <div className="received">
                     <p>Update Received Key to null</p>
-                    <Button onClick={() => handleReceivedKeySubmit()}>Update</Button>
+                    <Button onClick={handleReceivedKeySubmit}>Update</Button>
                     {receivedMessage && <Message message={receivedMessage} font={receivedFont} />}
                 </div>
             </div>

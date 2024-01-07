@@ -137,7 +137,7 @@ namespace webapi.Controllers.Core
                 if (offer.sender_id != _userInfo.UserId || offer.receiver_id != _userInfo.UserId)
                     return StatusCode(404);
 
-                return StatusCode(200, new { offer });
+                return StatusCode(200, new { offer, userId = _userInfo.UserId });
             }
             catch (OfferException ex)
             {
@@ -146,7 +146,7 @@ namespace webapi.Controllers.Core
         }
 
         [HttpGet("all")]
-        public async Task<IActionResult> GetAll([FromQuery] bool? sended = null, [FromQuery] bool? isAccepted = null)
+        public async Task<IActionResult> GetAll([FromQuery] int skip, [FromQuery] int count, [FromQuery] bool? sended = null, [FromQuery] bool? isAccepted = null)
         {
             var query = _dbContext.Offers.OrderByDescending(o => o.created_at)
                 .Select(o => new { o.offer_id, o.sender_id, o.receiver_id, o.created_at, o.is_accepted, o.offer_type })
@@ -182,9 +182,12 @@ namespace webapi.Controllers.Core
                     break;
             }
 
-            var offers = await query.ToListAsync();
+            var offers = await query
+                .Skip(skip)
+                .Take(count)
+                .ToListAsync();
 
-            return StatusCode(200, new { offers });
+            return StatusCode(200, new { offers, user_id = _userInfo.UserId });
         }
 
         [HttpDelete("{offerId}")]

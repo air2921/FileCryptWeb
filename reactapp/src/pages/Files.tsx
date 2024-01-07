@@ -4,9 +4,12 @@ import AxiosRequest from '../api/AxiosRequest';
 import Input from '../components/Helpers/Input';
 import Message from '../components/Message/Message';
 import AxiosRequestInterceptor from '../api/AxiosRequestInterceptor';
+import Button from '../components/Helpers/Button';
 
 const Files = () => {
     const [byAsc, setBy] = useState(true);
+    const [skip, setSkip] = useState(0);
+    const step = 10;
     const [errorMessage, setErrorMessage] = useState('');
     const [filesList, setFiles] = useState(null);
 
@@ -15,7 +18,7 @@ const Files = () => {
     const [cryptographyError, setCryptographyError] = useState('');
 
     const fetchData = async () => {
-        const response = await AxiosRequest({ endpoint: `api/core/files/all?byAscending=${byAsc}`, method: 'GET', withCookie: true, requestBody: null });
+        const response = await AxiosRequest({ endpoint: `api/core/files/all?byAscending=${byAsc}&skip=${skip}&count=${step}`, method: 'GET', withCookie: true, requestBody: null });
 
         if (response.isSuccess) {
             setFiles(response.data);
@@ -24,6 +27,14 @@ const Files = () => {
             setErrorMessage(response.data);
         }
     }
+
+    const handleLoadMore = () => {
+        setSkip(prevSkip => prevSkip + step);
+    };
+
+    const handleBack = () => {
+        setSkip(prevSkip => Math.max(0, prevSkip - step));
+    };
 
     const deleteFile = async (fileId: number) => {
         const response = await AxiosRequest({ endpoint: `api/core/files?fileId=${fileId}&filename=&byId=true`, method: 'DELETE', withCookie: true, requestBody: null });
@@ -92,7 +103,7 @@ const Files = () => {
 
     useEffect(() => {
         fetchData();
-    }, [byAsc, lastTimeModified]);
+    }, [byAsc, lastTimeModified, skip]);
 
     if (!filesList) {
         return <div className="error">{errorMessage || 'Loading...'}</div>;
@@ -120,6 +131,8 @@ const Files = () => {
             </div>
             <div className="files">
                 <FileList files={files} isOwner={true} deleteFile={deleteFile} error={deletingError} />
+                {skip > 0 && <Button onClick={handleBack}>Back</Button>}
+                {files.length > step - 1 && <Button onClick={handleLoadMore}>Load More</Button>}
             </div>
         </div>
     );
