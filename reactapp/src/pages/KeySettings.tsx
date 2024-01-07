@@ -128,7 +128,8 @@ const KeySettings = () => {
                     {internalMessage && <Message message={internalMessage} font={internalFont} />}
                 </div>
                 <div className="received">
-                    <Button onClick={() => handleReceivedKeySubmit()}>Clean Received Key</Button>
+                    <p>Update Received Key to null</p>
+                    <Button onClick={() => handleReceivedKeySubmit()}>Update</Button>
                     {receivedMessage && <Message message={receivedMessage} font={receivedFont} />}
                 </div>
             </div>
