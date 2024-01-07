@@ -31,10 +31,10 @@ const Register = () => {
                 <Verify endpoint='api/auth/verify' method='POST' />
             ) : (
                     <div className="register-container">
-                        <p className="welcome-text">Welcome to FileCrypt. Let's start our adventure here</p>
+                        <p className="welcome-text">Welcome to FileCryptWeb! Let's start secure your data here</p>
                         <form onSubmit={handleSubmit}>
                             <Input text='Username' type="text" id="username" require={true} value={username} onChange={(e) => setUsername(e.target.value)} />
-                            <Input text='Email' type="email" id="email" require={true} value={email} onChange={(e) => setEmail(e.target.value)} />
+                            <Input text='Email address' type="email" id="email" require={true} value={email} onChange={(e) => setEmail(e.target.value)} />
                             <Input text='Password' type="password" id="password" require={true} value={password} onChange={(e) => setPassword(e.target.value)} />
                             <Button>Continue</Button>
                         </form>

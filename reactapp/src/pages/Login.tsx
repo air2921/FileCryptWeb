@@ -27,19 +27,16 @@ const Login = () => {
     return (
         <div className="login">
             <div className="login-container">
-                <p className="welcome-text">
-                    Have an account ?
-                    Sign In
-                </p>
+                <p className="welcome-text">Sign in to FileCryptWeb</p>
                 <form onSubmit={handleSubmit}>
-                    <Input text='Login' type="email" id="email" require={true} value={email} onChange={(e) => setEmail(e.target.value)} />
+                    <Input text='Email address' type="email" id="email" require={true} value={email} onChange={(e) => setEmail(e.target.value)} />
                     <Input text='Password' type="password" id="password" require={true} value={password} onChange={(e) => setPassword(e.target.value)} />
                     <Button>Sign In</Button>
                 </form>
                 {errorMessage && <Message message={errorMessage} font='error' />}
             </div>
             <div className="signup-container">
-                <p>No? <a href="/signup">Create an account</a>And try sign in, after it.</p>
+                <p>New to FileCrypt?<a href="/signup"> Create an account </a></p>
             </div>
         </div>
     );

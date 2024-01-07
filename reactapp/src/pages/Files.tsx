@@ -3,7 +3,7 @@ import FileList from '../components/FileList/FileList';
 import AxiosRequest from '../api/AxiosRequest';
 import Input from '../components/Helpers/Input';
 import Message from '../components/Message/Message';
-import AxiosRequestIntercaptor from '../api/AxiosRequestInterceptor';
+import AxiosRequestInterceptor from '../api/AxiosRequestInterceptor';
 
 const Files = () => {
     const [byAsc, setBy] = useState(true);
@@ -55,7 +55,7 @@ const Files = () => {
 
     const encryptFile = async (file: FormData, fileType: string, operationType: string, filename: string) => {
         try {
-            const response = await AxiosRequestIntercaptor.post(
+            const response = await AxiosRequestInterceptor.post(
                 `https://localhost:7067/api/core/cryptography/${fileType}/${operationType}`,
                 file,
                 {
@@ -103,13 +103,20 @@ const Files = () => {
     return (
         <div className="container">
             <div className="cryptography">
+                <p>Select file to encrypt</p>
                 <div className="encrypt">
-                    <Input text='Select file to encrypt' type="file" id='private-encrypt' require={true} onChange={(e) => handleFileChange(e, 'private', 'encrypt')} />
+                    <Input text='Private' type="file" id='private-encrypt' require={true} onChange={(e) => handleFileChange(e, 'private', 'encrypt')} />
+                    <Input text='Internal' type="file" id='internal-encrypt' require={true} onChange={(e) => handleFileChange(e, 'internal', 'encrypt')} />
+                    <Input text='Received' type="file" id='received-encrypt' require={true} onChange={(e) => handleFileChange(e, 'received', 'encrypt')} />
                 </div>
+                <p>Select file to decrypt</p>
                 <div className="decrypt">
-                    <Input text='Select file to decrypt' type="file" id='private-decrypt' require={true} onChange={(e) => handleFileChange(e, 'private', 'decrypt')} />
+                    <Input text='Private' type="file" id='private-decrypt' require={true} onChange={(e) => handleFileChange(e, 'private', 'decrypt')} />
+                    <Input text='Internal' type="file" id='internal-decrypt' require={true} onChange={(e) => handleFileChange(e, 'internal', 'decrypt')} />
+                    <Input text='Received' type="file" id='received-decrypt' require={true} onChange={(e) => handleFileChange(e, 'received', 'decrypt')} />
                 </div>
                 {cryptographyError && < Message message={cryptographyError} font={'error'} />}
+                <p>You can manage your encryption keys<a href="/settings/keys"> here </a></p>
             </div>
             <div className="files">
                 <FileList files={files} isOwner={true} deleteFile={deleteFile} error={deletingError} />
