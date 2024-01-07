@@ -8,13 +8,14 @@ import Button from '../components/Helpers/Button';
 
 const KeySettings = () => {
     const [userKeys, setKeys] = useState(null);
-    const [successStatus, setStatus] = useState(false);
     const [errorMessage, setErrorMessage] = useState('');
 
     const [privateMessage, setPrivateMessage] = useState('');
     const [internalMessage, setInternalMessage] = useState('');
     const [privateFont, setPrivateFont] = useState('');
     const [internalFont, setInternalFont] = useState('');
+    const [receivedMessage, setReceivedMessage] = useState('');
+    const [receivedFont, setReceivedFont] = useState('');
 
     const [privateKey, setPrivateKey] = useState('');
     const [internalKey, setInternalKey] = useState('');
@@ -26,7 +27,6 @@ const KeySettings = () => {
 
         if (response.isSuccess) {
             setKeys(response.data);
-            setStatus(true);
         }
         else {
             setErrorMessage(response.data);
@@ -37,7 +37,7 @@ const KeySettings = () => {
         fetchData();
     }, []);
 
-    if (!successStatus || !userKeys) {
+    if (!userKeys) {
         return <div className="error">{errorMessage || 'Loading...'}</div>;
     }
 
@@ -86,6 +86,19 @@ const KeySettings = () => {
         }
     }
 
+    const handleReceivedKeySubmit = async () => {
+        const response = await AxiosRequest({ endpoint: 'api/core/keys/received/clean', method: 'PUT', withCookie: true, requestBody: null });
+
+        if (response.isSuccess) {
+            setReceivedMessage(response.data.message);
+            setReceivedFont('done');
+        }
+        else {
+            setReceivedMessage(response.data);
+            setReceivedFont('error');
+        }
+    }
+
     const handlePrivateKeySubmit = (e: FormEvent) => {
         handleSubmit(e, 'private', isAutoPrivate, privateKey);
     };
@@ -113,6 +126,10 @@ const KeySettings = () => {
                         <Button>Update Internal Key</Button>
                     </form>
                     {internalMessage && <Message message={internalMessage} font={internalFont} />}
+                </div>
+                <div className="received">
+                    <Button onClick={() => handleReceivedKeySubmit()}>Clean Received Key</Button>
+                    {receivedMessage && <Message message={receivedMessage} font={receivedFont} />}
                 </div>
             </div>
         </div>

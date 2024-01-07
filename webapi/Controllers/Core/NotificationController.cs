@@ -5,7 +5,6 @@ using webapi.DB;
 using webapi.Exceptions;
 using webapi.Interfaces.Services;
 using webapi.Interfaces.SQL;
-using webapi.Localization.Exceptions;
 using webapi.Models;
 
 namespace webapi.Controllers.Core

@@ -6,7 +6,7 @@ import Button from '../Helpers/Button';
 function FileList({ files, isOwner, deleteFile, error }: FileListProps) {
 
     if (!files || files.every(file => file === null)) {
-        return <div><Message message={'No encrypted files here'} font='home_storage' /></div>;
+        return <div><Message message={'No encrypted files here'} font='storage' /></div>;
     }
 
     return (

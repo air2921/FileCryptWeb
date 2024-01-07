@@ -6,7 +6,7 @@ import Button from '../Helpers/Button';
 function OfferList({ offers, isOwner, deleteOffer, acceptOffer, error }: OfferListProps) {
 
     if (!offers || offers.every(offer => offer === null)) {
-        return <div><Message message={'No sended or received offers'} font={'home_storage'} /></div>;
+        return <div><Message message={'No sended or received offers'} font={'storage'} /></div>;
     }
 
     return (
@@ -25,7 +25,7 @@ function OfferList({ offers, isOwner, deleteOffer, acceptOffer, error }: OfferLi
                         </div>
                         <div className="offer-details">
                             <div className="time">{<DateComponent date={offer.created_at} />}</div>
-                            <div className="brief-file-info">
+                            <div className="brief-offer-info">
                                 <div className="sender">Sender#{offer.sender_id}</div>
                                 <div className="receiver">Receiver#{offer.receiver_id}</div>
                             </div>
