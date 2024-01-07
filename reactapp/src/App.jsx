@@ -17,7 +17,7 @@ function App() {
             <Routes>
                 <Route path="/" element={<Home />} />
                 <Route path="/about" element={<About />} />
-                <Route path="/user/:userId" element={<User />} />
+                <Route path="/user/:userId/:username" element={<User />} />
                 <Route path="/settings" element={<UserSettings />} />
                 <Route path="/settings/keys" element={<KeySetting />} />
                 <Route path="/offers" element={<Offers />} />

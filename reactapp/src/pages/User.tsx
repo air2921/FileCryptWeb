@@ -9,13 +9,14 @@ import AxiosRequest from '../api/AxiosRequest';
 
 const User = () => {
     const { userId } = useParams();
+    const { username } = useParams();
     const [userData, setUserData] = useState(null);
     const [successStatusCode, setStatusCode] = useState(false)
     const [errorMessage, setErrorMessage] = useState('');
 
     const fetchData = async () => {
 
-        const response = await AxiosRequest({ endpoint: `api/core/users/${userId}`, method: 'GET', withCookie: true, requestBody: null })
+        const response = await AxiosRequest({ endpoint: `api/core/users/${userId}/${username}`, method: 'GET', withCookie: true, requestBody: null })
 
         if (response.isSuccess) {
             setUserData(response.data);
@@ -28,7 +29,7 @@ const User = () => {
 
     useEffect(() => {
         fetchData();
-    }, [userId]);
+    }, [userId, username]);
 
     if (!successStatusCode || !userData) {
         return <div className="error">{errorMessage || 'Loading...'}</div>;

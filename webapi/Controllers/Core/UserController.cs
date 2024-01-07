@@ -28,11 +28,11 @@ namespace webapi.Controllers.Core
             _readUser = readUser;
         }
 
-        [HttpGet("{userId}")]
-        public async Task<IActionResult> GetUser([FromRoute] int userId)
+        [HttpGet("{userId}/{username}")]
+        public async Task<IActionResult> GetUser([FromRoute] int userId, [FromRoute] string username)
         {
             var user_keys_files = await _dbContext.Users
-                .Where(u => u.id == userId)
+                .Where(u => u.id == userId && u.username == username)
                 .GroupJoin(
                     _dbContext.Keys,
                     user => user.id,
