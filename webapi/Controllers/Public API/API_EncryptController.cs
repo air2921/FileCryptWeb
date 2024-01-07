@@ -5,8 +5,6 @@ using webapi.DB;
 using webapi.Exceptions;
 using webapi.Interfaces.Controllers;
 using webapi.Interfaces.Cryptography;
-using webapi.Interfaces.SQL;
-using webapi.Models;
 using webapi.Services;
 
 namespace webapi.Controllers.Public_API

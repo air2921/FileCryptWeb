@@ -1,4 +1,6 @@
 interface FileListProps {
     files: FileProps[] | null,
-    isOwner: boolean
+    isOwner: boolean,
+    deleteFile?: (offerId: number) => void,
+    error?: string
 }

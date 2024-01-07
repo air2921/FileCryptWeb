@@ -31,7 +31,8 @@ const Offers = () => {
 
         if (response.isSuccess) {
             setOffers(response.data);
-        } else {
+        }
+        else {
             setErrorMessage(response.data);
         }
     }
@@ -90,7 +91,7 @@ const Offers = () => {
         <div className="container">
             <div className="create">
                 <form onSubmit={createOffer}>
-                    <Input text='UID of the person you want to send offer to' type="number" id="offer" require={true} value={userId} onChange={(e) => setUserId(parseInt(e.target.value, 10))} />
+                    <Input text='UID of the offer receiver' type="number" id="offer" require={true} value={userId} onChange={(e) => setUserId(parseInt(e.target.value, 10))} />
                     <Button>Submit</Button>
                 </form>
                 {createOfferMessage && <Message message={createOfferMessage} font={createOfferFont} />}

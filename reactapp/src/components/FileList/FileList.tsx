@@ -1,8 +1,9 @@
 import React from 'react';
 import DateComponent from '../Date/Date';
 import Message from '../Message/Message';
+import Button from '../Helpers/Button';
 
-function FileList({ files, isOwner }: FileListProps) {
+function FileList({ files, isOwner, deleteFile, error }: FileListProps) {
 
     if (!files || files.every(file => file === null)) {
         return <div><Message message={'No encrypted files here'} font='home_storage' /></div>;
@@ -27,7 +28,10 @@ function FileList({ files, isOwner }: FileListProps) {
                                 <div className="file-id">UID#{file.user_id}</div>
                             </div>
                         </div>
-                        {isOwner && <button>Delete</button>}
+                        {isOwner && deleteFile && (
+                            <Button onClick={() => deleteFile(file.file_id)}>Delete</Button>
+                        )}
+                        {error && <Message message={error} font={'error'} />}
                     </li>
                 ))}
         </ul>

@@ -6,7 +6,6 @@ using webapi.Exceptions;
 using webapi.Interfaces.Services;
 using webapi.Interfaces.SQL;
 using webapi.Localization;
-using webapi.Localization.Exceptions;
 using webapi.Models;
 
 namespace webapi.Controllers.Core
@@ -46,7 +45,7 @@ namespace webapi.Controllers.Core
                 {
                     await _deleteFileById.DeleteById(fileId.Value, _userInfo.UserId);
 
-                    return StatusCode(200, new { message = SuccessMessage.SuccessFileDeleted});
+                    return StatusCode(200, new { message = SuccessMessage.SuccessFileDeleted });
                 }
 
                 if (string.IsNullOrWhiteSpace(filename))
@@ -96,9 +95,6 @@ namespace webapi.Controllers.Core
             }
 
             var files = await query.ToListAsync();
-
-            if (files is null || files.Count == 0)
-                return StatusCode(404, new { message = ExceptionFileMessages.NoOneFileNotFound });
 
             return StatusCode(200, new { files });
         }

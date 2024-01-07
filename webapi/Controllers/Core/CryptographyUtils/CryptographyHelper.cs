@@ -15,9 +15,10 @@ namespace webapi.Controllers.Base
     public class CryptographyHelper : ControllerBase, ICryptographyControllerBase, ICryptographyParamsProvider
     {
         private const string DEFAULT_FOLDER = "C:\\FileCryptWeb";
+        private const int TASK_AWAITING = 30000;
 
-        private readonly string privateType = FileType.Received.ToString().ToLowerInvariant();
-        private readonly string internalType = FileType.Received.ToString().ToLowerInvariant();
+        private readonly string privateType = FileType.Private.ToString().ToLowerInvariant();
+        private readonly string internalType = FileType.Internal.ToString().ToLowerInvariant();
         private readonly string receivedType = FileType.Received.ToString().ToLowerInvariant();
 
         private readonly IFileService _fileService;
@@ -96,18 +97,18 @@ namespace webapi.Controllers.Base
                     await _fileService.DeleteFile(filePath);
                     await _fileService.DeleteFile($"{filePath}.tmp");
 
-                    return StatusCode(400, new { message = ex.Message });
+                    return StatusCode(422, new { message = ex.Message });
                 }
                 catch (Exception exc)
                 {
                     _logger.LogError(exc.ToString());
-                    return StatusCode(400, new { message = ex.Message });
+                    return StatusCode(422, new { message = ex.Message });
                 }
             }
             catch (Exception ex)
             {
                 _logger.LogError(ex.ToString());
-                return StatusCode(400, new { message = "Unexpected error" });
+                return StatusCode(500, new { message = "Unexpected error" });
             }
         }
 
@@ -121,34 +122,28 @@ namespace webapi.Controllers.Base
 
         private async Task EncryptFile(string filePath, Func<string, byte[], CancellationToken, Task<CryptographyResult>> CryptographyFunction, byte[] key)
         {
-            try
+            using var cts = new CancellationTokenSource();
+            var cancellationToken = cts.Token;
+
+            var cryptographyTask = CryptographyFunction(filePath, key, cancellationToken);
+            var timeoutTask = Task.Delay(TASK_AWAITING);
+
+            var completedTask = await Task.WhenAny(cryptographyTask, timeoutTask);
+
+            if (completedTask == timeoutTask)
             {
-                using var cts = new CancellationTokenSource();
-                var cancellationToken = cts.Token;
-
-                var cryptographyTask = CryptographyFunction(filePath, key, cancellationToken);
-                var timeoutTask = Task.Delay(30000);
-
-                var completedTask = await Task.WhenAny(cryptographyTask, timeoutTask);
-
-                if (completedTask == timeoutTask)
-                {
-                    cts.Cancel();
-
-                    if (System.IO.File.Exists(filePath))
-                        await Task.Run(() => System.IO.File.Delete(filePath));
-
-                    throw new InvalidOperationException(ErrorMessage.TaskTimedOut);
-                }
-            }
-            catch (Exception ex)
-            {
-                _logger.LogCritical(ex.ToString());
+                cts.Cancel();
 
                 if (System.IO.File.Exists(filePath))
                     await Task.Run(() => System.IO.File.Delete(filePath));
 
-                throw new InvalidOperationException("Unexpected error");
+                throw new InvalidOperationException(ErrorMessage.TaskTimedOut);
+            }
+            else
+            {
+                var cryptographyResult = await cryptographyTask;
+                if (!cryptographyResult.Success)
+                    throw new InvalidOperationException(ErrorMessage.BadCryptographyData);
             }
         }
 

@@ -42,8 +42,7 @@ namespace webapi
                     origin.EndsWith("api/public/cryptography/received/decryption") ||
                     origin.EndsWith("api/public/cryptography/private/encryption") ||
                     origin.EndsWith("api/public/cryptography/internal/encryption") ||
-                    origin.EndsWith("api/public/cryptography/received/encryption")
-                    );
+                    origin.EndsWith("api/public/cryptography/received/encryption"));
                 });
             });
 

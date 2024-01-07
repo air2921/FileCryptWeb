@@ -34,7 +34,7 @@ namespace webapi.Controllers.Core
 
         [HttpPost("encrypt")]
         [RequestSizeLimit(75 * 1024 * 1024)]
-        public async Task<IActionResult> EncryptFile([FromRoute] string type, [FromForm] IFormFile file)
+        public async Task<IActionResult> EncryptFile([FromRoute] string type, IFormFile file)
         {
             try
             {
