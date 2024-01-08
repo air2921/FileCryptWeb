@@ -6,11 +6,10 @@ interface InputProps {
     value?: any,
     onChange: (e: ChangeEvent<HTMLInputElement>) => void,
     require: boolean,
-    className?: string,
-    text: string
+    text?: string
 }
 
-function Input({ type, id, value, onChange, require, className, text }: InputProps) {
+function Input({ type, id, value, onChange, require, text }: InputProps) {
     return (
         <div className="form-group">
             <p>{text}</p>
@@ -19,9 +18,8 @@ function Input({ type, id, value, onChange, require, className, text }: InputPro
                     type={type}
                     id={id}
                     value={value}
+                    required={require}
                     onChange={onChange}
-                    className={`form-control ${className}`}
-                    required={require} 
                 />
             </label>
         </div>

@@ -8,13 +8,14 @@ import Button from '../components/Helpers/Button';
 
 const KeySettings = () => {
     const [userKeys, setKeys] = useState(null);
-    const [successStatus, setStatus] = useState(false);
     const [errorMessage, setErrorMessage] = useState('');
 
     const [privateMessage, setPrivateMessage] = useState('');
     const [internalMessage, setInternalMessage] = useState('');
     const [privateFont, setPrivateFont] = useState('');
     const [internalFont, setInternalFont] = useState('');
+    const [receivedMessage, setReceivedMessage] = useState('');
+    const [receivedFont, setReceivedFont] = useState('');
 
     const [privateKey, setPrivateKey] = useState('');
     const [internalKey, setInternalKey] = useState('');
@@ -26,7 +27,6 @@ const KeySettings = () => {
 
         if (response.isSuccess) {
             setKeys(response.data);
-            setStatus(true);
         }
         else {
             setErrorMessage(response.data);
@@ -37,7 +37,7 @@ const KeySettings = () => {
         fetchData();
     }, []);
 
-    if (!successStatus || !userKeys) {
+    if (!userKeys) {
         return <div className="error">{errorMessage || 'Loading...'}</div>;
     }
 
@@ -86,6 +86,19 @@ const KeySettings = () => {
         }
     }
 
+    const handleReceivedKeySubmit = async () => {
+        const response = await AxiosRequest({ endpoint: 'api/core/keys/received/clean', method: 'PUT', withCookie: true, requestBody: null });
+
+        if (response.isSuccess) {
+            setReceivedMessage(response.data.message);
+            setReceivedFont('done');
+        }
+        else {
+            setReceivedMessage(response.data);
+            setReceivedFont('error');
+        }
+    }
+
     const handlePrivateKeySubmit = (e: FormEvent) => {
         handleSubmit(e, 'private', isAutoPrivate, privateKey);
     };
@@ -100,19 +113,32 @@ const KeySettings = () => {
             <div className="keys">
                 <div className="private">
                     <form onSubmit={handlePrivateKeySubmit}>
-                        <Input text='Set your new private key' type="text" id="private" require={false} value={privateKey} onChange={(e) => setPrivateKey(e.target.value)} />
-                        <CheckBox text='Auto-generation key' type="checkbox" id="auto-private" checked={isAutoPrivate} onChange={handlePrivateCheckboxChange} />
+                        {!isAutoPrivate && (
+                            <Input text='Set your new private key' type="text" id="private" require={false} value={privateKey} onChange={(e) => setPrivateKey(e.target.value)}/>
+                        )}
+                        {!privateKey && (
+                            <CheckBox text='Auto-generation key' type="checkbox" id="auto-private" checked={isAutoPrivate} onChange={handlePrivateCheckboxChange} />
+                        )}
                         <Button>Update Private Key</Button>
                     </form>
                     {privateMessage && <Message message={privateMessage} font={privateFont} />}
                 </div>
                 <div className="internal">
                     <form onSubmit={handleInternalKeySubmit}>
-                        <Input text='Set your new internal key' type="text" id="internal" require={false} value={internalKey} onChange={(e) => setInternalKey(e.target.value)} />
-                        <CheckBox text='Auto-generation key' type="checkbox" id="auto-internal" checked={isAutoInternal} onChange={handleInternalCheckboxChange} />
+                        {!isAutoInternal && (
+                            <Input text='Set your new internal key' type="text" id="internal" require={false} value={internalKey} onChange={(e) => setInternalKey(e.target.value)} />
+                        )}
+                        {!internalKey && (
+                            <CheckBox text='Auto-generation key' type="checkbox" id="auto-internal" checked={isAutoInternal} onChange={handleInternalCheckboxChange} />
+                        )}
                         <Button>Update Internal Key</Button>
                     </form>
                     {internalMessage && <Message message={internalMessage} font={internalFont} />}
+                </div>
+                <div className="received">
+                    <p>Update Received Key to null</p>
+                    <Button onClick={handleReceivedKeySubmit}>Update</Button>
+                    {receivedMessage && <Message message={receivedMessage} font={receivedFont} />}
                 </div>
             </div>
         </div>

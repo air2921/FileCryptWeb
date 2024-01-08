@@ -5,7 +5,6 @@ using webapi.DB;
 using webapi.Exceptions;
 using webapi.Interfaces.Services;
 using webapi.Interfaces.SQL;
-using webapi.Localization.Exceptions;
 using webapi.Models;
 
 namespace webapi.Controllers.Core
@@ -47,11 +46,13 @@ namespace webapi.Controllers.Core
         }
 
         [HttpGet("all")]
-        public async Task<IActionResult> GetAll()
+        public async Task<IActionResult> GetAll([FromQuery] int skip, [FromQuery] int count)
         {
-            var query = _dbContext.Notifications.OrderByDescending(n => n.send_time).AsQueryable();
-
-            var notifications = await query.Where(n => n.receiver_id == _userInfo.UserId).ToListAsync();
+            var notifications = await _dbContext.Notifications.OrderByDescending(n => n.send_time)
+                .Where(n => n.receiver_id == _userInfo.UserId)
+                .Skip(skip)
+                .Take(count)
+                .ToListAsync();
 
             return StatusCode(200, new { notifications });
         }

@@ -2,15 +2,17 @@ import React from 'react';
 import DateComponent from '../Date/Date';
 import Message from '../Message/Message';
 import Button from '../Helpers/Button';
+import Font from '../Font/Font';
 
 function FileList({ files, isOwner, deleteFile, error }: FileListProps) {
 
     if (!files || files.every(file => file === null)) {
-        return <div><Message message={'No encrypted files here'} font='home_storage' /></div>;
+        return <div><Message message={'No encrypted files here'} font='storage' /></div>;
     }
 
     return (
         <ul>
+            <Message message={'Your Files'} font='storage' />
             {files
                 .filter(file => file !== null)
                 .map(file => (
@@ -29,7 +31,9 @@ function FileList({ files, isOwner, deleteFile, error }: FileListProps) {
                             </div>
                         </div>
                         {isOwner && deleteFile && (
-                            <Button onClick={() => deleteFile(file.file_id)}>Delete</Button>
+                            <Button onClick={() => deleteFile(file.file_id)}>
+                                <Font font={'delete'} />
+                            </Button>
                         )}
                         {error && <Message message={error} font={'error'} />}
                     </li>

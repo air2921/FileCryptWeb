@@ -80,7 +80,7 @@ namespace webapi.Controllers.Core
         }
 
         [HttpGet("all")]
-        public async Task<IActionResult> GetAllFiles([FromQuery] bool byAscending)
+        public async Task<IActionResult> GetAllFiles([FromQuery] bool byAscending, [FromQuery] int skip, [FromQuery] int count)
         {
             var query = _dbContext.Files.Where(f => f.user_id == _userInfo.UserId).AsQueryable();
 
@@ -94,7 +94,10 @@ namespace webapi.Controllers.Core
                     break;
             }
 
-            var files = await query.ToListAsync();
+            var files = await query
+                .Skip(skip)
+                .Take(count)
+                .ToListAsync();
 
             return StatusCode(200, new { files });
         }

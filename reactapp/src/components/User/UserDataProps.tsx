@@ -5,4 +5,5 @@ interface UserDataProps {
         role: string;
         email: string;
     };
+    isOwner: boolean
 }

@@ -35,7 +35,9 @@ namespace webapi
 
                 options.AddPolicy("AllowOriginAPI", builder =>
                 {
-                    builder.AllowAnyOrigin().WithMethods("POST").WithHeaders(Constants.ENCRYPTION_KEY_HEADER_NAME, Constants.API_HEADER_NAME)
+                    builder.AllowAnyOrigin()
+                    .WithMethods("POST")
+                    .WithHeaders(Constants.ENCRYPTION_KEY_HEADER_NAME, Constants.API_HEADER_NAME)
                     .SetIsOriginAllowed(origin =>
                     origin.EndsWith("api/public/cryptography/private/decryption") ||
                     origin.EndsWith("api/public/cryptography/internal/decryption") ||
