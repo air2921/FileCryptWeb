@@ -2,6 +2,7 @@ import React, { useEffect, useState } from 'react';
 import NotificationList from '../components/Notifications/NotificationList';
 import AxiosRequest from '../api/AxiosRequest';
 import Button from '../components/Helpers/Button';
+import Font from '../components/Font/Font';
 
 const Notifications = () => {
     const [errorMessage, setErrorMessage] = useState('');
@@ -55,8 +56,8 @@ const Notifications = () => {
     return (
         <div className="container">
             <NotificationList notifications={notifications} deleteNotification={deleteNotification} error={deletingError} />
-            {skip > 0 && <Button onClick={handleBack}>Back</Button>}
-            {notifications.length > step - 1 && <Button onClick={handleLoadMore}>Load More</Button>}
+            {skip > 0 && <Button onClick={handleBack}><Font font={'arrow_back'} /></Button>}
+            {notifications.length > step - 1 && <Button onClick={handleLoadMore}><Font font={'arrow_forward'} /></Button>}
         </div>
     );
 }

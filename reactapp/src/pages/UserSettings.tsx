@@ -13,11 +13,11 @@ const UserSettings = () => {
     const [successStatusCode, setStatus] = useState(false);
 
     const fetchData = async () => {
-        const response = await AxiosRequest({ endpoint: `api/core/users/data/only`, method: 'GET', withCookie: true, requestBody: null })
+        const response = await AxiosRequest({ endpoint: `api/core/users/data/only`, method: 'GET', withCookie: true, requestBody: null });
 
         if (response.isSuccess) {
-            setUserData(response.data)
-            setStatus(true)
+            setUserData(response.data);
+            setStatus(true);
         }
         else {
             setErrorMessage(response.data);
@@ -29,15 +29,14 @@ const UserSettings = () => {
     }, []);
 
     if (!successStatusCode || !userData) {
-        return <div className="error">{errorMessage || 'Loading...'}</div>;
+        return <div className="error">{errorMessage || 'Loading...'}</div>
     }
 
     const { user } = userData as { user: any };
-    console.log(user);
 
     return (
         <div className="container">
-            <UserData user={user} />
+            <UserData user={user} isOwner={true} />
             <Username />
             <div className="auth-data-container">
                 <Password />

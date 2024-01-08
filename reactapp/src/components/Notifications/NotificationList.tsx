@@ -10,9 +10,18 @@ function NotificationList({ notifications, deleteNotification, error }: Notifica
         return <div><Message message={'No received notifications'} font='storage' /></div>;
     }
 
+    let font;
+
+    if (notifications.some(notification => notification !== null && !notification.is_checked)) {
+        font = 'notifications_active';
+    }
+    else {
+        font = 'notifications';
+    }
+
     return (
         <ul>
-            <Message message={'Your Notifications'} font='storage' />
+            <Message message={'Your Notifications'} font={font} />
             {notifications
                 .filter(notification => notification !== null)
                 .map(notification => (
@@ -20,11 +29,11 @@ function NotificationList({ notifications, deleteNotification, error }: Notifica
                         <div className="notification-header">
                             <div className="notification-icon">
                                 {
-                                    notification.priority === 'Trade' ? <i className="material-icons-sharp">key</i> :
-                                    notification.priority === 'Info' ? <i className="material-icons-sharp">info</i> :
-                                    notification.priority === 'Warning' ? <i className="material-icons-sharp">warning</i> :
-                                    notification.priority === 'Security' ? <i className="material-icons-sharp">security</i> :
-                                    null
+                                    notification.priority === 'Trade' ? <Font font={'key'} /> :
+                                    notification.priority === 'Info' ? <Font font={'info'} /> :
+                                    notification.priority === 'Warning' ? <Font font={'warning'} /> :
+                                    notification.priority === 'Security' ? <Font font={'security'} /> :
+                                    <Font font={'notifications'} />
                                 }
                             </div>
                             <div className="priority">{notification.priority}</div>

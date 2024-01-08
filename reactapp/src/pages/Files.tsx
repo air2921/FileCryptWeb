@@ -5,6 +5,7 @@ import Message from '../components/Message/Message';
 import AxiosRequestInterceptor from '../api/AxiosRequestInterceptor';
 import Button from '../components/Helpers/Button';
 import FileButton from '../components/Helpers/FileButton';
+import Font from '../components/Font/Font';
 
 const Files = () => {
     const [byAsc, setBy] = useState(true);
@@ -131,8 +132,8 @@ const Files = () => {
             </div>
             <div className="files">
                 <FileList files={files} isOwner={true} deleteFile={deleteFile} error={deletingError} />
-                {skip > 0 && <Button onClick={handleBack}>Back</Button>}
-                {files.length > step - 1 && <Button onClick={handleLoadMore}>Load More</Button>}
+                {skip > 0 && <Button onClick={handleBack}><Font font={'arrow_back'} /></Button>}
+                {files.length > step - 1 && <Button onClick={handleLoadMore}><Font font={'arrow_forward'} /></Button>}
             </div>
         </div>
     );

@@ -4,6 +4,7 @@ import Input from '../components/Helpers/Input';
 import AxiosRequest from '../api/AxiosRequest';
 import Message from '../components/Message/Message';
 import Button from '../components/Helpers/Button';
+import Font from '../components/Font/Font';
 
 const Offers = () => {
     const [errorMessage, setErrorMessage] = useState('');
@@ -108,8 +109,8 @@ const Offers = () => {
             </div>
             <div className="offers">
                 <OfferList offers={offers} user_id={user_id} isOwner={true} deleteOffer={deleteOffer} acceptOffer={acceptOffer} error={actionError} />
-                {skip > 0 && <Button onClick={handleBack}>Back</Button>}
-                {offers.length > step - 1 && <Button onClick={handleLoadMore}>Load More</Button>}
+                {skip > 0 && <Button onClick={handleBack}><Font font={'arrow_back'} /></Button>}
+                {offers.length > step - 1 && <Button onClick={handleLoadMore}><Font font={'arrow_forward'} /></Button>}
             </div>
         </div>
     );
