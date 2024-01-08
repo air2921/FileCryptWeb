@@ -1,16 +1,20 @@
 import React, { useEffect, useState } from 'react';
 import NotificationList from '../components/Notifications/NotificationList';
 import AxiosRequest from '../api/AxiosRequest';
+import Button from '../components/Helpers/Button';
+import Font from '../components/Font/Font';
 
 const Notifications = () => {
     const [errorMessage, setErrorMessage] = useState('');
     const [notificationList, setNotifications] = useState(null);
 
+    const [skip, setSkip] = useState(0);
+    const step = 10;
     const [lastTimeModified, setLastTimeModified] = useState(Date.now());
     const [deletingError, setDeletingError] = useState('');
 
     const fetchData = async () => {
-        const response = await AxiosRequest({ endpoint: 'api/core/notifications/all', method: 'GET', withCookie: true, requestBody: null });
+        const response = await AxiosRequest({ endpoint: `api/core/notifications/all?skip=${skip}&count=${step}`, method: 'GET', withCookie: true, requestBody: null });
 
         if (response.isSuccess) {
             setNotifications(response.data);
@@ -19,6 +23,14 @@ const Notifications = () => {
             setErrorMessage(response.data);
         }
     }
+
+    const handleLoadMore = () => {
+        setSkip(prevSkip => prevSkip + step);
+    };
+
+    const handleBack = () => {
+        setSkip(prevSkip => Math.max(0, prevSkip - step));
+    };
 
     const deleteNotification = async (notificationId: number) => {
         const response = await AxiosRequest({ endpoint: `api/core/notifications/${notificationId}`, method: 'DELETE', withCookie: true, requestBody: null });
@@ -33,7 +45,7 @@ const Notifications = () => {
 
     useEffect(() => {
         fetchData();
-    }, [lastTimeModified]);
+    }, [lastTimeModified, skip]);
 
     if (!notificationList) {
         return <div className="error">{errorMessage || 'Loading...'}</div>;
@@ -44,6 +56,8 @@ const Notifications = () => {
     return (
         <div className="container">
             <NotificationList notifications={notifications} deleteNotification={deleteNotification} error={deletingError} />
+            {skip > 0 && <Button onClick={handleBack}><Font font={'arrow_back'} /></Button>}
+            {notifications.length > step - 1 && <Button onClick={handleLoadMore}><Font font={'arrow_forward'} /></Button>}
         </div>
     );
 }

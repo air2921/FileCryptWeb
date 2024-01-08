@@ -2,8 +2,9 @@ import React from 'react';
 import DateComponent from '../Date/Date';
 import Message from '../Message/Message';
 import Button from '../Helpers/Button';
+import Font from '../Font/Font';
 
-function OfferList({ offers, isOwner, deleteOffer, acceptOffer, error }: OfferListProps) {
+function OfferList({ offers, user_id, isOwner, deleteOffer, acceptOffer, error }: OfferListProps) {
 
     if (!offers || offers.every(offer => offer === null)) {
         return <div><Message message={'No sended or received offers'} font={'storage'} /></div>;
@@ -11,6 +12,7 @@ function OfferList({ offers, isOwner, deleteOffer, acceptOffer, error }: OfferLi
 
     return (
         <ul>
+            <Message message={'Your Offers'} font='storage' />
             {offers
                 .filter(offer => offer !== null)
                 .map(offer => (
@@ -30,11 +32,13 @@ function OfferList({ offers, isOwner, deleteOffer, acceptOffer, error }: OfferLi
                                 <div className="receiver">Receiver#{offer.receiver_id}</div>
                             </div>
                         </div>
-                        {!offer.is_accepted && acceptOffer && (
+                        {!offer.is_accepted && user_id === offer.receiver_id && acceptOffer && (
                             <Button onClick={() => acceptOffer(offer.offer_id)}>Accept</Button>
                         )}
                         {isOwner && deleteOffer && (
-                            <Button onClick={() => deleteOffer(offer.offer_id)}>Delete</Button>
+                            <Button onClick={() => deleteOffer(offer.offer_id)}>
+                                <Font font={'delete'} />
+                            </Button>
                         )}
                         {error && <Message message={error} font={'error'} />}
                     </li>

@@ -1,4 +1,5 @@
 import React from 'react';
+import Font from '../Font/Font';
 
 function UserKeys({ keys }: UserKeysProps) {
     return (
@@ -8,7 +9,7 @@ function UserKeys({ keys }: UserKeysProps) {
                     Private Key
                 </div>
                 <div className="has-key">
-                    {keys.privateKey ? <i className="material-icons-sharp">check_small</i> : <i className="material-icons-sharp">close_small</i>}
+                    {keys.privateKey ? <Font font={'check_small'} /> : <Font font={'close_small'} />}
                 </div>
             </div>
             <div className="internal-key">
@@ -16,7 +17,7 @@ function UserKeys({ keys }: UserKeysProps) {
                     Internal Key
                 </div>
                 <div className="has-key">
-                    {keys.internalKey ? <i className="material-icons-sharp">check_small</i> : <i className="material-icons-sharp">close_small</i>}
+                    {keys.internalKey ? <Font font={'check_small'} /> : <Font font={'close_small'} />}
                 </div>
             </div>
             <div className="received-key">
@@ -24,7 +25,7 @@ function UserKeys({ keys }: UserKeysProps) {
                     Received Key
                 </div>
                 <div className="has-key">
-                    {keys.receivedKey ? <i className="material-icons-sharp">check_small</i> : <i className="material-icons-sharp">close_small</i>}
+                    {keys.receivedKey ? <Font font={'check_small'} /> : <Font font={'close_small'} />}
                 </div>
             </div>
         </div>

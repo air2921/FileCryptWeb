@@ -1,5 +1,6 @@
 import React from 'react';
 import { format } from 'date-fns';
+import Font from '../Font/Font';
 
 function DateComponent({ date }: DateProps) {
 
@@ -8,7 +9,7 @@ function DateComponent({ date }: DateProps) {
 
     return (
         <div>
-            {formattedDate}
+            <Font font={'schedule'} /> {formattedDate}
         </div>
     );
 }

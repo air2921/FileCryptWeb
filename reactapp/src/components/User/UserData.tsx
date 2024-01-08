@@ -1,6 +1,7 @@
 import React from 'react';
+import Font from '../Font/Font';
 
-function UserData({ user }: UserDataProps) {
+function UserData({ user, isOwner }: UserDataProps) {
     return (
         <div className="user-data-container">
             <div>
@@ -11,9 +12,11 @@ function UserData({ user }: UserDataProps) {
                     {user.role}
                 </div>
             </div>
-            <div className="email">
-                {user.email}
-            </div>
+            {isOwner && (
+                <div className="email">
+                    <Font font={'mail'} /> {user.email}
+                </div>
+            )}
         </div>
     );
 };

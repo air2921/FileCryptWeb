@@ -1,0 +1,3 @@
+interface FontProps {
+    font: string
+}

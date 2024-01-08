@@ -51,7 +51,7 @@ namespace webapi.Controllers.Core
                 .Where(o => o.sender_id == userId || o.receiver_id == userId)
                 .OrderByDescending(o => o.created_at)
                 .Select(o => new { o.offer_id, o.sender_id, o.receiver_id, o.offer_type, o.created_at, o.is_accepted })
-                .Take(5)
+                .Take(3)
                 .ToListAsync();
 
             if (!user_keys_files.Any())
