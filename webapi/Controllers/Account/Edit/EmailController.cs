@@ -69,7 +69,7 @@ namespace webapi.Controllers.Account.Edit
                     return StatusCode(404);
                 }
 
-                bool IsCorrect = _passwordManager.CheckPassword(userModel.password_hash, user.password_hash);
+                bool IsCorrect = _passwordManager.CheckPassword(userModel.password, user.password!);
                 if (!IsCorrect)
                     return StatusCode(401, new { message = AccountErrorMessage.PasswordIncorrect });
 

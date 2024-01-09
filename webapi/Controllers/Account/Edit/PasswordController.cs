@@ -63,13 +63,13 @@ namespace webapi.Controllers.Account.Edit
                     return StatusCode(404, new { message = AccountErrorMessage.UserNotFound });
                 }
 
-                bool IsCorrect = _passwordManager.CheckPassword(passwordDto.OldPassword, user.password_hash);
+                bool IsCorrect = _passwordManager.CheckPassword(passwordDto.OldPassword, user.password);
                 if (!IsCorrect)
                     return StatusCode(401, new { message = AccountErrorMessage.PasswordIncorrect });
 
                 _logger.LogInformation($"{_userInfo.Username}#{_userInfo.UserId} Password is correct, action is allowed");
 
-                var newUserModel = new UserModel { id = _userInfo.UserId, password_hash = _passwordManager.HashingPassword(passwordDto.NewPassword) };
+                var newUserModel = new UserModel { id = _userInfo.UserId, password = _passwordManager.HashingPassword(passwordDto.NewPassword) };
                 await _update.Update(newUserModel, null);
                 _logger.LogInformation("Password was hashed and updated in db");
 

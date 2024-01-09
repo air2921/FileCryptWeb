@@ -128,7 +128,7 @@ namespace webapi.Controllers.Account
 
                 _logger.LogInformation($"Token: '{token}' is not expired");
 
-                var userModel = new UserModel { id = link.user_id, password_hash = _passwordManager.HashingPassword(password) };
+                var userModel = new UserModel { id = link.user_id, password = _passwordManager.HashingPassword(password) };
                 await _updateUser.Update(userModel, null);
                 _logger.LogInformation($"Password was updated for user with id: {link.user_id}");
 

@@ -58,12 +58,12 @@ namespace webapi.Controllers.Account
                 if (user is not null)
                     return StatusCode(409, new { message = AccountErrorMessage.UserExists });
 
-                if (!Regex.IsMatch(userModel.password_hash, Validation.Password))
+                if (!Regex.IsMatch(userModel.password, Validation.Password))
                     return StatusCode(400, new { message = AccountErrorMessage.InvalidFormatPassword });
 
                 int code = _generateCode.GenerateSixDigitCode();
 
-                string password = _passwordManager.HashingPassword(userModel.password_hash);
+                string password = _passwordManager.HashingPassword(userModel.password);
                 _logger.LogInformation("Password was hashed");
 
                 HttpContext.Session.SetString(EMAIL, email);
@@ -114,7 +114,7 @@ namespace webapi.Controllers.Account
                 if (!code.Equals(correctCode))
                     return StatusCode(422, new { message = AccountErrorMessage.CodeIncorrect });
 
-                var userModel = new UserModel { email = email, password_hash = password, username = username, role = role };
+                var userModel = new UserModel { email = email, password = password, username = username, role = role };
                 await _userCreate.Create(userModel);
                 _logger.LogInformation("User was added in db");
 
