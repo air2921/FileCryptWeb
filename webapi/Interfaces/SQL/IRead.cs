@@ -3,6 +3,6 @@
     public interface IRead<TModel>
     {
         Task<TModel> ReadById(int id, bool? byForeign);
-        Task<IEnumerable<TModel>> ReadAll();
+        Task<IEnumerable<TModel>> ReadAll(int skip, int count);
     }
 }

@@ -56,9 +56,12 @@ namespace webapi.DB.SQL
                 throw new UserException(ExceptionUserMessages.UserNotFound);
         }
 
-        public async Task<IEnumerable<KeyModel>> ReadAll()
+        public async Task<IEnumerable<KeyModel>> ReadAll(int skip, int count)
         {
-            return await _dbContext.Keys.ToListAsync() ??
+            return await _dbContext.Keys
+                .Skip(skip)
+                .Take(count)
+                .ToListAsync() ??
                 throw new UserException(ExceptionUserMessages.NoOneUserNotFound);
         }
     }

@@ -59,9 +59,12 @@ namespace webapi.DB.SQL
             return user;
         }
 
-        public async Task<IEnumerable<UserModel>> ReadAll()
+        public async Task<IEnumerable<UserModel>> ReadAll(int skip, int count)
         {
-            var users = await _dbContext.Users.ToListAsync() ??
+            var users = await _dbContext.Users
+                .Skip(skip)
+                .Take(count)
+                .ToListAsync() ??
                 throw new UserException(ExceptionUserMessages.NoOneUserNotFound);
 
             return users;

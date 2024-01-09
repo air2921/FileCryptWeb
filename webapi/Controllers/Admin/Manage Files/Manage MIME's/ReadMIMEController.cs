@@ -40,12 +40,12 @@ namespace webapi.Controllers.Admin.Manage_Files.Manage_MIME_s
         }
 
         [HttpGet("all")]
-        public async Task<IActionResult> ReadAllMimes()
+        public async Task<IActionResult> ReadAllMimes([FromQuery] int skip, [FromQuery] int count)
         {
             try
             {
-                var mimes = await _readMime.ReadAll();
-                _logger.LogInformation($"{_userInfo.Username}#{_userInfo.UserId} requsted MIME collection");
+                var mimes = await _readMime.ReadAll(skip, count);
+                _logger.LogInformation($"{_userInfo.Username}#{_userInfo.UserId} requsted MIME collection, skipped {skip} and quantity requested {count}");
 
                 return StatusCode(200, new { mimes });
             }

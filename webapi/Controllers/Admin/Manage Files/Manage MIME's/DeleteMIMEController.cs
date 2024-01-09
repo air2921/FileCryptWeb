@@ -40,7 +40,7 @@ namespace webapi.Controllers.Admin.Manage_Files.Manage_MIME_s
             _deleteMimeByName = deleteMimeByName;
         }
 
-        [HttpDelete("one")]
+        [HttpDelete]
         public async Task<IActionResult> DeleteOneMime([FromQuery] int? mimeId, [FromQuery] string? mime)
         {
             try

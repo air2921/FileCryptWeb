@@ -51,12 +51,12 @@ namespace webapi.Controllers.Admin.Manage_Offers
         }
 
         [HttpGet("all")]
-        public async Task<IActionResult> ReadAllOffer()
+        public async Task<IActionResult> ReadAllOffer([FromQuery] int skip, [FromQuery] int count)
         {
             try
             {
-                var offer = await _read.ReadAll();
-                _logger.LogWarning($"{_userInfo.Username}#{_userInfo.UserId} requested information about all offers");
+                var offer = await _read.ReadAll(skip, count);
+                _logger.LogWarning($"{_userInfo.Username}#{_userInfo.UserId} requested information about offers, skipped {skip} and quantity requested {count}");
 
                 return StatusCode(200, new { offer });
             }
@@ -66,7 +66,7 @@ namespace webapi.Controllers.Admin.Manage_Offers
             }
         }
 
-        [HttpGet("all/offers/{userId}")]
+        [HttpGet("all/{userId}")]
         public async Task<IActionResult> ReadAllUserOffers([FromRoute] int userId)
         {
             try

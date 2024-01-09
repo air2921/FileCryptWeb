@@ -38,9 +38,12 @@ namespace webapi.DB.SQL
             return notification;
         }
 
-        public async Task<IEnumerable<NotificationModel>> ReadAll()
+        public async Task<IEnumerable<NotificationModel>> ReadAll(int skip, int count)
         {
-            return await _dbContext.Notifications.ToListAsync() ??
+            return await _dbContext.Notifications
+                .Skip(skip)
+                .Take(count)
+                .ToListAsync() ??
                 throw new NotificationException(ExceptionNotificationMessages.NoOneNotificationNotFound);
         }
 

@@ -1,5 +1,7 @@
 ﻿using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
+using Microsoft.EntityFrameworkCore;
+using webapi.DB;
 using webapi.Exceptions;
 using webapi.Interfaces.Services;
 using webapi.Interfaces.SQL;
@@ -13,12 +15,14 @@ namespace webapi.Controllers.Admin.Manage_Files
     public class ReadFileController : ControllerBase
     {
         private readonly IUserInfo _userInfo;
+        private readonly FileCryptDbContext _dbContext;
         private readonly ILogger<ReadFileController> _logger;
         private readonly IRead<FileModel> _read;
 
-        public ReadFileController(IUserInfo userInfo, ILogger<ReadFileController> logger, IRead<FileModel> read)
+        public ReadFileController(IUserInfo userInfo, FileCryptDbContext dbContext, ILogger<ReadFileController> logger, IRead<FileModel> read)
         {
             _userInfo = userInfo;
+            _dbContext = dbContext;
             _logger = logger;
             _read = read;
         }
@@ -37,6 +41,35 @@ namespace webapi.Controllers.Admin.Manage_Files
             {
                 return StatusCode(404, new { message = ex.Message });
             }
+        }
+
+        [HttpGet("all")]
+        public async Task<IActionResult> ReadAll([FromQuery] int skip, [FromQuery] int count)
+        {
+            try
+            {
+                var file = await _read.ReadAll(skip, count);
+                _logger.LogInformation($"{_userInfo.Username}#{_userInfo.UserId} requested information about some files, skipped {skip} and quantity requested {count}");
+
+                return StatusCode(200, new { file });
+            }
+            catch (FileException ex)
+            {
+                return StatusCode(404, new { message = ex.Message });
+            }
+        }
+
+        [HttpGet("all/{userId}")]
+        public async Task<IActionResult> ReadAllUserFiles([FromRoute] int userId, [FromQuery] int skip, [FromQuery] int count)
+        {
+            var files = await _dbContext.Files
+                .Where(f => f.user_id == userId)
+                .OrderByDescending(f => f.operation_date)
+                .Skip(skip)
+                .Take(count)
+                .ToListAsync();
+
+            return StatusCode(200, new { files });
         }
     }
 }

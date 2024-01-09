@@ -59,39 +59,6 @@ namespace webapi.Services.Security
             return InsertRandomChars(str, 75);
         }
 
-        public CookieOptions SetCookieOptions(TimeSpan expireTime)
-        {
-            return new CookieOptions { HttpOnly = true, MaxAge = expireTime, Secure = true, SameSite = SameSiteMode.None };
-        }
-
-        public async Task UpdateJwtToken()
-        {
-            if (!_context.HttpContext.Request.Cookies.TryGetValue(Constants.REFRESH_COOKIE_KEY, out string? refresh))
-                throw new UnauthorizedAccessException("Refresh Token was not found");
-
-            var userAndToken = await _dbContext.Tokens
-                .Where(t => t.refresh_token == HashingToken(refresh))
-                .Join(_dbContext.Users, token => token.user_id, user => user.id, (token, user) => new { token, user })
-                .FirstOrDefaultAsync() ?? throw new UnauthorizedAccessException("User was not found");
-
-            if (userAndToken.token.expiry_date < DateTime.UtcNow)
-                throw new UnauthorizedAccessException("Refresh Token timed out");
-
-            if (_context.HttpContext.Request.Cookies.ContainsKey(Constants.JWT_COOKIE_KEY))
-                _context.HttpContext.Response.Cookies.Delete(Constants.JWT_COOKIE_KEY);
-
-            var userModel = new UserModel
-            { 
-                id = userAndToken.user.id,
-                username = userAndToken.user.username,
-                email = userAndToken.user.email,
-                role = userAndToken.user.role
-            };
-
-            string jwt = GenerateJwtToken(userModel, Constants.JwtExpiry);
-            _context.HttpContext.Response.Cookies.Append(Constants.JWT_COOKIE_KEY, jwt, SetCookieOptions(Constants.JwtExpiry));
-        }
-
         public string HashingToken(string token)
         {
             byte[] hashBytes = SHA512.HashData(Encoding.UTF8.GetBytes(token));
@@ -123,6 +90,39 @@ namespace webapi.Services.Security
             string outputStr = inputStr.Insert(insertPosition, randomChars);
 
             return outputStr;
+        }
+
+        public CookieOptions SetCookieOptions(TimeSpan expireTime)
+        {
+            return new CookieOptions { HttpOnly = true, MaxAge = expireTime, Secure = true, SameSite = SameSiteMode.None };
+        }
+
+        public async Task UpdateJwtToken()
+        {
+            if (!_context.HttpContext.Request.Cookies.TryGetValue(Constants.REFRESH_COOKIE_KEY, out string? refresh))
+                throw new UnauthorizedAccessException("Refresh Token was not found");
+
+            var userAndToken = await _dbContext.Tokens
+                .Where(t => t.refresh_token == HashingToken(refresh))
+                .Join(_dbContext.Users, token => token.user_id, user => user.id, (token, user) => new { token, user })
+                .FirstOrDefaultAsync() ?? throw new UnauthorizedAccessException("User was not found");
+
+            if (userAndToken.token.expiry_date < DateTime.UtcNow)
+                throw new UnauthorizedAccessException("Refresh Token timed out");
+
+            if (_context.HttpContext.Request.Cookies.ContainsKey(Constants.JWT_COOKIE_KEY))
+                _context.HttpContext.Response.Cookies.Delete(Constants.JWT_COOKIE_KEY);
+
+            var userModel = new UserModel
+            { 
+                id = userAndToken.user.id,
+                username = userAndToken.user.username,
+                email = userAndToken.user.email,
+                role = userAndToken.user.role
+            };
+
+            string jwt = GenerateJwtToken(userModel, Constants.JwtExpiry);
+            _context.HttpContext.Response.Cookies.Append(Constants.JWT_COOKIE_KEY, jwt, SetCookieOptions(Constants.JwtExpiry));
         }
 
         public void DeleteTokens()
