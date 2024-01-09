@@ -5,8 +5,16 @@
         public static readonly TimeSpan JwtExpiry = TimeSpan.FromMinutes(20);
         public static readonly TimeSpan RefreshExpiry = TimeSpan.FromDays(90);
 
-        public const string JWT_COOKIE_KEY = "auth_access";
-        public const string REFRESH_COOKIE_KEY = "auth_refresh";
+        #region
+
+        /// <summary>
+        /// This cookie name does not reflect its direct purpose. Such a non-obvious name may complicate possible attacks to steal authentication data
+        /// </summary>
+        public const string JWT_COOKIE_KEY = "session_preference";
+        public const string REFRESH_COOKIE_KEY = "long_time_preference";
+
+        #endregion
+
         public const string XSRF_COOKIE_KEY = ".AspNetCore.Xsrf";
 
         public const string SERVICE_FREEZE_FLAG = "ServiceFreezed";

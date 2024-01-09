@@ -33,10 +33,6 @@ const KeySettings = () => {
         }
     }
 
-    useEffect(() => {
-        fetchData();
-    }, []);
-
     if (!userKeys) {
         return <div className="error">{errorMessage || 'Loading...'}</div>;
     }
@@ -107,6 +103,10 @@ const KeySettings = () => {
         handleSubmit(e, 'internal', isAutoInternal, internalKey);
     };
 
+    useEffect(() => {
+        fetchData();
+    }, []);
+
     return (
         <div>
             <UserKeys keys={keys} />
@@ -119,7 +119,7 @@ const KeySettings = () => {
                         {!privateKey && (
                             <CheckBox text='Auto-generation key' type="checkbox" id="auto-private" checked={isAutoPrivate} onChange={handlePrivateCheckboxChange} />
                         )}
-                        <Button>Update Private Key</Button>
+                        <Button>Update</Button>
                     </form>
                     {privateMessage && <Message message={privateMessage} font={privateFont} />}
                 </div>
@@ -131,7 +131,7 @@ const KeySettings = () => {
                         {!internalKey && (
                             <CheckBox text='Auto-generation key' type="checkbox" id="auto-internal" checked={isAutoInternal} onChange={handleInternalCheckboxChange} />
                         )}
-                        <Button>Update Internal Key</Button>
+                        <Button>Update</Button>
                     </form>
                     {internalMessage && <Message message={internalMessage} font={internalFont} />}
                 </div>
