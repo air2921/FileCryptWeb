@@ -76,6 +76,7 @@ namespace webapi
             services.AddScoped<IFileService, FileService>();
             services.AddScoped<IVirusCheck, ClamAV>();
             services.AddScoped<IUserInfo, UserData>();
+            services.AddScoped<IUserAgent, UserAgent>();
             services.AddScoped<IAes, AesCreator>();
         }
 

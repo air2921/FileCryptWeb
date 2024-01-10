@@ -23,6 +23,7 @@ namespace webapi.Controllers.Account.Edit
         private readonly FileCryptDbContext _dbContext;
         private readonly ICreate<NotificationModel> _createNotification;
         private readonly IUpdate<UserModel> _update;
+        private readonly IUserAgent _userAgent;
         private readonly IEmailSender _email;
         private readonly ILogger<EmailController> _logger;
         private readonly IPasswordManager _passwordManager;
@@ -35,6 +36,7 @@ namespace webapi.Controllers.Account.Edit
             FileCryptDbContext dbContext,
             ICreate<NotificationModel> createNotification,
             IUpdate<UserModel> update,
+            IUserAgent userAgent,
             IEmailSender email,
             ILogger<EmailController> logger,
             IPasswordManager passwordManager,
@@ -46,6 +48,7 @@ namespace webapi.Controllers.Account.Edit
             _dbContext = dbContext;
             _createNotification = createNotification;
             _update = update;
+            _userAgent = userAgent;
             _email = email;
             _logger = logger;
             _passwordManager = passwordManager;
@@ -167,14 +170,12 @@ namespace webapi.Controllers.Account.Edit
                 _logger.LogInformation("Email was was updated in db");
 
                 var clientInfo = Parser.GetDefault().Parse(HttpContext.Request.Headers["User-Agent"].ToString());
-                var browser = clientInfo.UA.Family;
-                var browserVersion = clientInfo.UA.Major + "." + clientInfo.UA.Minor;
-                var os = clientInfo.OS.Family;
+                var ua = _userAgent.GetBrowserData(clientInfo);
 
                 var notificationModel = new NotificationModel
                 {
                     message_header = "Someone changed your account email/login",
-                    message = $"Someone changed your email at {DateTime.UtcNow} from {browser} {browserVersion} on OS {os}." +
+                    message = $"Someone changed your email at {DateTime.UtcNow} from {ua.Browser} {ua.Version} on OS {ua.OS}." +
                     $"New email: '{email}'",
                     priority = Priority.Security.ToString(),
                     send_time = DateTime.UtcNow,

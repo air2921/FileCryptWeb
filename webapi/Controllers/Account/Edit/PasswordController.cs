@@ -22,6 +22,7 @@ namespace webapi.Controllers.Account.Edit
     {
         private readonly ICreate<NotificationModel> _createNotification;
         private readonly IUpdate<UserModel> _update;
+        private readonly IUserAgent _userAgent;
         private readonly ILogger<PasswordController> _logger;
         private readonly IPasswordManager _passwordManager;
         private readonly ITokenService _tokenService;
@@ -31,6 +32,7 @@ namespace webapi.Controllers.Account.Edit
         public PasswordController(
             ICreate<NotificationModel> createNotification,
             IUpdate<UserModel> update,
+            IUserAgent userAgent,
             ILogger<PasswordController> logger,
             IPasswordManager passwordManager,
             ITokenService tokenService,
@@ -39,6 +41,7 @@ namespace webapi.Controllers.Account.Edit
         {
             _createNotification = createNotification;
             _update = update;
+            _userAgent = userAgent;
             _logger = logger;
             _passwordManager = passwordManager;
             _tokenService = tokenService;
@@ -74,14 +77,12 @@ namespace webapi.Controllers.Account.Edit
                 _logger.LogInformation("Password was hashed and updated in db");
 
                 var clientInfo = Parser.GetDefault().Parse(HttpContext.Request.Headers["User-Agent"].ToString());
-                var browser = clientInfo.UA.Family;
-                var browserVersion = clientInfo.UA.Major + "." + clientInfo.UA.Minor;
-                var os = clientInfo.OS.Family;
+                var ua = _userAgent.GetBrowserData(clientInfo);
 
                 var notificationModel = new NotificationModel
                 {
                     message_header = "Someone changed your password",
-                    message = $"Someone changed your password at {DateTime.UtcNow} from {browser} {browserVersion} on OS {os}.",
+                    message = $"Someone changed your password at {DateTime.UtcNow} from {ua.Browser}   {ua.Version} on OS {ua.OS}.",
                     priority = Priority.Security.ToString(),
                     send_time = DateTime.UtcNow,
                     is_checked = false,

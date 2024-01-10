@@ -28,6 +28,7 @@ namespace webapi.Controllers.Account
         private readonly FileCryptDbContext _dbContext;
         private readonly ILogger<AuthSessionController> _logger;
         private readonly IUserInfo _userInfo;
+        private readonly IUserAgent _userAgent;
         private readonly IEmailSender _emailSender;
         private readonly IRedisCache _redisCache;
         private readonly IRedisKeys _redisKeys;
@@ -41,6 +42,7 @@ namespace webapi.Controllers.Account
             FileCryptDbContext dbContext,
             ILogger<AuthSessionController> logger,
             IUserInfo userInfo,
+            IUserAgent userAgent,
             IEmailSender emailSender,
             IRedisCache redisCache,
             IRedisKeys redisKeys,
@@ -53,6 +55,7 @@ namespace webapi.Controllers.Account
             _dbContext = dbContext;
             _logger = logger;
             _userInfo = userInfo;
+            _userAgent = userAgent;
             _emailSender = emailSender;
             _redisCache = redisCache;
             _redisKeys = redisKeys;
@@ -158,14 +161,12 @@ namespace webapi.Controllers.Account
                     role = user.role,
                 };
 
-                var browser = clientInfo.UA.Family;
-                var browserVersion = clientInfo.UA.Major + "." + clientInfo.UA.Minor;
-                var os = clientInfo.OS.Family;
+                var ua = _userAgent.GetBrowserData(clientInfo);
 
                 var notificationModel = new NotificationModel
                 {
                     message_header = "Someone has accessed your account",
-                    message = $"Someone signed in to your account {user.username}#{user.id} at {DateTime.UtcNow} from {browser} {browserVersion} on OS {os}",
+                    message = $"Someone signed in to your account {user.username}#{user.id} at {DateTime.UtcNow} from {ua.Browser} {ua.Version} on OS {ua.OS}",
                     priority = Priority.Security.ToString(),
                     send_time = DateTime.UtcNow,
                     is_checked = false,
