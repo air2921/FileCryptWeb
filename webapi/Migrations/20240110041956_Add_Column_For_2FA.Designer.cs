@@ -2,6 +2,7 @@
 using System;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Infrastructure;
+using Microsoft.EntityFrameworkCore.Migrations;
 using Microsoft.EntityFrameworkCore.Storage.ValueConversion;
 using Npgsql.EntityFrameworkCore.PostgreSQL.Metadata;
 using webapi.DB;
@@ -11,9 +12,11 @@ using webapi.DB;
 namespace webapi.Migrations
 {
     [DbContext(typeof(FileCryptDbContext))]
-    partial class FileCryptDbContextModelSnapshot : ModelSnapshot
+    [Migration("20240110041956_Add_Column_For_2FA")]
+    partial class Add_Column_For_2FA
     {
-        protected override void BuildModel(ModelBuilder modelBuilder)
+        /// <inheritdoc />
+        protected override void BuildTargetModel(ModelBuilder modelBuilder)
         {
 #pragma warning disable 612, 618
             modelBuilder
