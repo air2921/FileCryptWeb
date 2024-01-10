@@ -21,6 +21,8 @@ namespace webapi.Models
 
         public bool? is_2fa_enabled { get; set; }
 
+        public bool? is_blocked { get; set; }
+
         [JsonIgnore]
         public KeyModel? Keys { get; set; }
 

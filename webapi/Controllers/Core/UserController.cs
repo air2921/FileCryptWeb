@@ -73,13 +73,13 @@ namespace webapi.Controllers.Core
 
             if (userId.Equals(_userInfo.UserId))
             {
-                var user = user_keys_files.Select(u => new { u.user.id, u.user.username, u.user.role, u.user.email }).FirstOrDefault();
+                var user = user_keys_files.Select(u => new { u.user.id, u.user.username, u.user.role, u.user.email, u.user.is_blocked }).FirstOrDefault();
 
                 return StatusCode(200, new { user, IsOwner, keys = new { privateKey, internalKey, receivedKey }, files, offers });
             }
             else
             {
-                var user = user_keys_files.Select(u => new { u.user.id, u.user.username, u.user.role }).FirstOrDefault();
+                var user = user_keys_files.Select(u => new { u.user.id, u.user.username, u.user.role, u.user.is_blocked }).FirstOrDefault();
 
                 return StatusCode(206, new { user, IsOwner, keys = new { privateKey, internalKey, receivedKey }, files, offers });
             }
