@@ -78,6 +78,9 @@ namespace webapi.Controllers.Account
                 if (user is null)
                     return StatusCode(404, new { message = AccountErrorMessage.UserNotFound });
 
+                if ((bool)user.is_blocked!)
+                    return StatusCode(403, new { message = AccountErrorMessage.UserBlocked });
+
                 bool IsCorrect = _passwordManager.CheckPassword(userModel.password, user.password!);
                 if (!IsCorrect)
                     return StatusCode(401, new { message = AccountErrorMessage.PasswordIncorrect });
@@ -117,7 +120,6 @@ namespace webapi.Controllers.Account
 
             if (correctCode is null || id is null)
                 return StatusCode(500);
-
 
             var user = await _dbContext.Users.FirstOrDefaultAsync(u => u.id == int.Parse(id));
             if (user is null)

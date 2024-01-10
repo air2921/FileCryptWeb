@@ -2,6 +2,7 @@
 {
     public static class AccountErrorMessage
     {
+        public const string UserBlocked = "You have been permanently banned from this resource for violating the terms of use";
         public const string PasswordIncorrect = "Password is incorrect";
         public const string CodeIncorrect = "Code is incorrect";
         public const string VerifyCodeNull = "Сode timed out or an error occurred while receiving the code";

@@ -118,7 +118,16 @@ namespace webapi.Controllers.Account
                 if (!IsCorrect)
                     return StatusCode(422, new { message = AccountErrorMessage.CodeIncorrect });
 
-                var userModel = new UserModel { email = email, password = password, username = username, role = role, is_2fa_enabled = bool.Parse(flag_2fa) };
+                var userModel = new UserModel
+                {
+                    email = email,
+                    password = password,
+                    username = username,
+                    role = role,
+                    is_2fa_enabled = bool.Parse(flag_2fa),
+                    is_blocked = false
+                };
+
                 await _userCreate.Create(userModel);
                 _logger.LogInformation("User was added in db");
 

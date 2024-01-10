@@ -88,6 +88,12 @@ namespace webapi.DB.SQL
             if (userModel.role is not null)
                 user.role = userModel.role;
 
+            if (userModel.is_blocked is not null)
+                user.is_blocked = userModel.is_blocked;
+
+            if (userModel.is_2fa_enabled is not null)
+                user.is_2fa_enabled = userModel.is_2fa_enabled;
+
             await _dbContext.SaveChangesAsync();
         }
     }

@@ -5,6 +5,9 @@ function UserData({ user, isOwner }: UserDataProps) {
     return (
         <div className="user-data-container">
             <div>
+                {user.is_blocked && 'User is blocked'}
+            </div>
+            <div>
                 <div className="username">
                     {`${user.username}#${user.id}`}
                 </div>
