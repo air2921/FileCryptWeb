@@ -23,15 +23,20 @@ const AxiosRequest = async ({ endpoint, method, withCookie, requestBody, respons
                 throw new Error('Invalid request method');
         }
 
-        return { isSuccess: true, data: response.data };
+        return { isSuccess: true, data: response.data, statusCode: response.status };
 
     } catch (error: any) {
         console.log(error);
+        let statusCode = 500;
         let errorMessage = 'An error occurred during the request';
         if (error.response) {
             errorMessage = error.response.data && error.response.data.message ? error.response.data.message : 'Unknown error';
+            statusCode = error.response.status;
         }
-        return { isSuccess: false, data: errorMessage };
+        if (error.response) {
+            errorMessage = error.response.data && error.response.data.message ? error.response.data.message : 'Unknown error';
+        }
+        return { isSuccess: false, data: errorMessage, statusCode: statusCode };
     }
 }
 

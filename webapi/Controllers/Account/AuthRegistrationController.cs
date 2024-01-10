@@ -68,14 +68,6 @@ namespace webapi.Controllers.Account
                 string password = _passwordManager.HashingPassword(userModel.password);
                 _logger.LogInformation("Password was hashed");
 
-                HttpContext.Session.SetString(EMAIL, email);
-                HttpContext.Session.SetString(PASSWORD, password);
-                HttpContext.Session.SetString(USERNAME, userModel.username);
-                HttpContext.Session.SetString(ROLE, Role.User.ToString());
-                HttpContext.Session.SetString(IS_2FA, userModel.is_2fa_enabled.ToString());
-                HttpContext.Session.SetString(CODE, code.ToString());
-                _logger.LogInformation("Data was saved in user session");
-
                 var emailDto = new EmailDto
                 {
                     username = userModel.username,
@@ -86,6 +78,15 @@ namespace webapi.Controllers.Account
 
                 await _email.SendMessage(emailDto);
                 _logger.LogInformation($"Email was sended on {email} (1-st step)");
+
+                HttpContext.Session.SetString(EMAIL, email);
+                HttpContext.Session.SetString(PASSWORD, password);
+                HttpContext.Session.SetString(USERNAME, userModel.username);
+                HttpContext.Session.SetString(ROLE, Role.User.ToString());
+                HttpContext.Session.SetString(IS_2FA, userModel.is_2fa_enabled.ToString());
+                HttpContext.Session.SetString(CODE, _passwordManager.HashingPassword(code.ToString()));
+
+                _logger.LogInformation("Data was saved in user session");
 
                 return StatusCode(200, new { message = AccountSuccessMessage.EmailSended });
             }
@@ -103,23 +104,21 @@ namespace webapi.Controllers.Account
             string? password = HttpContext.Session.GetString(PASSWORD);
             string? username = HttpContext.Session.GetString(USERNAME);
             string? role = HttpContext.Session.GetString(ROLE);
-            bool is_2fa = bool.Parse(HttpContext.Session.GetString(IS_2FA));
-            int correctCode = int.Parse(HttpContext.Session.GetString(CODE));
+            string? correctCode = HttpContext.Session.GetString(CODE);
+            string? flag_2fa = HttpContext.Session.GetString(IS_2FA);
 
-            if (email is null || password is null || username is null || role is null)
+            if (email is null || password is null || username is null || role is null || correctCode is null || flag_2fa is null)
                 return StatusCode(422, new { message = AccountErrorMessage.NullUserData });
 
             _logger.LogInformation("User data was succesfully received from session (not null anything)");
 
             try
             {
-                if (!_validation.IsSixDigit(correctCode))
-                    return StatusCode(500, new { message = AccountErrorMessage.Error });
-
-                if (!code.Equals(correctCode))
+                bool IsCorrect = _passwordManager.CheckPassword(code.ToString(), correctCode);
+                if (!IsCorrect)
                     return StatusCode(422, new { message = AccountErrorMessage.CodeIncorrect });
 
-                var userModel = new UserModel { email = email, password = password, username = username, role = role, is_2fa_enabled = is_2fa };
+                var userModel = new UserModel { email = email, password = password, username = username, role = role, is_2fa_enabled = bool.Parse(flag_2fa) };
                 await _userCreate.Create(userModel);
                 _logger.LogInformation("User was added in db");
 

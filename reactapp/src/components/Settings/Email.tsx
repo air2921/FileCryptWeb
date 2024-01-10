@@ -15,7 +15,7 @@ const Email = () => {
     const handleSubmit = async (e: FormEvent) => {
         e.preventDefault();
 
-        const response = await AxiosRequest({ endpoint: 'api/account/edit/email/start', method: 'POST', withCookie: true, requestBody: { password_hash: password } })
+        const response = await AxiosRequest({ endpoint: 'api/account/edit/email/start', method: 'POST', withCookie: true, requestBody: { password: password } })
 
         if (response.isSuccess) {
             setStatus(true);
