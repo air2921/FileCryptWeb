@@ -16,16 +16,18 @@ namespace webapi.Controllers.Core
     public class UserController : ControllerBase
     {
         private readonly FileCryptDbContext _dbContext;
+        private readonly IDelete<UserModel> _deleteUser;
         private readonly IUserInfo _userInfo;
         private readonly ITokenService _tokenService;
         private readonly IRead<UserModel> _readUser;
 
-        public UserController(FileCryptDbContext dbContext, IUserInfo userInfo, ITokenService tokenService, IRead<UserModel> readUser)
+        public UserController(FileCryptDbContext dbContext,  IUserInfo userInfo, ITokenService tokenService, IRead<UserModel> readUser, IDelete<UserModel> deleteUser)
         {
             _dbContext = dbContext;
             _userInfo = userInfo;
             _tokenService = tokenService;
             _readUser = readUser;
+            _deleteUser = deleteUser;
         }
 
         [HttpGet("{userId}/{username}")]
@@ -104,6 +106,22 @@ namespace webapi.Controllers.Core
             catch (UserException ex)
             {
                 return StatusCode(404, new { message = ex.Message });
+            }
+        }
+
+        [HttpDelete]
+        public async Task<IActionResult> DeleteUser()
+        {
+            try
+            {
+                await _deleteUser.DeleteById(_userInfo.UserId, null);
+                _tokenService.DeleteTokens();
+
+                return StatusCode(204);
+            }
+            catch (UserException)
+            {
+                return StatusCode(404);
             }
         }
     }
