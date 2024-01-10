@@ -22,5 +22,8 @@
         public const string RecoveryAccountBody = "You have applied for account recovery\n" +
             "If it was not you,please change your password.\n" +
             "Your unique recovery link: ";
+
+        public const string Verify2FaHeader = "Confirm login on FileCryptWeb";
+        public const string Verify2FaBody = "You provide this email address to confirm your two-factor authentication login.\n Your login code: ";
     }
 }
