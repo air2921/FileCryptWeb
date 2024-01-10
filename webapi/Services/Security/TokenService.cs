@@ -107,8 +107,11 @@ namespace webapi.Services.Security
                 .Join(_dbContext.Users, token => token.user_id, user => user.id, (token, user) => new { token, user })
                 .FirstOrDefaultAsync() ?? throw new UnauthorizedAccessException("User was not found");
 
-            if (userAndToken.token.expiry_date < DateTime.UtcNow)
-                throw new UnauthorizedAccessException("Refresh Token timed out");
+            if (userAndToken.token.expiry_date < DateTime.UtcNow || (bool)userAndToken.user.is_blocked!)
+            {
+                DeleteTokens();
+                throw new UnauthorizedAccessException("Refresh Token is invalid");
+            }
 
             if (_context.HttpContext.Request.Cookies.ContainsKey(Constants.JWT_COOKIE_KEY))
                 _context.HttpContext.Response.Cookies.Delete(Constants.JWT_COOKIE_KEY);
