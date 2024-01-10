@@ -20,6 +20,8 @@ namespace webapi.Controllers.Account
         private const string PASSWORD = "Password";
         private const string USERNAME = "Username";
         private const string ROLE = "Role";
+        private const string IS_2FA = "2FA";
+        private const string CODE = "Code";
 
         private readonly ILogger<AuthRegistrationController> _logger;
         private readonly ICreate<UserModel> _userCreate;
@@ -70,7 +72,8 @@ namespace webapi.Controllers.Account
                 HttpContext.Session.SetString(PASSWORD, password);
                 HttpContext.Session.SetString(USERNAME, userModel.username);
                 HttpContext.Session.SetString(ROLE, Role.User.ToString());
-                HttpContext.Session.SetInt32(email, code);
+                HttpContext.Session.SetString(IS_2FA, userModel.is_2fa_enabled.ToString());
+                HttpContext.Session.SetString(CODE, code.ToString());
                 _logger.LogInformation("Data was saved in user session");
 
                 var emailDto = new EmailDto
@@ -88,6 +91,7 @@ namespace webapi.Controllers.Account
             }
             catch (Exception)
             {
+                HttpContext.Session.Clear();
                 return StatusCode(500);
             }
         }
@@ -99,7 +103,8 @@ namespace webapi.Controllers.Account
             string? password = HttpContext.Session.GetString(PASSWORD);
             string? username = HttpContext.Session.GetString(USERNAME);
             string? role = HttpContext.Session.GetString(ROLE);
-            int correctCode = (int)HttpContext.Session.GetInt32(email);
+            bool is_2fa = bool.Parse(HttpContext.Session.GetString(IS_2FA));
+            int correctCode = int.Parse(HttpContext.Session.GetString(CODE));
 
             if (email is null || password is null || username is null || role is null)
                 return StatusCode(422, new { message = AccountErrorMessage.NullUserData });
@@ -114,32 +119,23 @@ namespace webapi.Controllers.Account
                 if (!code.Equals(correctCode))
                     return StatusCode(422, new { message = AccountErrorMessage.CodeIncorrect });
 
-                var userModel = new UserModel { email = email, password = password, username = username, role = role };
+                var userModel = new UserModel { email = email, password = password, username = username, role = role, is_2fa_enabled = is_2fa };
                 await _userCreate.Create(userModel);
                 _logger.LogInformation("User was added in db");
-
-                DeleteSessionData(email);
-                _logger.LogInformation("User data deleted from session");
 
                 return StatusCode(201, new { userModel });
             }
             catch (Exception ex)
             {
                 _logger.LogCritical(ex.ToString());
-                DeleteSessionData(email);
-                _logger.LogInformation("User data deleted from session");
 
                 return StatusCode(500, new { message = AccountErrorMessage.Error });
             }
-        }
-
-        private void DeleteSessionData(string email)
-        {
-            HttpContext.Session.Remove(email);
-            HttpContext.Session.Remove(EMAIL);
-            HttpContext.Session.Remove(PASSWORD);
-            HttpContext.Session.Remove(USERNAME);
-            HttpContext.Session.Remove(ROLE);
+            finally
+            {
+                HttpContext.Session.Clear();
+                _logger.LogInformation("User data deleted from session");
+            }
         }
     }
 }
