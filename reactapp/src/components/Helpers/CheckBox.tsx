@@ -5,12 +5,13 @@ interface CheckBoxProps {
     checked: boolean,
     id: string,
     onChange: (event: ChangeEvent<HTMLInputElement>) => void,
-    text: string
+    text?: string
 }
 
 function CheckBox({ type, id, checked, onChange, text }: CheckBoxProps) {
     return (
-        <div>{text}
+        <div>
+            <p>{text}</p>
             <label htmlFor={id}>
                 <input
                     type={type}

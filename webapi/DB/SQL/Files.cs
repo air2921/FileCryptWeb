@@ -27,9 +27,12 @@ namespace webapi.DB.SQL
                 throw new FileException(ExceptionFileMessages.FileNotFound);
         }
 
-        public async Task<IEnumerable<FileModel>> ReadAll()
+        public async Task<IEnumerable<FileModel>> ReadAll(int skip, int count)
         {
-            return await _dbContext.Files.ToListAsync() ??
+            return await _dbContext.Files
+                .Skip(skip)
+                .Take(count)
+                .ToListAsync() ??
                 throw new FileException(ExceptionFileMessages.NoOneFileNotFound);
         }
 

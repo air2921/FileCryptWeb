@@ -17,7 +17,11 @@ namespace webapi.Models
         [EmailAddress]
         public string? email { get; set; }
 
-        public string? password_hash { get; set; }
+        public string? password { get; set; }
+
+        public bool? is_2fa_enabled { get; set; }
+
+        public bool? is_blocked { get; set; }
 
         [JsonIgnore]
         public KeyModel? Keys { get; set; }

@@ -20,5 +20,7 @@
         public const string SuccessOfferCreated = "The offer was succesfully created and sent";
         public const string SuccessApiUpdated = "New API settings have been applied";
         public const string SuccessFileDeleted = "File was successfully deleted";
+        public const string UserBlocked = "User was successfully blocked";
+        public const string UserUnlocked = "User was successfully unlocked";
     }
 }

@@ -50,8 +50,9 @@ namespace webapi.Middlewares
                         .Join(dbContext.Users, token => token.user_id, user => user.id, (token, user) => new { token, user })
                         .FirstOrDefaultAsync();
 
-                    if (userAndToken is null || !userAndToken.token.expiry_date.HasValue || userAndToken.token.expiry_date < DateTime.UtcNow)
+                    if (userAndToken is null || !userAndToken.token.expiry_date.HasValue || userAndToken.token.expiry_date < DateTime.UtcNow || userAndToken.user.is_blocked == true)
                     {
+                        tokenService.DeleteTokens();
                         await _next(context);
                         return;
                     }

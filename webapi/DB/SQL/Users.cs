@@ -1,6 +1,7 @@
 ﻿using Microsoft.EntityFrameworkCore;
 using webapi.Exceptions;
 using webapi.Interfaces.SQL;
+using webapi.Localization;
 using webapi.Localization.Exceptions;
 using webapi.Models;
 
@@ -59,9 +60,12 @@ namespace webapi.DB.SQL
             return user;
         }
 
-        public async Task<IEnumerable<UserModel>> ReadAll()
+        public async Task<IEnumerable<UserModel>> ReadAll(int skip, int count)
         {
-            var users = await _dbContext.Users.ToListAsync() ??
+            var users = await _dbContext.Users
+                .Skip(skip)
+                .Take(count)
+                .ToListAsync() ??
                 throw new UserException(ExceptionUserMessages.NoOneUserNotFound);
 
             return users;
@@ -69,7 +73,8 @@ namespace webapi.DB.SQL
 
         public async Task Update(UserModel userModel, bool? byForeign)
         {
-            var user = await _dbContext.Users.FirstOrDefaultAsync(u => u.id == userModel.id);
+            var user = await _dbContext.Users.FirstOrDefaultAsync(u => u.id == userModel.id) ??
+                throw new UserException(AccountErrorMessage.UserNotFound);
 
             if (userModel.username is not null)
                 user.username = userModel.username;
@@ -77,11 +82,17 @@ namespace webapi.DB.SQL
             if (userModel.email is not null)
                 user.email = userModel.email;
 
-            if (userModel.password_hash is not null)
-                user.password_hash = userModel.password_hash;
+            if (userModel.password is not null)
+                user.password = userModel.password;
 
             if (userModel.role is not null)
                 user.role = userModel.role;
+
+            if (userModel.is_blocked is not null)
+                user.is_blocked = userModel.is_blocked;
+
+            if (userModel.is_2fa_enabled is not null)
+                user.is_2fa_enabled = userModel.is_2fa_enabled;
 
             await _dbContext.SaveChangesAsync();
         }

@@ -1,5 +1,8 @@
 ﻿using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
+using Microsoft.EntityFrameworkCore;
+using System.Text.RegularExpressions;
+using webapi.DB;
 using webapi.Exceptions;
 using webapi.Interfaces.Cryptography;
 using webapi.Interfaces.Redis;
@@ -7,6 +10,7 @@ using webapi.Interfaces.Services;
 using webapi.Interfaces.SQL;
 using webapi.Localization;
 using webapi.Models;
+using webapi.Services;
 
 namespace webapi.Controllers.Core
 {
@@ -17,34 +21,40 @@ namespace webapi.Controllers.Core
     {
         private readonly IConfiguration _configuration;
         private readonly IRead<KeyModel> _readKeys;
-        private readonly IUpdateKeys _updateKeys;
+        private readonly FileCryptDbContext _dbContext;
         private readonly IGenerateKey _generateKey;
         private readonly IRedisCache _redisCaching;
         private readonly IRedisKeys _redisKeys;
         private readonly IUserInfo _userInfo;
         private readonly ITokenService _tokenService;
+        private readonly IEncryptKey _encryptKey;
+        private readonly IValidation _validation;
         private readonly IDecryptKey _decryptKey;
         private readonly byte[] secretKey;
 
         public KeysController(
             IConfiguration configuration,
             IRead<KeyModel> readKeys,
-            IUpdateKeys updateKeys,
+            FileCryptDbContext dbContext,
             IGenerateKey generateKey,
             IRedisCache redisCaching,
             IRedisKeys redisKeys,
             IUserInfo userInfo,
             ITokenService tokenService,
+            IEncryptKey encryptKey,
+            IValidation validation,
             IDecryptKey decryptKey)
         {
             _configuration = configuration;
             _readKeys = readKeys;
-            _updateKeys = updateKeys;
+            _dbContext = dbContext;
             _generateKey = generateKey;
             _redisCaching = redisCaching;
             _redisKeys = redisKeys;
             _userInfo = userInfo;
             _tokenService = tokenService;
+            _encryptKey = encryptKey;
+            _validation = validation;
             _decryptKey = decryptKey;
             secretKey = Convert.FromBase64String(_configuration["FileCryptKey"]!);
         }
@@ -77,94 +87,89 @@ namespace webapi.Controllers.Core
         [ValidateAntiForgeryToken]
         public async Task<IActionResult> UpdatePrivateKey([FromBody] KeyModel? keyModel, [FromQuery] bool auto)
         {
-            try
+            string? key = null;
+
+            if (auto)
             {
-                string? key = null;
-
-                if(auto)
-                {
-                    key = _generateKey.GenerateKey();
-                }
-                else
-                {
-                    if (keyModel is null)
-                        return StatusCode(400, new { message = "Client request error" });
-
-                    key = keyModel.private_key;
-                }
-
-                var newKeyModel = new KeyModel { user_id = _userInfo.UserId, private_key = key };
-
-                await _updateKeys.UpdatePrivateKey(newKeyModel);
-                await _redisCaching.DeleteCache(_redisKeys.PrivateKey);
-
-                return StatusCode(200, new { message = AccountSuccessMessage.KeyUpdated, private_key = key });
+                key = _generateKey.GenerateKey();
             }
-            catch (UserException ex)
+            else
+            {
+                if (keyModel is null || string.IsNullOrWhiteSpace(keyModel.private_key))
+                    return StatusCode(400, new { message = ErrorMessage.InvalidKey });
+
+                key = keyModel.private_key;
+            }
+
+            if (!Regex.IsMatch(key, Validation.EncryptionKey) || _validation.IsBase64String(key) == false)
+                return StatusCode(400, new { message = ErrorMessage.InvalidKey });
+
+            var existingUser = await _dbContext.Keys.FirstOrDefaultAsync(u => u.user_id == _userInfo.UserId);
+            if (existingUser is null)
             {
                 _tokenService.DeleteTokens();
-                return StatusCode(404, new { message = ex.Message });
+                return StatusCode(404);
             }
-            catch (ArgumentException ex)
-            {
-                return StatusCode(422, new { message = ex.Message });
-            }
+
+            existingUser.private_key = await _encryptKey.EncryptionKeyAsync(key, secretKey);
+            await _dbContext.SaveChangesAsync();
+            await _redisCaching.DeleteCache(_redisKeys.PrivateKey);
+
+            return StatusCode(200, new { message = AccountSuccessMessage.KeyUpdated});
         }
 
         [HttpPut("internal")]
         [ValidateAntiForgeryToken]
         public async Task<IActionResult> UpdatePersonalInternalKey([FromBody] KeyModel? keyModel, [FromQuery] bool auto)
         {
-            try
+            string? key = null;
+
+            if (auto)
             {
-                string? key = null;
-
-                if (auto)
-                {
-                    key = _generateKey.GenerateKey();
-                }
-                else
-                {
-                    if (keyModel is null)
-                        return StatusCode(400, new { message = "Client request error" });
-
-                    key = keyModel.private_key;
-                }
-
-                var newKeyModel = new KeyModel { user_id = _userInfo.UserId, internal_key = key };
-
-                await _updateKeys.UpdatePersonalInternalKey(newKeyModel);
-                await _redisCaching.DeleteCache(_redisKeys.InternalKey);
-
-                return StatusCode(200, new { message = AccountSuccessMessage.KeyUpdated, internal_key = key });
+                key = _generateKey.GenerateKey();
             }
-            catch (UserException ex)
+            else
+            {
+                if (keyModel is null || string.IsNullOrWhiteSpace(keyModel.internal_key))
+                    return StatusCode(400, new { message = ErrorMessage.InvalidKey });
+
+                key = keyModel.internal_key;
+            }
+
+            if (!Regex.IsMatch(key, Validation.EncryptionKey) || _validation.IsBase64String(key) == false)
+                return StatusCode(400, new { message = ErrorMessage.InvalidKey });
+
+            var existingUser = await _dbContext.Keys.FirstOrDefaultAsync(u => u.user_id == _userInfo.UserId);
+            if (existingUser is null)
             {
                 _tokenService.DeleteTokens();
-                return StatusCode(404, new { message = ex.Message });
+                return StatusCode(404);
             }
-            catch (ArgumentException ex)
-            {
-                return StatusCode(422, new { message = ex.Message });
-            }
+
+            existingUser.internal_key = await _encryptKey.EncryptionKeyAsync(key, secretKey);
+            await _dbContext.SaveChangesAsync();
+            await _redisCaching.DeleteCache(_redisKeys.InternalKey);
+
+            return StatusCode(200, new { message = AccountSuccessMessage.KeyUpdated });
         }
 
         [HttpPut("received/clean")]
         [ValidateAntiForgeryToken]
         public async Task<IActionResult> CleanReceivedInternalKey()
         {
-            try
-            {
-                await _updateKeys.CleanReceivedInternalKey(_userInfo.UserId);
-                await _redisCaching.DeleteCache(_redisKeys.ReceivedKey);
-
-                return StatusCode(200, new { message = AccountSuccessMessage.KeyRemoved });
-            }
-            catch (UserException ex)
+            var existingUser = await _dbContext.Keys.FirstOrDefaultAsync(u => u.user_id == _userInfo.UserId);
+            if (existingUser is null)
             {
                 _tokenService.DeleteTokens();
-                return StatusCode(404, new { message = ex.Message });
+                return StatusCode(404);
             }
+
+            existingUser.received_key = null;
+            await _dbContext.SaveChangesAsync();
+
+            await _redisCaching.DeleteCache(_redisKeys.ReceivedKey);
+
+            return StatusCode(200, new { message = AccountSuccessMessage.KeyUpdated });
         }
     }
 }

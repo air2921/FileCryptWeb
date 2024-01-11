@@ -4,6 +4,7 @@ interface UserDataProps {
         id: string;
         role: string;
         email: string;
+        is_blocked: boolean
     };
     isOwner: boolean
 }

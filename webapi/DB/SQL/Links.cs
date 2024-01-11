@@ -27,9 +27,12 @@ namespace webapi.DB.SQL
                 throw new LinkException(ExceptionLinkMessages.LinkNotFound);
         }
 
-        public async Task<IEnumerable<LinkModel>> ReadAll()
+        public async Task<IEnumerable<LinkModel>> ReadAll(int skip, int count)
         {
-            return await _dbContext.Links.ToListAsync() ??
+            return await _dbContext.Links
+                .Skip(skip)
+                .Take(count)
+                .ToListAsync() ??
                 throw new LinkException(ExceptionLinkMessages.NoOneLinkNotFound);
         }
 

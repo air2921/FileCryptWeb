@@ -3,6 +3,7 @@ using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
 using UAParser;
 using webapi.DB;
+using webapi.DTO;
 using webapi.Exceptions;
 using webapi.Interfaces.Redis;
 using webapi.Interfaces.Services;
@@ -18,13 +19,19 @@ namespace webapi.Controllers.Account
     [ValidateAntiForgeryToken]
     public class AuthSessionController : ControllerBase
     {
+        private const string CODE = "Code";
+        private const string ID = "Id";
+
         private readonly FileCryptDbContext _dbContext;
         private readonly ILogger<AuthSessionController> _logger;
         private readonly IUserInfo _userInfo;
+        private readonly IUserAgent _userAgent;
+        private readonly IEmailSender _emailSender;
         private readonly IRedisCache _redisCache;
         private readonly IRedisKeys _redisKeys;
         private readonly IPasswordManager _passwordManager;
         private readonly ITokenService _tokenService;
+        private readonly IGenerateSixDigitCode _generateCode;
         private readonly IUpdate<TokenModel> _updateToken;
         private readonly ICreate<NotificationModel> _createNotification;
 
@@ -32,57 +39,111 @@ namespace webapi.Controllers.Account
             FileCryptDbContext dbContext,
             ILogger<AuthSessionController> logger,
             IUserInfo userInfo,
+            IUserAgent userAgent,
+            IEmailSender emailSender,
             IRedisCache redisCache,
             IRedisKeys redisKeys,
             IPasswordManager passwordManager,
             ITokenService tokenService,
+            IGenerateSixDigitCode generateCode,
             IUpdate<TokenModel> updateToken,
             ICreate<NotificationModel> createNotification)
         {
             _dbContext = dbContext;
             _logger = logger;
             _userInfo = userInfo;
+            _userAgent = userAgent;
+            _emailSender = emailSender;
             _redisCache = redisCache;
             _redisKeys = redisKeys;
             _passwordManager = passwordManager;
             _tokenService = tokenService;
+            _generateCode = generateCode;
             _updateToken = updateToken;
             _createNotification = createNotification;
         }
+
+        #region Factical login endpoints and helped method
 
         [HttpPost("login")]
         public async Task<IActionResult> Login(UserModel userModel)
         {
             try
             {
-                if (userModel.email is null || userModel.password_hash is null)
+                if (userModel.email is null || userModel.password is null)
                     return StatusCode(422, new { message = AccountErrorMessage.InvalidUserData });
 
-                var user = await _dbContext.Users.FirstOrDefaultAsync(u => u.email == userModel.email.ToLowerInvariant());
+                var email = userModel.email.ToLowerInvariant();
+                var user = await _dbContext.Users.FirstOrDefaultAsync(u => u.email == email);
                 if (user is null)
                     return StatusCode(404, new { message = AccountErrorMessage.UserNotFound });
 
-                bool IsCorrect = _passwordManager.CheckPassword(userModel.password_hash, user.password_hash!);
+                if (user.is_blocked == true)
+                    return StatusCode(403, new { message = AccountErrorMessage.UserBlocked });
+
+                bool IsCorrect = _passwordManager.CheckPassword(userModel.password, user.password!);
                 if (!IsCorrect)
                     return StatusCode(401, new { message = AccountErrorMessage.PasswordIncorrect });
 
-                var newUserModel = new UserModel
+                var clientInfo = Parser.GetDefault().Parse(HttpContext.Request.Headers["User-Agent"].ToString());
+
+                if ((bool)!user.is_2fa_enabled!)
+                    return await CreateTokens(clientInfo, user);
+
+                int code = _generateCode.GenerateSixDigitCode();
+                var emailDto = new EmailDto
                 {
-                    id = user.id,
-                    username = user.username,
-                    email = user.email,
-                    role = user.role,
+                    username = user.username!,
+                    email = user.email!,
+                    subject = EmailMessage.Verify2FaHeader,
+                    message = EmailMessage.Verify2FaBody + code
                 };
 
-                var clientInfo = Parser.GetDefault().Parse(HttpContext.Request.Headers["User-Agent"].ToString());
-                var browser = clientInfo.UA.Family;
-                var browserVersion = clientInfo.UA.Major + "." + clientInfo.UA.Minor;
-                var os = clientInfo.OS.Family;
+                await _emailSender.SendMessage(emailDto);
+
+                HttpContext.Session.SetString(ID, user.id.ToString());
+                HttpContext.Session.SetString(CODE, _passwordManager.HashingPassword(code.ToString()));
+
+                return StatusCode(200, new { message = AccountSuccessMessage.EmailSended });
+            }
+            catch (Exception)
+            {
+                return StatusCode(500);
+            }
+        }
+
+        [HttpPost("verify/2fa")]
+        public async Task<IActionResult> VerifyTwoFA([FromQuery] int code)
+        {
+            string? correctCode = HttpContext.Session.GetString(CODE);
+            string? id = HttpContext.Session.GetString(ID);
+
+            if (correctCode is null || id is null)
+                return StatusCode(500);
+
+            var user = await _dbContext.Users.FirstOrDefaultAsync(u => u.id == int.Parse(id));
+            if (user is null)
+                return StatusCode(404, new { message = AccountErrorMessage.UserNotFound });
+
+            bool IsCorrect = _passwordManager.CheckPassword(code.ToString(), correctCode);
+            if (!IsCorrect)
+                return StatusCode(422, new { message = AccountErrorMessage.CodeIncorrect });
+
+            var clientInfo = Parser.GetDefault().Parse(HttpContext.Request.Headers["User-Agent"].ToString());
+
+            return await CreateTokens(clientInfo, user);
+        }
+
+        private async Task<IActionResult> CreateTokens(ClientInfo clientInfo, UserModel user)
+        {
+            try
+            {
+                var ua = _userAgent.GetBrowserData(clientInfo);
 
                 var notificationModel = new NotificationModel
                 {
                     message_header = "Someone has accessed your account",
-                    message = $"Someone signed in to your account {user.username}#{user.id} at {DateTime.UtcNow} from {browser} {browserVersion} on OS {os}",
+                    message = $"Someone signed in to your account {user.username}#{user.id} at {DateTime.UtcNow} from {ua.Browser} {ua.Version} on OS {ua.OS}",
                     priority = Priority.Security.ToString(),
                     send_time = DateTime.UtcNow,
                     is_checked = false,
@@ -103,21 +164,24 @@ namespace webapi.Controllers.Account
 
                 await _createNotification.Create(notificationModel);
                 _logger.LogInformation("Created notification about logged in account");
-                
-                Response.Cookies.Append(Constants.JWT_COOKIE_KEY, _tokenService.GenerateJwtToken(newUserModel, Constants.JwtExpiry), _tokenService.SetCookieOptions(Constants.JwtExpiry));
+
+                Response.Cookies.Append(Constants.JWT_COOKIE_KEY, _tokenService.GenerateJwtToken(user, Constants.JwtExpiry), _tokenService.SetCookieOptions(Constants.JwtExpiry));
                 Response.Cookies.Append(Constants.REFRESH_COOKIE_KEY, refreshToken, _tokenService.SetCookieOptions(Constants.RefreshExpiry));
                 _logger.LogInformation("Jwt and refresh was sended to client");
 
-                return StatusCode(200);
+                return StatusCode(201);
             }
-            catch (UserException)
+            catch (TokenException ex)
             {
-                _logger.LogCritical("When trying to update the data, the user was deleted");
-                _tokenService.DeleteTokens();
-                _logger.LogDebug("Tokens was deleted");
-                return StatusCode(404);
+                return StatusCode(404, new { message = ex.Message });
+            }
+            finally
+            {
+                HttpContext.Session.Clear();
             }
         }
+
+        #endregion
 
         [HttpPut("logout")]
         [Authorize]

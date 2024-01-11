@@ -50,12 +50,12 @@ namespace webapi.Controllers.Admin.Manage_Notifications
         }
 
         [HttpGet("all")]
-        public async Task<IActionResult> GetAllNotifications()
+        public async Task<IActionResult> GetAllNotifications([FromQuery] int skip, [FromQuery] int count)
         {
             try
             {
-                var notification = await _read.ReadAll();
-                _logger.LogInformation($"{_userInfo.Username}#{_userInfo.UserId} requested information about all notifications");
+                var notification = await _read.ReadAll(skip, count);
+                _logger.LogInformation($"{_userInfo.Username}#{_userInfo.UserId} requested information about notifications, skipped {skip} and quntity requested {count}");
 
                 return StatusCode(200, new { notification });
             }

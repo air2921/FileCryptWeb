@@ -40,12 +40,12 @@ namespace webapi.Controllers.Admin.Manage_Users
         }
 
         [HttpGet("all")]
-        public async Task<IActionResult> ReadAllUsers()
+        public async Task<IActionResult> ReadAllUsers([FromQuery] int skip, [FromQuery] int count)
         {
             try
             {
-                var users = await _read.ReadAll();
-                _logger.LogWarning($"{_userInfo.Username}#{_userInfo.UserId} requested information about all users");
+                var users = await _read.ReadAll(skip, count);
+                _logger.LogWarning($"{_userInfo.Username}#{_userInfo.UserId} requested information about users, skipped {skip} and quantity requested {count}");
 
                 return StatusCode(200, new { users });
             }

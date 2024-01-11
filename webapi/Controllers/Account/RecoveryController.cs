@@ -2,7 +2,6 @@
 using Microsoft.EntityFrameworkCore;
 using UAParser;
 using webapi.DB;
-using webapi.DB.SQL;
 using webapi.DTO;
 using webapi.Exceptions;
 using webapi.Interfaces.Services;
@@ -12,13 +11,14 @@ using webapi.Models;
 
 namespace webapi.Controllers.Account
 {
-    [Route("api/recovery")]
+    [Route("api/auth/recovery")]
     [ApiController]
     [ValidateAntiForgeryToken]
     public class RecoveryController : ControllerBase
     {
         private readonly FileCryptDbContext _dbContext;
         private readonly ILogger<RecoveryController> _logger;
+        private readonly IUserAgent _userAgent;
         private readonly IEmailSender _emailSender;
         private readonly ICreate<LinkModel> _createLink;
         private readonly ICreate<NotificationModel> _createNotification;
@@ -31,6 +31,7 @@ namespace webapi.Controllers.Account
         public RecoveryController(
             FileCryptDbContext dbContext,
             ILogger<RecoveryController> logger,
+            IUserAgent userAgent,
             IEmailSender emailSender,
             ICreate<LinkModel> createLink,
             ICreate<NotificationModel> createNotification,
@@ -42,6 +43,7 @@ namespace webapi.Controllers.Account
         {
             _dbContext = dbContext;
             _logger = logger;
+            _userAgent = userAgent;
             _emailSender = emailSender;
             _createLink = createLink;
             _createNotification = createNotification;
@@ -73,14 +75,12 @@ namespace webapi.Controllers.Account
                 };
 
                 var clientInfo = Parser.GetDefault().Parse(HttpContext.Request.Headers["User-Agent"].ToString());
-                var browser = clientInfo.UA.Family;
-                var browserVersion = clientInfo.UA.Major + "." + clientInfo.UA.Minor;
-                var os = clientInfo.OS.Family;
+                var ua = _userAgent.GetBrowserData(clientInfo);
 
                 var notificationModel = new NotificationModel
                 {
                     message_header = "Someone trying recovery your account",
-                    message = $"Someone trying recovery your account {user.username}#{user.id} at {DateTime.UtcNow} from {browser} {browserVersion} on OS {os}." +
+                    message = $"Someone trying recovery your account {user.username}#{user.id} at {DateTime.UtcNow} from {ua.Browser} {ua.Version} on OS {ua.OS}." +
                     $"Qnique token was sended on {user.email}",
                     priority = Priority.Security.ToString(),
                     send_time = DateTime.UtcNow,
@@ -128,20 +128,18 @@ namespace webapi.Controllers.Account
 
                 _logger.LogInformation($"Token: '{token}' is not expired");
 
-                var userModel = new UserModel { id = link.user_id, password_hash = _passwordManager.HashingPassword(password) };
+                var userModel = new UserModel { id = link.user_id, password = _passwordManager.HashingPassword(password) };
                 await _updateUser.Update(userModel, null);
                 _logger.LogInformation($"Password was updated for user with id: {link.user_id}");
 
 
                 var clientInfo = Parser.GetDefault().Parse(HttpContext.Request.Headers["User-Agent"].ToString());
-                var browser = clientInfo.UA.Family;
-                var browserVersion = clientInfo.UA.Major + "." + clientInfo.UA.Minor;
-                var os = clientInfo.OS.Family;
+                var ua = _userAgent.GetBrowserData(clientInfo);
 
                 var notificationModel = new NotificationModel
                 {
                     message_header = "Someone changed your password",
-                    message = $"Someone changed your password at {DateTime.UtcNow} from {browser} {browserVersion} on OS {os}.",
+                    message = $"Someone changed your password at {DateTime.UtcNow} from {ua.Browser} {ua.Version} on OS {ua.OS}.",
                     priority = Priority.Security.ToString(),
                     send_time = DateTime.UtcNow,
                     is_checked = false,
