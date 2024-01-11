@@ -10,7 +10,8 @@ interface CheckBoxProps {
 
 function CheckBox({ type, id, checked, onChange, text }: CheckBoxProps) {
     return (
-        <div>{text}
+        <div>
+            <p>{text}</p>
             <label htmlFor={id}>
                 <input
                     type={type}

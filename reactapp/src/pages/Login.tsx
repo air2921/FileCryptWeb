@@ -10,7 +10,7 @@ const Login = () => {
     const [email, setEmail] = useState('');
     const [password, setPassword] = useState('');
     const [errorMessage, setErrorMessage] = useState<string | null>(null);
-    const [redirect, setRedirect] = useState(false);
+    const [verificationRequired, setVerification] = useState(false);
     const navigate = useNavigate();
 
     const handleSubmit = async (e: FormEvent) => {
@@ -23,7 +23,7 @@ const Login = () => {
                 navigate('/');
             }
             else if (response.statusCode === 200) {
-                setRedirect(true);
+                setVerification(true);
             }
         }
         else {
@@ -33,7 +33,7 @@ const Login = () => {
 
     return (
         <div>
-            {redirect ? (
+            {verificationRequired ? (
                 <Verify endpoint='api/auth/verify/2fa' method='POST' />
             ) : (
                     <div className="login">

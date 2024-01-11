@@ -78,7 +78,7 @@ namespace webapi.Controllers.Account
                 if (user is null)
                     return StatusCode(404, new { message = AccountErrorMessage.UserNotFound });
 
-                if ((bool)user.is_blocked!)
+                if (user.is_blocked == true)
                     return StatusCode(403, new { message = AccountErrorMessage.UserBlocked });
 
                 bool IsCorrect = _passwordManager.CheckPassword(userModel.password, user.password!);

@@ -40,7 +40,6 @@ namespace webapi
 
             services.AddScoped<ICreate<KeyModel>, Keys>();
             services.AddScoped<IRead<KeyModel>, Keys>();
-            services.AddScoped<IUpdateKeys, UpdateKeys>();
 
             services.AddScoped<ICreate<FileModel>, Files>();
             services.AddScoped<IDelete<FileModel>, Files>();
