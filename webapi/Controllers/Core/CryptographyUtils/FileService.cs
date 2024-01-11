@@ -88,7 +88,7 @@ namespace webapi.Controllers.Base.CryptographyUtils
             {
                 try
                 {
-                    var mimesDb = await _read.ReadAll(0, 100000);
+                    var mimesDb = await _read.ReadAll(0, 10000);
                     string[] mimesArray = mimesDb.Select(m => m.mime_name).ToArray();
 
                     var mimesJson = JsonConvert.SerializeObject(mimesArray);
