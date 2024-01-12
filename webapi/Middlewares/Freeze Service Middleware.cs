@@ -33,7 +33,7 @@ namespace webapi.Middlewares
                 await _next(context);
                 return;
             }
-            catch (KeyNotFoundException)
+            catch (InvalidOperationException)
             {
                 await _next(context);
                 return;
@@ -54,12 +54,10 @@ namespace webapi.Middlewares
         {
             try
             {
-                var stringFlag = await redisCache.GetCachedData(Constants.SERVICE_FREEZE_FLAG);
+                var stringFlag = await redisCache.GetCachedData(Constants.SERVICE_FREEZE_FLAG) ??
+                    throw new InvalidOperationException();
+
                 return bool.Parse(stringFlag);
-            }
-            catch (KeyNotFoundException)
-            {
-                throw;
             }
             catch (FormatException)
             {

@@ -90,9 +90,7 @@ namespace webapi.DB.RedisDb
             var db = _context.GetDatabase();
             var redisValue = await db.StringGetAsync(key);
             if (redisValue.HasValue)
-            {
                 await db.KeyDeleteAsync(key);
-            }
 
             await db.StringSetAsync(key, value, expire);
         }
@@ -100,11 +98,11 @@ namespace webapi.DB.RedisDb
         public async Task<string> GetCachedData(string key)
         {
             var db = _context.GetDatabase();
-            var redisValue = await db.StringGetAsync(key)!;
+            var redisValue = await db.StringGetAsync(key);
             if (redisValue.HasValue)
                 return redisValue!;
 
-            throw new KeyNotFoundException("Data was not found");
+            return null;
         }
 
         public async Task DeleteCache(string key)
