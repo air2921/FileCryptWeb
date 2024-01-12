@@ -35,24 +35,24 @@ namespace webapi.Middlewares
             try
             {
                 var isAllowRequest = await redisCache.GetCachedData(apiKey);
-                bool isAllowed = bool.Parse(isAllowRequest);
-
-                if (isAllowed == false)
+                if (isAllowRequest is not null)
                 {
-                    context.Response.StatusCode = 403;
+                    bool isAllowed = bool.Parse(isAllowRequest);
+
+                    if (isAllowed == false)
+                    {
+                        context.Response.StatusCode = 403;
+                        return;
+                    }
+
+                    await _next(context);
                     return;
                 }
-
-                await _next(context);
-                return;
-            }
-            catch (KeyNotFoundException)
-            {
-                try
+                else
                 {
                     var isAllowed = await CheckAndCacheData(context, redisCache, dbContext, apiKey);
-                    
-                    if(isAllowed)
+
+                    if (isAllowed)
                     {
                         await _next(context);
                         return;
@@ -63,11 +63,11 @@ namespace webapi.Middlewares
                         return;
                     }
                 }
-                catch (InvalidOperationException ex)
-                {
-                    context.Response.StatusCode = int.Parse(ex.Message);
-                    return;
-                }
+            }
+            catch (InvalidOperationException ex)
+            {
+                context.Response.StatusCode = int.Parse(ex.Message);
+                return;
             }
             catch (Exception ex)
             {
