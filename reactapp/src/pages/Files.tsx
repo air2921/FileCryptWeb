@@ -38,7 +38,7 @@ const Files = () => {
     };
 
     const deleteFile = async (fileId: number) => {
-        const response = await AxiosRequest({ endpoint: `api/core/files?fileId=${fileId}&filename=&byId=true`, method: 'DELETE', withCookie: true, requestBody: null });
+        const response = await AxiosRequest({ endpoint: `api/core/files/{fileId}`, method: 'DELETE', withCookie: true, requestBody: null });
 
         if (response.isSuccess) {
             setDeletingError('');

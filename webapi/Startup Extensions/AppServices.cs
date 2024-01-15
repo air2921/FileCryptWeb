@@ -16,7 +16,12 @@ namespace webapi
                 .AddUserSecrets<AppServices>()
                 .Build();
 
-            services.AddDbContext<FileCryptDbContext>(options => options.UseNpgsql(configuration.GetConnectionString(App.MainDb)));
+            services.AddDbContext<FileCryptDbContext>(options =>
+            {
+                options.UseNpgsql(configuration.GetConnectionString(App.MainDb))
+                .EnableServiceProviderCaching(false)
+                .EnableDetailedErrors(true);
+            });
 
             services.AddControllers();
             services.AddLogging();

@@ -6,7 +6,7 @@ using webapi.Models;
 
 namespace webapi.DB.SQL
 {
-    public class Files : ICreate<FileModel>, IRead<FileModel>, IDelete<FileModel>, IDeleteByName<FileModel>
+    public class Files : ICreate<FileModel>, IRead<FileModel>, IDelete<FileModel>
     {
         private readonly FileCryptDbContext _dbContext;
 
@@ -39,15 +39,6 @@ namespace webapi.DB.SQL
         public async Task DeleteById(int id, int? user_id)
         {
             var file = await _dbContext.Files.FirstOrDefaultAsync(f => f.file_id == id && f.user_id == user_id) ??
-                throw new FileException(ExceptionFileMessages.FileNotFound);
-
-            _dbContext.Remove(file);
-            await _dbContext.SaveChangesAsync();
-        }
-
-        public async Task DeleteByName(string fileName, int? user_id)
-        {
-            var file = await _dbContext.Files.FirstOrDefaultAsync(f => f.file_name == fileName && f.user_id == user_id) ??
                 throw new FileException(ExceptionFileMessages.FileNotFound);
 
             _dbContext.Remove(file);

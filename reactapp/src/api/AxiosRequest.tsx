@@ -33,9 +33,6 @@ const AxiosRequest = async ({ endpoint, method, withCookie, requestBody, respons
             errorMessage = error.response.data && error.response.data.message ? error.response.data.message : 'Unknown error';
             statusCode = error.response.status;
         }
-        if (error.response) {
-            errorMessage = error.response.data && error.response.data.message ? error.response.data.message : 'Unknown error';
-        }
         return { isSuccess: false, data: errorMessage, statusCode: statusCode };
     }
 }

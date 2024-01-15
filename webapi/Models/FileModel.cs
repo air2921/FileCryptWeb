@@ -10,16 +10,12 @@ namespace webapi.Models
         [Key]
         public int file_id { get; set; }
 
-        [JsonIgnore(Condition = JsonIgnoreCondition.WhenWritingNull)]
         public string? file_name { get; set; }
 
-        [JsonIgnore(Condition = JsonIgnoreCondition.WhenWritingNull)]
         public string? file_mime { get; set; }
 
-        [JsonIgnore(Condition = JsonIgnoreCondition.WhenWritingNull)]
         public string? type { get; set; }
 
-        [JsonIgnore(Condition = JsonIgnoreCondition.WhenWritingNull)]
         public DateTime? operation_date { get; set; }
 
         [ForeignKey("user_id")]
