@@ -1,8 +1,10 @@
 ﻿using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
+using Newtonsoft.Json;
 using webapi.DB;
 using webapi.Exceptions;
+using webapi.Interfaces.Redis;
 using webapi.Interfaces.Services;
 using webapi.Interfaces.SQL;
 using webapi.Localization.Exceptions;
@@ -16,14 +18,22 @@ namespace webapi.Controllers.Core
     public class UserController : ControllerBase
     {
         private readonly FileCryptDbContext _dbContext;
+        private readonly IRedisCache _redisCache;
         private readonly IDelete<UserModel> _deleteUser;
         private readonly IUserInfo _userInfo;
         private readonly ITokenService _tokenService;
         private readonly IRead<UserModel> _readUser;
 
-        public UserController(FileCryptDbContext dbContext,  IUserInfo userInfo, ITokenService tokenService, IRead<UserModel> readUser, IDelete<UserModel> deleteUser)
+        public UserController(
+            FileCryptDbContext dbContext,
+            IRedisCache redisCache,
+            IUserInfo userInfo,
+            ITokenService tokenService,
+            IRead<UserModel> readUser,
+            IDelete<UserModel> deleteUser)
         {
             _dbContext = dbContext;
+            _redisCache = redisCache;
             _userInfo = userInfo;
             _tokenService = tokenService;
             _readUser = readUser;
@@ -90,9 +100,24 @@ namespace webapi.Controllers.Core
         [HttpGet("data/only")]
         public async Task<IActionResult> GetOnlyUser()
         {
+            var cacheKey = $"User_Data_{_userInfo.UserId}";
+
             try
             {
-                var originalUser = await _readUser.ReadById(_userInfo.UserId, null);
+                var originalUser = new UserModel();
+
+                var cache = await _redisCache.GetCachedData(cacheKey);
+                if (cache is null)
+                {
+                    originalUser = await _readUser.ReadById(_userInfo.UserId, null);
+
+                    await _redisCache.CacheData(cacheKey, originalUser, TimeSpan.FromMinutes(3));
+                }
+                else
+                {
+                    originalUser = JsonConvert.DeserializeObject<UserModel>(cache);
+                }
+
                 var user = new
                 {
                     id = originalUser.id,
@@ -116,6 +141,7 @@ namespace webapi.Controllers.Core
             {
                 await _deleteUser.DeleteById(_userInfo.UserId, null);
                 _tokenService.DeleteTokens();
+                HttpContext.Session.Clear();
 
                 return StatusCode(204);
             }

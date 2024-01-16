@@ -6,7 +6,7 @@ namespace webapi.Interfaces.Redis
     {
         Task<string> CacheKey(string key, Func<Task<KeyModel>> readKeyFunction);
         Task CacheData(string key, object value, TimeSpan expire);
-        Task<string?> GetCachedData(string key);
+        Task<string> GetCachedData(string key);
         Task DeleteCache(string key);
     }
 }
