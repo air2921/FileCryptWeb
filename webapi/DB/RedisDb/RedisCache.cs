@@ -101,7 +101,7 @@ namespace webapi.DB.RedisDb
             await db.StringSetAsync(key, JsonConvert.SerializeObject(value, settings), expire);
         }
 
-        public async Task<string> GetCachedData(string key)
+        public async Task<string?> GetCachedData(string key)
         {
             var db = _context.GetDatabase();
             var redisValue = await db.StringGetAsync(key);
