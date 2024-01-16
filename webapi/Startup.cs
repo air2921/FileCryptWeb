@@ -24,7 +24,6 @@ namespace webapi
                 app.UseSwaggerUI();
             }
 
-            app.UseAPI();
             app.UseHttpsRedirection();
             app.UseStaticFiles();
             app.UseRouting();

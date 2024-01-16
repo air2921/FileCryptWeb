@@ -82,6 +82,8 @@ namespace webapi.Controllers.Base.CryptographyUtils
                 if (mimes is not null)
                 {
                     string[] mimesArray = JsonConvert.DeserializeObject<string[]>(mimes);
+                    if (mimesArray is null || mimesArray.Length.Equals(0))
+                        return false;
 
                     return mimesArray.Contains(Mime);
                 }
@@ -90,9 +92,7 @@ namespace webapi.Controllers.Base.CryptographyUtils
                     var mimesDb = await _read.ReadAll(0, 10000);
                     string[] mimesArray = mimesDb.Select(m => m.mime_name).ToArray()!;
 
-                    var mimesJson = JsonConvert.SerializeObject(mimesArray);
-
-                    await _redisCache.CacheData(Constants.MIME_COLLECTION, mimesJson, TimeSpan.FromDays(3));
+                    await _redisCache.CacheData(Constants.MIME_COLLECTION, mimesArray, TimeSpan.FromDays(3));
 
                     return mimesArray.Contains(Mime);
                 }

@@ -43,7 +43,6 @@ namespace webapi
 
             services.AddScoped<ICreate<FileModel>, Files>();
             services.AddScoped<IDelete<FileModel>, Files>();
-            services.AddScoped<IDeleteByName<FileModel>, Files>();
             services.AddScoped<IRead<FileModel>, Files>();
 
             services.AddScoped<ICreate<NotificationModel>, Notifications>();

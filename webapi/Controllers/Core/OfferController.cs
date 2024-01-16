@@ -154,12 +154,8 @@ namespace webapi.Controllers.Core
                 }
 
                 var offer = await _readOffer.ReadById(offerId, false);
-                var settings = new JsonSerializerSettings
-                {
-                    ReferenceLoopHandling = ReferenceLoopHandling.Ignore
-                };
 
-                await _redisCache.CacheData(cacheKey, JsonConvert.SerializeObject(offer, settings), TimeSpan.FromMinutes(10));
+                await _redisCache.CacheData(cacheKey, offer, TimeSpan.FromMinutes(10));
 
                 if (offer.sender_id != _userInfo.UserId || offer.receiver_id != _userInfo.UserId)
                     return StatusCode(404);
@@ -228,12 +224,7 @@ namespace webapi.Controllers.Core
                 .Take(count)
                 .ToListAsync();
 
-            var settings = new JsonSerializerSettings
-            {
-                ReferenceLoopHandling = ReferenceLoopHandling.Ignore
-            };
-
-            await _redisCache.CacheData(cacheKey, JsonConvert.SerializeObject(offers, settings), TimeSpan.FromMinutes(5));
+            await _redisCache.CacheData(cacheKey, offers, TimeSpan.FromMinutes(5));
 
             return StatusCode(200, new { offers, user_id = _userInfo.UserId });
         }

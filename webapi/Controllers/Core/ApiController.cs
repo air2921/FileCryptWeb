@@ -68,12 +68,7 @@ namespace webapi.Controllers.Core
 
                 var api = await _readAPI.ReadById(_userInfo.UserId, true);
 
-                var settings = new JsonSerializerSettings
-                {
-                    ReferenceLoopHandling = ReferenceLoopHandling.Ignore
-                };
-
-                await _redisCache.CacheData(cacheKey, JsonConvert.SerializeObject(api, settings), TimeSpan.FromMinutes(10));
+                await _redisCache.CacheData(cacheKey, api, TimeSpan.FromMinutes(10));
 
                 return StatusCode(200, new { api });
             }

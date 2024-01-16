@@ -88,12 +88,7 @@ namespace webapi.Controllers.Core
                 {
                     keys = await _readKeys.ReadById(_userInfo.UserId, true);
 
-                    var settings = new JsonSerializerSettings
-                    {
-                        ReferenceLoopHandling = ReferenceLoopHandling.Ignore
-                    };
-
-                    await _redisCache.CacheData(cacheKey, JsonConvert.SerializeObject(keys, settings), TimeSpan.FromMinutes(10));
+                    await _redisCache.CacheData(cacheKey, keys, TimeSpan.FromMinutes(10));
                 }
 
                 if (keys is null)

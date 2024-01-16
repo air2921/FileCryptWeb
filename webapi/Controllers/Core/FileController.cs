@@ -47,8 +47,8 @@ namespace webapi.Controllers.Core
             {
 
                 await _deleteFileById.DeleteById(fileId, _userInfo.UserId);
-
                 HttpContext.Session.SetString(FILES, true.ToString());
+
                 return StatusCode(200, new { message = SuccessMessage.SuccessFileDeleted });
             }
             catch (FileException ex)
@@ -78,12 +78,7 @@ namespace webapi.Controllers.Core
                 if (file.user_id != _userInfo.UserId)
                     return StatusCode(404);
 
-                var settings = new JsonSerializerSettings
-                {
-                    ReferenceLoopHandling = ReferenceLoopHandling.Ignore
-                };
-
-                await _redisCache.CacheData(cacheKey, JsonConvert.SerializeObject(file, settings), TimeSpan.FromMinutes(5));
+                await _redisCache.CacheData(cacheKey, file, TimeSpan.FromMinutes(5));
 
                 return StatusCode(200, new { file });
             }
@@ -124,14 +119,9 @@ namespace webapi.Controllers.Core
             var files = await query
             .Skip(skip)
             .Take(count)
-            .ToListAsync();
+            .ToListAsync();;
 
-            var settings = new JsonSerializerSettings
-            {
-                ReferenceLoopHandling = ReferenceLoopHandling.Ignore
-            };
-
-            await _redisCache.CacheData(cacheKey, JsonConvert.SerializeObject(files, settings), TimeSpan.FromSeconds(15));
+            await _redisCache.CacheData(cacheKey, files, TimeSpan.FromSeconds(15));
 
             return StatusCode(200, new { files });
         }

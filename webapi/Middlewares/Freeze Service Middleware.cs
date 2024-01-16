@@ -1,4 +1,5 @@
-﻿using webapi.Interfaces.Redis;
+﻿using Newtonsoft.Json;
+using webapi.Interfaces.Redis;
 using webapi.Services;
 
 namespace webapi.Middlewares
@@ -57,7 +58,7 @@ namespace webapi.Middlewares
                 var stringFlag = await redisCache.GetCachedData(Constants.SERVICE_FREEZE_FLAG) ??
                     throw new InvalidOperationException();
 
-                return bool.Parse(stringFlag);
+                return JsonConvert.DeserializeObject<bool>(stringFlag);
             }
             catch (FormatException)
             {

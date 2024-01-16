@@ -58,12 +58,7 @@ namespace webapi.Controllers.Core
 
                 var notification = await _readNotification.ReadById(notificationId, null);
 
-                var settings = new JsonSerializerSettings
-                {
-                    ReferenceLoopHandling = ReferenceLoopHandling.Ignore
-                };
-
-                await _redisCache.CacheData(cacheKey, JsonConvert.SerializeObject(notification, settings), TimeSpan.FromMinutes(10));
+                await _redisCache.CacheData(cacheKey, notification, TimeSpan.FromMinutes(10));
 
                 if (notification.receiver_id != _userInfo.UserId)
                     return StatusCode(404);
@@ -98,12 +93,7 @@ namespace webapi.Controllers.Core
                 .Take(count)
                 .ToListAsync();
 
-            var settings = new JsonSerializerSettings
-            {
-                ReferenceLoopHandling = ReferenceLoopHandling.Ignore
-            };
-
-            await _redisCache.CacheData(cacheKey, JsonConvert.SerializeObject(notifications, settings), TimeSpan.FromMinutes(5));
+            await _redisCache.CacheData(cacheKey, notifications, TimeSpan.FromMinutes(5));
 
             return StatusCode(200, new { notifications });
         }

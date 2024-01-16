@@ -1,4 +1,5 @@
-﻿using webapi.Exceptions;
+﻿using Newtonsoft.Json;
+using webapi.Exceptions;
 using webapi.Interfaces.Cryptography;
 using webapi.Interfaces.Redis;
 using webapi.Localization.Exceptions;
@@ -85,14 +86,19 @@ namespace webapi.DB.RedisDb
             }
         }
 
-        public async Task CacheData(string key, string value, TimeSpan expire)
+        public async Task CacheData(string key, object value, TimeSpan expire)
         {
             var db = _context.GetDatabase();
             var redisValue = await db.StringGetAsync(key);
             if (redisValue.HasValue)
                 await db.KeyDeleteAsync(key);
 
-            await db.StringSetAsync(key, value, expire);
+            var settings = new JsonSerializerSettings
+            {
+                ReferenceLoopHandling = ReferenceLoopHandling.Ignore
+            };
+
+            await db.StringSetAsync(key, JsonConvert.SerializeObject(value, settings), expire);
         }
 
         public async Task<string> GetCachedData(string key)
