@@ -8,9 +8,9 @@ namespace webapi
         {
             AppConfigurationCheck.ConfigurationCheck();
 
-            DiContainer.Singleton(services);
-            DiContainer.Scoped(services);
-            DiContainer.Transient(services);
+            DependencyContainer.Singleton(services);
+            DependencyContainer.Scoped(services);
+            DependencyContainer.Transient(services);
 
             AppServices.Register(services);
         }
