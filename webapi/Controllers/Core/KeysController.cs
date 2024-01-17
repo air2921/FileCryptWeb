@@ -4,7 +4,6 @@ using Microsoft.EntityFrameworkCore;
 using Newtonsoft.Json;
 using System.Text.RegularExpressions;
 using webapi.DB;
-using webapi.DB.SQL;
 using webapi.Exceptions;
 using webapi.Interfaces.Cryptography;
 using webapi.Interfaces.Redis;
@@ -33,8 +32,6 @@ namespace webapi.Controllers.Core
         private readonly IValidation _validation;
         private readonly IDecryptKey _decryptKey;
         private readonly byte[] secretKey;
-
-        private const string KEYS = "Cache_Keys";
 
         public KeysController(
             IConfiguration configuration,
@@ -72,12 +69,12 @@ namespace webapi.Controllers.Core
             {
                 var keys = new KeyModel();
                 var cacheKeys = await _redisCache.GetCachedData(cacheKey);
-                bool clearCache = HttpContext.Session.GetString(KEYS) is not null ? bool.Parse(HttpContext.Session.GetString(KEYS)) : true;
+                bool clearCache = HttpContext.Session.GetString(Constants.CACHE_KEYS) is not null ? bool.Parse(HttpContext.Session.GetString(Constants.CACHE_KEYS)) : true;
 
                 if (clearCache)
                 {
                     await _redisCache.DeleteCache(cacheKey);
-                    HttpContext.Session.SetString(KEYS, false.ToString());
+                    HttpContext.Session.SetString(Constants.CACHE_KEYS, false.ToString());
                 }
 
                 if (cacheKeys is not null)
@@ -138,7 +135,7 @@ namespace webapi.Controllers.Core
             existingUser.private_key = await _encryptKey.EncryptionKeyAsync(key, secretKey);
             await _dbContext.SaveChangesAsync();
 
-            HttpContext.Session.SetString(KEYS, true.ToString());
+            HttpContext.Session.SetString(Constants.CACHE_KEYS, true.ToString());
             await _redisCache.DeleteCache(_redisKeys.PrivateKey);
 
             return StatusCode(200, new { message = AccountSuccessMessage.KeyUpdated});
@@ -175,7 +172,7 @@ namespace webapi.Controllers.Core
             existingUser.internal_key = await _encryptKey.EncryptionKeyAsync(key, secretKey);
             await _dbContext.SaveChangesAsync();
 
-            HttpContext.Session.SetString(KEYS, true.ToString());
+            HttpContext.Session.SetString(Constants.CACHE_KEYS, true.ToString());
             await _redisCache.DeleteCache(_redisKeys.InternalKey);
 
             return StatusCode(200, new { message = AccountSuccessMessage.KeyUpdated });
@@ -195,7 +192,7 @@ namespace webapi.Controllers.Core
             existingUser.received_key = null;
             await _dbContext.SaveChangesAsync();
 
-            HttpContext.Session.SetString(KEYS, true.ToString());
+            HttpContext.Session.SetString(Constants.CACHE_KEYS, true.ToString());
             await _redisCache.DeleteCache(_redisKeys.ReceivedKey);
 
             return StatusCode(200, new { message = AccountSuccessMessage.KeyUpdated });

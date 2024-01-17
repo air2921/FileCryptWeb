@@ -20,9 +20,9 @@ function OfferList({ offers, user_id, isOwner, deleteOffer, acceptOffer, error }
                         <div className="offer_header">
                             <div>{offer.offer_type} trade #{offer.offer_id}</div>
                             {offer.is_accepted ? (
-                                <i className="material-icons-sharp">check_small</i>
+                                <Font font={'check_small'} />
                             ) : (
-                                <i className="material-icons-sharp">close_small</i>
+                                <Font font={'close_small'} />
                             )}
                         </div>
                         <div className="offer-details">

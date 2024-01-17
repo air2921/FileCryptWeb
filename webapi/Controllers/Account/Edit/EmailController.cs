@@ -9,6 +9,7 @@ using webapi.Interfaces.Services;
 using webapi.Interfaces.SQL;
 using webapi.Localization;
 using webapi.Models;
+using webapi.Services;
 
 namespace webapi.Controllers.Account.Edit
 {
@@ -191,6 +192,7 @@ namespace webapi.Controllers.Account.Edit
                 HttpContext.Session.Remove(_userInfo.UserId.ToString());
                 HttpContext.Session.Remove(EMAIL);
                 _logger.LogInformation($"User session {_userInfo.Username}#{_userInfo.UserId} has been cleared");
+                HttpContext.Session.SetString(Constants.CACHE_USER_DATA, true.ToString());
 
                 return StatusCode(201);
             }

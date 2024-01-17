@@ -9,6 +9,7 @@ using webapi.Interfaces.Services;
 using webapi.Interfaces.SQL;
 using webapi.Localization;
 using webapi.Models;
+using webapi.Services;
 
 namespace webapi.Controllers.Core
 {
@@ -22,8 +23,6 @@ namespace webapi.Controllers.Core
         private readonly IUserInfo _userInfo;
         private readonly IDelete<FileModel> _deleteFileById;
         private readonly IRead<FileModel> _readFile;
-
-        private const string FILES = "Cache_Files_List";
 
         public FileController(
             FileCryptDbContext dbContext,
@@ -47,7 +46,7 @@ namespace webapi.Controllers.Core
             {
 
                 await _deleteFileById.DeleteById(fileId, _userInfo.UserId);
-                HttpContext.Session.SetString(FILES, true.ToString());
+                HttpContext.Session.SetString(Constants.CACHE_FILES, true.ToString());
 
                 return StatusCode(200, new { message = SuccessMessage.SuccessFileDeleted });
             }
@@ -92,12 +91,12 @@ namespace webapi.Controllers.Core
         public async Task<IActionResult> GetAllFiles([FromQuery] bool byAscending, [FromQuery] int skip, [FromQuery] int count)
         {
             var cacheKey = $"Files_{_userInfo.UserId}_{byAscending}_{skip}_{count}";
-            bool clearCache = HttpContext.Session.GetString(FILES) is not null ? bool.Parse(HttpContext.Session.GetString(FILES)) : true;
+            bool clearCache = HttpContext.Session.GetString(Constants.CACHE_FILES) is not null ? bool.Parse(HttpContext.Session.GetString(Constants.CACHE_FILES)) : true;
 
             if (clearCache)
             {
                 await _redisCache.DeleteCache(cacheKey);
-                HttpContext.Session.SetString(FILES, false.ToString());
+                HttpContext.Session.SetString(Constants.CACHE_FILES, false.ToString());
             }
 
             var cacheFiles = await _redisCache.GetCachedData(cacheKey);

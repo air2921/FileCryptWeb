@@ -11,6 +11,7 @@ using webapi.Interfaces.SQL;
 using webapi.Localization;
 using webapi.Localization.Exceptions;
 using webapi.Models;
+using webapi.Services;
 
 namespace webapi.Controllers.Core
 {
@@ -29,8 +30,6 @@ namespace webapi.Controllers.Core
         private readonly IRead<OfferModel> _readOffer;
         private readonly IDelete<OfferModel> _deleteOffer;
         private readonly ITokenService _tokenService;
-
-        private const string OFFERS = "Cache_Offer_List";
 
         public OfferController(
             FileCryptDbContext dbContext,
@@ -100,7 +99,7 @@ namespace webapi.Controllers.Core
 
                 await _createOffer.Create(offerModel);
                 await _createNotification.Create(notificationModel);
-                HttpContext.Session.SetString(OFFERS, true.ToString());
+                HttpContext.Session.SetString(Constants.CACHE_OFFERS, true.ToString());
 
                 return StatusCode(201, new { message = SuccessMessage.SuccessOfferCreated });
             }
@@ -132,7 +131,7 @@ namespace webapi.Controllers.Core
             offer.is_accepted = true;
 
             await _dbContext.SaveChangesAsync();
-            HttpContext.Session.SetString(OFFERS, true.ToString());
+            HttpContext.Session.SetString(Constants.CACHE_OFFERS, true.ToString());
 
             return StatusCode(200, new { message = SuccessMessage.SuccessOfferAccepted });
         }
@@ -173,12 +172,12 @@ namespace webapi.Controllers.Core
         {
             var cacheKey = $"Offer_{_userInfo.UserId}_{skip}_{count}_{sended}_{isAccepted}";
 
-            bool clearCache = HttpContext.Session.GetString(OFFERS) is not null ? bool.Parse(HttpContext.Session.GetString(OFFERS)) : true;
+            bool clearCache = HttpContext.Session.GetString(Constants.CACHE_OFFERS) is not null ? bool.Parse(HttpContext.Session.GetString(Constants.CACHE_OFFERS)) : true;
 
             if (clearCache)
             {
                 await _redisCache.DeleteCache(cacheKey);
-                HttpContext.Session.SetString(OFFERS, false.ToString());
+                HttpContext.Session.SetString(Constants.CACHE_OFFERS, false.ToString());
             }
 
             var cacheOffers = await _redisCache.GetCachedData(cacheKey);
@@ -224,7 +223,7 @@ namespace webapi.Controllers.Core
                 .Take(count)
                 .ToListAsync();
 
-            await _redisCache.CacheData(cacheKey, offers, TimeSpan.FromMinutes(5));
+            await _redisCache.CacheData(cacheKey, offers, TimeSpan.FromMinutes(3));
 
             return StatusCode(200, new { offers, user_id = _userInfo.UserId });
         }
@@ -236,7 +235,7 @@ namespace webapi.Controllers.Core
             try
             {
                 await _deleteOffer.DeleteById(offerId, _userInfo.UserId);
-                HttpContext.Session.SetString(OFFERS, true.ToString());
+                HttpContext.Session.SetString(Constants.CACHE_OFFERS, true.ToString());
 
                 return StatusCode(200, new { message = SuccessMessage.SuccessOfferDeleted });
             }

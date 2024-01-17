@@ -8,6 +8,7 @@ using webapi.Interfaces.Redis;
 using webapi.Interfaces.Services;
 using webapi.Interfaces.SQL;
 using webapi.Models;
+using webapi.Services;
 
 namespace webapi.Controllers.Core
 {
@@ -21,8 +22,6 @@ namespace webapi.Controllers.Core
         private readonly IUserInfo _userInfo;
         private readonly IRead<NotificationModel> _readNotification;
         private readonly IDelete<NotificationModel> _deleteNotification;
-
-        private const string NOTIFICATIONS = "Cache_Notification_List";
 
         public NotificationController(
             FileCryptDbContext dbContext,
@@ -75,12 +74,12 @@ namespace webapi.Controllers.Core
         public async Task<IActionResult> GetAll([FromQuery] int skip, [FromQuery] int count)
         {
             var cacheKey = $"Notifications_{_userInfo.UserId}_{skip}_{count}";
-            bool clearCache = HttpContext.Session.GetString(NOTIFICATIONS) is not null ? bool.Parse(HttpContext.Session.GetString(NOTIFICATIONS)) : true;
+            bool clearCache = HttpContext.Session.GetString(Constants.CACHE_NOTIFICATIONS) is not null ? bool.Parse(HttpContext.Session.GetString(Constants.CACHE_NOTIFICATIONS)) : true;
 
             if (clearCache)
             {
                 await _redisCache.DeleteCache(cacheKey);
-                HttpContext.Session.SetString(NOTIFICATIONS, false.ToString());
+                HttpContext.Session.SetString(Constants.CACHE_NOTIFICATIONS, false.ToString());
             }
 
             var cacheNotifications = await _redisCache.GetCachedData(cacheKey);
@@ -93,7 +92,7 @@ namespace webapi.Controllers.Core
                 .Take(count)
                 .ToListAsync();
 
-            await _redisCache.CacheData(cacheKey, notifications, TimeSpan.FromMinutes(5));
+            await _redisCache.CacheData(cacheKey, notifications, TimeSpan.FromMinutes(3));
 
             return StatusCode(200, new { notifications });
         }
@@ -105,7 +104,7 @@ namespace webapi.Controllers.Core
             try
             {
                 await _deleteNotification.DeleteById(notificationId, _userInfo.UserId);
-                HttpContext.Session.SetString(NOTIFICATIONS, true.ToString());
+                HttpContext.Session.SetString(Constants.CACHE_NOTIFICATIONS, true.ToString());
 
                 return StatusCode(200);
             }
