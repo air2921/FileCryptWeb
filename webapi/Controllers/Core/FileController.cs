@@ -118,7 +118,7 @@ namespace webapi.Controllers.Core
             var files = await query
             .Skip(skip)
             .Take(count)
-            .ToListAsync();;
+            .ToListAsync();
 
             await _redisCache.CacheData(cacheKey, files, TimeSpan.FromSeconds(15));
 
