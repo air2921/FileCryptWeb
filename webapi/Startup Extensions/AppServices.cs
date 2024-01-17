@@ -16,7 +16,12 @@ namespace webapi
                 .AddUserSecrets<AppServices>()
                 .Build();
 
-            services.AddDbContext<FileCryptDbContext>(options => options.UseNpgsql(configuration.GetConnectionString(App.MainDb)));
+            services.AddDbContext<FileCryptDbContext>(options =>
+            {
+                options.UseNpgsql(configuration.GetConnectionString(App.MAIN_DB))
+                .EnableServiceProviderCaching(false)
+                .EnableDetailedErrors(true);
+            });
 
             services.AddControllers();
             services.AddLogging();
@@ -75,7 +80,7 @@ namespace webapi
                     ValidateIssuerSigningKey = true,
                     ValidateIssuer = true,
                     ValidateAudience = true,
-                    IssuerSigningKey = new SymmetricSecurityKey(Encoding.ASCII.GetBytes(configuration[App.appSecretKey]!)),
+                    IssuerSigningKey = new SymmetricSecurityKey(Encoding.ASCII.GetBytes(configuration[App.SECRET_KEY]!)),
                     ValidIssuer = "FileCrypt",
                     ValidAudience = "User",
                     ClockSkew = TimeSpan.Zero

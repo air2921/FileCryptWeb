@@ -5,6 +5,7 @@ using webapi.Interfaces.Services;
 using webapi.Interfaces.SQL;
 using webapi.Localization;
 using webapi.Models;
+using webapi.Services;
 
 namespace webapi.Controllers.Account.Edit
 {
@@ -46,6 +47,7 @@ namespace webapi.Controllers.Account.Edit
 
                 await _tokenService.UpdateJwtToken();
                 _logger.LogInformation("jwt with a new claims was updated");
+                HttpContext.Session.SetString(Constants.CACHE_USER_DATA, true.ToString());
 
                 return StatusCode(200, new { message = AccountSuccessMessage.UsernameUpdated });
             }

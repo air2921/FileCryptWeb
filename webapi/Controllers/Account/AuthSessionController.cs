@@ -213,6 +213,7 @@ namespace webapi.Controllers.Account
                 await _redisCache.DeleteCache(_redisKeys.PrivateKey);
                 await _redisCache.DeleteCache(_redisKeys.InternalKey);
                 await _redisCache.DeleteCache(_redisKeys.ReceivedKey);
+                HttpContext.Session.Clear();
 
                 _logger.LogInformation("Encryption keys was deleted from cache");
             }

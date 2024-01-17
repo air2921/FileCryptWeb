@@ -43,7 +43,7 @@ namespace webapi.Controllers.Admin.Manage_Encryption_Keys
             _logger = logger;
             _redisCache = redisCache;
             _userInfo = userInfo;
-            secretKey = Convert.FromBase64String(_configuration[App.appKey]!);
+            secretKey = Convert.FromBase64String(_configuration[App.ENCRYPTION_KEY]!);
         }
 
         [HttpPut("revoke/received/{userId}")]

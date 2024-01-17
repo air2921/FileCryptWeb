@@ -23,7 +23,7 @@
         /// 
         /// Below are the expected value formats
         ///                ↓ 
-        /// secretKey--> Expected value format: ANY
+        /// secretKey--> Expected value format: String 128 bit long
         /// emailPassword--> Expected value format: ANY
         /// emailAdress-> Expected value format: "FileCryptWeb@email.com"
         /// fileCryptKey-> Expected value format: 256-bit byte array encoded in Base64String

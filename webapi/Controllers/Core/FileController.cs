@@ -1,12 +1,15 @@
 ﻿using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
+using Newtonsoft.Json;
 using webapi.DB;
 using webapi.Exceptions;
+using webapi.Interfaces.Redis;
 using webapi.Interfaces.Services;
 using webapi.Interfaces.SQL;
 using webapi.Localization;
 using webapi.Models;
+using webapi.Services;
 
 namespace webapi.Controllers.Core
 {
@@ -16,42 +19,34 @@ namespace webapi.Controllers.Core
     public class FileController : ControllerBase
     {
         private readonly FileCryptDbContext _dbContext;
+        private readonly IRedisCache _redisCache;
         private readonly IUserInfo _userInfo;
         private readonly IDelete<FileModel> _deleteFileById;
-        private readonly IDeleteByName<FileModel> _deleteFileByName;
         private readonly IRead<FileModel> _readFile;
 
         public FileController(
             FileCryptDbContext dbContext,
+            IRedisCache redisCache,
             IUserInfo userInfo,
             IDelete<FileModel> deleteFileById,
-            IDeleteByName<FileModel> deleteFileByName,
             IRead<FileModel> readFile)
         {
             _dbContext = dbContext;
+            _redisCache = redisCache;
             _userInfo = userInfo;
             _deleteFileById = deleteFileById;
-            _deleteFileByName = deleteFileByName;
             _readFile = readFile;
         }
 
-        [HttpDelete]
+        [HttpDelete("{fileId}")]
         [ValidateAntiForgeryToken]
-        public async Task<IActionResult> DeleteFileFromHistory([FromQuery] int? fileId, [FromQuery] string? filename, [FromQuery] bool byId)
+        public async Task<IActionResult> DeleteFileFromHistory([FromRoute] int fileId)
         {
             try
             {
-                if (fileId.HasValue && byId)
-                {
-                    await _deleteFileById.DeleteById(fileId.Value, _userInfo.UserId);
 
-                    return StatusCode(200, new { message = SuccessMessage.SuccessFileDeleted });
-                }
-
-                if (string.IsNullOrWhiteSpace(filename))
-                    return StatusCode(400);
-
-                await _deleteFileByName.DeleteByName(filename, _userInfo.UserId);
+                await _deleteFileById.DeleteById(fileId, _userInfo.UserId);
+                HttpContext.Session.SetString(Constants.CACHE_FILES, true.ToString());
 
                 return StatusCode(200, new { message = SuccessMessage.SuccessFileDeleted });
             }
@@ -64,12 +59,25 @@ namespace webapi.Controllers.Core
         [HttpGet("{fileId}")]
         public async Task<IActionResult> GetOneFile([FromRoute] int fileId)
         {
+            var cacheKey = $"File_{fileId}";
+
             try
             {
+                var cacheFile = JsonConvert.DeserializeObject<FileModel>(await _redisCache.GetCachedData(cacheKey));
+                if (cacheFile is not null)
+                {
+                    if (cacheFile.user_id != _userInfo.UserId)
+                        return StatusCode(404);
+
+                    return StatusCode(200, new { file = cacheFile });
+                }
+
                 var file = await _readFile.ReadById(fileId, null);
 
                 if (file.user_id != _userInfo.UserId)
                     return StatusCode(404);
+
+                await _redisCache.CacheData(cacheKey, file, TimeSpan.FromMinutes(5));
 
                 return StatusCode(200, new { file });
             }
@@ -82,9 +90,22 @@ namespace webapi.Controllers.Core
         [HttpGet("all")]
         public async Task<IActionResult> GetAllFiles([FromQuery] bool byAscending, [FromQuery] int skip, [FromQuery] int count)
         {
+            var cacheKey = $"Files_{_userInfo.UserId}_{byAscending}_{skip}_{count}";
+            bool clearCache = HttpContext.Session.GetString(Constants.CACHE_FILES) is not null ? bool.Parse(HttpContext.Session.GetString(Constants.CACHE_FILES)) : true;
+
+            if (clearCache)
+            {
+                await _redisCache.DeleteCache(cacheKey);
+                HttpContext.Session.SetString(Constants.CACHE_FILES, false.ToString());
+            }
+
+            var cacheFiles = await _redisCache.GetCachedData(cacheKey);
+            if (cacheFiles is not null)
+                return StatusCode(200, new { files = JsonConvert.DeserializeObject<IEnumerable<FileModel>>(cacheFiles) });
+
             var query = _dbContext.Files.Where(f => f.user_id == _userInfo.UserId).AsQueryable();
 
-            switch(byAscending)
+            switch (byAscending)
             {
                 case true:
                     query = query.OrderByDescending(f => f.operation_date).AsQueryable();
@@ -95,9 +116,11 @@ namespace webapi.Controllers.Core
             }
 
             var files = await query
-                .Skip(skip)
-                .Take(count)
-                .ToListAsync();
+            .Skip(skip)
+            .Take(count)
+            .ToListAsync();;
+
+            await _redisCache.CacheData(cacheKey, files, TimeSpan.FromSeconds(15));
 
             return StatusCode(200, new { files });
         }

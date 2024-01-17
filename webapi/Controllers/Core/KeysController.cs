@@ -1,6 +1,7 @@
 ﻿using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
+using Newtonsoft.Json;
 using System.Text.RegularExpressions;
 using webapi.DB;
 using webapi.Exceptions;
@@ -23,7 +24,7 @@ namespace webapi.Controllers.Core
         private readonly IRead<KeyModel> _readKeys;
         private readonly FileCryptDbContext _dbContext;
         private readonly IGenerateKey _generateKey;
-        private readonly IRedisCache _redisCaching;
+        private readonly IRedisCache _redisCache;
         private readonly IRedisKeys _redisKeys;
         private readonly IUserInfo _userInfo;
         private readonly ITokenService _tokenService;
@@ -37,7 +38,7 @@ namespace webapi.Controllers.Core
             IRead<KeyModel> readKeys,
             FileCryptDbContext dbContext,
             IGenerateKey generateKey,
-            IRedisCache redisCaching,
+            IRedisCache redisCache,
             IRedisKeys redisKeys,
             IUserInfo userInfo,
             ITokenService tokenService,
@@ -49,7 +50,7 @@ namespace webapi.Controllers.Core
             _readKeys = readKeys;
             _dbContext = dbContext;
             _generateKey = generateKey;
-            _redisCaching = redisCaching;
+            _redisCache = redisCache;
             _redisKeys = redisKeys;
             _userInfo = userInfo;
             _tokenService = tokenService;
@@ -62,17 +63,37 @@ namespace webapi.Controllers.Core
         [HttpGet("all")]
         public async Task<IActionResult> GetAllKeys()
         {
+            var cacheKey = $"Keys_{_userInfo.UserId}";
+
             try
             {
-                var userKeys = await _readKeys.ReadById(_userInfo.UserId, true);
+                var keys = new KeyModel();
+                var cacheKeys = await _redisCache.GetCachedData(cacheKey);
+                bool clearCache = HttpContext.Session.GetString(Constants.CACHE_KEYS) is not null ? bool.Parse(HttpContext.Session.GetString(Constants.CACHE_KEYS)) : true;
 
-                string? privateKey = await _decryptKey.DecryptionKeyAsync(userKeys.private_key!, secretKey);
-                string? receivedKey = userKeys.received_key is not null ? "hidden" : null;
-                string? internalKey = null;
-                if(userKeys.internal_key is not null)
+                if (clearCache)
                 {
-                    internalKey = await _decryptKey.DecryptionKeyAsync(userKeys.internal_key, secretKey);
+                    await _redisCache.DeleteCache(cacheKey);
+                    HttpContext.Session.SetString(Constants.CACHE_KEYS, false.ToString());
                 }
+
+                if (cacheKeys is not null)
+                {
+                    keys = JsonConvert.DeserializeObject<KeyModel>(cacheKeys);
+                }
+                else
+                {
+                    keys = await _readKeys.ReadById(_userInfo.UserId, true);
+
+                    await _redisCache.CacheData(cacheKey, keys, TimeSpan.FromMinutes(10));
+                }
+
+                if (keys is null)
+                    return StatusCode(404);
+
+                string? privateKey = keys.private_key is not null ? await _decryptKey.DecryptionKeyAsync(keys.private_key, secretKey) : null;
+                string? internalKey = keys.internal_key is not null ? await _decryptKey.DecryptionKeyAsync(keys.internal_key, secretKey) : null;
+                string? receivedKey = keys.received_key is not null ? await _decryptKey.DecryptionKeyAsync(keys.received_key, secretKey) : null;
 
                 return StatusCode(200, new { keys = new { privateKey, internalKey, receivedKey }});
             }
@@ -113,7 +134,9 @@ namespace webapi.Controllers.Core
 
             existingUser.private_key = await _encryptKey.EncryptionKeyAsync(key, secretKey);
             await _dbContext.SaveChangesAsync();
-            await _redisCaching.DeleteCache(_redisKeys.PrivateKey);
+
+            HttpContext.Session.SetString(Constants.CACHE_KEYS, true.ToString());
+            await _redisCache.DeleteCache(_redisKeys.PrivateKey);
 
             return StatusCode(200, new { message = AccountSuccessMessage.KeyUpdated});
         }
@@ -148,7 +171,9 @@ namespace webapi.Controllers.Core
 
             existingUser.internal_key = await _encryptKey.EncryptionKeyAsync(key, secretKey);
             await _dbContext.SaveChangesAsync();
-            await _redisCaching.DeleteCache(_redisKeys.InternalKey);
+
+            HttpContext.Session.SetString(Constants.CACHE_KEYS, true.ToString());
+            await _redisCache.DeleteCache(_redisKeys.InternalKey);
 
             return StatusCode(200, new { message = AccountSuccessMessage.KeyUpdated });
         }
@@ -167,7 +192,8 @@ namespace webapi.Controllers.Core
             existingUser.received_key = null;
             await _dbContext.SaveChangesAsync();
 
-            await _redisCaching.DeleteCache(_redisKeys.ReceivedKey);
+            HttpContext.Session.SetString(Constants.CACHE_KEYS, true.ToString());
+            await _redisCache.DeleteCache(_redisKeys.ReceivedKey);
 
             return StatusCode(200, new { message = AccountSuccessMessage.KeyUpdated });
         }

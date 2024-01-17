@@ -1,13 +1,17 @@
 ﻿using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
+using Newtonsoft.Json;
 using webapi.DB;
+using webapi.DB.SQL;
 using webapi.Exceptions;
+using webapi.Interfaces.Redis;
 using webapi.Interfaces.Services;
 using webapi.Interfaces.SQL;
 using webapi.Localization;
 using webapi.Localization.Exceptions;
 using webapi.Models;
+using webapi.Services;
 
 namespace webapi.Controllers.Core
 {
@@ -17,6 +21,7 @@ namespace webapi.Controllers.Core
     public class OfferController : ControllerBase
     {
         private readonly FileCryptDbContext _dbContext;
+        private readonly IRedisCache _redisCache;
         private readonly IUserInfo _userInfo;
         private readonly ICreate<OfferModel> _createOffer;
         private readonly ICreate<NotificationModel> _createNotification;
@@ -28,6 +33,7 @@ namespace webapi.Controllers.Core
 
         public OfferController(
             FileCryptDbContext dbContext,
+            IRedisCache redisCache,
             IUserInfo userInfo,
             ICreate<OfferModel> createOffer,
             ICreate<NotificationModel> createNotification,
@@ -38,6 +44,7 @@ namespace webapi.Controllers.Core
             ITokenService tokenService)
         {
             _dbContext = dbContext;
+            _redisCache = redisCache;
             _userInfo = userInfo;
             _createOffer = createOffer;
             _createNotification = createNotification;
@@ -92,6 +99,7 @@ namespace webapi.Controllers.Core
 
                 await _createOffer.Create(offerModel);
                 await _createNotification.Create(notificationModel);
+                HttpContext.Session.SetString(Constants.CACHE_OFFERS, true.ToString());
 
                 return StatusCode(201, new { message = SuccessMessage.SuccessOfferCreated });
             }
@@ -123,6 +131,7 @@ namespace webapi.Controllers.Core
             offer.is_accepted = true;
 
             await _dbContext.SaveChangesAsync();
+            HttpContext.Session.SetString(Constants.CACHE_OFFERS, true.ToString());
 
             return StatusCode(200, new { message = SuccessMessage.SuccessOfferAccepted });
         }
@@ -130,9 +139,22 @@ namespace webapi.Controllers.Core
         [HttpGet("{offerId}")]
         public async Task<IActionResult> GetOneOffer([FromRoute] int offerId)
         {
+            var cacheKey = $"Offer_{offerId}";
             try
             {
+                var cacheOffer = await _redisCache.GetCachedData(cacheKey);
+                if (cacheOffer is not null)
+                {
+                    var cacheResult = JsonConvert.DeserializeObject<OfferModel>(cacheOffer);
+                    if (cacheResult.sender_id != _userInfo.UserId || cacheResult.sender_id != _userInfo.UserId)
+                        return StatusCode(404);
+
+                    return StatusCode(200, new { offers = cacheResult, userId = _userInfo.UserId });
+                }
+
                 var offer = await _readOffer.ReadById(offerId, false);
+
+                await _redisCache.CacheData(cacheKey, offer, TimeSpan.FromMinutes(10));
 
                 if (offer.sender_id != _userInfo.UserId || offer.receiver_id != _userInfo.UserId)
                     return StatusCode(404);
@@ -148,6 +170,20 @@ namespace webapi.Controllers.Core
         [HttpGet("all")]
         public async Task<IActionResult> GetAll([FromQuery] int skip, [FromQuery] int count, [FromQuery] bool? sended = null, [FromQuery] bool? isAccepted = null)
         {
+            var cacheKey = $"Offer_{_userInfo.UserId}_{skip}_{count}_{sended}_{isAccepted}";
+
+            bool clearCache = HttpContext.Session.GetString(Constants.CACHE_OFFERS) is not null ? bool.Parse(HttpContext.Session.GetString(Constants.CACHE_OFFERS)) : true;
+
+            if (clearCache)
+            {
+                await _redisCache.DeleteCache(cacheKey);
+                HttpContext.Session.SetString(Constants.CACHE_OFFERS, false.ToString());
+            }
+
+            var cacheOffers = await _redisCache.GetCachedData(cacheKey);
+            if (cacheOffers is not null)
+                return StatusCode(200, new { offers = JsonConvert.DeserializeObject<IEnumerable<OfferModel>>(cacheOffers), user_id = _userInfo.UserId });
+
             var query = _dbContext.Offers.OrderByDescending(o => o.created_at)
                 .Select(o => new { o.offer_id, o.sender_id, o.receiver_id, o.created_at, o.is_accepted, o.offer_type })
                 .AsQueryable();
@@ -187,6 +223,8 @@ namespace webapi.Controllers.Core
                 .Take(count)
                 .ToListAsync();
 
+            await _redisCache.CacheData(cacheKey, offers, TimeSpan.FromMinutes(3));
+
             return StatusCode(200, new { offers, user_id = _userInfo.UserId });
         }
 
@@ -197,6 +235,7 @@ namespace webapi.Controllers.Core
             try
             {
                 await _deleteOffer.DeleteById(offerId, _userInfo.UserId);
+                HttpContext.Session.SetString(Constants.CACHE_OFFERS, true.ToString());
 
                 return StatusCode(200, new { message = SuccessMessage.SuccessOfferDeleted });
             }

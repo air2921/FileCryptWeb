@@ -1,12 +1,15 @@
 ﻿using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
+using Newtonsoft.Json;
 using webapi.DB;
 using webapi.Exceptions;
+using webapi.Interfaces.Redis;
 using webapi.Interfaces.Services;
 using webapi.Interfaces.SQL;
 using webapi.Localization.Exceptions;
 using webapi.Models;
+using webapi.Services;
 
 namespace webapi.Controllers.Core
 {
@@ -16,14 +19,22 @@ namespace webapi.Controllers.Core
     public class UserController : ControllerBase
     {
         private readonly FileCryptDbContext _dbContext;
+        private readonly IRedisCache _redisCache;
         private readonly IDelete<UserModel> _deleteUser;
         private readonly IUserInfo _userInfo;
         private readonly ITokenService _tokenService;
         private readonly IRead<UserModel> _readUser;
 
-        public UserController(FileCryptDbContext dbContext,  IUserInfo userInfo, ITokenService tokenService, IRead<UserModel> readUser, IDelete<UserModel> deleteUser)
+        public UserController(
+            FileCryptDbContext dbContext,
+            IRedisCache redisCache,
+            IUserInfo userInfo,
+            ITokenService tokenService,
+            IRead<UserModel> readUser,
+            IDelete<UserModel> deleteUser)
         {
             _dbContext = dbContext;
+            _redisCache = redisCache;
             _userInfo = userInfo;
             _tokenService = tokenService;
             _readUser = readUser;
@@ -34,7 +45,7 @@ namespace webapi.Controllers.Core
         public async Task<IActionResult> GetUser([FromRoute] int userId, [FromRoute] string username)
         {
             var user_keys_files = await _dbContext.Users
-                .Where(u => u.id == userId && u.username == username)
+                    .Where(u => u.id == userId && u.username == username)
                 .GroupJoin(
                     _dbContext.Keys,
                     user => user.id,
@@ -57,13 +68,13 @@ namespace webapi.Controllers.Core
                 .ToListAsync();
 
             if (!user_keys_files.Any())
-            {
-                if (userId.Equals(_userInfo.UserId))
                 {
-                    _tokenService.DeleteTokens();
+                    if (userId.Equals(_userInfo.UserId))
+                    {
+                        _tokenService.DeleteTokens();
+                    }
+                    return StatusCode(404, new { message = ExceptionUserMessages.UserNotFound });
                 }
-                return StatusCode(404, new { message = ExceptionUserMessages.UserNotFound });
-            }
 
             var keys = user_keys_files.Select(u => u.keys.FirstOrDefault()).FirstOrDefault();
             var files = user_keys_files.Select(u => u.files).ToList();
@@ -90,9 +101,31 @@ namespace webapi.Controllers.Core
         [HttpGet("data/only")]
         public async Task<IActionResult> GetOnlyUser()
         {
+            var cacheKey = $"User_Data_{_userInfo.UserId}";
+
             try
             {
-                var originalUser = await _readUser.ReadById(_userInfo.UserId, null);
+                var originalUser = new UserModel();
+
+                bool clearCache = HttpContext.Session.GetString(Constants.CACHE_USER_DATA) is not null ? bool.Parse(HttpContext.Session.GetString(Constants.CACHE_USER_DATA)) : true;
+                if (clearCache)
+                {
+                    await _redisCache.DeleteCache(cacheKey);
+                    HttpContext.Session.SetString(Constants.CACHE_USER_DATA, false.ToString());
+                }
+
+                var cache = await _redisCache.GetCachedData(cacheKey);
+                if (cache is null)
+                {
+                    originalUser = await _readUser.ReadById(_userInfo.UserId, null);
+
+                    await _redisCache.CacheData(cacheKey, originalUser, TimeSpan.FromMinutes(3));
+                }
+                else
+                {
+                    originalUser = JsonConvert.DeserializeObject<UserModel>(cache);
+                }
+
                 var user = new
                 {
                     id = originalUser.id,
@@ -116,6 +149,7 @@ namespace webapi.Controllers.Core
             {
                 await _deleteUser.DeleteById(_userInfo.UserId, null);
                 _tokenService.DeleteTokens();
+                HttpContext.Session.Clear();
 
                 return StatusCode(204);
             }

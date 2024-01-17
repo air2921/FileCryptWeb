@@ -31,7 +31,7 @@ namespace webapi.Services.Security
 
         public string GenerateJwtToken(UserModel userModel, TimeSpan expiry)
         {
-            SymmetricSecurityKey key = new SymmetricSecurityKey(Encoding.ASCII.GetBytes(_configuration[App.appSecretKey]!));
+            SymmetricSecurityKey key = new SymmetricSecurityKey(Encoding.ASCII.GetBytes(_configuration[App.SECRET_KEY]!));
             var credentials = new SigningCredentials(key, SecurityAlgorithms.HmacSha256);
 
             var claims = new[]

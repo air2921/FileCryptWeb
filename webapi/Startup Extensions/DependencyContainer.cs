@@ -16,14 +16,13 @@ using webapi.Controllers.Base.CryptographyUtils;
 
 namespace webapi
 {
-    public class DiContainer
+    public class DependencyContainer
     {
         public static void Singleton(IServiceCollection services)
         {
             services.AddSingleton<IHttpContextAccessor, HttpContextAccessor>();
             services.AddSingleton<IValidation, Validation>();
             services.AddSingleton<IRedisDbContext, RedisDbContext>();
-            services.AddSingleton<IPasswordManager, PasswordManager>();
             services.AddSingleton<IGenerateKey, GenerateCodesAndKeys>();
             services.AddSingleton<IGenerateSixDigitCode, GenerateCodesAndKeys>();
         }
@@ -43,7 +42,6 @@ namespace webapi
 
             services.AddScoped<ICreate<FileModel>, Files>();
             services.AddScoped<IDelete<FileModel>, Files>();
-            services.AddScoped<IDeleteByName<FileModel>, Files>();
             services.AddScoped<IRead<FileModel>, Files>();
 
             services.AddScoped<ICreate<NotificationModel>, Notifications>();
@@ -73,6 +71,7 @@ namespace webapi
             services.AddScoped<ICryptographyControllerBase, CryptographyHelper>();
             services.AddScoped<ICryptographyParamsProvider, CryptographyHelper>();
             services.AddScoped<IFileService, FileService>();
+            services.AddScoped<IPasswordManager, PasswordManager>();
             services.AddScoped<IVirusCheck, ClamAV>();
             services.AddScoped<IUserInfo, UserData>();
             services.AddScoped<IUserAgent, UserAgent>();
