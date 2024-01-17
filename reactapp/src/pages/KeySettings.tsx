@@ -33,12 +33,6 @@ const KeySettings = () => {
         }
     }
 
-    if (!userKeys) {
-        return <div className="error">{errorMessage || 'Loading...'}</div>;
-    }
-
-    const { keys } = userKeys as { keys: any };
-
     const handlePrivateCheckboxChange = (e: ChangeEvent<HTMLInputElement>) => {
         setIsAutoPrivate(e.target.checked);
     };
@@ -82,6 +76,16 @@ const KeySettings = () => {
         }
     }
 
+    useEffect(() => {
+        fetchData();
+    }, []);
+
+    if (!userKeys) {
+        return <div className="error">{errorMessage || 'Loading...'}</div>;
+    }
+
+    const { keys } = userKeys as { keys: any };
+
     const handleReceivedKeySubmit = async () => {
         const response = await AxiosRequest({ endpoint: 'api/core/keys/received/clean', method: 'PUT', withCookie: true, requestBody: null });
 
@@ -102,10 +106,6 @@ const KeySettings = () => {
     const handleInternalKeySubmit = (e: FormEvent) => {
         handleSubmit(e, 'internal', isAutoInternal, internalKey);
     };
-
-    useEffect(() => {
-        fetchData();
-    }, []);
 
     return (
         <div>

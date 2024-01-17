@@ -26,7 +26,7 @@ namespace webapi.DB.RedisDb
             _redisKeys = redisKeys;
             _configuration = configuration;
             _decrypt = decrypt;
-            secretKey = Convert.FromBase64String(_configuration[App.appKey]!);
+            secretKey = Convert.FromBase64String(_configuration[App.ENCRYPTION_KEY]!);
         }
 
         public async Task<string> CacheKey(string key, Func<Task<KeyModel>> readKeyFunction)

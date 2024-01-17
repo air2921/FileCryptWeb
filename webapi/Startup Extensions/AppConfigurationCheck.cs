@@ -16,12 +16,12 @@ namespace webapi
             string keyPattern = Validation.EncryptionKey;
             string emailPattern = Validation.Email;
 
-            string? secretKey = configuration[App.appSecretKey];
-            string? emailPassword = configuration[App.appEmailPassword];
-            string? emailAdress = configuration[App.appEmail];
-            string? FileCryptKey = configuration[App.appKey];
-            string? redisServer = configuration.GetConnectionString(App.RedisDb);
-            string? postgres = configuration.GetConnectionString(App.MainDb);
+            string? secretKey = configuration[App.SECRET_KEY];
+            string? emailPassword = configuration[App.EMAIL_PASSWORD];
+            string? emailAdress = configuration[App.EMAIL];
+            string? FileCryptKey = configuration[App.ENCRYPTION_KEY];
+            string? redisServer = configuration.GetConnectionString(App.REDIS_DB);
+            string? postgres = configuration.GetConnectionString(App.MAIN_DB);
 
             bool InvalidConfiguration =
                  string.IsNullOrWhiteSpace(secretKey) || string.IsNullOrWhiteSpace(emailPassword) ||

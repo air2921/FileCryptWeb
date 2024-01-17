@@ -27,7 +27,7 @@ namespace webapi.DB.SQL
             _generateKey = generateKey;
             _encrypt = encrypt;
             _configuration = configuration;
-            secretKey = Convert.FromBase64String(_configuration[App.appKey]!);
+            secretKey = Convert.FromBase64String(_configuration[App.ENCRYPTION_KEY]!);
         }
 
         public async Task Create(KeyModel keyModel)

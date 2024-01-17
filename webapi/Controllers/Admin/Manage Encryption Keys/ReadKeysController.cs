@@ -38,7 +38,7 @@ namespace webapi.Controllers.Admin.Manage_Encryption_Keys
             _configuration = configuration;
             _logger = logger;
             _dbContext = dbContext;
-            secretKey = Convert.FromBase64String(_configuration[App.appKey]!);
+            secretKey = Convert.FromBase64String(_configuration[App.ENCRYPTION_KEY]!);
         }
 
         [HttpGet("all/{userId}")]

@@ -22,8 +22,8 @@ namespace webapi.Services.Third_Party_Services
         {
             try
             {
-                string Email = _configuration[App.appEmail]!;
-                string Password = _configuration[App.appEmailPassword]!;
+                string Email = _configuration[App.EMAIL]!;
+                string Password = _configuration[App.EMAIL_PASSWORD]!;
 
                 var emailMessage = new MimeMessage();
                 emailMessage.From.Add(new MailboxAddress("FileCrypt", Email));

@@ -38,11 +38,11 @@
 
     public static class App
     {
-        public const string MainDb = "PostgresConnection";
-        public const string RedisDb = "RedisConnection";
-        public const string appKey = "FileCryptKey";
-        public const string appEmail = "Email";
-        public const string appEmailPassword = "EmailPassword";
-        public const string appSecretKey = "SecretKey";
+        public const string MAIN_DB = "PostgresConnection";
+        public const string REDIS_DB = "RedisConnection";
+        public const string ENCRYPTION_KEY = "FileCryptKey";
+        public const string EMAIL = "Email";
+        public const string EMAIL_PASSWORD = "EmailPassword";
+        public const string SECRET_KEY = "SecretKey";
     }
 }
