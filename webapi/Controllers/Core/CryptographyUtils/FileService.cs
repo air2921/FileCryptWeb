@@ -89,7 +89,7 @@ namespace webapi.Controllers.Base.CryptographyUtils
                 }
                 else
                 {
-                    var mimesDb = await _read.ReadAll(0, 10000);
+                    var mimesDb = await _read.ReadAll(null, 0, 10000);
                     string[] mimesArray = mimesDb.Select(m => m.mime_name).ToArray()!;
 
                     await _redisCache.CacheData(Constants.MIME_COLLECTION, mimesArray, TimeSpan.FromDays(3));

@@ -44,7 +44,7 @@ namespace webapi.Controllers.Admin.Manage_Files.Manage_MIME_s
         {
             try
             {
-                var mimes = await _readMime.ReadAll(skip, count);
+                var mimes = await _readMime.ReadAll(null, skip, count);
                 _logger.LogInformation($"{_userInfo.Username}#{_userInfo.UserId} requsted MIME collection, skipped {skip} and quantity requested {count}");
 
                 return StatusCode(200, new { mimes });

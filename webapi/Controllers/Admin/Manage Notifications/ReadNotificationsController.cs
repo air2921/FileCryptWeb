@@ -50,39 +50,16 @@ namespace webapi.Controllers.Admin.Manage_Notifications
         }
 
         [HttpGet("all")]
-        public async Task<IActionResult> GetAllNotifications([FromQuery] int skip, [FromQuery] int count)
+        public async Task<IActionResult> GetAllNotifications([FromQuery] int? userId, [FromQuery] int skip, [FromQuery] int count)
         {
             try
             {
-                var notification = await _read.ReadAll(skip, count);
+                var notification = await _read.ReadAll(userId, skip, count);
                 _logger.LogInformation($"{_userInfo.Username}#{_userInfo.UserId} requested information about notifications, skipped {skip} and quntity requested {count}");
 
                 return StatusCode(200, new { notification });
             }
             catch (NotificationException ex)
-            {
-                return StatusCode(404, new { message = ex.Message });
-            }
-        }
-
-        [HttpGet("all/{userId}")]
-        public async Task<IActionResult> ReadAllUserNotifications([FromRoute] int userId)
-        {
-            try
-            {
-                var notifications = await _dbContext.Notifications
-                    .Where(n => n.receiver_id == userId)
-                    .OrderByDescending(n => n.send_time)
-                    .ToListAsync();
-
-                if (notifications is null)
-                    return StatusCode(404, new { message = ExceptionNotificationMessages.NoOneNotificationNotFound });
-
-                _logger.LogInformation($"{_userInfo.Username}#{_userInfo.UserId} requested information about all notifications user#{userId}");
-
-                return StatusCode(200, new { notifications });
-            }
-            catch (OfferException ex)
             {
                 return StatusCode(404, new { message = ex.Message });
             }

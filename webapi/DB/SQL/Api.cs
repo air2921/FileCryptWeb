@@ -45,12 +45,12 @@ namespace webapi.DB.SQL
                 throw new ApiException(ExceptionApiMessages.ApiNotFound);
         }
 
-        public async Task<IEnumerable<ApiModel>> ReadAll(int skip, int count)
+        public async Task<IEnumerable<ApiModel>> ReadAll(int? user_id, int skip, int count)
         {
-            return await _dbContext.API.Skip(skip)
+            return await _dbContext.API
+                .Skip(skip)
                 .Take(count)
-                .ToListAsync() ??
-                throw new ApiException(ExceptionApiMessages.NoOneApiNotFound);
+                .ToListAsync();
         }
 
         public async Task Update(ApiModel apiModel, bool? byForeign)

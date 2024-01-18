@@ -42,13 +42,16 @@ namespace webapi.DB.SQL
                 throw new OfferException(ExceptionOfferMessages.OfferNotFound);
         }
 
-        public async Task<IEnumerable<OfferModel>> ReadAll(int skip, int count)
+        public async Task<IEnumerable<OfferModel>> ReadAll(int? user_id, int skip, int count)
         {
-            return await _dbContext.Offers
-                .Skip(skip)
-                .Take(count)
-                .ToListAsync() ??
-                throw new OfferException(ExceptionOfferMessages.NoOneOfferNotFound);
+            var query = _dbContext.Offers
+                .OrderByDescending(o => o.created_at)
+                .AsQueryable();
+
+            if (user_id.HasValue)
+                return await query.Where(o => o.sender_id == user_id || o.receiver_id == user_id).Skip(skip).Take(count).ToListAsync();
+
+            return await query.Skip(skip).Take(count).ToListAsync();
         }
     }
 }

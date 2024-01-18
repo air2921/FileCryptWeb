@@ -119,7 +119,7 @@ namespace webapi.DB.SQL
                 throw new MimeException(ExceptionMimeMessages.MimeNotFound);
         }
 
-        public async Task<IEnumerable<FileMimeModel>> ReadAll(int skip, int count)
+        public async Task<IEnumerable<FileMimeModel>> ReadAll(int? user_id, int skip, int count)
         {
             return await _dbContext.Mimes
                 .Skip(skip)

@@ -44,7 +44,7 @@ namespace webapi.Controllers.Admin.Manage_Users
         {
             try
             {
-                var users = await _read.ReadAll(skip, count);
+                var users = await _read.ReadAll(null, skip, count);
                 _logger.LogWarning($"{_userInfo.Username}#{_userInfo.UserId} requested information about users, skipped {skip} and quantity requested {count}");
 
                 return StatusCode(200, new { users });

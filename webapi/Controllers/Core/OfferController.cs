@@ -3,7 +3,6 @@ using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
 using Newtonsoft.Json;
 using webapi.DB;
-using webapi.DB.SQL;
 using webapi.Exceptions;
 using webapi.Interfaces.Redis;
 using webapi.Interfaces.Services;
@@ -168,9 +167,9 @@ namespace webapi.Controllers.Core
         }
 
         [HttpGet("all")]
-        public async Task<IActionResult> GetAll([FromQuery] int skip, [FromQuery] int count, [FromQuery] bool? sended = null, [FromQuery] bool? isAccepted = null)
+        public async Task<IActionResult> GetAll([FromQuery] int skip, [FromQuery] int count)
         {
-            var cacheKey = $"Offer_{_userInfo.UserId}_{skip}_{count}_{sended}_{isAccepted}";
+            var cacheKey = $"Offer_{_userInfo.UserId}_{skip}_{count}";
 
             bool clearCache = HttpContext.Session.GetString(Constants.CACHE_OFFERS) is not null ? bool.Parse(HttpContext.Session.GetString(Constants.CACHE_OFFERS)) : true;
 
@@ -184,44 +183,12 @@ namespace webapi.Controllers.Core
             if (cacheOffers is not null)
                 return StatusCode(200, new { offers = JsonConvert.DeserializeObject<IEnumerable<OfferModel>>(cacheOffers), user_id = _userInfo.UserId });
 
-            var query = _dbContext.Offers.OrderByDescending(o => o.created_at)
-                .Select(o => new { o.offer_id, o.sender_id, o.receiver_id, o.created_at, o.is_accepted, o.offer_type })
-                .AsQueryable();
-
-            switch (sended)
+            var offers = await _readOffer.ReadAll(_userInfo.UserId, skip, count);
+            foreach (var offer in offers)
             {
-                case true:
-                    query = query.Where(o => o.sender_id == _userInfo.UserId);
-                    break;
-
-                case false:
-                    query = query.Where(o => o.receiver_id == _userInfo.UserId);
-                    break;
-
-                default:
-                    query = query.Where(o => o.sender_id == _userInfo.UserId || o.receiver_id == _userInfo.UserId);
-                    break;
+                offer.offer_body = null;
+                offer.offer_header = null;
             }
-
-            switch (isAccepted)
-            {
-                case true:
-                    query = query.Where(o => o.is_accepted == true);
-                    break;
-
-                case false:
-                    query = query.Where(o => o.is_accepted == false);
-                    break;
-
-                default:
-                    query = query.Where(o => o.is_accepted == true || o.is_accepted == false);
-                    break;
-            }
-
-            var offers = await query
-                .Skip(skip)
-                .Take(count)
-                .ToListAsync();
 
             await _redisCache.CacheData(cacheKey, offers, TimeSpan.FromMinutes(3));
 

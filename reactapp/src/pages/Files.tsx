@@ -19,7 +19,7 @@ const Files = () => {
     const [cryptographyError, setCryptographyError] = useState('');
 
     const fetchData = async () => {
-        const response = await AxiosRequest({ endpoint: `api/core/files/all?byAscending=${byAsc}&skip=${skip}&count=${step}`, method: 'GET', withCookie: true, requestBody: null });
+        const response = await AxiosRequest({ endpoint: `api/core/files/all?skip=${skip}&count=${step}`, method: 'GET', withCookie: true, requestBody: null });
 
         if (response.isSuccess) {
             setFiles(response.data);

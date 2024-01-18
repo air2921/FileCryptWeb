@@ -88,9 +88,9 @@ namespace webapi.Controllers.Core
         }
 
         [HttpGet("all")]
-        public async Task<IActionResult> GetAllFiles([FromQuery] bool byAscending, [FromQuery] int skip, [FromQuery] int count)
+        public async Task<IActionResult> GetAllFiles([FromQuery] int skip, [FromQuery] int count)
         {
-            var cacheKey = $"Files_{_userInfo.UserId}_{byAscending}_{skip}_{count}";
+            var cacheKey = $"Files_{_userInfo.UserId}_{skip}_{count}";
             bool clearCache = HttpContext.Session.GetString(Constants.CACHE_FILES) is not null ? bool.Parse(HttpContext.Session.GetString(Constants.CACHE_FILES)) : true;
 
             if (clearCache)
@@ -103,22 +103,7 @@ namespace webapi.Controllers.Core
             if (cacheFiles is not null)
                 return StatusCode(200, new { files = JsonConvert.DeserializeObject<IEnumerable<FileModel>>(cacheFiles) });
 
-            var query = _dbContext.Files.Where(f => f.user_id == _userInfo.UserId).AsQueryable();
-
-            switch (byAscending)
-            {
-                case true:
-                    query = query.OrderByDescending(f => f.operation_date).AsQueryable();
-                    break;
-                case false:
-                    query = query.OrderBy(f => f.operation_date).AsQueryable();
-                    break;
-            }
-
-            var files = await query
-            .Skip(skip)
-            .Take(count)
-            .ToListAsync();
+            var files = await _readFile.ReadAll(_userInfo.UserId, skip, count);
 
             await _redisCache.CacheData(cacheKey, files, TimeSpan.FromSeconds(15));
 

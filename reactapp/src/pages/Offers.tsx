@@ -21,16 +21,7 @@ const Offers = () => {
     const [actionError, setActionError] = useState('');
 
     const fetchData = async () => {
-        let baseUrl = `api/core/offers/all?skip=${skip}&count=${15}`
-
-        let queryString = Object.entries(filter)
-            .filter(([key, value]) => value !== null)
-            .map(([key, value]) => `${key}=${value}`)
-            .join('&');
-
-        let endpoint = queryString ? `${baseUrl}&${queryString}` : baseUrl;
-
-        const response = await AxiosRequest({ endpoint: endpoint, method: 'GET', withCookie: true, requestBody: null });
+        const response = await AxiosRequest({ endpoint: `api/core/offers/all?skip=${skip}&count=${step}`, method: 'GET', withCookie: true, requestBody: null });
 
         if (response.isSuccess) {
             setOffers(response.data);

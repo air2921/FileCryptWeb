@@ -28,6 +28,10 @@ const Login = () => {
         }
         else {
             setErrorMessage(response.data);
+
+            setTimeout(() => {
+                setErrorMessage('');
+            }, 5000)
         }
     };
 

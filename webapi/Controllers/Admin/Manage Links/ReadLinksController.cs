@@ -48,11 +48,11 @@ namespace webapi.Controllers.Admin.Manage_Links
         }
 
         [HttpGet("all")]
-        public async Task<IActionResult> ReadAll([FromQuery] int skip, [FromQuery] int count)
+        public async Task<IActionResult> ReadAll([FromQuery] int? userId, [FromQuery] int skip, [FromQuery] int count)
         {
             try
             {
-                var links = await _readLinks.ReadAll(skip, count);
+                var links = await _readLinks.ReadAll(userId, skip, count);
                 _logger.LogInformation($"{_userInfo.Username}#{_userInfo.UserId} requested information about links, skipped {skip} and quantity requested {count}");
 
                 return StatusCode(200, new { links });

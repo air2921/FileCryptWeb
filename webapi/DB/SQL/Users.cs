@@ -60,15 +60,13 @@ namespace webapi.DB.SQL
             return user;
         }
 
-        public async Task<IEnumerable<UserModel>> ReadAll(int skip, int count)
+        public async Task<IEnumerable<UserModel>> ReadAll(int? user_id, int skip, int count)
         {
-            var users = await _dbContext.Users
+            return await _dbContext.Users
                 .Skip(skip)
                 .Take(count)
-                .ToListAsync() ??
-                throw new UserException(ExceptionUserMessages.NoOneUserNotFound);
+                .ToListAsync();
 
-            return users;
         }
 
         public async Task Update(UserModel userModel, bool? byForeign)

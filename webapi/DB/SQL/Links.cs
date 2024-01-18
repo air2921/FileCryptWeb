@@ -27,13 +27,16 @@ namespace webapi.DB.SQL
                 throw new LinkException(ExceptionLinkMessages.LinkNotFound);
         }
 
-        public async Task<IEnumerable<LinkModel>> ReadAll(int skip, int count)
+        public async Task<IEnumerable<LinkModel>> ReadAll(int? user_id, int skip, int count)
         {
-            return await _dbContext.Links
-                .Skip(skip)
-                .Take(count)
-                .ToListAsync() ??
-                throw new LinkException(ExceptionLinkMessages.NoOneLinkNotFound);
+            var query = _dbContext.Links
+                .OrderByDescending(l => l.created_at)
+                .AsQueryable();
+
+            if (user_id.HasValue)
+                return await query.Where(l => l.user_id == user_id).Skip(skip).Take(count).ToListAsync();
+
+            return await query.Skip(skip).Take(count).ToListAsync();
         }
 
         public async Task DeleteById(int id, int? user_id)

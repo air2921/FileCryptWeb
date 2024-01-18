@@ -38,13 +38,16 @@ namespace webapi.DB.SQL
             return notification;
         }
 
-        public async Task<IEnumerable<NotificationModel>> ReadAll(int skip, int count)
+        public async Task<IEnumerable<NotificationModel>> ReadAll(int? user_id, int skip, int count)
         {
-            return await _dbContext.Notifications
-                .Skip(skip)
-                .Take(count)
-                .ToListAsync() ??
-                throw new NotificationException(ExceptionNotificationMessages.NoOneNotificationNotFound);
+            var query = _dbContext.Notifications
+                .OrderByDescending(n => n.send_time)
+                .AsQueryable();
+
+            if (user_id.HasValue)
+                return await query.Where(n => n.receiver_id == user_id).Skip(skip).Take(count).ToListAsync();
+
+            return await query.Skip(skip).Take(count).ToListAsync();
         }
 
         public async Task DeleteById(int id, int? user_id)

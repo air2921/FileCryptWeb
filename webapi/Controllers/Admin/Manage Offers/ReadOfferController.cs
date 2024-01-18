@@ -51,37 +51,14 @@ namespace webapi.Controllers.Admin.Manage_Offers
         }
 
         [HttpGet("all")]
-        public async Task<IActionResult> ReadAllOffer([FromQuery] int skip, [FromQuery] int count)
+        public async Task<IActionResult> ReadAllOffer([FromQuery] int? userId, [FromQuery] int skip, [FromQuery] int count)
         {
             try
             {
-                var offer = await _read.ReadAll(skip, count);
+                var offer = await _read.ReadAll(userId, skip, count);
                 _logger.LogWarning($"{_userInfo.Username}#{_userInfo.UserId} requested information about offers, skipped {skip} and quantity requested {count}");
 
                 return StatusCode(200, new { offer });
-            }
-            catch (OfferException ex)
-            {
-                return StatusCode(404, new { message = ex.Message });
-            }
-        }
-
-        [HttpGet("all/{userId}")]
-        public async Task<IActionResult> ReadAllUserOffers([FromRoute] int userId)
-        {
-            try
-            {
-                var offers = await _dbContext.Offers
-                    .Where(o => o.sender_id == userId || o.receiver_id == userId)
-                    .OrderByDescending(o => o.created_at)
-                    .ToListAsync();
-
-                if (offers is null)
-                    return StatusCode(404, new { message = ExceptionOfferMessages.NoOneOfferNotFound });
-
-                _logger.LogInformation($"{_userInfo.Username}#{_userInfo.UserId} requested information about all offers user#{userId}");
-
-                return StatusCode(200, new { offers });
             }
             catch (OfferException ex)
             {

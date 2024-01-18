@@ -27,13 +27,16 @@ namespace webapi.DB.SQL
                 throw new FileException(ExceptionFileMessages.FileNotFound);
         }
 
-        public async Task<IEnumerable<FileModel>> ReadAll(int skip, int count)
+        public async Task<IEnumerable<FileModel>> ReadAll(int? user_id, int skip, int count)
         {
-            return await _dbContext.Files
-                .Skip(skip)
-                .Take(count)
-                .ToListAsync() ??
-                throw new FileException(ExceptionFileMessages.NoOneFileNotFound);
+            var query = _dbContext.Files
+                .OrderByDescending(f => f.operation_date)
+                .AsQueryable();
+
+            if (user_id.HasValue)
+                return await query.Where(f => f.user_id == user_id).Skip(skip).Take(count).ToListAsync();
+
+            return await query.Skip(skip).Take(count).ToListAsync();
         }
 
         public async Task DeleteById(int id, int? user_id)

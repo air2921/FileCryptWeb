@@ -86,11 +86,7 @@ namespace webapi.Controllers.Core
             if (cacheNotifications is not null)
                 return StatusCode(200, new { notifications = JsonConvert.DeserializeObject<IEnumerable<NotificationModel>>(cacheNotifications) });
 
-            var notifications = await _dbContext.Notifications.OrderByDescending(n => n.send_time)
-                .Where(n => n.receiver_id == _userInfo.UserId)
-                .Skip(skip)
-                .Take(count)
-                .ToListAsync();
+            var notifications = await _readNotification.ReadAll(_userInfo.UserId, skip, count);
 
             await _redisCache.CacheData(cacheKey, notifications, TimeSpan.FromMinutes(3));
 

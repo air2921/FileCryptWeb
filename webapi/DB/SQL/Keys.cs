@@ -35,8 +35,7 @@ namespace webapi.DB.SQL
             var user = await _dbContext.Keys.FirstOrDefaultAsync(u => u.user_id == keyModel.user_id);
             if (user == null)
             {
-                var tempKey = _generateKey.GenerateKey();
-                var privateKey = await _encrypt.EncryptionKeyAsync(tempKey, secretKey);
+                var privateKey = await _encrypt.EncryptionKeyAsync(_generateKey.GenerateKey(), secretKey);
                 keyModel.private_key = privateKey;
 
                 await _dbContext.AddAsync(keyModel);
@@ -56,13 +55,12 @@ namespace webapi.DB.SQL
                 throw new UserException(ExceptionUserMessages.UserNotFound);
         }
 
-        public async Task<IEnumerable<KeyModel>> ReadAll(int skip, int count)
+        public async Task<IEnumerable<KeyModel>> ReadAll(int? user_id, int skip, int count)
         {
             return await _dbContext.Keys
                 .Skip(skip)
                 .Take(count)
-                .ToListAsync() ??
-                throw new UserException(ExceptionUserMessages.NoOneUserNotFound);
+                .ToListAsync();
         }
     }
 }

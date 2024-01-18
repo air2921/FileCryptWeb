@@ -44,32 +44,19 @@ namespace webapi.Controllers.Admin.Manage_Files
         }
 
         [HttpGet("all")]
-        public async Task<IActionResult> ReadAll([FromQuery] int skip, [FromQuery] int count)
+        public async Task<IActionResult> ReadAll([FromQuery] int? userId, [FromQuery] int skip, [FromQuery] int count)
         {
             try
             {
-                var file = await _read.ReadAll(skip, count);
+                var files = await _read.ReadAll(userId, skip, count);
                 _logger.LogInformation($"{_userInfo.Username}#{_userInfo.UserId} requested information about some files, skipped {skip} and quantity requested {count}");
 
-                return StatusCode(200, new { file });
+                return StatusCode(200, new { files });
             }
             catch (FileException ex)
             {
                 return StatusCode(404, new { message = ex.Message });
             }
-        }
-
-        [HttpGet("all/{userId}")]
-        public async Task<IActionResult> ReadAllUserFiles([FromRoute] int userId, [FromQuery] int skip, [FromQuery] int count)
-        {
-            var files = await _dbContext.Files
-                .Where(f => f.user_id == userId)
-                .OrderByDescending(f => f.operation_date)
-                .Skip(skip)
-                .Take(count)
-                .ToListAsync();
-
-            return StatusCode(200, new { files });
         }
     }
 }

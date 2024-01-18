@@ -35,13 +35,12 @@ namespace webapi.DB.SQL
                 throw new TokenException(ExceptionTokenMessages.RefreshNotFound);
         }
 
-        public async Task<IEnumerable<TokenModel>> ReadAll(int skip, int count)
+        public async Task<IEnumerable<TokenModel>> ReadAll(int? user_id, int skip, int count)
         {
             return await _dbContext.Tokens
                 .Skip(skip)
                 .Take(count)
-                .ToListAsync() ??
-                throw new TokenException(ExceptionTokenMessages.NoOneRefreshNotFound);
+                .ToListAsync();
         }
 
         public async Task Update(TokenModel tokenModel, bool? byForeign)
