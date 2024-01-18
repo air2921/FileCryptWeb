@@ -52,12 +52,9 @@ namespace webapi.Controllers.Base.CryptographyUtils
             return typesArray.Contains(lowerType);
         }
 
-        public async Task<bool> CheckFile(IFormFile? file)
+        public async Task<bool> CheckFile(IFormFile file)
         {
-            if (file is null || file.Length == 0)
-                return false;
-
-            if (file.ContentType is null)
+            if (file.Length == 0 || file.ContentType is null)
                 return false;
 
             if (!await _virusCheck.GetResultScan(file))

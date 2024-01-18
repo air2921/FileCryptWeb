@@ -1,4 +1,5 @@
 ﻿using Newtonsoft.Json;
+using StackExchange.Redis;
 using webapi.Exceptions;
 using webapi.Interfaces.Cryptography;
 using webapi.Interfaces.Redis;
@@ -15,6 +16,7 @@ namespace webapi.DB.RedisDb
         private readonly IConfiguration _configuration;
         private readonly IDecryptKey _decrypt;
         private readonly byte[] secretKey;
+        private readonly IDatabase _db;
 
         public RedisCache(
             IRedisDbContext context,
@@ -27,14 +29,14 @@ namespace webapi.DB.RedisDb
             _configuration = configuration;
             _decrypt = decrypt;
             secretKey = Convert.FromBase64String(_configuration[App.ENCRYPTION_KEY]!);
+            _db = context.GetDatabase();
         }
 
         public async Task<string> CacheKey(string key, Func<Task<KeyModel>> readKeyFunction)
         {
             try
             {
-                var db = _context.GetDatabase();
-                var value = await db.StringGetAsync(key);
+                var value = await _db.StringGetAsync(key);
 
                 if (value.HasValue)
                 {
@@ -74,7 +76,7 @@ namespace webapi.DB.RedisDb
                         throw new ArgumentException();
                     }
 
-                    await db.StringSetAsync(key, encryptionKey, TimeSpan.FromMinutes(30));
+                    await _db.StringSetAsync(key, encryptionKey, TimeSpan.FromMinutes(30));
 
                     var decryptedKey = await _decrypt.DecryptionKeyAsync(encryptionKey!, secretKey);
                     return decryptedKey;
@@ -88,23 +90,21 @@ namespace webapi.DB.RedisDb
 
         public async Task CacheData(string key, object value, TimeSpan expire)
         {
-            var db = _context.GetDatabase();
-            var redisValue = await db.StringGetAsync(key);
+            var redisValue = await _db.StringGetAsync(key);
             if (redisValue.HasValue)
-                await db.KeyDeleteAsync(key);
+                await _db.KeyDeleteAsync(key);
 
             var settings = new JsonSerializerSettings
             {
                 ReferenceLoopHandling = ReferenceLoopHandling.Ignore
             };
 
-            await db.StringSetAsync(key, JsonConvert.SerializeObject(value, settings), expire);
+            await _db.StringSetAsync(key, JsonConvert.SerializeObject(value, settings), expire);
         }
 
         public async Task<string> GetCachedData(string key)
         {
-            var db = _context.GetDatabase();
-            var redisValue = await db.StringGetAsync(key);
+            var redisValue = await _db.StringGetAsync(key);
             if (redisValue.HasValue)
                 return redisValue!;
 
@@ -113,10 +113,9 @@ namespace webapi.DB.RedisDb
 
         public async Task DeleteCache(string key)
         {
-            var db = _context.GetDatabase();
-            var value = await db.StringGetAsync(key);
+            var value = await _db.StringGetAsync(key);
             if (value.HasValue)
-                await db.KeyDeleteAsync(key);
+                await _db.KeyDeleteAsync(key);
         }
     }
 }
