@@ -8,7 +8,7 @@ namespace webapi.Services
         public const string Password = "^(?=.*[A-Za-z])(?=.*\\d)[A-Za-z\\d]{8,30}$";
         public const string Email = "^[a-zA-Z0-9._%+-]+@[a-zA-Z0-9.-]+\\.[a-zA-Z]{2,}$";
 
-        public bool IsBase64String(string key)
+        public bool IsBase64String(string? key)
         {
             if (string.IsNullOrEmpty(key) || key.Length % 4 != 0)
                 return false;

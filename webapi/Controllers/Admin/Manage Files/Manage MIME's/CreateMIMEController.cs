@@ -28,11 +28,10 @@ namespace webapi.Controllers.Admin.Manage_Files.Manage_MIME_s
         }
 
         [HttpPost("add/new")]
-        public async Task<IActionResult> CreateNewMime([FromBody] FileMimeModel mimeModel)
+        public async Task<IActionResult> CreateNewMime([FromBody] string mime)
         {
-            await _createMime.Create(mimeModel);
-            await _redisCache.DeleteCache(Constants.MIME_COLLECTION);
-            _logger.LogWarning($"new MIME type: {mimeModel.mime_name}. Added in db");
+            await _createMime.Create(new FileMimeModel { mime_name = mime });
+            _logger.LogWarning($"new MIME type: {mime}. Added in db");
 
             return StatusCode(201, new { message = SuccessMessage.SuccessCreatedNewMime });
         }

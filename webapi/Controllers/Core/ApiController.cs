@@ -38,7 +38,11 @@ namespace webapi.Controllers.Core
         [HttpPost]
         public async Task<IActionResult> CreateNewAPI()
         {
-            var apiModel = new ApiModel { user_id = _userInfo.UserId };
+            var apiModel = new ApiModel
+            {
+                api_key = Guid.NewGuid().ToString("N") + Guid.NewGuid().ToString(),
+                user_id = _userInfo.UserId 
+            };
 
             await _createAPI.Create(apiModel);
             HttpContext.Session.SetString(Constants.CACHE_API, true.ToString());

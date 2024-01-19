@@ -10,7 +10,7 @@ namespace webapi.Models
         [Key]
         public int key_id { get; set; }
 
-        public string? private_key { get; set; }
+        public string private_key { get; set; }
 
         public string? internal_key { get; set; }
 

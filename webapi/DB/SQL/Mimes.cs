@@ -5,6 +5,7 @@ using webapi.Interfaces.Services;
 using webapi.Interfaces.SQL;
 using webapi.Localization.Exceptions;
 using webapi.Models;
+using webapi.Services;
 
 namespace webapi.DB.SQL
 {
@@ -28,6 +29,7 @@ namespace webapi.DB.SQL
         public async Task Create(FileMimeModel mimeModel)
         {
             await _dbContext.AddAsync(mimeModel);
+            await _redisCache.DeleteCache(Constants.MIME_COLLECTION);
             await _dbContext.SaveChangesAsync();
         }
 
@@ -72,8 +74,6 @@ namespace webapi.DB.SQL
                     new FileMimeModel { mime_name = "application/json" },
                     new FileMimeModel { mime_name = "application/rtf" },
                     new FileMimeModel { mime_name = "text/richtext" },
-                    new FileMimeModel { mime_name = "application/javascript" },
-                    new FileMimeModel { mime_name = "application/x-javascript" },
                     new FileMimeModel { mime_name = "font/woff" },
                     new FileMimeModel { mime_name = "font/woff2" },
                     new FileMimeModel { mime_name = "font/otf" },
@@ -110,6 +110,7 @@ namespace webapi.DB.SQL
                 await _dbContext.AddRangeAsync(mimeModels);
             }
 
+            await _redisCache.DeleteCache(Constants.MIME_COLLECTION);
             await _dbContext.SaveChangesAsync();
         }
 
@@ -134,6 +135,7 @@ namespace webapi.DB.SQL
                 throw new MimeException(ExceptionMimeMessages.MimeNotFound);
 
             _dbContext.Mimes.Remove(mime);
+            await _redisCache.DeleteCache(Constants.MIME_COLLECTION);
             await _dbContext.SaveChangesAsync();
         }
 
@@ -143,6 +145,7 @@ namespace webapi.DB.SQL
                 throw new MimeException(ExceptionMimeMessages.MimeNotFound);
 
             _dbContext.Mimes.Remove(mime);
+            await _redisCache.DeleteCache(Constants.MIME_COLLECTION);
             await _dbContext.SaveChangesAsync();
         }
     }

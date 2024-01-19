@@ -1,7 +1,6 @@
 ﻿using Microsoft.EntityFrameworkCore;
 using webapi.Exceptions;
 using webapi.Interfaces.Cryptography;
-using webapi.Interfaces.Services;
 using webapi.Interfaces.SQL;
 using webapi.Localization.Exceptions;
 using webapi.Models;
@@ -9,38 +8,25 @@ using webapi.Services;
 
 namespace webapi.DB.SQL
 {
-    public class Keys : ICreate<KeyModel>, IRead<KeyModel>
+    public class Keys : ICreate<KeyModel>, IRead<KeyModel>, IUpdate<KeyModel>
     {
         private readonly FileCryptDbContext _dbContext;
-        private readonly IGenerateKey _generateKey;
-        private readonly IEncryptKey _encrypt;
         private readonly IConfiguration _configuration;
+        private readonly IEncryptKey _encrypt;
         private readonly byte[] secretKey;
 
-        public Keys(
-            FileCryptDbContext dbContext,
-            IGenerateKey generateKey,
-            IEncryptKey encrypt,
-            IConfiguration configuration)
+        public Keys(FileCryptDbContext dbContext, IConfiguration configuration, IEncryptKey encrypt)
         {
             _dbContext = dbContext;
-            _generateKey = generateKey;
-            _encrypt = encrypt;
             _configuration = configuration;
+            _encrypt = encrypt;
             secretKey = Convert.FromBase64String(_configuration[App.ENCRYPTION_KEY]!);
         }
 
         public async Task Create(KeyModel keyModel)
         {
-            var user = await _dbContext.Keys.FirstOrDefaultAsync(u => u.user_id == keyModel.user_id);
-            if (user == null)
-            {
-                var privateKey = await _encrypt.EncryptionKeyAsync(_generateKey.GenerateKey(), secretKey);
-                keyModel.private_key = privateKey;
-
-                await _dbContext.AddAsync(keyModel);
-                await _dbContext.SaveChangesAsync();
-            }
+            await _dbContext.AddAsync(keyModel);
+            await _dbContext.SaveChangesAsync();
         }
 
         public async Task<KeyModel> ReadById(int id, bool? byForeign)
@@ -61,6 +47,22 @@ namespace webapi.DB.SQL
                 .Skip(skip)
                 .Take(count)
                 .ToListAsync();
+        }
+
+        public async Task Update(KeyModel keyModel, bool? byForeign)
+        {
+            var keys = byForeign == true
+                ? await _dbContext.Keys.FirstOrDefaultAsync(k => k.user_id == keyModel.user_id)
+                : await _dbContext.Keys.FirstOrDefaultAsync(k => k.key_id == keyModel.key_id);
+
+            if (keys is null)
+                throw new UserException(ExceptionUserMessages.UserNotFound);
+
+            keys.private_key = await _encrypt.EncryptionKeyAsync(keyModel.private_key, secretKey);
+            keys.internal_key = keyModel.internal_key is not null ? await _encrypt.EncryptionKeyAsync(keyModel.internal_key, secretKey) : keys.internal_key;
+            keys.received_key = keyModel.received_key;
+
+            await _dbContext.SaveChangesAsync();
         }
     }
 }
