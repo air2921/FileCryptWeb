@@ -68,6 +68,11 @@ namespace webapi
             services.AddScoped<IRead<ApiModel>, Api>();
             services.AddScoped<IUpdate<ApiModel>, Api>();
 
+            services.AddScoped<ICreate<LinkModel>, Links>();
+            services.AddScoped<IDelete<LinkModel>, Links>();
+            services.AddScoped<IDeleteByName<LinkModel>, Links>();
+            services.AddScoped<IRead<LinkModel>, Links>();
+
             services.AddScoped<ICryptographyControllerBase, CryptographyHelper>();
             services.AddScoped<ICryptographyParamsProvider, CryptographyHelper>();
             services.AddScoped<IFileService, FileService>();

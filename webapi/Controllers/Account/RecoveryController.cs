@@ -1,5 +1,6 @@
 ﻿using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
+using StackExchange.Redis;
 using UAParser;
 using webapi.DB;
 using webapi.DTO;
@@ -8,18 +9,20 @@ using webapi.Interfaces.Services;
 using webapi.Interfaces.SQL;
 using webapi.Localization;
 using webapi.Models;
+using webapi.Services;
 
 namespace webapi.Controllers.Account
 {
     [Route("api/auth/recovery")]
     [ApiController]
-    [ValidateAntiForgeryToken]
+    //[ValidateAntiForgeryToken]
     public class RecoveryController : ControllerBase
     {
         private readonly FileCryptDbContext _dbContext;
         private readonly ILogger<RecoveryController> _logger;
         private readonly IUserAgent _userAgent;
         private readonly IEmailSender _emailSender;
+        private readonly IRead<UserModel> _readUser;
         private readonly ICreate<LinkModel> _createLink;
         private readonly ICreate<NotificationModel> _createNotification;
         private readonly IUpdate<UserModel> _updateUser;
@@ -27,24 +30,28 @@ namespace webapi.Controllers.Account
         private readonly IPasswordManager _passwordManager;
         private readonly IDeleteByName<LinkModel> _deleteByName;
         private readonly IGenerateKey _generateKey;
+        private readonly IFileManager _fileManager;
 
         public RecoveryController(
             FileCryptDbContext dbContext,
             ILogger<RecoveryController> logger,
             IUserAgent userAgent,
             IEmailSender emailSender,
+            IRead<UserModel> readUser,
             ICreate<LinkModel> createLink,
             ICreate<NotificationModel> createNotification,
             IUpdate<UserModel> updateUser,
             IUpdate<TokenModel> updateToken,
             IPasswordManager passwordManager,
             IDeleteByName<LinkModel> deleteByName,
-            IGenerateKey generateKey)
+            IGenerateKey generateKey,
+            IFileManager fileManager)
         {
             _dbContext = dbContext;
             _logger = logger;
             _userAgent = userAgent;
             _emailSender = emailSender;
+            _readUser = readUser;
             _createLink = createLink;
             _createNotification = createNotification;
             _updateUser = updateUser;
@@ -52,10 +59,11 @@ namespace webapi.Controllers.Account
             _passwordManager = passwordManager;
             _deleteByName = deleteByName;
             _generateKey = generateKey;
+            _fileManager = fileManager;
         }
 
         [HttpPost("create/unique/token")]
-        public async Task<IActionResult> RecoveryAccount([FromBody] string email)
+        public async Task<IActionResult> RecoveryAccount([FromQuery] string email)
         {
             try
             {
@@ -90,10 +98,10 @@ namespace webapi.Controllers.Account
 
                 var emailDto = new EmailDto
                 {
-                    username = user.username!,
-                    email = user.email!,
+                    username = user.username,
+                    email = user.email,
                     subject = EmailMessage.RecoveryAccountHeader,
-                    message = EmailMessage.RecoveryAccountBody + token
+                    message = EmailMessage.RecoveryAccountBody + $"{_fileManager.GetReactAppUrl(App.REACT_LAUNCH_JSON_PATH, true)}/auth/recovery/{token}"
                 };
 
                 await _emailSender.SendMessage(emailDto);
@@ -110,7 +118,7 @@ namespace webapi.Controllers.Account
         }
 
         [HttpPost("account")]
-        public async Task<IActionResult> RecoveryAccountByToken([FromBody] string password, [FromQuery] string token)
+        public async Task<IActionResult> RecoveryAccountByToken([FromQuery] string password, [FromQuery] string token)
         {
             try
             {
@@ -128,10 +136,11 @@ namespace webapi.Controllers.Account
 
                 _logger.LogInformation($"Token: '{token}' is not expired");
 
-                var userModel = new UserModel { id = link.user_id, password = _passwordManager.HashingPassword(password) };
-                await _updateUser.Update(userModel, null);
-                _logger.LogInformation($"Password was updated for user with id: {link.user_id}");
+                var user = await _readUser.ReadById(link.user_id, null);
+                user.password = _passwordManager.HashingPassword(password);
 
+                await _updateUser.Update(user, null);
+                _logger.LogInformation($"Password was updated for user with id: {link.user_id}");
 
                 var clientInfo = Parser.GetDefault().Parse(HttpContext.Request.Headers["User-Agent"].ToString());
                 var ua = _userAgent.GetBrowserData(clientInfo);
@@ -161,6 +170,10 @@ namespace webapi.Controllers.Account
                 return StatusCode(200, new { message = AccountSuccessMessage.PasswordUpdated });
             }
             catch (LinkException ex)
+            {
+                return StatusCode(404, new { message = ex.Message });
+            }
+            catch (UserException ex)
             {
                 return StatusCode(404, new { message = ex.Message });
             }

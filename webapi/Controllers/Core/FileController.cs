@@ -41,7 +41,6 @@ namespace webapi.Controllers.Core
         {
             try
             {
-
                 await _deleteFileById.DeleteById(fileId, _userInfo.UserId);
                 HttpContext.Session.SetString(Constants.CACHE_FILES, true.ToString());
 

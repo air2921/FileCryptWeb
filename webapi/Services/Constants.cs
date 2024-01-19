@@ -44,5 +44,6 @@
         public const string EMAIL = "Email";
         public const string EMAIL_PASSWORD = "EmailPassword";
         public const string SECRET_KEY = "SecretKey";
+        public const string REACT_LAUNCH_JSON_PATH = "C:\\Users\\Stewi\\source\\repos\\FileCryptWeb\\reactapp\\.vscode\\launch.json";
     }
 }

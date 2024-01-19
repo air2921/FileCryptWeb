@@ -15,7 +15,7 @@ const Email = () => {
     const handleSubmit = async (e: FormEvent) => {
         e.preventDefault();
 
-        const response = await AxiosRequest({ endpoint: 'api/account/edit/email/start', method: 'POST', withCookie: true, requestBody: { password: password } })
+        const response = await AxiosRequest({ endpoint: `api/account/edit/email/start?password=${password}`, method: 'POST', withCookie: true, requestBody: null })
 
         if (response.isSuccess) {
             setStatus(true);
@@ -53,7 +53,7 @@ const Confirm = () => {
     const handleSubmit = async (e: FormEvent) => {
         e.preventDefault();
 
-        const response = await AxiosRequest({ endpoint: `api/account/edit/email/confirm/old?code=${code}`, method: 'POST', withCookie: true, requestBody: { email: email } })
+        const response = await AxiosRequest({ endpoint: `api/account/edit/email/confirm/old?email=${email}&code=${code}`, method: 'POST', withCookie: true, requestBody: null })
 
         if (response.isSuccess) {
             setStatus(true);

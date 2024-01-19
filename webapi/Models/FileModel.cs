@@ -10,13 +10,13 @@ namespace webapi.Models
         [Key]
         public int file_id { get; set; }
 
-        public string? file_name { get; set; }
+        public string file_name { get; set; }
 
-        public string? file_mime { get; set; }
+        public string file_mime { get; set; }
 
-        public string? type { get; set; }
+        public string type { get; set; }
 
-        public DateTime? operation_date { get; set; }
+        public DateTime operation_date { get; set; }
 
         [ForeignKey("user_id")]
         public int user_id { get; set; }

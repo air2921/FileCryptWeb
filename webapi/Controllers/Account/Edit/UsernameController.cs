@@ -16,17 +16,20 @@ namespace webapi.Controllers.Account.Edit
     public class UsernameController : ControllerBase
     {
         private readonly IUpdate<UserModel> _update;
+        private readonly IRead<UserModel> _readUser;
         private readonly ILogger<UsernameController> _logger;
         private readonly IUserInfo _userInfo;
         private readonly ITokenService _tokenService;
 
         public UsernameController(
             IUpdate<UserModel> update,
+            IRead<UserModel> readUser,
             ILogger<UsernameController> logger,
             IUserInfo userInfo,
             ITokenService tokenService)
         {
             _update = update;
+            _readUser = readUser;
             _logger = logger;
             _userInfo = userInfo;
             _tokenService = tokenService;
@@ -40,9 +43,10 @@ namespace webapi.Controllers.Account.Edit
                 if (username.Length > 30)
                     return StatusCode(411, new { message = $"username {username} is too much large" });
 
-                var newUserModel = new UserModel { id = _userInfo.UserId, username = username };
+                var user = await _readUser.ReadById(_userInfo.UserId, null);
+                user.username = username;
 
-                await _update.Update(newUserModel, null);
+                await _update.Update(user, null);
                 _logger.LogInformation($"username was updated in db. {username}#{_userInfo.UserId}");
 
                 await _tokenService.UpdateJwtToken();

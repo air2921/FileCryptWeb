@@ -1,4 +1,5 @@
 ﻿using CsvHelper;
+using Newtonsoft.Json.Linq;
 using System.Globalization;
 using webapi.Interfaces.Services;
 
@@ -44,6 +45,22 @@ namespace webapi.Services.DataManager
             }
 
             return mimes;
+        }
+
+        public string GetReactAppUrl(string path, bool isChrome)
+        {
+            string jsonContent = File.ReadAllText(path);
+
+            JObject launchJson = JObject.Parse(jsonContent);
+
+            string edgeUrl = launchJson["configurations"][0]["url"].ToString();
+
+            string chromeUrl = launchJson["configurations"][1]["url"].ToString();
+
+            if (isChrome)
+                return chromeUrl;
+
+            return edgeUrl;
         }
     }
 }

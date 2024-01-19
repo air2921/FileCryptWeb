@@ -31,36 +31,34 @@ namespace webapi.Controllers.Admin
         }
 
         [HttpPost("send")]
-        public async Task<IActionResult> SendEmail([FromBody] NotificationModel notificationModel, [FromQuery] string username, [FromQuery] string email)
+        public async Task<IActionResult> SendEmail([FromBody] NotifyDTO notifyDTO, [FromQuery] string username, [FromQuery] string email)
         {
             try
             {
-                var userModel = new UserModel { username = username, email = email };
-
                 var emailDto = new EmailDto
                 {
                     username = username,
                     email = email,
-                    subject = notificationModel.message_header,
-                    message = notificationModel.message
+                    subject = notifyDTO.message_header,
+                    message = notifyDTO.message
                 };
 
                 await _emailSender.SendMessage(emailDto);
                 
                 var newNotificationModel = new NotificationModel
                 {
-                    receiver_id = notificationModel.receiver_id,
+                    receiver_id = notifyDTO.receiver_id,
                     message_header = "You have a notification from administrator",
-                    message = notificationModel.message,
+                    message = notifyDTO.message,
                     send_time = DateTime.UtcNow,
-                    priority = notificationModel.priority,
+                    priority = notifyDTO.priority,
                     is_checked = false
                 };
 
-                _logger.LogWarning($"{_userInfo.Username}#{_userInfo.UserId} sent message via work email to {username}#{notificationModel.receiver_id} on {email}");
+                _logger.LogWarning($"{_userInfo.Username}#{_userInfo.UserId} sent message via work email to {username}#{notifyDTO.receiver_id} on {email}");
 
                 await _createNotification.Create(newNotificationModel);
-                _logger.LogInformation($"Created notification. Sender: {_userInfo.Username}#{_userInfo.UserId}. Receiver:{username}#{notificationModel.receiver_id} ");
+                _logger.LogInformation($"Created notification. Sender: {_userInfo.Username}#{_userInfo.UserId}. Receiver:{username}#{notifyDTO.receiver_id} ");
 
                 return StatusCode(201, new { message = SuccessMessage.SuccessEmailSendedAndCreatedNotification, sended_notification = newNotificationModel });
             }

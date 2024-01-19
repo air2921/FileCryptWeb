@@ -116,15 +116,7 @@ namespace webapi.Services.Security
             if (_context.HttpContext.Request.Cookies.ContainsKey(Constants.JWT_COOKIE_KEY))
                 _context.HttpContext.Response.Cookies.Delete(Constants.JWT_COOKIE_KEY);
 
-            var userModel = new UserModel
-            { 
-                id = userAndToken.user.id,
-                username = userAndToken.user.username,
-                email = userAndToken.user.email,
-                role = userAndToken.user.role
-            };
-
-            string jwt = GenerateJwtToken(userModel, Constants.JwtExpiry);
+            string jwt = GenerateJwtToken(userAndToken.user, Constants.JwtExpiry);
             _context.HttpContext.Response.Cookies.Append(Constants.JWT_COOKIE_KEY, jwt, SetCookieOptions(Constants.JwtExpiry));
         }
 

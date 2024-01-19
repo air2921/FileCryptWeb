@@ -10,18 +10,18 @@ namespace webapi.Models
         [Key]
         public int id { get; set; }
 
-        public string? username { get; set; }
+        public string username { get; set; }
 
-        public string? role { get; set; }
+        public string role { get; set; }
 
         [EmailAddress]
-        public string? email { get; set; }
+        public string email { get; set; }
 
-        public string? password { get; set; }
+        public string password { get; set; }
 
-        public bool? is_2fa_enabled { get; set; }
+        public bool is_2fa_enabled { get; set; }
 
-        public bool? is_blocked { get; set; }
+        public bool is_blocked { get; set; }
 
         [JsonIgnore]
         public KeyModel? Keys { get; set; }

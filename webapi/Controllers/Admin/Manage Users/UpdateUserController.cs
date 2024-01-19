@@ -67,13 +67,9 @@ namespace webapi.Controllers.Admin.Manage_Users
                 if (_userInfo.Role != Role.HighestAdmin.ToString() && targetUser.role == Role.HighestAdmin.ToString())
                     return StatusCode(403, new { message = ErrorMessage.HighestRoleError });
 
-                var userModel = new UserModel
-                {
-                    id = userId,
-                    is_blocked = block
-                };
+                targetUser.is_blocked = block;
 
-                await _updateUser.Update(userModel, null);
+                await _updateUser.Update(targetUser, null);
 
                 if (block)
                 {

@@ -23,6 +23,7 @@ namespace webapi.Controllers.Account.Edit
 
         private readonly FileCryptDbContext _dbContext;
         private readonly ICreate<NotificationModel> _createNotification;
+        private readonly IRead<UserModel> _readUser;
         private readonly IUpdate<UserModel> _update;
         private readonly IUserAgent _userAgent;
         private readonly IEmailSender _email;
@@ -36,6 +37,7 @@ namespace webapi.Controllers.Account.Edit
         public EmailController(
             FileCryptDbContext dbContext,
             ICreate<NotificationModel> createNotification,
+            IRead<UserModel> readUser,
             IUpdate<UserModel> update,
             IUserAgent userAgent,
             IEmailSender email,
@@ -48,6 +50,7 @@ namespace webapi.Controllers.Account.Edit
         {
             _dbContext = dbContext;
             _createNotification = createNotification;
+            _readUser = readUser;
             _update = update;
             _userAgent = userAgent;
             _email = email;
@@ -60,7 +63,7 @@ namespace webapi.Controllers.Account.Edit
         }
 
         [HttpPost("start")]
-        public async Task<IActionResult> StartEmailChangeProcess([FromBody] UserModel userModel)
+        public async Task<IActionResult> StartEmailChangeProcess([FromQuery] string password)
         {
             try
             {
@@ -73,7 +76,7 @@ namespace webapi.Controllers.Account.Edit
                     return StatusCode(404);
                 }
 
-                bool IsCorrect = _passwordManager.CheckPassword(userModel.password, user.password!);
+                bool IsCorrect = _passwordManager.CheckPassword(password, user.password);
                 if (!IsCorrect)
                     return StatusCode(401, new { message = AccountErrorMessage.PasswordIncorrect });
 
@@ -91,8 +94,8 @@ namespace webapi.Controllers.Account.Edit
 
                 HttpContext.Session.SetInt32(_userInfo.Email, code);
                 _logger.LogInformation($"Code was saved in user session {_userInfo.Username}#{_userInfo.UserId}");
-
                 _logger.LogInformation($"Email to {_userInfo.Username}#{_userInfo.UserId} was sended on {_userInfo.Email} (1-st step)");
+
                 return StatusCode(200, new { message = AccountSuccessMessage.EmailSended });
             }
             catch (Exception)
@@ -102,7 +105,7 @@ namespace webapi.Controllers.Account.Edit
         }
 
         [HttpPost("confirm/old")]
-        public async Task<IActionResult> ConfirmOldEmail([FromBody] UserModel userModel, [FromQuery] int code)
+        public async Task<IActionResult> ConfirmOldEmail([FromQuery] string email, [FromQuery] int code)
         {
             try
             {
@@ -120,7 +123,7 @@ namespace webapi.Controllers.Account.Edit
                 //Here is 2 steps in single endpoint, for best user experience,
                 //if this doesn't fit your business logic, you can split that logic into two different endpoints
 
-                string email = userModel.email.ToLowerInvariant();
+                email = email.ToLowerInvariant();
 
                 var user = await _dbContext.Users.FirstOrDefaultAsync(u => u.email == email);
                 if (user is not null)
@@ -166,8 +169,10 @@ namespace webapi.Controllers.Account.Edit
                 if (!code.Equals(correctCode))
                     return StatusCode(422, new { message = AccountErrorMessage.CodeIncorrect });
 
-                var newUserModel = new UserModel { id = _userInfo.UserId, email = email };
-                await _update.Update(newUserModel, null);
+                var user = await _readUser.ReadById(_userInfo.UserId, null);
+                user.email = email;
+
+                await _update.Update(user, null);
                 _logger.LogInformation("Email was was updated in db");
 
                 var clientInfo = Parser.GetDefault().Parse(HttpContext.Request.Headers["User-Agent"].ToString());

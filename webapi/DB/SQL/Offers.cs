@@ -10,16 +10,19 @@ namespace webapi.DB.SQL
     public class Offers : ICreate<OfferModel>, IDelete<OfferModel>, IRead<OfferModel>
     {
         private readonly FileCryptDbContext _dbContext;
+        private readonly IRead<UserModel> _readUser;
 
-        public Offers(FileCryptDbContext dbContext)
+        public Offers(FileCryptDbContext dbContext, IRead<UserModel> readUser)
         {
             _dbContext = dbContext;
+            _readUser = readUser;
         }
 
         public async Task Create(OfferModel offerModel)
         {
-            var users = await _dbContext.Users.Select(u => u.id).ToArrayAsync();
-            bool bothExist = users.Contains(offerModel.sender_id) && users.Contains(offerModel.receiver_id);
+            var sender = await _readUser.ReadById(offerModel.sender_id, null);
+            var receiver = await _readUser.ReadById(offerModel.receiver_id, null);
+            bool bothExist = receiver is not null && sender is not null;
             if (!bothExist)
                 throw new UserException(AccountErrorMessage.UserNotFound);
 

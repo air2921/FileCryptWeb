@@ -45,13 +45,11 @@ const KeySettings = () => {
     const handleSubmit = async (e: FormEvent, keyType: string, isAuto: boolean, keyValue: string) => {
         e.preventDefault();
 
-        const body = isAuto ? null : { [`${keyType.toLowerCase()}_key`]: keyValue };
-
         const response = await AxiosRequest({
-            endpoint: `api/core/keys/${keyType.toLowerCase()}?auto=${isAuto}`,
+            endpoint: `api/core/keys/${keyType.toLowerCase()}?key=${isAuto ? null : keyValue}&auto=${isAuto}`,
             method: 'PUT',
             withCookie: true,
-            requestBody: body
+            requestBody: null
         });
 
         if (keyType.toLowerCase() === 'private') {
