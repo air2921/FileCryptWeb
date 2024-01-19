@@ -45,7 +45,7 @@ const KeySettings = () => {
     const handleSubmit = async (e: FormEvent, keyType: string, isAuto: boolean, keyValue: string) => {
         e.preventDefault();
 
-        const body = isAuto ? null : { [`${keyType.toLowerCase()}_key`]: keyValue };
+        const body = isAuto ? null : { key: keyValue };
 
         const response = await AxiosRequest({
             endpoint: `api/core/keys/${keyType.toLowerCase()}?auto=${isAuto}`,
