@@ -9,12 +9,13 @@ using webapi.Interfaces.Services;
 using webapi.Interfaces.SQL;
 using webapi.Localization;
 using webapi.Models;
+using webapi.Services;
 
 namespace webapi.Controllers.Account
 {
     [Route("api/auth/recovery")]
     [ApiController]
-    [ValidateAntiForgeryToken]
+    //[ValidateAntiForgeryToken]
     public class RecoveryController : ControllerBase
     {
         private readonly FileCryptDbContext _dbContext;
@@ -29,6 +30,7 @@ namespace webapi.Controllers.Account
         private readonly IPasswordManager _passwordManager;
         private readonly IDeleteByName<LinkModel> _deleteByName;
         private readonly IGenerateKey _generateKey;
+        private readonly IFileManager _fileManager;
 
         public RecoveryController(
             FileCryptDbContext dbContext,
@@ -42,7 +44,8 @@ namespace webapi.Controllers.Account
             IUpdate<TokenModel> updateToken,
             IPasswordManager passwordManager,
             IDeleteByName<LinkModel> deleteByName,
-            IGenerateKey generateKey)
+            IGenerateKey generateKey,
+            IFileManager fileManager)
         {
             _dbContext = dbContext;
             _logger = logger;
@@ -56,10 +59,11 @@ namespace webapi.Controllers.Account
             _passwordManager = passwordManager;
             _deleteByName = deleteByName;
             _generateKey = generateKey;
+            _fileManager = fileManager;
         }
 
         [HttpPost("create/unique/token")]
-        public async Task<IActionResult> RecoveryAccount([FromBody] string email)
+        public async Task<IActionResult> RecoveryAccount([FromQuery] string email)
         {
             try
             {
@@ -97,7 +101,7 @@ namespace webapi.Controllers.Account
                     username = user.username,
                     email = user.email,
                     subject = EmailMessage.RecoveryAccountHeader,
-                    message = EmailMessage.RecoveryAccountBody + token
+                    message = EmailMessage.RecoveryAccountBody + $"{_fileManager.GetReactAppUrl(App.REACT_LAUNCH_JSON_PATH, true)}/auth/recovery/{token}"
                 };
 
                 await _emailSender.SendMessage(emailDto);
@@ -114,7 +118,7 @@ namespace webapi.Controllers.Account
         }
 
         [HttpPost("account")]
-        public async Task<IActionResult> RecoveryAccountByToken([FromBody] string password, [FromQuery] string token)
+        public async Task<IActionResult> RecoveryAccountByToken([FromQuery] string password, [FromQuery] string token)
         {
             try
             {

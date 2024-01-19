@@ -108,7 +108,7 @@ namespace webapi.Controllers.Core
 
         [HttpPut("private")]
         [ValidateAntiForgeryToken]
-        public async Task<IActionResult> UpdatePrivateKey([FromBody] string? key, [FromQuery] bool auto)
+        public async Task<IActionResult> UpdatePrivateKey([FromQuery] string? key, [FromQuery] bool auto)
         {
             try
             {
@@ -139,7 +139,7 @@ namespace webapi.Controllers.Core
 
         [HttpPut("internal")]
         [ValidateAntiForgeryToken]
-        public async Task<IActionResult> UpdatePersonalInternalKey([FromBody] string? key, [FromQuery] bool auto)
+        public async Task<IActionResult> UpdatePersonalInternalKey([FromQuery] string? key, [FromQuery] bool auto)
         {
             try
             {

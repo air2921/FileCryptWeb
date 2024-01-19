@@ -6,7 +6,7 @@ using webapi.Models;
 
 namespace webapi.DB.SQL
 {
-    public class Links : ICreate<LinkModel>, IRead<LinkModel>, IDelete<Links>, IDeleteByName<LinkModel>
+    public class Links : ICreate<LinkModel>, IRead<LinkModel>, IDelete<LinkModel>, IDeleteByName<LinkModel>
     {
         private readonly FileCryptDbContext _dbContext;
 

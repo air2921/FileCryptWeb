@@ -63,7 +63,7 @@ namespace webapi.Controllers.Account.Edit
         }
 
         [HttpPost("start")]
-        public async Task<IActionResult> StartEmailChangeProcess([FromBody] string password)
+        public async Task<IActionResult> StartEmailChangeProcess([FromQuery] string password)
         {
             try
             {
@@ -105,7 +105,7 @@ namespace webapi.Controllers.Account.Edit
         }
 
         [HttpPost("confirm/old")]
-        public async Task<IActionResult> ConfirmOldEmail([FromBody] string email, [FromQuery] int code)
+        public async Task<IActionResult> ConfirmOldEmail([FromQuery] string email, [FromQuery] int code)
         {
             try
             {
