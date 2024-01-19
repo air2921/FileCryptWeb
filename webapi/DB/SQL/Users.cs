@@ -87,23 +87,12 @@ namespace webapi.DB.SQL
             var user = await _dbContext.Users.FirstOrDefaultAsync(u => u.id == userModel.id) ??
                 throw new UserException(AccountErrorMessage.UserNotFound);
 
-            if (userModel.username is not null)
-                user.username = userModel.username;
-
-            if (userModel.email is not null)
-                user.email = userModel.email;
-
-            if (userModel.password is not null)
-                user.password = userModel.password;
-
-            if (userModel.role is not null)
-                user.role = userModel.role;
-
-            if (userModel.is_blocked is not null)
-                user.is_blocked = userModel.is_blocked;
-
-            if (userModel.is_2fa_enabled is not null)
-                user.is_2fa_enabled = userModel.is_2fa_enabled;
+            user.username = userModel.username;
+            user.email = userModel.email;
+            user.password = userModel.password;
+            user.role = userModel.role;
+            user.is_blocked = userModel.is_blocked;
+            user.is_2fa_enabled = userModel.is_2fa_enabled;
 
             await _dbContext.SaveChangesAsync();
         }

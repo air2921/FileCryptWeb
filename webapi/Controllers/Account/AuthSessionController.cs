@@ -66,14 +66,11 @@ namespace webapi.Controllers.Account
         #region Factical login endpoints and helped method
 
         [HttpPost("login")]
-        public async Task<IActionResult> Login(UserModel userModel)
+        public async Task<IActionResult> Login(AuthDTO userDTO)
         {
             try
             {
-                if (userModel.email is null || userModel.password is null)
-                    return StatusCode(422, new { message = AccountErrorMessage.InvalidUserData });
-
-                var email = userModel.email.ToLowerInvariant();
+                var email = userDTO.email.ToLowerInvariant();
                 var user = await _dbContext.Users.FirstOrDefaultAsync(u => u.email == email);
                 if (user is null)
                     return StatusCode(404, new { message = AccountErrorMessage.UserNotFound });
@@ -81,16 +78,17 @@ namespace webapi.Controllers.Account
                 if (user.is_blocked == true)
                     return StatusCode(403, new { message = AccountErrorMessage.UserBlocked });
 
-                bool IsCorrect = _passwordManager.CheckPassword(userModel.password, user.password!);
+                bool IsCorrect = _passwordManager.CheckPassword(userDTO.password, user.password!);
                 if (!IsCorrect)
                     return StatusCode(401, new { message = AccountErrorMessage.PasswordIncorrect });
 
                 var clientInfo = Parser.GetDefault().Parse(HttpContext.Request.Headers["User-Agent"].ToString());
 
-                if ((bool)!user.is_2fa_enabled!)
+                if (!user.is_2fa_enabled)
                     return await CreateTokens(clientInfo, user);
 
                 int code = _generateCode.GenerateSixDigitCode();
+
                 var emailDto = new EmailDto
                 {
                     username = user.username!,

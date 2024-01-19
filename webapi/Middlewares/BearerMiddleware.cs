@@ -57,15 +57,7 @@ namespace webapi.Middlewares
                         return;
                     }
 
-                    var userModel = new UserModel
-                    {
-                        id = userAndToken.user.id,
-                        username = userAndToken.user.username,
-                        email = userAndToken.user.email,
-                        role = userAndToken.user.role
-                    };
-
-                    string createdJWT = tokenService.GenerateJwtToken(userModel, Constants.JwtExpiry);
+                    string createdJWT = tokenService.GenerateJwtToken(userAndToken.user, Constants.JwtExpiry);
                     var jwtCookieOptions = tokenService.SetCookieOptions(Constants.JwtExpiry);
 
                     context.Response.Cookies.Append(Constants.JWT_COOKIE_KEY, createdJWT, jwtCookieOptions);

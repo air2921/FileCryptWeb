@@ -50,7 +50,7 @@ namespace webapi.Controllers.Account.Edit
         }
 
         [HttpPut]
-        public async Task<IActionResult> UpdatePassword([FromBody] PasswordDto passwordDto)
+        public async Task<IActionResult> UpdatePassword([FromBody] PasswordDTO passwordDto)
         {
             try
             {
@@ -70,10 +70,11 @@ namespace webapi.Controllers.Account.Edit
                 if (!IsCorrect)
                     return StatusCode(401, new { message = AccountErrorMessage.PasswordIncorrect });
 
+
                 _logger.LogInformation($"{_userInfo.Username}#{_userInfo.UserId} Password is correct, action is allowed");
 
-                var newUserModel = new UserModel { id = _userInfo.UserId, password = _passwordManager.HashingPassword(passwordDto.NewPassword) };
-                await _update.Update(newUserModel, null);
+                user.password = _passwordManager.HashingPassword(passwordDto.NewPassword);
+                await _update.Update(user, null);
                 _logger.LogInformation("Password was hashed and updated in db");
 
                 var clientInfo = Parser.GetDefault().Parse(HttpContext.Request.Headers["User-Agent"].ToString());
