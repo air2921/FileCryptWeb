@@ -4,6 +4,7 @@ using webapi.Exceptions;
 using webapi.Interfaces.Controllers;
 using webapi.Interfaces.Cryptography;
 using webapi.Interfaces.Services;
+using webapi.Services;
 
 namespace webapi.Controllers.Core
 {
@@ -40,7 +41,10 @@ namespace webapi.Controllers.Core
             {
                 var param = await _cryptographyParams.GetCryptographyParams(type);
 
-                return await _cryptographyController.EncryptFile(_encrypt.EncryptFileAsync, param.EncryptionKey, file, _userInfo.UserId, type);
+                var encryptedFile = await _cryptographyController.EncryptFile(_encrypt.EncryptFileAsync, param.EncryptionKey, file, _userInfo.UserId, type);
+                HttpContext.Session.SetString(Constants.CACHE_FILES, true.ToString());
+
+                return encryptedFile;
             }
             catch (UserException ex)
             {
@@ -64,7 +68,10 @@ namespace webapi.Controllers.Core
             {
                 var param = await _cryptographyParams.GetCryptographyParams(type);
 
-                return await _cryptographyController.EncryptFile(_decrypt.DecryptFileAsync, param.EncryptionKey, file, _userInfo.UserId, type);
+                var decryptedFile = await _cryptographyController.EncryptFile(_decrypt.DecryptFileAsync, param.EncryptionKey, file, _userInfo.UserId, type);
+                HttpContext.Session.SetString(Constants.CACHE_FILES, true.ToString());
+
+                return decryptedFile;
             }
             catch (UserException ex)
             {

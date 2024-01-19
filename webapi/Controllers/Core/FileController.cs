@@ -18,20 +18,17 @@ namespace webapi.Controllers.Core
     [Authorize]
     public class FileController : ControllerBase
     {
-        private readonly FileCryptDbContext _dbContext;
         private readonly IRedisCache _redisCache;
         private readonly IUserInfo _userInfo;
         private readonly IDelete<FileModel> _deleteFileById;
         private readonly IRead<FileModel> _readFile;
 
         public FileController(
-            FileCryptDbContext dbContext,
             IRedisCache redisCache,
             IUserInfo userInfo,
             IDelete<FileModel> deleteFileById,
             IRead<FileModel> readFile)
         {
-            _dbContext = dbContext;
             _redisCache = redisCache;
             _userInfo = userInfo;
             _deleteFileById = deleteFileById;
@@ -105,7 +102,7 @@ namespace webapi.Controllers.Core
 
             var files = await _readFile.ReadAll(_userInfo.UserId, skip, count);
 
-            await _redisCache.CacheData(cacheKey, files, TimeSpan.FromSeconds(15));
+            await _redisCache.CacheData(cacheKey, files, TimeSpan.FromMinutes(3));
 
             return StatusCode(200, new { files });
         }
