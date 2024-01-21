@@ -101,7 +101,7 @@ namespace webapi.Controllers.Account
                     username = user.username,
                     email = user.email,
                     subject = EmailMessage.RecoveryAccountHeader,
-                    message = EmailMessage.RecoveryAccountBody + $"{_fileManager.GetReactAppUrl(App.REACT_LAUNCH_JSON_PATH, true)}/auth/recovery/{token}"
+                    message = EmailMessage.RecoveryAccountBody + $"{_fileManager.GetReactAppUrl(App.REACT_LAUNCH_JSON_PATH, true)}/auth/recovery?token={token}"
                 };
 
                 await _emailSender.SendMessage(emailDto);

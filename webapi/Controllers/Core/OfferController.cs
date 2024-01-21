@@ -171,7 +171,7 @@ namespace webapi.Controllers.Core
         {
             var cacheKey = $"Offer_{_userInfo.UserId}_{skip}_{count}";
 
-            bool clearCache = HttpContext.Session.GetString(Constants.CACHE_OFFERS) is not null ? bool.Parse(HttpContext.Session.GetString(Constants.CACHE_OFFERS)) : true;
+            bool clearCache = bool.TryParse(HttpContext.Session.GetString(Constants.CACHE_OFFERS), out var parsedValue) ? parsedValue : true;
 
             if (clearCache)
             {
@@ -186,8 +186,8 @@ namespace webapi.Controllers.Core
             var offers = await _readOffer.ReadAll(_userInfo.UserId, skip, count);
             foreach (var offer in offers)
             {
-                offer.offer_body = null;
-                offer.offer_header = null;
+                offer.offer_body = string.Empty;
+                offer.offer_header = string.Empty;
             }
 
             await _redisCache.CacheData(cacheKey, offers, TimeSpan.FromMinutes(3));

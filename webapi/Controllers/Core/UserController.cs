@@ -107,7 +107,7 @@ namespace webapi.Controllers.Core
             {
                 var originalUser = new UserModel();
 
-                bool clearCache = HttpContext.Session.GetString(Constants.CACHE_USER_DATA) is not null ? bool.Parse(HttpContext.Session.GetString(Constants.CACHE_USER_DATA)) : true;
+                bool clearCache = bool.TryParse(HttpContext.Session.GetString(Constants.CACHE_USER_DATA), out var parsedValue) ? parsedValue : true;
                 if (clearCache)
                 {
                     await _redisCache.DeleteCache(cacheKey);

@@ -1,6 +1,5 @@
 ﻿using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
-using Microsoft.EntityFrameworkCore;
 using Newtonsoft.Json;
 using webapi.DB;
 using webapi.Exceptions;
@@ -74,7 +73,7 @@ namespace webapi.Controllers.Core
         public async Task<IActionResult> GetAll([FromQuery] int skip, [FromQuery] int count)
         {
             var cacheKey = $"Notifications_{_userInfo.UserId}_{skip}_{count}";
-            bool clearCache = HttpContext.Session.GetString(Constants.CACHE_NOTIFICATIONS) is not null ? bool.Parse(HttpContext.Session.GetString(Constants.CACHE_NOTIFICATIONS)) : true;
+            bool clearCache = bool.TryParse(HttpContext.Session.GetString(Constants.CACHE_NOTIFICATIONS), out var parsedValue) ? parsedValue : true;
 
             if (clearCache)
             {

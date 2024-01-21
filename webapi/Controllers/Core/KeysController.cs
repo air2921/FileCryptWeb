@@ -1,9 +1,6 @@
 ﻿using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
-using Microsoft.EntityFrameworkCore;
-using Microsoft.EntityFrameworkCore.Metadata.Internal;
 using Newtonsoft.Json;
-using Pipelines.Sockets.Unofficial;
 using System.Text.RegularExpressions;
 using webapi.DB;
 using webapi.Exceptions;
@@ -71,7 +68,7 @@ namespace webapi.Controllers.Core
             {
                 var keys = new KeyModel();
                 var cacheKeys = await _redisCache.GetCachedData(cacheKey);
-                bool clearCache = HttpContext.Session.GetString(Constants.CACHE_KEYS) is not null ? bool.Parse(HttpContext.Session.GetString(Constants.CACHE_KEYS)) : true;
+                bool clearCache = bool.TryParse(HttpContext.Session.GetString(Constants.CACHE_KEYS), out var parsedValue) ? parsedValue : true;
 
                 if (clearCache)
                 {

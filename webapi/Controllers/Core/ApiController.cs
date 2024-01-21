@@ -58,7 +58,7 @@ namespace webapi.Controllers.Core
             try
             {
                 var cacheApi = await _redisCache.GetCachedData(cacheKey);
-                bool clearCache = HttpContext.Session.GetString(Constants.CACHE_API) is not null ? bool.Parse(HttpContext.Session.GetString(Constants.CACHE_API)) : true;
+                bool clearCache = bool.TryParse(HttpContext.Session.GetString(Constants.CACHE_API), out var parsedValue) ? parsedValue : true;
                 if (clearCache)
                 {
                     await _redisCache.DeleteCache(cacheKey);

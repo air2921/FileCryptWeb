@@ -91,8 +91,8 @@ namespace webapi.Controllers.Account
 
                 var emailDto = new EmailDto
                 {
-                    username = user.username!,
-                    email = user.email!,
+                    username = user.username,
+                    email = user.email,
                     subject = EmailMessage.Verify2FaHeader,
                     message = EmailMessage.Verify2FaBody + code
                 };

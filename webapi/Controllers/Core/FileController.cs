@@ -1,8 +1,6 @@
 ﻿using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
-using Microsoft.EntityFrameworkCore;
 using Newtonsoft.Json;
-using webapi.DB;
 using webapi.Exceptions;
 using webapi.Interfaces.Redis;
 using webapi.Interfaces.Services;
@@ -87,7 +85,7 @@ namespace webapi.Controllers.Core
         public async Task<IActionResult> GetAllFiles([FromQuery] int skip, [FromQuery] int count)
         {
             var cacheKey = $"Files_{_userInfo.UserId}_{skip}_{count}";
-            bool clearCache = HttpContext.Session.GetString(Constants.CACHE_FILES) is not null ? bool.Parse(HttpContext.Session.GetString(Constants.CACHE_FILES)) : true;
+            bool clearCache = bool.TryParse(HttpContext.Session.GetString(Constants.CACHE_FILES), out var parsedValue) ? parsedValue : true;
 
             if (clearCache)
             {
