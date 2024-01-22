@@ -11,23 +11,28 @@ import KeySetting from './pages/KeySettings';
 import Offers from './pages/Offers';
 import Files from './pages/Files';
 import Notifications from './pages/Notifications';
+import NotFound from './pages/no_logic/NotFound/NotFound'
+import Layout from './components/Layout/Layout';
 
 function App() {
     return (
-        <div>
+        <>
             <Routes>
-                <Route path="/" element={<Home />} />
-                <Route path="/about" element={<About />} />
-                <Route path="/user/:userId/:username" element={<User />} />
-                <Route path="/settings" element={<UserSettings />} />
-                <Route path="/settings/keys" element={<KeySetting />} />
-                <Route path="/offers" element={<Offers />} />
-                <Route path="/files" element={<Files />} />
-                <Route path="/notifications" element={<Notifications />} />
-                <Route path="/auth/signin" element={<Login />} />
-                <Route path="/auth/signup" element={ <Register /> } />
+                <Route path="/" element={<Layout />}>
+                    <Route index element={<Home />} />
+                    <Route path="about" element={<About />} />
+                    <Route path="user/:userId/:username" element={<User />} />
+                    <Route path="settings" element={<UserSettings />} />
+                    <Route path="settings/keys" element={<KeySetting />} />
+                    <Route path="offers" element={<Offers />} />
+                    <Route path="files" element={<Files />} />
+                    <Route path="notifications" element={<Notifications />} />
+                    <Route path="auth/signin" element={<Login />} />
+                    <Route path="auth/signup" element={<Register />} />
+                    <Route path="*" element={<NotFound />} />
+                </Route>
             </Routes>
-        </div>
+        </>
     );
 }
 

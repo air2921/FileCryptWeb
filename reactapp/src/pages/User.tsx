@@ -1,5 +1,5 @@
 ﻿import React, { useEffect, useState } from 'react';
-import { useParams } from 'react-router-dom';
+import { useNavigate, useParams } from 'react-router-dom';
 
 import UserData from '../components/User/UserData';
 import UserKeys from '../components/User/UserKeys';
@@ -13,6 +13,7 @@ const User = () => {
     const [userData, setUserData] = useState(null);
     const [successStatusCode, setStatusCode] = useState(false)
     const [errorMessage, setErrorMessage] = useState('');
+    const navigate = useNavigate();
 
     const fetchData = async () => {
 
@@ -23,6 +24,10 @@ const User = () => {
             setStatusCode(true);
         }
         else {
+            if (response.statusCode === 404) {
+                navigate("*");
+            }
+
             setErrorMessage(response.data);
         }
     };

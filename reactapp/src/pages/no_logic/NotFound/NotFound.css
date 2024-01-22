@@ -1,0 +1,40 @@
+.error-container {
+    background-color: black;
+    color: white;
+    display: flex;
+    flex-direction: column;
+    justify-content: flex-start;
+    align-items: center;
+    min-height: 100vh;
+    padding-top: 100px;
+}
+
+.error-code h1 {
+    font-size: 5em;
+}
+
+.main-button {
+    display: inline-block;
+    padding: 15px 30px;
+    font-size: 1.2em;
+    background-color: #007bff;
+    color: white;
+    border: none;
+    cursor: pointer;
+    text-decoration: none;
+    margin: 0 auto;
+}
+
+.error-description h2 {
+    font-size: 2em;
+    color: gray;
+    flex: 1;
+}
+
+.divider {
+    width: 80px;
+    height: 2px;
+    background-color: gray;
+    margin-top: 20px;
+    margin-bottom: 20px;
+}

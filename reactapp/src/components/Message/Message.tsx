@@ -3,7 +3,7 @@ import Font from '../Font/Font';
 
 function Message({ message, font }: MessageProps) {
     return (
-        <div className="error-container">
+        <div className="message-container">
             <Font font={font} />
             <div>{message}</div>
         </div>
