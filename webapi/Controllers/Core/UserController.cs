@@ -68,13 +68,7 @@ namespace webapi.Controllers.Core
                 .ToListAsync();
 
             if (!user_keys_files.Any())
-                {
-                    if (userId.Equals(_userInfo.UserId))
-                    {
-                        _tokenService.DeleteTokens();
-                    }
-                    return StatusCode(404, new { message = ExceptionUserMessages.UserNotFound });
-                }
+                return StatusCode(404, new { message = ExceptionUserMessages.UserNotFound });
 
             var keys = user_keys_files.Select(u => u.keys.FirstOrDefault()).FirstOrDefault();
             var files = user_keys_files.Select(u => u.files).ToList();
