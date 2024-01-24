@@ -62,7 +62,7 @@ namespace webapi.Controllers.Account
             _fileManager = fileManager;
         }
 
-        [HttpPost("create/unique/token")]
+        [HttpPost("unique/token")]
         public async Task<IActionResult> RecoveryAccount([FromQuery] string email)
         {
             try
@@ -145,7 +145,7 @@ namespace webapi.Controllers.Account
                 var clientInfo = Parser.GetDefault().Parse(HttpContext.Request.Headers["User-Agent"].ToString());
                 var ua = _userAgent.GetBrowserData(clientInfo);
 
-                var notificationModel = new NotificationModel
+                await _createNotification.Create(new NotificationModel
                 {
                     message_header = "Someone changed your password",
                     message = $"Someone changed your password at {DateTime.UtcNow} from {ua.Browser} {ua.Version} on OS {ua.OS}.",
@@ -153,9 +153,7 @@ namespace webapi.Controllers.Account
                     send_time = DateTime.UtcNow,
                     is_checked = false,
                     receiver_id = link.user_id
-                };
-
-                await _createNotification.Create(notificationModel);
+                });
 
                 await _deleteByName.DeleteByName(token, null);
                 _logger.LogInformation($"Token: {token} was deleted");
@@ -167,7 +165,7 @@ namespace webapi.Controllers.Account
                     expiry_date = DateTime.UtcNow.AddYears(-100)
                 }, true);
 
-                return StatusCode(200, new { message = AccountSuccessMessage.PasswordUpdated });
+                return StatusCode(200);
             }
             catch (LinkException ex)
             {

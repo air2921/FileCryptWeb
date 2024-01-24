@@ -5,18 +5,13 @@ import Message from '../components/Message/Message';
 import Input from '../components/Helpers/Input';
 import CheckBox from '../components/Helpers/CheckBox';
 import Button from '../components/Helpers/Button';
+import Font from '../components/Font/Font';
 
 const KeySettings = () => {
     const [userKeys, setKeys] = useState(null);
     const [errorMessage, setErrorMessage] = useState('');
-
-    const [privateMessage, setPrivateMessage] = useState('');
-    const [internalMessage, setInternalMessage] = useState('');
-    const [privateFont, setPrivateFont] = useState('');
-    const [internalFont, setInternalFont] = useState('');
-    const [receivedMessage, setReceivedMessage] = useState('');
-    const [receivedFont, setReceivedFont] = useState('');
-
+    const [keyMessage, setKeyMessage] = useState('');
+    const [keyFont, setKeyFont] = useState('');
     const [privateKey, setPrivateKey] = useState('');
     const [internalKey, setInternalKey] = useState('');
     const [isAutoPrivate, setIsAutoPrivate] = useState(false);
@@ -54,24 +49,29 @@ const KeySettings = () => {
 
         if (keyType.toLowerCase() === 'private') {
             if (response.isSuccess) {
-                setPrivateMessage(response.data.message);
-                setPrivateFont('done');
+                setKeyMessage(response.data.message);
+                setKeyFont('done');
             }
             else {
-                setPrivateMessage(response.data);
-                setPrivateFont('error');
+                setKeyMessage(response.data);
+                setKeyFont('error');
             }
         }
         else if (keyType.toLowerCase() === 'internal') {
             if (response.isSuccess) {
-                setInternalMessage(response.data.message);
-                setInternalFont('done');
+                setKeyMessage(response.data.message);
+                setKeyFont('done');
             }
             else {
-                setInternalMessage(response.data);
-                setInternalFont('error');
+                setKeyMessage(response.data);
+                setKeyFont('error');
             }
         }
+
+        setTimeout(() => {
+            setKeyMessage('');
+            setKeyFont('');
+        }, 5000)
     }
 
     useEffect(() => {
@@ -88,13 +88,18 @@ const KeySettings = () => {
         const response = await AxiosRequest({ endpoint: 'api/core/keys/received/clean', method: 'PUT', withCookie: true, requestBody: null });
 
         if (response.isSuccess) {
-            setReceivedMessage(response.data.message);
-            setReceivedFont('done');
+            setKeyMessage(response.data.message);
+            setKeyFont('done');
         }
         else {
-            setReceivedMessage(response.data);
-            setReceivedFont('error');
+            setKeyMessage(response.data);
+            setKeyFont('error');
         }
+
+        setTimeout(() => {
+            setKeyMessage('');
+            setKeyFont('');
+        }, 5000)
     }
 
     const handlePrivateKeySubmit = (e: FormEvent) => {
@@ -106,7 +111,7 @@ const KeySettings = () => {
     };
 
     return (
-        <div>
+        <div className="container">
             <UserKeys keys={keys} />
             <div className="keys">
                 <div className="private">
@@ -117,9 +122,10 @@ const KeySettings = () => {
                         {!privateKey && (
                             <CheckBox text='Auto-generation key' type="checkbox" id="auto-private" checked={isAutoPrivate} onChange={handlePrivateCheckboxChange} />
                         )}
-                        <Button>Update</Button>
+                        <Button>
+                            <Font font={'refresh'} />
+                        </Button>
                     </form>
-                    {privateMessage && <Message message={privateMessage} font={privateFont} />}
                 </div>
                 <div className="internal">
                     <form onSubmit={handleInternalKeySubmit}>
@@ -129,16 +135,19 @@ const KeySettings = () => {
                         {!internalKey && (
                             <CheckBox text='Auto-generation key' type="checkbox" id="auto-internal" checked={isAutoInternal} onChange={handleInternalCheckboxChange} />
                         )}
-                        <Button>Update</Button>
+                        <Button>
+                            <Font font={'refresh'} />
+                        </Button>
                     </form>
-                    {internalMessage && <Message message={internalMessage} font={internalFont} />}
                 </div>
                 <div className="received">
-                    <p>Update Received Key to null</p>
-                    <Button onClick={handleReceivedKeySubmit}>Update</Button>
-                    {receivedMessage && <Message message={receivedMessage} font={receivedFont} />}
+                    <p>Delete Received Key</p>
+                    <Button onClick={handleReceivedKeySubmit}>
+                        <Font font={'delete'} />
+                    </Button>
                 </div>
             </div>
+            <Message message={keyMessage} font={keyFont} />
         </div>
     );
 }

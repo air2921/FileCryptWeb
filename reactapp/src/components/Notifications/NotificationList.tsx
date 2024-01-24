@@ -4,7 +4,7 @@ import Button from '../Helpers/Button';
 import Message from '../Message/Message';
 import Font from '../Font/Font';
 
-function NotificationList({ notifications, deleteNotification, error }: NotificationListProps) {
+function NotificationList({ notifications, deleteNotification }: NotificationListProps) {
 
     if (!notifications || notifications.every(notification => notification === null)) {
         return <div><Message message={'No received notifications'} font='storage' /></div>;
@@ -54,7 +54,6 @@ function NotificationList({ notifications, deleteNotification, error }: Notifica
                                 <Font font={'delete'} />
                             </Button>
                         )}
-                        {error && <Message message={error} font={'error'} />}
                     </li>
                 ))}
         </ul>

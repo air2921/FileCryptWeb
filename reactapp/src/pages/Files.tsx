@@ -6,6 +6,7 @@ import AxiosRequestInterceptor from '../api/AxiosRequestInterceptor';
 import Button from '../components/Helpers/Button';
 import FileButton from '../components/Helpers/FileButton';
 import Font from '../components/Font/Font';
+import Modal from '../components/Modal/Modal';
 
 const Files = () => {
     const [byAsc, setBy] = useState(true);
@@ -13,10 +14,11 @@ const Files = () => {
     const step = 10;
     const [errorMessage, setErrorMessage] = useState('');
     const [filesList, setFiles] = useState(null);
-
+    const [encryptModalActive, setEncryptModalActive] = useState(false);
+    const [decryptModalActive, setDecryptModalActive] = useState(false); 
     const [lastTimeModified, setLastTimeModified] = useState(Date.now());
-    const [deletingError, setDeletingError] = useState('');
-    const [cryptographyError, setCryptographyError] = useState('');
+    const [message, setMessage] = useState('');
+    const [font, setFont] = useState('');
 
     const fetchData = async () => {
         const response = await AxiosRequest({ endpoint: `api/core/files/all?skip=${skip}&count=${step}`, method: 'GET', withCookie: true, requestBody: null });
@@ -41,12 +43,17 @@ const Files = () => {
         const response = await AxiosRequest({ endpoint: `api/core/files/${fileId}`, method: 'DELETE', withCookie: true, requestBody: null });
 
         if (response.isSuccess) {
-            setDeletingError('');
             setLastTimeModified(Date.now());
         }
         else {
-            setDeletingError(response.data);
+            setMessage(response.data);
+            setFont('error')
         }
+
+        setTimeout(() => {
+            setMessage('');
+            setFont('');
+        }, 5000)
     }
 
     const downloadFile = (file: Blob, filename: string) => {
@@ -76,7 +83,8 @@ const Files = () => {
                 }
             );
 
-            setCryptographyError('');
+            setMessage('');
+            setFont('');
             setLastTimeModified(Date.now());
             downloadFile(response.data, filename);
         }
@@ -84,12 +92,19 @@ const Files = () => {
             const errorText = await error.response.data.text();
             try {
                 const errorJson = JSON.parse(errorText);
-                setCryptographyError(errorJson.message)
+                setMessage(errorJson.message)
+                setFont('error');
             }
             catch (e) {
-                setCryptographyError('Unexpected error')
+                setMessage('Unexpected error')
+                setFont('error');
             }
         }
+
+        setTimeout(() => {
+            setMessage('');
+            setFont('');
+        }, 5000)
     }
 
     const handleFileChange = (event: ChangeEvent<HTMLInputElement>, fileType: string, operationType: string) => {
@@ -115,23 +130,38 @@ const Files = () => {
     return (
         <div className="container">
             <div className="cryptography">
-                <p>Select file to encrypt</p>
                 <div className="encrypt">
-                    <FileButton id={'private-encrypt'} font={'upload_file'} onChange={(e) => handleFileChange(e, 'private', 'encrypt')} fileType={'private'} operationType={'encrypt'} />
-                    <FileButton id={'internal-encrypt'} font={'upload_file'} onChange={(e) => handleFileChange(e, 'internal', 'encrypt')} fileType={'internal'} operationType={'encrypt'} />
-                    <FileButton id={'received-encrypt'} font={'upload_file'} onChange={(e) => handleFileChange(e, 'received', 'encrypt')} fileType={'received'} operationType={'encrypt'} />
+                    <p>Encrypt File</p>
+                    <Button onClick={() => setEncryptModalActive(true)}>
+                        <Font font={'lock'} />
+                    </Button>
+                    <Modal isActive={encryptModalActive} setActive={setEncryptModalActive}>
+                        <p>Encrypt via Private Key</p>
+                        <FileButton id={'private-encrypt'} font={'upload_file'} onChange={(e) => handleFileChange(e, 'private', 'encrypt')} fileType={'private'} operationType={'encrypt'} />
+                        <p>Encrypt via Internal Key</p>
+                        <FileButton id={'internal-encrypt'} font={'upload_file'} onChange={(e) => handleFileChange(e, 'internal', 'encrypt')} fileType={'internal'} operationType={'encrypt'} />
+                        <p>Encrypt via Received Key</p>
+                        <FileButton id={'received-encrypt'} font={'upload_file'} onChange={(e) => handleFileChange(e, 'received', 'encrypt')} fileType={'received'} operationType={'encrypt'} />
+                    </Modal>
                 </div>
-                <p>Select file to decrypt</p>
                 <div className="decrypt">
-                    <FileButton id={'private-decrypt'} font={'upload_file'} onChange={(e) => handleFileChange(e, 'private', 'decrypt')} fileType={'private'} operationType={'decrypt'} />
-                    <FileButton id={'internal-decrypt'} font={'upload_file'} onChange={(e) => handleFileChange(e, 'internal', 'decrypt')} fileType={'internal'} operationType={'decrypt'} />
-                    <FileButton id={'received-decrypt'} font={'upload_file'} onChange={(e) => handleFileChange(e, 'received', 'decrypt')} fileType={'received'} operationType={'decrypt'} />
+                    <p>Decrypt File</p>
+                    <Button onClick={() => setDecryptModalActive(true)}>
+                        <Font font={'lock_open'} />
+                    </Button>
+                    <Modal isActive={decryptModalActive} setActive={setDecryptModalActive}>
+                        <p>Decrypt via Private Key</p>
+                        <FileButton id={'private-decrypt'} font={'upload_file'} onChange={(e) => handleFileChange(e, 'private', 'decrypt')} fileType={'private'} operationType={'decrypt'} />
+                        <p>Decrypt via Internal Key</p>
+                        <FileButton id={'internal-decrypt'} font={'upload_file'} onChange={(e) => handleFileChange(e, 'internal', 'decrypt')} fileType={'internal'} operationType={'decrypt'} />
+                        <p>Decrypt via Received Key</p>
+                        <FileButton id={'received-decrypt'} font={'upload_file'} onChange={(e) => handleFileChange(e, 'received', 'decrypt')} fileType={'received'} operationType={'decrypt'} />
+                    </Modal>
                 </div>
-                {cryptographyError && < Message message={cryptographyError} font={'error'} />}
-                <p>You can manage your encryption keys<a href="/settings/keys"> here </a></p>
             </div>
+            {message && font && < Message message={message} font={font} />}
             <div className="files">
-                <FileList files={files} isOwner={true} deleteFile={deleteFile} error={deletingError} />
+                <FileList files={files} isOwner={true} deleteFile={deleteFile} />
                 {skip > 0 && <Button onClick={handleBack}><Font font={'arrow_back'} /></Button>}
                 {files.length > step - 1 && <Button onClick={handleLoadMore}><Font font={'arrow_forward'} /></Button>}
             </div>

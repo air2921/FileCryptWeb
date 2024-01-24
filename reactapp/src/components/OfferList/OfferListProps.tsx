@@ -4,5 +4,4 @@ interface OfferListProps {
     user_id?: number
     deleteOffer?: (offerId: number) => void,
     acceptOffer?: (offerId: number) => void,
-    error?: string
 }

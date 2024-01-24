@@ -1,8 +1,8 @@
 import React from 'react';
 import { Routes, Route } from 'react-router-dom';
 
-import Register from './pages/Register';
-import Login from './pages/Login';
+import Register from './pages/auth/Registration/Register';
+import Login from './pages/auth/Login/Login';
 import Home from './pages/no_logic/Home';
 import About from './pages/no_logic/About';
 import User from './pages/User';
@@ -11,6 +11,7 @@ import KeySetting from './pages/KeySettings';
 import Offers from './pages/Offers';
 import Files from './pages/Files';
 import Notifications from './pages/Notifications';
+import RecoveryAccount from './pages/auth/Recovery/RecoveryAccount'
 import NotFound from './pages/no_logic/NotFound/NotFound'
 import Layout from './components/Layout/Layout';
 
@@ -27,8 +28,10 @@ function App() {
                     <Route path="offers" element={<Offers />} />
                     <Route path="files" element={<Files />} />
                     <Route path="notifications" element={<Notifications />} />
-                    <Route path="auth/signin" element={<Login />} />
+
+                    <Route path="auth/login" element={<Login />} />
                     <Route path="auth/signup" element={<Register />} />
+                    <Route path="auth/recovery" element={<RecoveryAccount />} />
                     <Route path="*" element={<NotFound />} />
                 </Route>
             </Routes>

@@ -4,7 +4,7 @@ import Message from '../Message/Message';
 import Button from '../Helpers/Button';
 import Font from '../Font/Font';
 
-function FileList({ files, isOwner, deleteFile, error }: FileListProps) {
+function FileList({ files, isOwner, deleteFile }: FileListProps) {
 
     if (!files || files.every(file => file === null)) {
         return <div><Message message={'No encrypted files here'} font='storage' /></div>;
@@ -35,7 +35,6 @@ function FileList({ files, isOwner, deleteFile, error }: FileListProps) {
                                 <Font font={'delete'} />
                             </Button>
                         )}
-                        {error && <Message message={error} font={'error'} />}
                     </li>
                 ))}
         </ul>

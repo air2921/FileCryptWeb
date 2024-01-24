@@ -4,7 +4,7 @@ import Message from '../Message/Message';
 import Button from '../Helpers/Button';
 import Font from '../Font/Font';
 
-function OfferList({ offers, user_id, isOwner, deleteOffer, acceptOffer, error }: OfferListProps) {
+function OfferList({ offers, user_id, isOwner, deleteOffer, acceptOffer }: OfferListProps) {
 
     if (!offers || offers.every(offer => offer === null)) {
         return <div><Message message={'No sended or received offers'} font={'storage'} /></div>;

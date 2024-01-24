@@ -19,5 +19,6 @@
     <Folder Include="src\components\Notifications\" />
     <Folder Include="src\components\Settings\" />
     <Folder Include="src\components\OfferList\" />
+    <Folder Include="src\pages\auth\Recovery\" />
   </ItemGroup>
 </Project>

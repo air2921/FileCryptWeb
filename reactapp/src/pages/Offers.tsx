@@ -10,15 +10,13 @@ const Offers = () => {
     const [errorMessage, setErrorMessage] = useState('');
     const [offersList, setOffers] = useState(null);
     const [filter, setFilter] = useState({ sended: null, isAccepted: null });
-
     const [userId, setUserId] = useState(0);
     const [skip, setSkip] = useState(0);
     const step = 10;
-    const [createOfferMessage, setCreateOfferMessage] = useState('')
-    const [createOfferFont, setCreateOfferFont] = useState('')
+    const [message, setMessage] = useState('');
+    const [font, setFont] = useState('');
 
     const [lastOfferModified, setLastOfferModified] = useState(Date.now());
-    const [actionError, setActionError] = useState('');
 
     const fetchData = async () => {
         const response = await AxiosRequest({ endpoint: `api/core/offers/all?skip=${skip}&count=${step}`, method: 'GET', withCookie: true, requestBody: null });
@@ -45,38 +43,57 @@ const Offers = () => {
         const response = await AxiosRequest({ endpoint: `api/core/offers/new/${userId}`, method: 'POST', withCookie: true, requestBody: null })
 
         if (response.isSuccess) {
-            setCreateOfferMessage(response.data.message);
-            setCreateOfferFont('done');
+            setMessage(response.data.message);
+            setFont('done');
             setLastOfferModified(Date.now());
         }
         else {
-            setCreateOfferMessage(response.data)
-            setCreateOfferFont('error');
+            setMessage(response.data)
+            setFont('error');
         }
+
+        setTimeout(() => {
+            setMessage('');
+            setFont('');
+        }, 5000)
     }
 
     const deleteOffer = async (offerId: number) => {
         const response = await AxiosRequest({ endpoint: `api/core/offers/${offerId}`, method: 'DELETE', withCookie: true, requestBody: null })
 
         if (response.isSuccess) {
-            setActionError('');
+            setMessage('');
+            setFont('');
             setLastOfferModified(Date.now());
         }
         else {
-            setActionError(response.data);
+            setMessage(response.data);
+            setFont('error');
         }
+
+        setTimeout(() => {
+            setMessage('');
+            setFont('');
+        }, 5000)
     }
 
     const acceptOffer = async (offerId: number) => {
         const response = await AxiosRequest({ endpoint: `api/core/offers/accept/${offerId}`, method: 'PUT', withCookie: true, requestBody: null })
 
         if (response.isSuccess) {
-            setActionError('');
+            setMessage('');
+            setFont('');
             setLastOfferModified(Date.now());
         }
         else {
-            setActionError(response.data);
+            setMessage(response.data);
+            setFont('error');
         }
+
+        setTimeout(() => {
+            setMessage('');
+            setFont('');
+        }, 5000)
     }
 
     useEffect(() => {
@@ -96,13 +113,13 @@ const Offers = () => {
                     <Input text='UID of the offer receiver' type="number" id="offer" require={true} value={userId} onChange={(e) => setUserId(parseInt(e.target.value, 10))} />
                     <Button>Submit</Button>
                 </form>
-                {createOfferMessage && <Message message={createOfferMessage} font={createOfferFont} />}
             </div>
             <div className="offers">
-                <OfferList offers={offers} user_id={user_id} isOwner={true} deleteOffer={deleteOffer} acceptOffer={acceptOffer} error={actionError} />
+                <OfferList offers={offers} user_id={user_id} isOwner={true} deleteOffer={deleteOffer} acceptOffer={acceptOffer} />
                 {skip > 0 && <Button onClick={handleBack}><Font font={'arrow_back'} /></Button>}
                 {offers.length > step - 1 && <Button onClick={handleLoadMore}><Font font={'arrow_forward'} /></Button>}
             </div>
+            {message && font && < Message message={message} font={font} />}
         </div>
     );
 }

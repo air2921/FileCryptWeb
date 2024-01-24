@@ -6,9 +6,7 @@ import Password from '../components/Settings/Password';
 import Email from '../components/Settings/Email';
 
 const UserSettings = () => {
-
     const [userData, setUserData] = useState(null); 
-
     const [errorMessage, setErrorMessage] = useState('');
     const [successStatusCode, setStatus] = useState(false);
 
@@ -38,7 +36,7 @@ const UserSettings = () => {
         <div className="container">
             <UserData user={user} isOwner={true} />
             <Username />
-            <div className="auth-data-container">
+            <div className="auth-container">
                 <Password />
                 <Email />
             </div>
