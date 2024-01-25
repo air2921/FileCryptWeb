@@ -70,7 +70,6 @@ namespace webapi.Controllers.Account.Edit
                 if (!IsCorrect)
                     return StatusCode(401, new { message = AccountErrorMessage.PasswordIncorrect });
 
-
                 _logger.LogInformation($"{_userInfo.Username}#{_userInfo.UserId} Password is correct, action is allowed");
 
                 user.password = _passwordManager.HashingPassword(passwordDto.NewPassword);
@@ -80,7 +79,7 @@ namespace webapi.Controllers.Account.Edit
                 var clientInfo = Parser.GetDefault().Parse(HttpContext.Request.Headers["User-Agent"].ToString());
                 var ua = _userAgent.GetBrowserData(clientInfo);
 
-                var notificationModel = new NotificationModel
+                await _createNotification.Create(new NotificationModel
                 {
                     message_header = "Someone changed your password",
                     message = $"Someone changed your password at {DateTime.UtcNow} from {ua.Browser}   {ua.Version} on OS {ua.OS}.",
@@ -88,9 +87,7 @@ namespace webapi.Controllers.Account.Edit
                     send_time = DateTime.UtcNow,
                     is_checked = false,
                     receiver_id = _userInfo.UserId
-                };
-
-                await _createNotification.Create(notificationModel);
+                });
 
                 return StatusCode(200, new { message = AccountSuccessMessage.PasswordUpdated });
             }

@@ -44,19 +44,17 @@ namespace webapi.Controllers.Core
         [HttpGet("{userId}/{username}")]
         public async Task<IActionResult> GetUser([FromRoute] int userId, [FromRoute] string username)
         {
-            var user_keys_files = await _dbContext.Users
+            var userAndKeys = await _dbContext.Users
                     .Where(u => u.id == userId && u.username == username)
-                .GroupJoin(
-                    _dbContext.Keys,
-                    user => user.id,
-                    keys => keys.user_id,
-                    (user, keys) => new { user, keys })
-                .SelectMany(
-                    combined => _dbContext.Files
-                        .Where(file => combined.keys.Select(k => k.user_id).Contains(file.user_id))
-                        .DefaultIfEmpty(),
-                    (combined, files) => new { combined.user, combined.keys, files })
-                .OrderByDescending(combined => combined.files.operation_date)
+                    .Join(_dbContext.Keys, user => user.id, keys => keys.user_id, (user, keys) => new { user, keys })
+                    .FirstOrDefaultAsync();
+
+            if (userAndKeys is null)
+                return StatusCode(404, new { message = ExceptionUserMessages.UserNotFound });
+
+            var files = await _dbContext.Files
+                .Where(f => f.user_id == userId)
+                .OrderByDescending(f => f.operation_date)
                 .Take(5)
                 .ToListAsync();
 
@@ -67,26 +65,33 @@ namespace webapi.Controllers.Core
                 .Take(3)
                 .ToListAsync();
 
-            if (!user_keys_files.Any())
-                return StatusCode(404, new { message = ExceptionUserMessages.UserNotFound });
-
-            var keys = user_keys_files.Select(u => u.keys.FirstOrDefault()).FirstOrDefault();
-            var files = user_keys_files.Select(u => u.files).ToList();
-
             bool IsOwner = userId.Equals(_userInfo.UserId);
-            bool privateKey = keys?.private_key is not null;
-            bool internalKey = keys?.internal_key is not null;
-            bool receivedKey = keys?.received_key is not null;
+            bool privateKey = userAndKeys.keys.private_key is not null;
+            bool internalKey = userAndKeys.keys.internal_key is not null;
+            bool receivedKey = userAndKeys.keys.received_key is not null;
 
             if (userId.Equals(_userInfo.UserId))
             {
-                var user = user_keys_files.Select(u => new { u.user.id, u.user.username, u.user.role, u.user.email, u.user.is_blocked }).FirstOrDefault();
+                var user = new
+                {
+                    id = userAndKeys.user.id,
+                    username = userAndKeys.user.username,
+                    email = userAndKeys.user.email,
+                    role = userAndKeys.user.role,
+                    is_blocked = userAndKeys.user.is_blocked
+                };
 
                 return StatusCode(200, new { user, IsOwner, keys = new { privateKey, internalKey, receivedKey }, files, offers });
             }
             else
             {
-                var user = user_keys_files.Select(u => new { u.user.id, u.user.username, u.user.role, u.user.is_blocked }).FirstOrDefault();
+                var user = new
+                {
+                    id = userAndKeys.user.id,
+                    username = userAndKeys.user.username,
+                    role = userAndKeys.user.role,
+                    is_blocked = userAndKeys.user.is_blocked
+                };
 
                 return StatusCode(206, new { user, IsOwner, keys = new { privateKey, internalKey, receivedKey }, files, offers });
             }

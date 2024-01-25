@@ -65,15 +65,13 @@ namespace webapi.Controllers.Account
                 string password = _passwordManager.HashingPassword(userDTO.password);
                 _logger.LogInformation("Password was hashed");
 
-                var emailDto = new EmailDto
+                await _email.SendMessage(new EmailDto
                 {
                     username = userDTO.username,
                     email = userDTO.email,
                     subject = EmailMessage.VerifyEmailHeader,
                     message = EmailMessage.VerifyEmailBody + code
-                };
-
-                await _email.SendMessage(emailDto);
+                });
                 _logger.LogInformation($"Email was sended on {email} (1-st step)");
 
                 HttpContext.Session.SetString(EMAIL, email);
@@ -115,7 +113,7 @@ namespace webapi.Controllers.Account
                 if (!IsCorrect)
                     return StatusCode(422, new { message = AccountErrorMessage.CodeIncorrect });
 
-                var userModel = new UserModel
+                await _userCreate.Create(new UserModel
                 {
                     email = email,
                     password = password,
@@ -123,12 +121,10 @@ namespace webapi.Controllers.Account
                     role = role,
                     is_2fa_enabled = bool.Parse(flag_2fa),
                     is_blocked = false
-                };
-
-                await _userCreate.Create(userModel);
+                });
                 _logger.LogInformation("User was added in db");
 
-                return StatusCode(201, new { userModel });
+                return StatusCode(201);
             }
             catch (Exception ex)
             {

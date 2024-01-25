@@ -1,6 +1,7 @@
 ﻿using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
 using StackExchange.Redis;
+using System.Text.RegularExpressions;
 using UAParser;
 using webapi.DB;
 using webapi.DTO;
@@ -122,6 +123,9 @@ namespace webapi.Controllers.Account
         {
             try
             {
+                if (!Regex.IsMatch(password, Validation.Password))
+                    return StatusCode(400, new { message = AccountErrorMessage.InvalidFormatPassword });
+
                 var link = await _dbContext.Links.FirstOrDefaultAsync(l => l.u_token == token);
                 if (link is null)
                     return StatusCode(404, new { message = AccountErrorMessage.InvalidToken });

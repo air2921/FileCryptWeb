@@ -35,17 +35,17 @@ namespace webapi.Controllers.Admin
         {
             try
             {
-                var emailDto = new EmailDto
+                await _emailSender.SendMessage(new EmailDto
                 {
                     username = username,
                     email = email,
                     subject = notifyDTO.message_header,
                     message = notifyDTO.message
-                };
+                });
 
-                await _emailSender.SendMessage(emailDto);
-                
-                var newNotificationModel = new NotificationModel
+                _logger.LogWarning($"{_userInfo.Username}#{_userInfo.UserId} sent message via work email to {username}#{notifyDTO.receiver_id} on {email}");
+
+                await _createNotification.Create(new NotificationModel
                 {
                     receiver_id = notifyDTO.receiver_id,
                     message_header = "You have a notification from administrator",
@@ -53,14 +53,10 @@ namespace webapi.Controllers.Admin
                     send_time = DateTime.UtcNow,
                     priority = notifyDTO.priority,
                     is_checked = false
-                };
-
-                _logger.LogWarning($"{_userInfo.Username}#{_userInfo.UserId} sent message via work email to {username}#{notifyDTO.receiver_id} on {email}");
-
-                await _createNotification.Create(newNotificationModel);
+                });
                 _logger.LogInformation($"Created notification. Sender: {_userInfo.Username}#{_userInfo.UserId}. Receiver:{username}#{notifyDTO.receiver_id} ");
 
-                return StatusCode(201, new { message = SuccessMessage.SuccessEmailSendedAndCreatedNotification, sended_notification = newNotificationModel });
+                return StatusCode(201, new { message = SuccessMessage.SuccessEmailSendedAndCreatedNotification });
             }
             catch (UserException ex)
             {

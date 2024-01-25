@@ -152,15 +152,14 @@ namespace webapi.Controllers.Core
 
                 var existingUser = await _readKeys.ReadById(_userInfo.UserId, true);
 
-                var keyModel = new KeyModel
+                await _updateKeys.Update(new KeyModel
                 {
                     user_id = _userInfo.UserId,
                     private_key = await _decryptKey.DecryptionKeyAsync(existingUser.private_key, secretKey),
                     internal_key = key,
                     received_key = existingUser.received_key,
-                };
+                }, true);
 
-                await _updateKeys.Update(keyModel, true);
                 HttpContext.Session.SetString(Constants.CACHE_KEYS, true.ToString());
                 await _redisCache.DeleteCache(_redisKeys.InternalKey);
 
@@ -181,14 +180,13 @@ namespace webapi.Controllers.Core
             {
                 var existingUser = await _readKeys.ReadById(_userInfo.UserId, true);
 
-                var keyModel = new KeyModel
+                await _updateKeys.Update(new KeyModel
                 {
                     user_id = _userInfo.UserId,
                     private_key = await _decryptKey.DecryptionKeyAsync(existingUser.private_key, secretKey),
                     received_key = null
-                };
+                }, true);
 
-                await _updateKeys.Update(keyModel, true);
                 HttpContext.Session.SetString(Constants.CACHE_KEYS, true.ToString());
                 await _redisCache.DeleteCache(_redisKeys.InternalKey);
 

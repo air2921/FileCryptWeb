@@ -75,7 +75,7 @@ namespace webapi.Controllers.Core
                 if (keys.internal_key is null)
                     return StatusCode(404, new { message = "You don't have a internal key for create an offer" });
 
-                var offerModel = new OfferModel
+                await _createOffer.Create(new OfferModel
                 {
                     offer_header = $"Proposal to accept an encryption key from a user: {_userInfo.Username}#{_userInfo.UserId}",
                     offer_body = keys.internal_key,
@@ -84,9 +84,9 @@ namespace webapi.Controllers.Core
                     sender_id = _userInfo.UserId,
                     receiver_id = receiverId,
                     created_at = DateTime.UtcNow
-                };
+                });
 
-                var notificationModel = new NotificationModel
+                await _createNotification.Create(new NotificationModel
                 {
                     message_header = "New offer",
                     message = $"You got a new offer from {_userInfo.Username}#{_userInfo.UserId}",
@@ -94,10 +94,8 @@ namespace webapi.Controllers.Core
                     send_time = DateTime.UtcNow,
                     is_checked = false,
                     receiver_id = receiverId
-                };
+                });
 
-                await _createOffer.Create(offerModel);
-                await _createNotification.Create(notificationModel);
                 HttpContext.Session.SetString(Constants.CACHE_OFFERS, true.ToString());
 
                 return StatusCode(201, new { message = SuccessMessage.SuccessOfferCreated });

@@ -82,15 +82,13 @@ namespace webapi.Controllers.Account.Edit
 
                 int code = _generateCode.GenerateSixDigitCode();
 
-                var emailDto = new EmailDto
-                { 
+                await _email.SendMessage(new EmailDto
+                {
                     username = _userInfo.Username,
                     email = _userInfo.Email,
                     subject = EmailMessage.ConfirmOldEmailHeader,
                     message = EmailMessage.ConfirmOldEmailBody + code
-                };
-
-                await _email.SendMessage(emailDto);
+                });
 
                 HttpContext.Session.SetInt32(_userInfo.Email, code);
                 _logger.LogInformation($"Code was saved in user session {_userInfo.Username}#{_userInfo.UserId}");
@@ -109,7 +107,7 @@ namespace webapi.Controllers.Account.Edit
         {
             try
             {
-                int correctCode = (int)HttpContext.Session.GetInt32(_userInfo.Email);
+                int correctCode = int.TryParse(HttpContext.Session.GetString(_userInfo.Email), out var parsedValue) ? parsedValue : 0;
                 _logger.LogInformation($"Code were received from user session {_userInfo.Username}#{_userInfo.UserId}. code: {correctCode}");
 
                 if (!_validation.IsSixDigit(correctCode))
@@ -131,15 +129,13 @@ namespace webapi.Controllers.Account.Edit
 
                 int confirmationCode = _generateCode.GenerateSixDigitCode();
 
-                var emailDto = new EmailDto
+                await _email.SendMessage(new EmailDto
                 {
                     username = _userInfo.Username,
                     email = email,
                     subject = EmailMessage.ConfirmNewEmailHeader,
                     message = EmailMessage.ConfirmNewEmailBody + confirmationCode
-                };
-
-                await _email.SendMessage(emailDto);
+                });
 
                 HttpContext.Session.SetInt32(_userInfo.UserId.ToString(), confirmationCode);
                 HttpContext.Session.SetString(EMAIL, email);
@@ -159,7 +155,7 @@ namespace webapi.Controllers.Account.Edit
         {
             try
             {
-                int correctCode = (int)HttpContext.Session.GetInt32(_userInfo.UserId.ToString());
+                int correctCode = int.TryParse(HttpContext.Session.GetString(_userInfo.UserId.ToString()), out var parsedValue) ? parsedValue : 0;
                 string? email = HttpContext.Session.GetString(EMAIL);
                 _logger.LogInformation($"Code and email were received from user session {_userInfo.Username}#{_userInfo.UserId}. code: {correctCode}, email: {email}");
 
@@ -178,7 +174,7 @@ namespace webapi.Controllers.Account.Edit
                 var clientInfo = Parser.GetDefault().Parse(HttpContext.Request.Headers["User-Agent"].ToString());
                 var ua = _userAgent.GetBrowserData(clientInfo);
 
-                var notificationModel = new NotificationModel
+                await _createNotification.Create(new NotificationModel
                 {
                     message_header = "Someone changed your account email/login",
                     message = $"Someone changed your email at {DateTime.UtcNow} from {ua.Browser} {ua.Version} on OS {ua.OS}." +
@@ -187,9 +183,7 @@ namespace webapi.Controllers.Account.Edit
                     send_time = DateTime.UtcNow,
                     is_checked = false,
                     receiver_id = _userInfo.UserId
-                };
-
-                await _createNotification.Create(notificationModel);
+                });
 
                 await _tokenService.UpdateJwtToken();
                 _logger.LogInformation("jwt with a new claims was updated");

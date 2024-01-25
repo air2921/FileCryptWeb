@@ -89,15 +89,13 @@ namespace webapi.Controllers.Account
 
                 int code = _generateCode.GenerateSixDigitCode();
 
-                var emailDto = new EmailDto
+                await _emailSender.SendMessage(new EmailDto
                 {
                     username = user.username,
                     email = user.email,
                     subject = EmailMessage.Verify2FaHeader,
                     message = EmailMessage.Verify2FaBody + code
-                };
-
-                await _emailSender.SendMessage(emailDto);
+                });
 
                 HttpContext.Session.SetString(ID, user.id.ToString());
                 HttpContext.Session.SetString(CODE, _passwordManager.HashingPassword(code.ToString()));
@@ -138,7 +136,17 @@ namespace webapi.Controllers.Account
             {
                 var ua = _userAgent.GetBrowserData(clientInfo);
 
-                var notificationModel = new NotificationModel
+                string refreshToken = _tokenService.GenerateRefreshToken();
+
+                await _updateToken.Update(new TokenModel
+                {
+                    user_id = user.id,
+                    refresh_token = _tokenService.HashingToken(refreshToken),
+                    expiry_date = DateTime.UtcNow + Constants.RefreshExpiry
+                }, true);
+                _logger.LogInformation("Refresh token was updated in db");
+
+                await _createNotification.Create(new NotificationModel
                 {
                     message_header = "Someone has accessed your account",
                     message = $"Someone signed in to your account {user.username}#{user.id} at {DateTime.UtcNow} from {ua.Browser} {ua.Version} on OS {ua.OS}",
@@ -146,21 +154,7 @@ namespace webapi.Controllers.Account
                     send_time = DateTime.UtcNow,
                     is_checked = false,
                     receiver_id = user.id
-                };
-
-                string refreshToken = _tokenService.GenerateRefreshToken();
-
-                var tokenModel = new TokenModel
-                {
-                    user_id = user.id,
-                    refresh_token = _tokenService.HashingToken(refreshToken),
-                    expiry_date = DateTime.UtcNow + Constants.RefreshExpiry
-                };
-
-                await _updateToken.Update(tokenModel, true);
-                _logger.LogInformation("Refresh token was updated in db");
-
-                await _createNotification.Create(notificationModel);
+                });
                 _logger.LogInformation("Created notification about logged in account");
 
                 Response.Cookies.Append(Constants.JWT_COOKIE_KEY, _tokenService.GenerateJwtToken(user, Constants.JwtExpiry), _tokenService.SetCookieOptions(Constants.JwtExpiry));

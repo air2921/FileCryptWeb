@@ -38,13 +38,12 @@ namespace webapi.Controllers.Core
         [HttpPost]
         public async Task<IActionResult> CreateNewAPI()
         {
-            var apiModel = new ApiModel
+            await _createAPI.Create(new ApiModel
             {
                 api_key = Guid.NewGuid().ToString("N") + Guid.NewGuid().ToString(),
-                user_id = _userInfo.UserId 
-            };
+                user_id = _userInfo.UserId
+            });
 
-            await _createAPI.Create(apiModel);
             HttpContext.Session.SetString(Constants.CACHE_API, true.ToString());
 
             return StatusCode(201);
