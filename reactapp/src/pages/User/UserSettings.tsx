@@ -1,9 +1,9 @@
 import React, { useEffect, useState } from 'react';
-import AxiosRequest from '../api/AxiosRequest';
-import UserData from '../components/User/UserData';
-import Username from '../components/Settings/Username';
-import Password from '../components/Settings/Password';
-import Email from '../components/Settings/Email';
+import AxiosRequest from '../../api/AxiosRequest';
+import UserData from '../../components/User/UserData';
+import Username from '../../components/Settings/Username';
+import Password from '../../components/Settings/Password';
+import Email from '../../components/Settings/Email';
 
 const UserSettings = () => {
     const [userData, setUserData] = useState(null); 

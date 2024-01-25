@@ -6,7 +6,8 @@ function Layout() {
         <>
             <header>
                 <Link to="/">Home</Link>
-                <Link to="/about">About Us</Link>
+                <Link to="/about">About</Link>
+                <Link to="/policy">Policy</Link>
             </header>
 
             <Outlet />

@@ -1,12 +1,12 @@
 ﻿import React, { ChangeEvent, useEffect, useState } from 'react';
-import FileList from '../components/FileList/FileList';
-import AxiosRequest from '../api/AxiosRequest';
-import Message from '../components/Message/Message';
-import AxiosRequestInterceptor from '../api/AxiosRequestInterceptor';
-import Button from '../components/Helpers/Button';
-import FileButton from '../components/Helpers/FileButton';
-import Font from '../components/Font/Font';
-import Modal from '../components/Modal/Modal';
+import AxiosRequest from '../../../api/AxiosRequest';
+import AxiosRequestInterceptor from '../../../api/AxiosRequestInterceptor';
+import Button from '../../../components/Helpers/Button';
+import Font from '../../../components/Font/Font';
+import Modal from '../../../components/Modal/Modal';
+import FileButton from '../../../components/Helpers/FileButton';
+import FileList from '../../../components/FileList/FileList';
+import Message from '../../../components/Message/Message';
 
 const Files = () => {
     const [byAsc, setBy] = useState(true);

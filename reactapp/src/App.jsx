@@ -5,12 +5,13 @@ import Register from './pages/auth/Registration/Register';
 import Login from './pages/auth/Login/Login';
 import Home from './pages/no_logic/Home';
 import About from './pages/no_logic/About';
-import User from './pages/User';
-import UserSettings from './pages/UserSettings';
-import KeySetting from './pages/KeySettings';
-import Offers from './pages/Offers';
-import Files from './pages/Files';
-import Notifications from './pages/Notifications';
+import Policy from './pages/no_logic/Policy'
+import User from './pages/User/User';
+import UserSettings from './pages/User/UserSettings';
+import KeySetting from './pages/User/KeySettings';
+import Offers from './pages/List/Offers/Offers';
+import Files from './pages/List/Files/Files';
+import Notifications from './pages/List/Notifications/Notifications';
 import RecoveryAccount from './pages/auth/Recovery/RecoveryAccount'
 import NotFound from './pages/no_logic/NotFound/NotFound'
 import Layout from './components/Layout/Layout';
@@ -22,6 +23,7 @@ function App() {
                 <Route path="/" element={<Layout />}>
                     <Route index element={<Home />} />
                     <Route path="about" element={<About />} />
+                    <Route path="policy" element={<Policy/>} />
                     <Route path="user/:userId/:username" element={<User />} />
                     <Route path="settings" element={<UserSettings />} />
                     <Route path="settings/keys" element={<KeySetting />} />

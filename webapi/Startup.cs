@@ -24,6 +24,9 @@ namespace webapi
                 app.UseSwaggerUI();
             }
 
+            if(env.IsProduction())
+                app.UseHsts();
+
             app.UseHttpsRedirection();
             app.UseStaticFiles();
             app.UseRouting();

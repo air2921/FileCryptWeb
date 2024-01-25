@@ -1,15 +1,14 @@
 import React, { FormEvent, useEffect, useState } from 'react';
-import OfferList from '../components/OfferList/OfferList';
-import Input from '../components/Helpers/Input';
-import AxiosRequest from '../api/AxiosRequest';
-import Message from '../components/Message/Message';
-import Button from '../components/Helpers/Button';
-import Font from '../components/Font/Font';
+import OfferList from '../../../components/OfferList/OfferList';
+import Input from '../../../components/Helpers/Input';
+import AxiosRequest from '../../../api/AxiosRequest';
+import Message from '../../../components/Message/Message';
+import Button from '../../../components/Helpers/Button';
+import Font from '../../../components/Font/Font';
 
 const Offers = () => {
     const [errorMessage, setErrorMessage] = useState('');
     const [offersList, setOffers] = useState(null);
-    const [filter, setFilter] = useState({ sended: null, isAccepted: null });
     const [userId, setUserId] = useState(0);
     const [skip, setSkip] = useState(0);
     const step = 10;
@@ -98,7 +97,7 @@ const Offers = () => {
 
     useEffect(() => {
         fetchData();
-    }, [filter, lastOfferModified, skip]);
+    }, [lastOfferModified, skip]);
 
     if (!offersList) {
         return <div className="error">{errorMessage || 'Loading...'}</div>;
