@@ -124,6 +124,11 @@ namespace webapi.Services.Security
         {
             _context.HttpContext.Response.Cookies.Delete(Constants.REFRESH_COOKIE_KEY);
             _context.HttpContext.Response.Cookies.Delete(Constants.JWT_COOKIE_KEY);
+
+            _context.HttpContext.Response.Cookies.Delete(Constants.IS_AUTHORIZED);
+            _context.HttpContext.Response.Cookies.Delete(Constants.USERNAME_COOKIE_KEY);
+            _context.HttpContext.Response.Cookies.Delete(Constants.USER_ID_COOKIE_KEY);
+            _context.HttpContext.Response.Cookies.Delete(Constants.ROLE_COOKIE_KEY);
         }
     }
 }

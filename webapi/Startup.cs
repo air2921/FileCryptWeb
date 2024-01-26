@@ -35,6 +35,7 @@ namespace webapi
             app.UseFreeze();
             app.UseBearer();
             app.UseAuthentication();
+            app.UseUserSession();
 
             if (env.IsDevelopment())
                 app.UseLog();

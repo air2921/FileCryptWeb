@@ -15,7 +15,7 @@
     <Folder Include="src\components\FileList\" />
     <Folder Include="src\components\Helpers\" />
     <Folder Include="src\components\Date\" />
-    <Folder Include="src\components\Layout\" />
+    <Folder Include="src\components\UseAuth\" />
     <Folder Include="src\components\Notifications\" />
     <Folder Include="src\components\Settings\" />
     <Folder Include="src\components\OfferList\" />
