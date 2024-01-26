@@ -67,7 +67,7 @@ namespace webapi.Controllers.Account.Edit
         {
             try
             {
-                var user = await _dbContext.Users.FirstOrDefaultAsync(u => u.email == _userInfo.Email);
+                var user = await _dbContext.Users.FirstOrDefaultAsync(u => u.id == _userInfo.UserId);
                 if (user is null)
                 {
                     _logger.LogWarning($"Non-existent user {_userInfo.Username}#{_userInfo.UserId} was requested to authorized endpoint.\nTrying delete tokens from cookie");

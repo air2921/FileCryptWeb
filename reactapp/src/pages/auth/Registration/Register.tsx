@@ -45,7 +45,7 @@ const Register = () => {
     return (
         <>
             <div className="register-container">
-                <p className="welcome-text">Welcome to FileCryptWeb! Let's start secure your data here</p>
+                <p className="welcome-text">Welcome to FileCryptWeb !</p>
                 <form onSubmit={handleSubmit}>
                     <Input text='Username' type="text" id="username" require={true} value={username} onChange={(e) => setUsername(e.target.value)} />
                     <Input text='Email address' type="email" id="email" require={true} value={email} onChange={(e) => setEmail(e.target.value)} />

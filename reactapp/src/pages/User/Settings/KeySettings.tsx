@@ -1,12 +1,12 @@
 ﻿import React, { ChangeEvent, FormEvent, useEffect, useState } from 'react';
-import UserKeys from '../../components/User/UserKeys';
-import AxiosRequest from '../../api/AxiosRequest';
-import Message from '../../components/Message/Message';
-import Input from '../../components/Helpers/Input';
-import CheckBox from '../../components/Helpers/CheckBox';
-import Button from '../../components/Helpers/Button';
-import Font from '../../components/Font/Font';
-import Modal from '../../components/Modal/Modal';
+import UserKeys from '../../../components/User/UserKeys';
+import AxiosRequest from '../../../api/AxiosRequest';
+import Message from '../../../components/Message/Message';
+import Input from '../../../components/Helpers/Input';
+import CheckBox from '../../../components/Helpers/CheckBox';
+import Button from '../../../components/Helpers/Button';
+import Font from '../../../components/Font/Font';
+import Modal from '../../../components/Modal/Modal';
 
 const KeySettings = () => {
     const [userKeys, setKeys] = useState(null);
@@ -134,9 +134,7 @@ const KeySettings = () => {
                         {!privateKey && (
                             <CheckBox text='Auto-generation key' type="checkbox" id="auto-private" checked={isAutoPrivate} onChange={handlePrivateCheckboxChange} />
                         )}
-                        <Button>
-                            <Font font={'refresh'} />
-                        </Button>
+                        <Button> <Font font={'refresh'} /> </Button>
                     </form>
                 </div>
                 <div className="internal">
@@ -147,16 +145,12 @@ const KeySettings = () => {
                         {!internalKey && (
                             <CheckBox text='Auto-generation key' type="checkbox" id="auto-internal" checked={isAutoInternal} onChange={handleInternalCheckboxChange} />
                         )}
-                        <Button>
-                            <Font font={'refresh'} />
-                        </Button>
+                        <Button> <Font font={'refresh'} /> </Button>
                     </form>
                 </div>
                 <div className="received">
                     <p>Delete Received Key</p>
-                    <Button onClick={handleReceivedKeySubmit}>
-                        <Font font={'delete'} />
-                    </Button>
+                    <Button onClick={handleReceivedKeySubmit}> <Font font={'delete'} /> </Button>
                 </div>
             </div>
             <Message message={keyMessage} font={keyFont} />

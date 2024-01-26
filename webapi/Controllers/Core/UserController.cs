@@ -130,7 +130,9 @@ namespace webapi.Controllers.Core
                     id = originalUser.id,
                     username = originalUser.username,
                     role = originalUser.role,
-                    email = originalUser.email
+                    email = originalUser.email,
+                    is_blocked = originalUser.is_blocked,
+                    is_2fa_enabled = originalUser.is_2fa_enabled,
                 };
 
                 return StatusCode(200, new { user });

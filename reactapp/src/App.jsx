@@ -7,8 +7,8 @@ import Home from './pages/no_logic/Home';
 import About from './pages/no_logic/About';
 import Policy from './pages/no_logic/Policy'
 import User from './pages/User/User';
-import UserSettings from './pages/User/UserSettings';
-import KeySetting from './pages/User/KeySettings';
+import UserSettings from './pages/User/Settings/UserSettings';
+import KeySetting from './pages/User/Settings/KeySettings';
 import Offers from './pages/List/Offers/Offers';
 import Files from './pages/List/Files/Files';
 import Notifications from './pages/List/Notifications/Notifications';

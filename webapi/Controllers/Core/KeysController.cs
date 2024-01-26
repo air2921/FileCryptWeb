@@ -121,7 +121,13 @@ namespace webapi.Controllers.Core
 
                 var existingUser = await _readKeys.ReadById(_userInfo.UserId, true);
 
-                await _updateKeys.Update(new KeyModel { user_id = _userInfo.UserId, private_key = key, received_key = existingUser.received_key }, true);
+                await _updateKeys.Update(new KeyModel
+                { 
+                    user_id = _userInfo.UserId,
+                    private_key = key,
+                    received_key = existingUser.received_key
+                }, true);
+
                 HttpContext.Session.SetString(Constants.CACHE_KEYS, true.ToString());
                 await _redisCache.DeleteCache(_redisKeys.PrivateKey);
 
@@ -179,6 +185,8 @@ namespace webapi.Controllers.Core
             try
             {
                 var existingUser = await _readKeys.ReadById(_userInfo.UserId, true);
+                if (existingUser.received_key is null)
+                    return StatusCode(409);
 
                 await _updateKeys.Update(new KeyModel
                 {

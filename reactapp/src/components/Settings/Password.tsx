@@ -5,7 +5,6 @@ import Input from '../Helpers/Input';
 import Button from '../Helpers/Button';
 
 const Password = () => {
-
     const [message, setMessage] = useState('');
     const [font, setFont] = useState('')
 
