@@ -12,10 +12,25 @@ namespace webapi.Models
 
         public string api_key { get; set; }
 
+        public string type { get; set; }
+
+        public DateTime? expiry_date { get; set; }
+
+        public bool is_blocked { get; set; }
+
+        public DateTime last_time_activity { get; set; }
+
         [ForeignKey("user_id")]
         public int user_id { get; set; }
 
         [JsonIgnore]
         public UserModel? User { get; set; }
+    }
+
+    public enum ApiType
+    {
+        Classic,
+        Development,
+        Production
     }
 }

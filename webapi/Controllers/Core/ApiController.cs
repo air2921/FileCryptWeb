@@ -35,18 +35,31 @@ namespace webapi.Controllers.Core
             _readAPI = readAPI;
         }
 
-        [HttpPost]
-        public async Task<IActionResult> CreateNewAPI()
+        [HttpPost("{type}")]
+        public async Task<IActionResult> CreateNewAPI([FromRoute] string type)
         {
-            await _createAPI.Create(new ApiModel
+            try
             {
-                api_key = Guid.NewGuid().ToString("N") + Guid.NewGuid().ToString(),
-                user_id = _userInfo.UserId
-            });
+                var ApiExpire = SetExpireAPI(type);
 
-            HttpContext.Session.SetString(Constants.CACHE_API, true.ToString());
+                await _createAPI.Create(new ApiModel
+                {
+                    api_key = Guid.NewGuid().ToString("N") + Guid.NewGuid().ToString(),
+                    type = type,
+                    expiry_date = ApiExpire,
+                    is_blocked = false,
+                    last_time_activity = DateTime.UtcNow,
+                    user_id = _userInfo.UserId
+                });
 
-            return StatusCode(201);
+                HttpContext.Session.SetString(Constants.CACHE_API, true.ToString());
+
+                return StatusCode(201);
+            }
+            catch (InvalidRouteException ex)
+            {
+                return StatusCode(404, new { message = ex.Message });
+            }
         }
 
         [HttpGet]
@@ -94,5 +107,19 @@ namespace webapi.Controllers.Core
                 return StatusCode(404, new { messaage = ex.Message });
             }
         }
+
+        private DateTime? SetExpireAPI(string type)
+        {
+            if (type.Equals(ApiType.Classic.ToString()))
+                return DateTime.UtcNow.AddDays(90);
+
+            if (type.Equals(ApiType.Development.ToString()))
+                return null;
+
+            if (type.Equals(ApiType.Production.ToString()))
+                return DateTime.UtcNow.AddDays(30);
+
+            throw new InvalidRouteException();
+        } 
     }
 }

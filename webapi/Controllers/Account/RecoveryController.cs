@@ -79,7 +79,6 @@ namespace webapi.Controllers.Account
                     user_id = user.id,
                     u_token = token,
                     expiry_date = DateTime.UtcNow.AddMinutes(30),
-                    is_used = false,
                     created_at = DateTime.UtcNow
                 };
 
