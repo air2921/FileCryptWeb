@@ -200,7 +200,7 @@ namespace webapi.Controllers.Account
         {
             try
             {
-                var tokenModel = new TokenModel() { user_id = _userInfo.UserId, refresh_token = null, expiry_date = DateTime.UtcNow.AddYears(-100) };
+                var tokenModel = new TokenModel() { user_id = _userInfo.UserId, refresh_token = Guid.NewGuid().ToString(), expiry_date = DateTime.UtcNow.AddYears(-100) };
 
                 await _updateToken.Update(tokenModel, true);
                 _logger.LogInformation($"{_userInfo.Username}#{_userInfo.UserId} refresh token was revoked");
@@ -218,6 +218,10 @@ namespace webapi.Controllers.Account
                 _logger.LogDebug("Tokens was deleted");
 
                 return StatusCode(404, new { message = ex.Message });
+            }
+            catch (TokenException)
+            {
+                return StatusCode(500);
             }
             finally
             {

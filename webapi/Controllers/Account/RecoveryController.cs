@@ -74,18 +74,26 @@ namespace webapi.Controllers.Account
 
                 string token = Guid.NewGuid().ToString("N") + Guid.NewGuid().ToString() + _generateKey.GenerateKey();
 
-                var linkModel = new LinkModel
+                var clientInfo = Parser.GetDefault().Parse(HttpContext.Request.Headers["User-Agent"].ToString());
+                var ua = _userAgent.GetBrowserData(clientInfo);
+
+                await _createLink.Create(new LinkModel
                 {
                     user_id = user.id,
                     u_token = token,
                     expiry_date = DateTime.UtcNow.AddMinutes(30),
                     created_at = DateTime.UtcNow
-                };
+                });
 
-                var clientInfo = Parser.GetDefault().Parse(HttpContext.Request.Headers["User-Agent"].ToString());
-                var ua = _userAgent.GetBrowserData(clientInfo);
+                await _emailSender.SendMessage(new EmailDto
+                {
+                    username = user.username,
+                    email = user.email,
+                    subject = EmailMessage.RecoveryAccountHeader,
+                    message = EmailMessage.RecoveryAccountBody + $"{_fileManager.GetReactAppUrl(App.REACT_LAUNCH_JSON_PATH, true)}/auth/recovery?token={token}"
+                });
 
-                var notificationModel = new NotificationModel
+                await _createNotification.Create(new NotificationModel
                 {
                     message_header = "Someone trying recovery your account",
                     message = $"Someone trying recovery your account {user.username}#{user.id} at {DateTime.UtcNow} from {ua.Browser} {ua.Version} on OS {ua.OS}." +
@@ -94,19 +102,8 @@ namespace webapi.Controllers.Account
                     send_time = DateTime.UtcNow,
                     is_checked = false,
                     receiver_id = user.id
-                };
+                });
 
-                var emailDto = new EmailDto
-                {
-                    username = user.username,
-                    email = user.email,
-                    subject = EmailMessage.RecoveryAccountHeader,
-                    message = EmailMessage.RecoveryAccountBody + $"{_fileManager.GetReactAppUrl(App.REACT_LAUNCH_JSON_PATH, true)}/auth/recovery?token={token}"
-                };
-
-                await _emailSender.SendMessage(emailDto);
-                await _createNotification.Create(notificationModel);
-                await _createLink.Create(linkModel);
                 _logger.LogInformation($"Created new token for {user.username}#{user.id} with life time for 30 minutes");
 
                 return StatusCode(201, new { message = AccountSuccessMessage.EmailSendedRecovery });
@@ -164,7 +161,7 @@ namespace webapi.Controllers.Account
                 await _updateToken.Update(new TokenModel
                 {
                     user_id = link.user_id,
-                    refresh_token = null,
+                    refresh_token = Guid.NewGuid().ToString(),
                     expiry_date = DateTime.UtcNow.AddYears(-100)
                 }, true);
 

@@ -14,7 +14,7 @@ namespace webapi.Controllers.Public_API
 {
     [ApiController]
     [EnableCors("AllowOriginAPI")]
-    [Route("api/public/cryptography/{type}/encryption")]
+    [Route("api/public/cryptography/{type}")]
     public class CryptographyController : ControllerBase
     {
         private readonly ICryptographyControllerBase _cryptographyController;
@@ -46,10 +46,10 @@ namespace webapi.Controllers.Public_API
         {
             try
             {
-                await ControlRequestCount(apiKey);
-                var userId = await IsValidAPI(apiKey);
+                var apiData = await IsValidAPI(apiKey);
+                await ControlRequestCount(apiKey, apiData.MaxRequest);
 
-                return await _cryptographyController.EncryptFile(_encrypt.EncryptFileAsync, encryptionKey, file, userId, type);
+                return await _cryptographyController.EncryptFile(_encrypt.EncryptFileAsync, encryptionKey, file, apiData.UserId, type);
             }
             catch (InvalidRouteException ex)
             {
@@ -70,10 +70,10 @@ namespace webapi.Controllers.Public_API
         {
             try
             {
-                await ControlRequestCount(apiKey);
-                var userId = await IsValidAPI(apiKey);
+                var apiData = await IsValidAPI(apiKey);
+                await ControlRequestCount(apiKey, apiData.MaxRequest);
 
-                return await _cryptographyController.EncryptFile(_decrypt.DecryptFileAsync, encryptionKey, file, userId, type);
+                return await _cryptographyController.EncryptFile(_decrypt.DecryptFileAsync, encryptionKey, file, apiData.UserId, type);
             }
             catch (InvalidRouteException ex)
             {
@@ -85,7 +85,7 @@ namespace webapi.Controllers.Public_API
             }
         }
 
-        private async Task<int> IsValidAPI(string apiKey)
+        private async Task<ApiData> IsValidAPI(string apiKey)
         {
             var api = await _dbContext.API.FirstOrDefaultAsync(a => a.api_key == apiKey);
             if (api is null)
@@ -97,30 +97,34 @@ namespace webapi.Controllers.Public_API
             if (api.type == ApiType.Classic.ToString() || api.type == ApiType.Production.ToString())
             {
                 if (api.expiry_date < DateTime.UtcNow)
+                {
+                    _dbContext.Remove(api);
+                    await _dbContext.SaveChangesAsync();
                     throw new ApiException("API Key expired");
+                }
             }
 
             api.last_time_activity = DateTime.UtcNow;
             await _dbContext.SaveChangesAsync();
 
-            return api.user_id;
+            return new ApiData(api.user_id, api.max_request_of_day);
         }
 
-        private async Task ControlRequestCount(string apiKey)
+        private async Task ControlRequestCount(string apiKey, int maxRequest)
         {
             var cacheKey = $"{DateTime.Today.ToString("yyyy-MM-dd")}_{apiKey}";
 
-            var now = DateTime.UtcNow.Date;
-            var endOfDay = now.AddDays(1).AddTicks(-1);
-            var timeUntilEndOfDay = endOfDay - now;
+            var currentTime = DateTime.Now;
+            var endOfDay = new DateTime(currentTime.Year, currentTime.Month, currentTime.Day, 23, 59, 59);
+            var timeUntilEndOfDay = endOfDay - currentTime;
 
             var cacheResult = await _redisCache.GetCachedData(cacheKey);
             if (cacheResult is not null)
             {
                 var requestCount = JsonConvert.DeserializeObject<int>(cacheResult);
 
-                if (requestCount > 25)
-                    throw new ApiException("Max count request of day is exceeded");
+                if (requestCount > maxRequest)
+                    throw new ApiException("Max count request of day is exceed");
 
                 await _redisCache.CacheData(cacheKey, requestCount + 1, timeUntilEndOfDay);
             }
@@ -130,4 +134,5 @@ namespace webapi.Controllers.Public_API
             }
         }
     }
+    public record ApiData(int UserId, int MaxRequest);
 }

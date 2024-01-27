@@ -9,7 +9,6 @@ using webapi.Localization;
 using webapi.Localization.Exceptions;
 using webapi.Controllers.Admin.Manage_Notifications;
 using webapi.Interfaces.Services;
-using webapi.DB.SQL;
 
 namespace webapi.Controllers.Admin.Manage_Tokens
 {
@@ -41,7 +40,7 @@ namespace webapi.Controllers.Admin.Manage_Tokens
         {
             try
             {
-                var tokenModel = new TokenModel { user_id = userId, refresh_token = null, expiry_date = DateTime.UtcNow.AddYears(-100) };
+                var tokenModel = new TokenModel { user_id = userId, refresh_token = Guid.NewGuid().ToString(), expiry_date = DateTime.UtcNow.AddYears(-100) };
 
                 var targetUser = await _dbContext.Users.FirstOrDefaultAsync(u => u.id == userId);
 

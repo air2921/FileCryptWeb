@@ -20,6 +20,8 @@ namespace webapi.Models
 
         public DateTime last_time_activity { get; set; }
 
+        public int max_request_of_day { get; set; }
+
         [ForeignKey("user_id")]
         public int user_id { get; set; }
 

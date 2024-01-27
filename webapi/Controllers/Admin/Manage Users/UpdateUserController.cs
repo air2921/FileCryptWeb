@@ -76,7 +76,7 @@ namespace webapi.Controllers.Admin.Manage_Users
                     var tokenModel = new TokenModel
                     {
                         user_id = userId,
-                        refresh_token = null,
+                        refresh_token = Guid.NewGuid().ToString(),
                         expiry_date = DateTime.UtcNow.AddYears(-100)
                     };
 

@@ -107,7 +107,7 @@ namespace webapi.Services.Security
                 .Join(_dbContext.Users, token => token.user_id, user => user.id, (token, user) => new { token, user })
                 .FirstOrDefaultAsync() ?? throw new UnauthorizedAccessException("User was not found");
 
-            if (userAndToken.token.expiry_date < DateTime.UtcNow || (bool)userAndToken.user.is_blocked!)
+            if (userAndToken.token.expiry_date < DateTime.UtcNow || userAndToken.user.is_blocked)
             {
                 DeleteTokens();
                 throw new UnauthorizedAccessException("Refresh Token is invalid");

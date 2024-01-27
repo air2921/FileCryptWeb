@@ -40,15 +40,16 @@ namespace webapi.Controllers.Core
         {
             try
             {
-                var ApiExpire = SetExpireAPI(type);
+                var apiSettings = SetExpireAPI(type);
 
                 await _createAPI.Create(new ApiModel
                 {
                     api_key = Guid.NewGuid().ToString("N") + Guid.NewGuid().ToString(),
                     type = type,
-                    expiry_date = ApiExpire,
+                    expiry_date = apiSettings.Expiry,
                     is_blocked = false,
                     last_time_activity = DateTime.UtcNow,
+                    max_request_of_day = apiSettings.MaxRequest,
                     user_id = _userInfo.UserId
                 });
 
@@ -59,6 +60,10 @@ namespace webapi.Controllers.Core
             catch (InvalidRouteException ex)
             {
                 return StatusCode(404, new { message = ex.Message });
+            }
+            catch (ApiException)
+            {
+                return StatusCode(500);
             }
         }
 
@@ -104,22 +109,24 @@ namespace webapi.Controllers.Core
             }
             catch (ApiException ex)
             {
-                return StatusCode(404, new { messaage = ex.Message });
+                return StatusCode(404, new { message = ex.Message });
             }
         }
 
-        private DateTime? SetExpireAPI(string type)
+        private ApiSettings SetExpireAPI(string type)
         {
             if (type.Equals(ApiType.Classic.ToString()))
-                return DateTime.UtcNow.AddDays(90);
+                return new ApiSettings(DateTime.UtcNow.AddDays(90), 50);
 
             if (type.Equals(ApiType.Development.ToString()))
-                return null;
+                return new ApiSettings(null, 25);
 
             if (type.Equals(ApiType.Production.ToString()))
-                return DateTime.UtcNow.AddDays(30);
+                return new ApiSettings(DateTime.UtcNow.AddDays(30), 1000);
 
             throw new InvalidRouteException();
-        } 
+        }
     }
+
+    public record ApiSettings(DateTime? Expiry, int MaxRequest);
 }
