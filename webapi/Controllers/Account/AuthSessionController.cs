@@ -1,6 +1,8 @@
 ﻿using Microsoft.AspNetCore.Authorization;
+using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
+using System.Net.Http;
 using UAParser;
 using webapi.DB;
 using webapi.DTO;
@@ -16,7 +18,6 @@ namespace webapi.Controllers.Account
 {
     [Route("api/auth")]
     [ApiController]
-    [ValidateAntiForgeryToken]
     public class AuthSessionController : ControllerBase
     {
         private const string CODE = "Code";
@@ -66,6 +67,7 @@ namespace webapi.Controllers.Account
         #region Factical login endpoints and helped method
 
         [HttpPost("login")]
+        [ValidateAntiForgeryToken]
         public async Task<IActionResult> Login(AuthDTO userDTO)
         {
             try
@@ -109,6 +111,7 @@ namespace webapi.Controllers.Account
         }
 
         [HttpPost("verify/2fa")]
+        [ValidateAntiForgeryToken]
         public async Task<IActionResult> VerifyTwoFA([FromQuery] int code)
         {
             string? correctCode = HttpContext.Session.GetString(CODE);
@@ -159,6 +162,21 @@ namespace webapi.Controllers.Account
 
                 Response.Cookies.Append(Constants.JWT_COOKIE_KEY, _tokenService.GenerateJwtToken(user, Constants.JwtExpiry), _tokenService.SetCookieOptions(Constants.JwtExpiry));
                 Response.Cookies.Append(Constants.REFRESH_COOKIE_KEY, refreshToken, _tokenService.SetCookieOptions(Constants.RefreshExpiry));
+
+                var cookieOptions = new CookieOptions
+                {
+                    MaxAge = Constants.JwtExpiry,
+                    Secure = true,
+                    HttpOnly = false,
+                    SameSite = SameSiteMode.None,
+                    IsEssential = false
+                };
+
+                Response.Cookies.Append(Constants.IS_AUTHORIZED, true.ToString(), cookieOptions);
+                Response.Cookies.Append(Constants.USER_ID_COOKIE_KEY, user.id.ToString(), cookieOptions);
+                Response.Cookies.Append(Constants.USERNAME_COOKIE_KEY, user.username, cookieOptions);
+                Response.Cookies.Append(Constants.ROLE_COOKIE_KEY, user.role, cookieOptions);
+
                 _logger.LogInformation("Jwt and refresh was sended to client");
 
                 return StatusCode(201);
@@ -177,6 +195,7 @@ namespace webapi.Controllers.Account
 
         [HttpPut("logout")]
         [Authorize]
+        [ValidateAntiForgeryToken]
         public async Task<IActionResult> Logout()
         {
             try

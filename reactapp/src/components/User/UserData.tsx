@@ -25,7 +25,9 @@ function UserData({ user, isOwner }: UserDataProps) {
                 </div>
             )}
             {isOwner && (
-                <Button onClick={() => navigate("/settings")}>Edit</Button>
+                <Button onClick={() => navigate("/settings")}>
+                    <Font font={'edit'} />
+                </Button>
             )}
         </div>
     );

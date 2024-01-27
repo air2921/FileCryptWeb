@@ -46,8 +46,8 @@ function TwoFA({ is_enabled_2fa }: TwoFaProps) {
 
     return (
         <div>
-            {is_enabled_2fa && <Button onClick={() => set2FaStatus(false, true)}>Disable 2FA</Button>}
-            {!is_enabled_2fa && <Button onClick={() => set2FaStatus(true, true)}>Enable 2FA</Button>}
+            {is_enabled_2fa && !visibleForm && < Button onClick={() => set2FaStatus(false, true)}>Disable 2FA</Button>}
+            {!is_enabled_2fa && !visibleForm && < Button onClick={() => set2FaStatus(true, true)}>Enable 2FA</Button>}
             {visibleForm && (
                 <form onSubmit={handleSubmit}>
                     <Input text='Confirm password' type="password" id="password" require={true} value={password} onChange={(e) => setPassword(e.target.value)} />
