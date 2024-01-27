@@ -84,10 +84,6 @@ namespace webapi.Controllers.Account.Edit
                 _logger.LogWarning("Tokens was deleted");
                 return StatusCode(404);
             }
-            catch (Exception)
-            {
-                return StatusCode(500);
-            }
         }
 
         [HttpPut("confirm/{enable}")]

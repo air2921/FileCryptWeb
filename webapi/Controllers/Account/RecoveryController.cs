@@ -66,52 +66,45 @@ namespace webapi.Controllers.Account
         [HttpPost("unique/token")]
         public async Task<IActionResult> RecoveryAccount([FromQuery] string email)
         {
-            try
+            var user = await _dbContext.Users.FirstOrDefaultAsync(u => u.email == email.ToLowerInvariant());
+            if (user is null)
+                return StatusCode(404, new { message = AccountErrorMessage.UserNotFound });
+
+            string token = Guid.NewGuid().ToString("N") + Guid.NewGuid().ToString() + _generateKey.GenerateKey();
+
+            var clientInfo = Parser.GetDefault().Parse(HttpContext.Request.Headers["User-Agent"].ToString());
+            var ua = _userAgent.GetBrowserData(clientInfo);
+
+            await _createLink.Create(new LinkModel
             {
-                var user = await _dbContext.Users.FirstOrDefaultAsync(u => u.email == email.ToLowerInvariant());
-                if (user is null)
-                    return StatusCode(404, new { message = AccountErrorMessage.UserNotFound });
+                user_id = user.id,
+                u_token = token,
+                expiry_date = DateTime.UtcNow.AddMinutes(30),
+                created_at = DateTime.UtcNow
+            });
 
-                string token = Guid.NewGuid().ToString("N") + Guid.NewGuid().ToString() + _generateKey.GenerateKey();
-
-                var clientInfo = Parser.GetDefault().Parse(HttpContext.Request.Headers["User-Agent"].ToString());
-                var ua = _userAgent.GetBrowserData(clientInfo);
-
-                await _createLink.Create(new LinkModel
-                {
-                    user_id = user.id,
-                    u_token = token,
-                    expiry_date = DateTime.UtcNow.AddMinutes(30),
-                    created_at = DateTime.UtcNow
-                });
-
-                await _emailSender.SendMessage(new EmailDto
-                {
-                    username = user.username,
-                    email = user.email,
-                    subject = EmailMessage.RecoveryAccountHeader,
-                    message = EmailMessage.RecoveryAccountBody + $"{_fileManager.GetReactAppUrl(App.REACT_LAUNCH_JSON_PATH, true)}/auth/recovery?token={token}"
-                });
-
-                await _createNotification.Create(new NotificationModel
-                {
-                    message_header = "Someone trying recovery your account",
-                    message = $"Someone trying recovery your account {user.username}#{user.id} at {DateTime.UtcNow} from {ua.Browser} {ua.Version} on OS {ua.OS}." +
-                    $"Qnique token was sended on {user.email}",
-                    priority = Priority.Security.ToString(),
-                    send_time = DateTime.UtcNow,
-                    is_checked = false,
-                    receiver_id = user.id
-                });
-
-                _logger.LogInformation($"Created new token for {user.username}#{user.id} with life time for 30 minutes");
-
-                return StatusCode(201, new { message = AccountSuccessMessage.EmailSendedRecovery });
-            }
-            catch (Exception)
+            await _emailSender.SendMessage(new EmailDto
             {
-                return StatusCode(500);
-            }
+                username = user.username,
+                email = user.email,
+                subject = EmailMessage.RecoveryAccountHeader,
+                message = EmailMessage.RecoveryAccountBody + $"{_fileManager.GetReactAppUrl(App.REACT_LAUNCH_JSON_PATH, true)}/auth/recovery?token={token}"
+            });
+
+            await _createNotification.Create(new NotificationModel
+            {
+                message_header = "Someone trying recovery your account",
+                message = $"Someone trying recovery your account {user.username}#{user.id} at {DateTime.UtcNow} from {ua.Browser} {ua.Version} on OS {ua.OS}." +
+                $"Qnique token was sended on {user.email}",
+                priority = Priority.Security.ToString(),
+                send_time = DateTime.UtcNow,
+                is_checked = false,
+                receiver_id = user.id
+            });
+
+            _logger.LogInformation($"Created new token for {user.username}#{user.id} with life time for 30 minutes");
+
+            return StatusCode(201, new { message = AccountSuccessMessage.EmailSendedRecovery });
         }
 
         [HttpPost("account")]

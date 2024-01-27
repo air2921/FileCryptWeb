@@ -122,15 +122,10 @@ namespace webapi.Controllers.Account
                     is_2fa_enabled = bool.Parse(flag_2fa),
                     is_blocked = false
                 });
+
                 _logger.LogInformation("User was added in db");
 
                 return StatusCode(201);
-            }
-            catch (Exception ex)
-            {
-                _logger.LogCritical(ex.ToString());
-
-                return StatusCode(500, new { message = AccountErrorMessage.Error });
             }
             finally
             {
