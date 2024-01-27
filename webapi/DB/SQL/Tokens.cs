@@ -17,8 +17,15 @@ namespace webapi.DB.SQL
 
         public async Task Create(TokenModel tokenModel)
         {
-            await _dbContext.AddAsync(tokenModel);
-            await _dbContext.SaveChangesAsync();
+            try
+            {
+                await _dbContext.AddAsync(tokenModel);
+                await _dbContext.SaveChangesAsync();
+            }
+            catch (DbUpdateException)
+            {
+                throw new TokenException(ExceptionTokenMessages.AlreadyExists);
+            }
         }
 
         public async Task<TokenModel> ReadById(int id, bool? byForeign)
@@ -45,24 +52,24 @@ namespace webapi.DB.SQL
 
         public async Task Update(TokenModel tokenModel, bool? byForeign)
         {
-            if(byForeign == true)
+            try
             {
-                var existingToken = await _dbContext.Tokens.FirstOrDefaultAsync(t => t.user_id == tokenModel.user_id) ??
+                var existingToken = byForeign == true
+                    ? await _dbContext.Tokens.FirstOrDefaultAsync(t => t.user_id == tokenModel.user_id)
+                    : await _dbContext.Tokens.FirstOrDefaultAsync(t => t.token_id == tokenModel.token_id);
+
+                if (existingToken is null)
                     throw new TokenException(ExceptionTokenMessages.RefreshNotFound);
 
                 existingToken.expiry_date = tokenModel.expiry_date;
                 existingToken.refresh_token = tokenModel.refresh_token;
+
+                await _dbContext.SaveChangesAsync();
             }
-            else
+            catch (DbUpdateException)
             {
-                var existingToken = await _dbContext.Tokens.FirstOrDefaultAsync(t => t.token_id == tokenModel.token_id) ??
-                    throw new TokenException(ExceptionTokenMessages.RefreshNotFound);
-
-                existingToken.expiry_date = tokenModel.expiry_date;
-                existingToken.refresh_token = tokenModel.refresh_token;
+                throw new TokenException(ExceptionTokenMessages.AlreadyExists);
             }
-
-            await _dbContext.SaveChangesAsync();
         }
     }
 }

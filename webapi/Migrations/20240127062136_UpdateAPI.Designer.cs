@@ -2,6 +2,7 @@
 using System;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Infrastructure;
+using Microsoft.EntityFrameworkCore.Migrations;
 using Microsoft.EntityFrameworkCore.Storage.ValueConversion;
 using Npgsql.EntityFrameworkCore.PostgreSQL.Metadata;
 using webapi.DB;
@@ -11,9 +12,11 @@ using webapi.DB;
 namespace webapi.Migrations
 {
     [DbContext(typeof(FileCryptDbContext))]
-    partial class FileCryptDbContextModelSnapshot : ModelSnapshot
+    [Migration("20240127062136_UpdateAPI")]
+    partial class UpdateAPI
     {
-        protected override void BuildModel(ModelBuilder modelBuilder)
+        /// <inheritdoc />
+        protected override void BuildTargetModel(ModelBuilder modelBuilder)
         {
 #pragma warning disable 612, 618
             modelBuilder
@@ -42,9 +45,6 @@ namespace webapi.Migrations
 
                     b.Property<DateTime>("last_time_activity")
                         .HasColumnType("timestamp with time zone");
-
-                    b.Property<int>("max_request_of_day")
-                        .HasColumnType("integer");
 
                     b.Property<string>("type")
                         .IsRequired()
@@ -259,11 +259,10 @@ namespace webapi.Migrations
 
                     NpgsqlPropertyBuilderExtensions.UseIdentityByDefaultColumn(b.Property<int>("token_id"));
 
-                    b.Property<DateTime>("expiry_date")
+                    b.Property<DateTime?>("expiry_date")
                         .HasColumnType("timestamp with time zone");
 
                     b.Property<string>("refresh_token")
-                        .IsRequired()
                         .HasColumnType("text");
 
                     b.Property<int>("user_id")

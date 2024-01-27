@@ -11,10 +11,10 @@ namespace webapi.Models
         public int token_id { get; set; }
 
         [JsonIgnore(Condition = JsonIgnoreCondition.WhenWritingNull)]
-        public string? refresh_token { get; set; }
+        public string refresh_token { get; set; }
 
         [JsonIgnore(Condition = JsonIgnoreCondition.WhenWritingNull)]
-        public DateTime? expiry_date { get; set; }
+        public DateTime expiry_date { get; set; }
 
         [ForeignKey("user_id")]
         public int user_id { get; set; }

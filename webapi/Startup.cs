@@ -42,6 +42,7 @@ namespace webapi
 
             app.UseAuthorization();
             app.UseXSRF();
+            app.UseExceptionHandle();
 
             app.UseEndpoints(endpoint =>
             {

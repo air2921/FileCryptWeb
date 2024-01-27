@@ -45,7 +45,7 @@ namespace webapi.DB.SQL
                 await _dbContext.Users.AddAsync(userModel);
                 await _dbContext.SaveChangesAsync();
                 var keyModel = new KeyModel { user_id = userModel.id, private_key = await _encrypt.EncryptionKeyAsync(_generateKey.GenerateKey(), secretKey) };
-                var tokenModel = new TokenModel { user_id = userModel.id };
+                var tokenModel = new TokenModel { user_id = userModel.id, refresh_token = Guid.NewGuid().ToString(), expiry_date = DateTime.UtcNow };
 
                 await _keyCreate.Create(keyModel);
                 await _tokenCreate.Create(tokenModel);

@@ -15,8 +15,6 @@ namespace webapi.Models
 
         public DateTime expiry_date { get; set; }
 
-        public bool is_used { get; set; }
-
         public DateTime created_at {  get; set; }
 
         [ForeignKey("user_id")]
