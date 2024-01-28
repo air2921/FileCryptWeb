@@ -24,6 +24,8 @@ namespace webapi.Controllers.Core
         private readonly IUserInfo _userInfo;
         private readonly ITokenService _tokenService;
         private readonly IRead<UserModel> _readUser;
+        private readonly IRead<FileModel> _readFile;
+        private readonly IRead<OfferModel> _readOffer;
 
         public UserController(
             FileCryptDbContext dbContext,
@@ -31,6 +33,8 @@ namespace webapi.Controllers.Core
             IUserInfo userInfo,
             ITokenService tokenService,
             IRead<UserModel> readUser,
+            IRead<FileModel> readFile,
+            IRead<OfferModel> readOffer,
             IDelete<UserModel> deleteUser)
         {
             _dbContext = dbContext;
@@ -38,6 +42,8 @@ namespace webapi.Controllers.Core
             _userInfo = userInfo;
             _tokenService = tokenService;
             _readUser = readUser;
+            _readFile = readFile;
+            _readOffer = readOffer;
             _deleteUser = deleteUser;
         }
 
@@ -52,25 +58,57 @@ namespace webapi.Controllers.Core
             if (userAndKeys is null)
                 return StatusCode(404, new { message = ExceptionUserMessages.UserNotFound });
 
-            var files = await _dbContext.Files
-                .Where(f => f.user_id == userId)
-                .OrderByDescending(f => f.operation_date)
-                .Take(5)
-                .ToListAsync();
+            var cacheKeyFiles = $"Profile_Files_{userId}";
+            var cacheKeyOffers = $"Profile_Offers_{userId}";
+            var list_offers = new List<OfferObject>();
+            var files = new List<FileModel>();
+            var offers = new List<OfferModel>();
 
-            var offers = await _dbContext.Offers
-                .Where(o => o.sender_id == userId || o.receiver_id == userId)
-                .OrderByDescending(o => o.created_at)
-                .Select(o => new { o.offer_id, o.sender_id, o.receiver_id, o.offer_type, o.created_at, o.is_accepted })
-                .Take(3)
-                .ToListAsync();
+            var cacheFiles = await _redisCache.GetCachedData(cacheKeyFiles);
+            if (cacheFiles is not null)
+            {
+                files = JsonConvert.DeserializeObject<List<FileModel>>(cacheFiles);
+            }
+            else
+            {
+                var filesDb = await _readFile.ReadAll(userId, 0, 5);
+                await _redisCache.CacheData(cacheKeyFiles, filesDb, TimeSpan.FromMinutes(1));
+
+                files = (List<FileModel>)filesDb;
+            }
+
+            var cacheOffers = await _redisCache.GetCachedData(cacheKeyOffers);
+            if (cacheOffers is not null)
+            {
+                offers = JsonConvert.DeserializeObject<List<OfferModel>>(cacheOffers);
+            }
+            else
+            {
+                var offersDb = await _readOffer.ReadAll(userId, 0, 5);
+                await _redisCache.CacheData(cacheKeyOffers, offersDb, TimeSpan.FromMinutes(1));
+
+                offers = (List<OfferModel>)offersDb;
+            }
+
+            foreach(var offer in offers)
+            {
+                list_offers.Add(new OfferObject
+                { 
+                    offer_id = offer.offer_id,
+                    sender_id = offer.sender_id,
+                    receiver_id = offer.receiver_id,
+                    offer_type = offer.offer_type,
+                    created_at = offer.created_at,
+                    is_accepted = offer.is_accepted,
+                });
+            }
 
             bool IsOwner = userId.Equals(_userInfo.UserId);
             bool privateKey = userAndKeys.keys.private_key is not null;
             bool internalKey = userAndKeys.keys.internal_key is not null;
             bool receivedKey = userAndKeys.keys.received_key is not null;
 
-            if (userId.Equals(_userInfo.UserId))
+            if (IsOwner)
             {
                 var user = new
                 {
@@ -81,7 +119,7 @@ namespace webapi.Controllers.Core
                     is_blocked = userAndKeys.user.is_blocked
                 };
 
-                return StatusCode(200, new { user, IsOwner, keys = new { privateKey, internalKey, receivedKey }, files, offers });
+                return StatusCode(200, new { user, IsOwner, keys = new { privateKey, internalKey, receivedKey }, files, offers = list_offers });
             }
             else
             {
@@ -93,7 +131,7 @@ namespace webapi.Controllers.Core
                     is_blocked = userAndKeys.user.is_blocked
                 };
 
-                return StatusCode(206, new { user, IsOwner, keys = new { privateKey, internalKey, receivedKey }, files, offers });
+                return StatusCode(206, new { user, IsOwner, keys = new { privateKey, internalKey, receivedKey }, files, offers = list_offers });
             }
         }
 
@@ -159,5 +197,15 @@ namespace webapi.Controllers.Core
                 return StatusCode(404);
             }
         }
+    }
+
+    public class OfferObject
+    {
+        public int offer_id { get; set; }
+        public int sender_id { get; set; }
+        public int receiver_id { get; set; }
+        public string offer_type { get; set; }
+        public DateTime created_at { get; set; }
+        public bool is_accepted { get; set; }
     }
 }

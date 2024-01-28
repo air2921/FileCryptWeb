@@ -9,7 +9,6 @@ import FileList from '../../../components/FileList/FileList';
 import Message from '../../../components/Message/Message';
 
 const Files = () => {
-    const [byAsc, setBy] = useState(true);
     const [skip, setSkip] = useState(0);
     const step = 10;
     const [errorMessage, setErrorMessage] = useState('');
@@ -119,7 +118,7 @@ const Files = () => {
 
     useEffect(() => {
         fetchData();
-    }, [byAsc, lastTimeModified, skip]);
+    }, [lastTimeModified, skip]);
 
     if (!filesList) {
         return <div className="error">{errorMessage || 'Loading...'}</div>;

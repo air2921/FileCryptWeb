@@ -58,6 +58,7 @@ function TwoFA({ is_enabled_2fa }: TwoFaProps) {
             <Modal isActive={successStatus} setActive={setStatus}>
                 <Verify endpoint={`api/account/edit/2fa/confirm/${is2Fa}`} method={'PUT'} />
             </Modal>
+            {message && <Message message={message} font={font} />}
         </div>
     );
 }

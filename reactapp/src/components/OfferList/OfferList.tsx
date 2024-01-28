@@ -40,7 +40,6 @@ function OfferList({ offers, user_id, isOwner, deleteOffer, acceptOffer }: Offer
                                 <Font font={'delete'} />
                             </Button>
                         )}
-                        {error && <Message message={error} font={'error'} />}
                     </li>
                 ))}
         </ul>

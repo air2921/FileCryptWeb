@@ -64,47 +64,55 @@ function Layout() {
     return (
         <>
             <header>
-                <Link to="/">Home</Link>
-                <Link to="/about">About</Link>
-                <Link to="/policy">Policy</Link>
-                {!isAuth && (
-                    <div className="auth">
-                        <Button onClick={() => navigate('/auth/signup')}>Sign Up</Button>
-                        <Button onClick={() => navigate('/auth/login')}>Sign In</Button>
+                <nav>
+                    <div>
+                        <Link to="/">Home</Link>
+                        <Link to="/about">About</Link>
+                        <Link to="/policy">Policy</Link>
+                        {!isAuth && (
+                            <div className="auth">
+                                <Button onClick={() => navigate('/auth/signup')}>Sign Up</Button>
+                                <Button onClick={() => navigate('/auth/login')}>Sign In</Button>
+                            </div>
+                        )}
+                        {isAuth && (
+                            <Button onClick={logout}>Log Out</Button>
+                        )}
                     </div>
-                )}
+                </nav>
             </header>
             {isAuth && (
                 <aside>
-                    <div>
-                        <Link to={profilePath}>
-                            <Font font={'account_circle'} />
-                            <h3>Profile</h3>
-                        </Link>
-                        <Link to="/settings">
-                            <Font font={'manage_accounts'} />
-                            <h3>Account</h3>
-                        </Link>
-                        <Link to="/notifications">
-                            <Font font={'notifications'} />
-                            <h3>Notifications</h3>
-                        </Link>
-                        <Link to="/offers">
-                            <Font font={'storage'} />
-                            <h3>Offers</h3>
-                        </Link>
-                        <Link to="/files">
-                            <Font font={'storage'} />
-                            <h3>Files</h3>
-                        </Link>
-                        {role === 'Admin' || role === 'HighestAdmin' && (
-                            <Link to="/admin">
-                                <Font font={'admin_panel_settings'} />
-                                <h3>Admin Panel</h3>
+                    <nav>
+                        <div>
+                            <Link to={profilePath}>
+                                <Font font={'account_circle'} />
+                                <h3>Profile</h3>
                             </Link>
-                        )}
-                        <Button onClick={logout}><Font font={'logout'} /></Button>
-                    </div>
+                            <Link to="/settings">
+                                <Font font={'manage_accounts'} />
+                                <h3>Account</h3>
+                            </Link>
+                            <Link to="/notifications">
+                                <Font font={'notifications'} />
+                                <h3>Notifications</h3>
+                            </Link>
+                            <Link to="/offers">
+                                <Font font={'storage'} />
+                                <h3>Offers</h3>
+                            </Link>
+                            <Link to="/files">
+                                <Font font={'storage'} />
+                                <h3>Files</h3>
+                            </Link>
+                            {role === 'Admin' || role === 'HighestAdmin' && (
+                                <Link to="/admin">
+                                    <Font font={'admin_panel_settings'} />
+                                    <h3>Admin Panel</h3>
+                                </Link>
+                            )}
+                        </div>
+                    </nav>
                 </aside>
             )}
             <Outlet />
