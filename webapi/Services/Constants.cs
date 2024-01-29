@@ -10,6 +10,7 @@
         /// <summary>
         /// This cookie name does not reflect its direct purpose. Such a non-obvious name may complicate possible attacks to steal authentication data
         /// </summary>
+
         public const string JWT_COOKIE_KEY = "session_preference";
         public const string REFRESH_COOKIE_KEY = "long_time_preference";
         public const string XSRF_COOKIE_KEY = ".AspNetCore.Xsrf";

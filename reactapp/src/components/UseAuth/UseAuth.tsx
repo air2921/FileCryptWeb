@@ -27,7 +27,7 @@ const useAuth = () => {
     useEffect(() => {
         const authStatus = getAuthCookie();
 
-        if (authStatus === null || authStatus === undefined) {
+        if (authStatus === undefined) {
             getAuthStatus();
         }
         else {

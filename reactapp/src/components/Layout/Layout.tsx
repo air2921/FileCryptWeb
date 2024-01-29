@@ -11,6 +11,7 @@ function Layout() {
     const [id, setId] = useState(cookie.load('auth_user_id'));
     const [role, setRole] = useState(cookie.load('auth_role'));
     const [profilePath, setPath] = useState('');
+    const [isAsideVisible, setAsideVisible] = useState(sessionStorage.getItem('isAsideVisible') === 'true');
     const isAuth = useAuth();
     const navigate = useNavigate();
 
@@ -59,30 +60,12 @@ function Layout() {
     useEffect(() => {
         checkCookies();
         setPath(`/user/${id}/${username}`);
-    }, [navigate]);
+    }, [isAuth, navigate]);
 
     return (
-        <>
-            <header>
-                <nav>
-                    <div>
-                        <Link to="/">Home</Link>
-                        <Link to="/about">About</Link>
-                        <Link to="/policy">Policy</Link>
-                        {!isAuth && (
-                            <div className="auth">
-                                <Button onClick={() => navigate('/auth/signup')}>Sign Up</Button>
-                                <Button onClick={() => navigate('/auth/login')}>Sign In</Button>
-                            </div>
-                        )}
-                        {isAuth && (
-                            <Button onClick={logout}>Log Out</Button>
-                        )}
-                    </div>
-                </nav>
-            </header>
-            {isAuth && (
-                <aside>
+        <div style={{ display: 'flex', minHeight: '100vh' }}>
+            {isAsideVisible && (
+                <aside style={{ background: '#000', padding: '1rem', width: '200px', display: 'flex', flexDirection: 'column', alignItems: 'center' }}>
                     <nav>
                         <div>
                             <Link to={profilePath}>
@@ -115,8 +98,40 @@ function Layout() {
                     </nav>
                 </aside>
             )}
-            <Outlet />
-        </>
+            {isAuth && (
+                <div className="aside-visible-btn">
+                    {!isAsideVisible && (
+                        <Button onClick={() => setAsideVisible(true)}>Open Sidebar</Button>
+                    )}
+                    {isAsideVisible && (
+                        <Button onClick={() => setAsideVisible(false)}>Close Sidebar</Button>
+                    )}
+                </div>
+            )}
+            <div style={{ flex: 1, display: 'flex', flexDirection: 'column' }}>
+                <header style={{ background: '#333', color: '#fff', padding: '1rem', textAlign: 'center' }}>
+                    <nav>
+                        <div>
+                            <Link to="/">Home</Link>
+                            <Link to="/about">About</Link>
+                            <Link to="/policy">Policy</Link>
+                            {!isAuth && (
+                                <div className="auth">
+                                    <Button onClick={() => navigate('/auth/signup')}>Sign Up</Button>
+                                    <Button onClick={() => navigate('/auth/login')}>Sign In</Button>
+                                </div>
+                            )}
+                            {isAuth && (
+                                <Button onClick={logout}>Log Out</Button>
+                            )}
+                        </div>
+                    </nav>
+                </header>
+                <div style={{ flex: 1, padding: '1rem' }}>
+                    <Outlet />
+                </div>
+            </div>
+        </div>
     );
 }
 

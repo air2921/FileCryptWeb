@@ -10,5 +10,6 @@ namespace webapi.Interfaces.Services
         public Task UpdateJwtToken();
         public string HashingToken(string token);
         public void DeleteTokens();
+        public void DeleteUserDataSession();
     }
 }
