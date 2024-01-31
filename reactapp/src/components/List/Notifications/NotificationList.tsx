@@ -1,8 +1,8 @@
 import React from 'react';
-import DateComponent from '../Date/Date';
-import Button from '../Helpers/Button';
-import Message from '../Message/Message';
-import Font from '../Font/Font';
+import DateComponent from '../../Date/Date';
+import Button from '../../Helpers/Button';
+import Message from '../../Message/Message';
+import Font from '../../Font/Font';
 
 function NotificationList({ notifications, deleteNotification }: NotificationListProps) {
 

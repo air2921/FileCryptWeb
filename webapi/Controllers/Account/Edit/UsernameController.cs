@@ -1,5 +1,6 @@
 ﻿using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
+using System.Text.RegularExpressions;
 using webapi.Exceptions;
 using webapi.Interfaces.Services;
 using webapi.Interfaces.SQL;
@@ -40,8 +41,8 @@ namespace webapi.Controllers.Account.Edit
         {
             try
             {
-                if (username.Length > 30)
-                    return StatusCode(411, new { message = $"username {username} is too much large" });
+                if (!Regex.IsMatch(username, Validation.Username))
+                    return StatusCode(400, new { message = AccountErrorMessage.InvalidFormatUsername });
 
                 var user = await _readUser.ReadById(_userInfo.UserId, null);
                 user.username = username;

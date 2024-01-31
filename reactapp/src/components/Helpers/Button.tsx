@@ -7,7 +7,7 @@ interface ButtonProps {
 
 function Button({ onClick, children }: ButtonProps) {
     return (
-        <button onClick={() => onClick && onClick()} type="submit" className="btn btn-primary">
+        <button onClick={() => onClick && onClick()} type="submit" className="btn btn-primary" style={{ background: 'transparent', padding: '3px' }}>
             {children}
         </button>
     );

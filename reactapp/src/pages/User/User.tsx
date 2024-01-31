@@ -2,9 +2,9 @@
 import { useNavigate, useParams } from 'react-router-dom';
 import UserData from '../../components/User/UserData';
 import UserKeys from '../../components/User/UserKeys';
-import OfferList from '../../components/OfferList/OfferList';
-import FileList from '../../components/FileList/FileList';
+import OfferList from '../../components/List/OfferList/OfferList';
 import AxiosRequest from '../../api/AxiosRequest';
+import FileList from '../../components/List/FileList/FileList';
 
 const User = () => {
     const { userId } = useParams();

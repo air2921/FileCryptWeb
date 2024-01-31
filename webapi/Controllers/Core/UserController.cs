@@ -2,7 +2,9 @@
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
 using Newtonsoft.Json;
+using System.ComponentModel.DataAnnotations;
 using webapi.DB;
+using webapi.DB.SQL;
 using webapi.Exceptions;
 using webapi.Interfaces.Redis;
 using webapi.Interfaces.Services;
@@ -108,31 +110,16 @@ namespace webapi.Controllers.Core
             bool internalKey = userAndKeys.keys.internal_key is not null;
             bool receivedKey = userAndKeys.keys.received_key is not null;
 
-            if (IsOwner)
+            var user = new
             {
-                var user = new
-                {
-                    id = userAndKeys.user.id,
-                    username = userAndKeys.user.username,
-                    email = userAndKeys.user.email,
-                    role = userAndKeys.user.role,
-                    is_blocked = userAndKeys.user.is_blocked
-                };
+                id = userAndKeys.user.id,
+                username = userAndKeys.user.username,
+                email = IsOwner ? userAndKeys.user.email : null,
+                role = userAndKeys.user.role,
+                is_blocked = userAndKeys.user.is_blocked
+            };
 
-                return StatusCode(200, new { user, IsOwner, keys = new { privateKey, internalKey, receivedKey }, files, offers = list_offers });
-            }
-            else
-            {
-                var user = new
-                {
-                    id = userAndKeys.user.id,
-                    username = userAndKeys.user.username,
-                    role = userAndKeys.user.role,
-                    is_blocked = userAndKeys.user.is_blocked
-                };
-
-                return StatusCode(206, new { user, IsOwner, keys = new { privateKey, internalKey, receivedKey }, files, offers = list_offers });
-            }
+            return StatusCode(200, new { user, IsOwner, keys = new { privateKey, internalKey, receivedKey }, files, offers = list_offers });
         }
 
         [HttpGet("data/only")]
@@ -197,6 +184,66 @@ namespace webapi.Controllers.Core
                 return StatusCode(404);
             }
         }
+
+        [HttpGet("find")]
+        public async Task<IActionResult> FindUser([FromQuery] string? username, [FromQuery] int userId)
+        {
+            if (string.IsNullOrWhiteSpace(username) && userId == 0)
+                return StatusCode(404, new { message = ExceptionUserMessages.UserNotFound });
+
+            if (!string.IsNullOrWhiteSpace(username) && userId == 0)
+            {
+                var users = new List<UserObject>();
+
+                var usersDb = await _dbContext.Users.Where(u => u.username == username)
+                .ToListAsync();
+
+                foreach (var user in usersDb)
+                {
+                    users.Add(new UserObject
+                    {
+                        id = user.id,
+                        username = user.username,
+                        role = user.role,
+                        is_blocked = user.is_blocked
+                    });
+                }
+
+                return StatusCode(200, new { users });
+            }
+
+            if (string.IsNullOrWhiteSpace(username) && userId != 0)
+            {
+                try
+                {
+                    var user = await _readUser.ReadById(userId, null);
+                    return StatusCode(200, new { username = user.username, id = user.id });
+                }
+                catch (UserException ex)
+                {
+                    return StatusCode(404, new { message = ex.Message });
+                }
+            }
+
+            if (!string.IsNullOrWhiteSpace(username) && userId != 0)
+            {
+                var user = await _dbContext.Users.FirstOrDefaultAsync(u => u.id == userId && u.username == username);
+                if (user is null)
+                    return StatusCode(404, new { message = ExceptionUserMessages.UserNotFound });
+
+                return StatusCode(200, new { username = user.username, id = user.id });
+            }
+
+            return StatusCode(404, new { message = ExceptionUserMessages.UserNotFound });
+        }
+    }
+
+    public class UserObject
+    {
+        public int id { get; set; }
+        public string username { get; set; }
+        public string role { get; set; }
+        public bool is_blocked { get; set; }
     }
 
     public class OfferObject

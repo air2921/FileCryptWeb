@@ -60,6 +60,9 @@ namespace webapi.Controllers.Account
                 if (!Regex.IsMatch(userDTO.password, Validation.Password))
                     return StatusCode(400, new { message = AccountErrorMessage.InvalidFormatPassword });
 
+                if (!Regex.IsMatch(userDTO.username, Validation.Username))
+                    return StatusCode(400, new { message = AccountErrorMessage.InvalidFormatUsername });
+
                 int code = _generateCode.GenerateSixDigitCode();
 
                 string password = _passwordManager.HashingPassword(userDTO.password);

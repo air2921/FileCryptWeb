@@ -35,19 +35,20 @@ namespace webapi.Controllers.Admin.Manage_Users
         }
 
         [HttpPut("role")]
-        public async Task<IActionResult> UpdateRole([FromBody] UserModel userModel)
+        public async Task<IActionResult> UpdateRole([FromQuery] int userId, [FromQuery] string role)
         {
             try
             {
-                var target = await _read.ReadById(userModel.id, null);
+                var target = await _read.ReadById(userId, null);
                 if (target.role == Role.HighestAdmin.ToString())
                     return StatusCode(403, new { message = ErrorMessage.HighestRoleError });
 
-                if (userModel.role == Role.HighestAdmin.ToString())
+                if (role == Role.HighestAdmin.ToString())
                     return StatusCode(403);
 
-                await _updateUser.Update(userModel, null);
-                _logger.LogWarning($"{_userInfo.Username}#{_userInfo.UserId} updated role user#{userModel.id}");
+                target.role = role;
+                await _updateUser.Update(target, null);
+                _logger.LogWarning($"{_userInfo.Username}#{_userInfo.UserId} updated role user#{userId}");
 
                 return StatusCode(200, new { message = SuccessMessage.SuccessRoleUpdated });
             }

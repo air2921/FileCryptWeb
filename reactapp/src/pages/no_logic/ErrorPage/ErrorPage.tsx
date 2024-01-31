@@ -1,15 +1,15 @@
 import React from 'react';
 import { Link } from 'react-router-dom';
-import './NotFound.css'
+import './ErrorPage.css'
 
-const NotFound = () => {
+const ErrorPage = ({ statusCode, message }: ErrorPageProps) => {
     return (
         <div className="error-container">
             <div className="error-code">
-                <h1>404</h1>
+                <h1>{statusCode}</h1>
             </div>
             <div className="error-description">
-                <h2>Not Found</h2>
+                <h2>{message}</h2>
             </div>
             <div className="divider"></div>
             <Link to="/" className="main-button">
@@ -19,4 +19,4 @@ const NotFound = () => {
     );
 }
 
-export default NotFound;
+export default ErrorPage;

@@ -1,5 +1,5 @@
 import React, { useEffect, useState } from 'react';
-import NotificationList from '../../../components/Notifications/NotificationList';
+import NotificationList from '../../../components/List/Notifications/NotificationList';
 import AxiosRequest from '../../../api/AxiosRequest';
 import Button from '../../../components/Helpers/Button';
 import Font from '../../../components/Font/Font';

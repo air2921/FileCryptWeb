@@ -5,7 +5,7 @@ import Button from '../../../components/Helpers/Button';
 import Font from '../../../components/Font/Font';
 import Modal from '../../../components/Modal/Modal';
 import FileButton from '../../../components/Helpers/FileButton';
-import FileList from '../../../components/FileList/FileList';
+import FileList from '../../../components/List/FileList/FileList';
 import Message from '../../../components/Message/Message';
 
 const Files = () => {

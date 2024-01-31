@@ -5,7 +5,7 @@ function Home() {
         <div className="home">
             <div className="head-container">
                 <div className="description">
-                    <p>Key Features:</p>
+                    <h2>Key Features:</h2>
                     <ul>
                         <li>Robust Security: Utilize AES256 encryption to ensure your files are protected with a strong cryptographic algorithm.</li>
                         <li>User-Friendly Interface: FileCryptWeb offers a simple and intuitive interface, enabling users to encrypt files without requiring technical expertise.</li>

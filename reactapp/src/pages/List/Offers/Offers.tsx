@@ -1,5 +1,5 @@
 import React, { FormEvent, useEffect, useState } from 'react';
-import OfferList from '../../../components/OfferList/OfferList';
+import OfferList from '../../../components/List/OfferList/OfferList';
 import Input from '../../../components/Helpers/Input';
 import AxiosRequest from '../../../api/AxiosRequest';
 import Message from '../../../components/Message/Message';
