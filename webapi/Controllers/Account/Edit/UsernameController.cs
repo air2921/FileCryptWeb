@@ -1,5 +1,6 @@
 ﻿using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
+using System.Text.RegularExpressions;
 using webapi.Exceptions;
 using webapi.Interfaces.Services;
 using webapi.Interfaces.SQL;
@@ -40,8 +41,8 @@ namespace webapi.Controllers.Account.Edit
         {
             try
             {
-                if (username.Length > 30)
-                    return StatusCode(411, new { message = $"username {username} is too much large" });
+                if (!Regex.IsMatch(username, Validation.Username))
+                    return StatusCode(400, new { message = AccountErrorMessage.InvalidFormatUsername });
 
                 var user = await _readUser.ReadById(_userInfo.UserId, null);
                 user.username = username;
@@ -50,6 +51,7 @@ namespace webapi.Controllers.Account.Edit
                 _logger.LogInformation($"username was updated in db. {username}#{_userInfo.UserId}");
 
                 await _tokenService.UpdateJwtToken();
+                _tokenService.DeleteUserDataSession();
                 _logger.LogInformation("jwt with a new claims was updated");
                 HttpContext.Session.SetString(Constants.CACHE_USER_DATA, true.ToString());
 

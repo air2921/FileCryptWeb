@@ -20,8 +20,15 @@ namespace webapi.DB.SQL
 
         public async Task Create(ApiModel apiModel)
         {
-            await _dbContext.AddAsync(apiModel);
-            await _dbContext.SaveChangesAsync();
+            try
+            {
+                await _dbContext.AddAsync(apiModel);
+                await _dbContext.SaveChangesAsync();
+            }
+            catch (DbUpdateException)
+            {
+                throw new ApiException(ExceptionApiMessages.AlreadyExists);
+            }
         }
 
         public async Task<ApiModel> ReadById(int id, bool? byForeign)

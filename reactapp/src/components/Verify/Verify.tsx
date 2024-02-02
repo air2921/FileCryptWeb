@@ -6,7 +6,7 @@ import Input from '../Helpers/Input';
 import Button from '../Helpers/Button';
 
 function Verify({ endpoint, method }: VerifyProps) {
-    const [code, setCode] = useState(0);
+    const [code, setCode] = useState<number>();
     const [errorMessage, setErrorMessage] = useState('');
     const navigate = useNavigate();
 

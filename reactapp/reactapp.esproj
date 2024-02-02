@@ -11,12 +11,15 @@
     <BuildOutputFolder>$(MSBuildProjectDirectory)\dist</BuildOutputFolder>
   </PropertyGroup>
   <ItemGroup>
+    <Folder Include="src\components\List\UserList\" />
     <Folder Include="src\components\Modal\" />
-    <Folder Include="src\components\FileList\" />
+    <Folder Include="src\components\List\FileList\" />
     <Folder Include="src\components\Helpers\" />
     <Folder Include="src\components\Date\" />
-    <Folder Include="src\components\Notifications\" />
+    <Folder Include="src\components\UseAuth\" />
+    <Folder Include="src\components\List\Notifications\" />
     <Folder Include="src\components\Settings\" />
-    <Folder Include="src\components\OfferList\" />
+    <Folder Include="src\components\List\OfferList\" />
+    <Folder Include="src\pages\auth\Recovery\" />
   </ItemGroup>
 </Project>

@@ -24,6 +24,9 @@ namespace webapi
                 app.UseSwaggerUI();
             }
 
+            if(env.IsProduction())
+                app.UseHsts();
+
             app.UseHttpsRedirection();
             app.UseStaticFiles();
             app.UseRouting();
@@ -32,12 +35,14 @@ namespace webapi
             app.UseFreeze();
             app.UseBearer();
             app.UseAuthentication();
+            app.UseUserSession();
 
             if (env.IsDevelopment())
                 app.UseLog();
 
             app.UseAuthorization();
             app.UseXSRF();
+            app.UseExceptionHandle();
 
             app.UseEndpoints(endpoint =>
             {

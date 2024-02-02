@@ -1,7 +1,11 @@
 import React from 'react';
 import Font from '../Font/Font';
+import Button from '../Helpers/Button';
+import { useNavigate } from 'react-router-dom';
 
 function UserData({ user, isOwner }: UserDataProps) {
+    const navigate = useNavigate();
+
     return (
         <div className="user-data-container">
             <div>
@@ -19,6 +23,11 @@ function UserData({ user, isOwner }: UserDataProps) {
                 <div className="email">
                     <Font font={'mail'} /> {user.email}
                 </div>
+            )}
+            {isOwner && (
+                <Button onClick={() => navigate("/settings")}>
+                    <Font font={'edit'} />
+                </Button>
             )}
         </div>
     );

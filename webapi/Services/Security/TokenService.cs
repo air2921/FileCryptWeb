@@ -107,7 +107,7 @@ namespace webapi.Services.Security
                 .Join(_dbContext.Users, token => token.user_id, user => user.id, (token, user) => new { token, user })
                 .FirstOrDefaultAsync() ?? throw new UnauthorizedAccessException("User was not found");
 
-            if (userAndToken.token.expiry_date < DateTime.UtcNow || (bool)userAndToken.user.is_blocked!)
+            if (userAndToken.token.expiry_date < DateTime.UtcNow || userAndToken.user.is_blocked)
             {
                 DeleteTokens();
                 throw new UnauthorizedAccessException("Refresh Token is invalid");
@@ -124,6 +124,19 @@ namespace webapi.Services.Security
         {
             _context.HttpContext.Response.Cookies.Delete(Constants.REFRESH_COOKIE_KEY);
             _context.HttpContext.Response.Cookies.Delete(Constants.JWT_COOKIE_KEY);
+
+            _context.HttpContext.Response.Cookies.Delete(Constants.IS_AUTHORIZED);
+            _context.HttpContext.Response.Cookies.Delete(Constants.USERNAME_COOKIE_KEY);
+            _context.HttpContext.Response.Cookies.Delete(Constants.USER_ID_COOKIE_KEY);
+            _context.HttpContext.Response.Cookies.Delete(Constants.ROLE_COOKIE_KEY);
+        }
+
+        public void DeleteUserDataSession()
+        {
+            _context.HttpContext.Response.Cookies.Delete(Constants.IS_AUTHORIZED);
+            _context.HttpContext.Response.Cookies.Delete(Constants.USERNAME_COOKIE_KEY);
+            _context.HttpContext.Response.Cookies.Delete(Constants.USER_ID_COOKIE_KEY);
+            _context.HttpContext.Response.Cookies.Delete(Constants.ROLE_COOKIE_KEY);
         }
     }
 }

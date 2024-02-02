@@ -1,6 +1,7 @@
 ﻿using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
 using StackExchange.Redis;
+using System.Text.RegularExpressions;
 using UAParser;
 using webapi.DB;
 using webapi.DTO;
@@ -62,59 +63,48 @@ namespace webapi.Controllers.Account
             _fileManager = fileManager;
         }
 
-        [HttpPost("create/unique/token")]
+        [HttpPost("unique/token")]
         public async Task<IActionResult> RecoveryAccount([FromQuery] string email)
         {
-            try
+            var user = await _dbContext.Users.FirstOrDefaultAsync(u => u.email == email.ToLowerInvariant());
+            if (user is null)
+                return StatusCode(404, new { message = AccountErrorMessage.UserNotFound });
+
+            string token = Guid.NewGuid().ToString("N") + Guid.NewGuid().ToString() + _generateKey.GenerateKey();
+
+            var clientInfo = Parser.GetDefault().Parse(HttpContext.Request.Headers["User-Agent"].ToString());
+            var ua = _userAgent.GetBrowserData(clientInfo);
+
+            await _createLink.Create(new LinkModel
             {
-                var user = await _dbContext.Users.FirstOrDefaultAsync(u => u.email == email.ToLowerInvariant());
-                if (user is null)
-                    return StatusCode(404, new { message = AccountErrorMessage.UserNotFound });
+                user_id = user.id,
+                u_token = token,
+                expiry_date = DateTime.UtcNow.AddMinutes(30),
+                created_at = DateTime.UtcNow
+            });
 
-                string token = Guid.NewGuid().ToString("N") + Guid.NewGuid().ToString() + _generateKey.GenerateKey();
-
-                var linkModel = new LinkModel
-                {
-                    user_id = user.id,
-                    u_token = token,
-                    expiry_date = DateTime.UtcNow.AddMinutes(30),
-                    is_used = false,
-                    created_at = DateTime.UtcNow
-                };
-
-                var clientInfo = Parser.GetDefault().Parse(HttpContext.Request.Headers["User-Agent"].ToString());
-                var ua = _userAgent.GetBrowserData(clientInfo);
-
-                var notificationModel = new NotificationModel
-                {
-                    message_header = "Someone trying recovery your account",
-                    message = $"Someone trying recovery your account {user.username}#{user.id} at {DateTime.UtcNow} from {ua.Browser} {ua.Version} on OS {ua.OS}." +
-                    $"Qnique token was sended on {user.email}",
-                    priority = Priority.Security.ToString(),
-                    send_time = DateTime.UtcNow,
-                    is_checked = false,
-                    receiver_id = user.id
-                };
-
-                var emailDto = new EmailDto
-                {
-                    username = user.username,
-                    email = user.email,
-                    subject = EmailMessage.RecoveryAccountHeader,
-                    message = EmailMessage.RecoveryAccountBody + $"{_fileManager.GetReactAppUrl(App.REACT_LAUNCH_JSON_PATH, true)}/auth/recovery?token={token}"
-                };
-
-                await _emailSender.SendMessage(emailDto);
-                await _createNotification.Create(notificationModel);
-                await _createLink.Create(linkModel);
-                _logger.LogInformation($"Created new token for {user.username}#{user.id} with life time for 30 minutes");
-
-                return StatusCode(201, new { message = AccountSuccessMessage.EmailSendedRecovery });
-            }
-            catch (Exception)
+            await _emailSender.SendMessage(new EmailDto
             {
-                return StatusCode(500);
-            }
+                username = user.username,
+                email = user.email,
+                subject = EmailMessage.RecoveryAccountHeader,
+                message = EmailMessage.RecoveryAccountBody + $"{_fileManager.GetReactAppUrl(App.REACT_LAUNCH_JSON_PATH, true)}/auth/recovery?token={token}"
+            });
+
+            await _createNotification.Create(new NotificationModel
+            {
+                message_header = "Someone trying recovery your account",
+                message = $"Someone trying recovery your account {user.username}#{user.id} at {DateTime.UtcNow} from {ua.Browser} {ua.Version} on OS {ua.OS}." +
+                $"Qnique token was sended on {user.email}",
+                priority = Priority.Security.ToString(),
+                send_time = DateTime.UtcNow,
+                is_checked = false,
+                receiver_id = user.id
+            });
+
+            _logger.LogInformation($"Created new token for {user.username}#{user.id} with life time for 30 minutes");
+
+            return StatusCode(201, new { message = AccountSuccessMessage.EmailSendedRecovery });
         }
 
         [HttpPost("account")]
@@ -122,6 +112,9 @@ namespace webapi.Controllers.Account
         {
             try
             {
+                if (!Regex.IsMatch(password, Validation.Password))
+                    return StatusCode(400, new { message = AccountErrorMessage.InvalidFormatPassword });
+
                 var link = await _dbContext.Links.FirstOrDefaultAsync(l => l.u_token == token);
                 if (link is null)
                     return StatusCode(404, new { message = AccountErrorMessage.InvalidToken });
@@ -145,7 +138,7 @@ namespace webapi.Controllers.Account
                 var clientInfo = Parser.GetDefault().Parse(HttpContext.Request.Headers["User-Agent"].ToString());
                 var ua = _userAgent.GetBrowserData(clientInfo);
 
-                var notificationModel = new NotificationModel
+                await _createNotification.Create(new NotificationModel
                 {
                     message_header = "Someone changed your password",
                     message = $"Someone changed your password at {DateTime.UtcNow} from {ua.Browser} {ua.Version} on OS {ua.OS}.",
@@ -153,9 +146,7 @@ namespace webapi.Controllers.Account
                     send_time = DateTime.UtcNow,
                     is_checked = false,
                     receiver_id = link.user_id
-                };
-
-                await _createNotification.Create(notificationModel);
+                });
 
                 await _deleteByName.DeleteByName(token, null);
                 _logger.LogInformation($"Token: {token} was deleted");
@@ -163,11 +154,11 @@ namespace webapi.Controllers.Account
                 await _updateToken.Update(new TokenModel
                 {
                     user_id = link.user_id,
-                    refresh_token = null,
+                    refresh_token = Guid.NewGuid().ToString(),
                     expiry_date = DateTime.UtcNow.AddYears(-100)
                 }, true);
 
-                return StatusCode(200, new { message = AccountSuccessMessage.PasswordUpdated });
+                return StatusCode(200);
             }
             catch (LinkException ex)
             {

@@ -7,6 +7,7 @@
         public const string CodeIncorrect = "Code is incorrect";
         public const string VerifyCodeNull = "Сode timed out or an error occurred while receiving the code";
         public const string InvalidFormatPassword = "Invalid password format";
+        public const string InvalidFormatUsername = "Invalid username format";
         public const string NullUserData = "Error while retrieving user data";
         public const string Error = "Unexpected error";
         public const string UserNotFound = "User was not found";

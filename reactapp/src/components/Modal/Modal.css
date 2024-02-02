@@ -13,7 +13,7 @@
     transition: 0.5s;
 }
 
-.modal-active{
+.modal.active{
     pointer-events: all;
     opacity: 1;
 }
@@ -24,9 +24,9 @@
     background-color: black;
     transform: scale(0.5);
     transition: 0.4s all;
-    width: 50vw;
+    width: auto;
 }
 
-.modal-content-active {
+.modal-content.active {
     transform: scale(1);
 }

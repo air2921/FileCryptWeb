@@ -1,33 +1,53 @@
 import React from 'react';
 import { Routes, Route } from 'react-router-dom';
 
-import Register from './pages/Register';
-import Login from './pages/Login';
+import Register from './pages/auth/Registration/Register';
+import Login from './pages/auth/Login/Login';
 import Home from './pages/no_logic/Home';
 import About from './pages/no_logic/About';
-import User from './pages/User';
-import UserSettings from './pages/UserSettings';
-import KeySetting from './pages/KeySettings';
-import Offers from './pages/Offers';
-import Files from './pages/Files';
-import Notifications from './pages/Notifications';
+import Policy from './pages/no_logic/Policy'
+import User from './pages/User/User';
+import Settings from './pages/User/Settings/Settings';
+import Offers from './pages/List/Offers/Offers';
+import Files from './pages/List/Files/Files';
+import Notifications from './pages/List/Notifications/Notifications';
+import RecoveryAccount from './pages/auth/Recovery/RecoveryAccount'
+import ErrorPage from './pages/no_logic/ErrorPage/ErrorPage'
+import Layout from './components/Layout/Layout';
+import useAuth from './components/UseAuth/UseAuth';
 
 function App() {
+    const isAuth = useAuth();
+
     return (
-        <div>
+        <>
             <Routes>
-                <Route path="/" element={<Home />} />
-                <Route path="/about" element={<About />} />
-                <Route path="/user/:userId/:username" element={<User />} />
-                <Route path="/settings" element={<UserSettings />} />
-                <Route path="/settings/keys" element={<KeySetting />} />
-                <Route path="/offers" element={<Offers />} />
-                <Route path="/files" element={<Files />} />
-                <Route path="/notifications" element={<Notifications />} />
-                <Route path="/auth/signin" element={<Login />} />
-                <Route path="/auth/signup" element={ <Register /> } />
+                <Route path="/" element={<Layout />}>
+                    <Route index element={<Home />} />
+                    <Route path="about" element={<About />} />
+                    <Route path="policy" element={<Policy />} />
+                    {isAuth ? (
+                        <>
+                            <Route path="user/:userId/:username" element={<User />} />
+                            <Route path="settings" element={<Settings />} />
+                            <Route path="offers" element={<Offers />} />
+                            <Route path="files" element={<Files />} />
+                            <Route path="notifications" element={<Notifications />} />
+                        </>
+                    ) : (
+                            <Route path="*" element={<ErrorPage statusCode={401} message={'Unauthorized'} />} />
+                    )}
+                    {!isAuth && (
+                        <>
+                            <Route path="auth/login" element={<Login />} />
+                            <Route path="auth/signup" element={<Register />} />
+                            <Route path="auth/recovery" element={<RecoveryAccount />} />
+                        </>
+                    )}
+                    <Route path="*" element={<ErrorPage statusCode={404} message={'Not Found'} />} />
+                </Route>
             </Routes>
-        </div>
+        </>
     );
 }
 

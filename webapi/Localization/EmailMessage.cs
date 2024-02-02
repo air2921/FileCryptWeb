@@ -25,5 +25,9 @@
 
         public const string Verify2FaHeader = "Confirm login on FileCryptWeb";
         public const string Verify2FaBody = "You provide this email address to confirm your two-factor authentication login.\n Your login code: ";
+
+        public const string Change2FaHeader = "Confirmation Code for Two-Factor Authentication Status Change";
+        public const string Change2FaBody = "We have received a request to change the status of two-factor authentication for your account.\n" +
+            "To complete this action, please use the following confirmation code: ";
     }
 }

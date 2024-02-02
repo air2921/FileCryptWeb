@@ -155,15 +155,15 @@ namespace webapi.Controllers.Base
             {
                 if (lowerFileType == privateType)
                 {
-                    return new CryptographyParams(await _redisCache.CacheKey(_redisKeys.PrivateKey, () => _readKeys.ReadById(_userInfo.UserId, true)));
+                    return new CryptographyParams(await _redisCache.CacheKey(_redisKeys.PrivateKey, _userInfo.UserId));
                 }
                 else if (lowerFileType == internalType)
                 {
-                    return new CryptographyParams(await _redisCache.CacheKey(_redisKeys.InternalKey, () => _readKeys.ReadById(_userInfo.UserId, true)));
+                    return new CryptographyParams(await _redisCache.CacheKey(_redisKeys.InternalKey, _userInfo.UserId));
                 }
                 else if (lowerFileType == receivedType)
                 {
-                    return new CryptographyParams(await _redisCache.CacheKey(_redisKeys.ReceivedKey, () => _readKeys.ReadById(_userInfo.UserId, true)));
+                    return new CryptographyParams(await _redisCache.CacheKey(_redisKeys.ReceivedKey, _userInfo.UserId));
                 }
                 throw new InvalidRouteException();
             }

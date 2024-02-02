@@ -34,6 +34,22 @@ namespace webapi.Migrations
                         .IsRequired()
                         .HasColumnType("text");
 
+                    b.Property<DateTime?>("expiry_date")
+                        .HasColumnType("timestamp with time zone");
+
+                    b.Property<bool>("is_blocked")
+                        .HasColumnType("boolean");
+
+                    b.Property<DateTime>("last_time_activity")
+                        .HasColumnType("timestamp with time zone");
+
+                    b.Property<int>("max_request_of_day")
+                        .HasColumnType("integer");
+
+                    b.Property<string>("type")
+                        .IsRequired()
+                        .HasColumnType("text");
+
                     b.Property<int>("user_id")
                         .HasColumnType("integer");
 
@@ -141,9 +157,6 @@ namespace webapi.Migrations
                     b.Property<DateTime>("expiry_date")
                         .HasColumnType("timestamp with time zone");
 
-                    b.Property<bool>("is_used")
-                        .HasColumnType("boolean");
-
                     b.Property<string>("u_token")
                         .IsRequired()
                         .HasColumnType("text");
@@ -246,10 +259,11 @@ namespace webapi.Migrations
 
                     NpgsqlPropertyBuilderExtensions.UseIdentityByDefaultColumn(b.Property<int>("token_id"));
 
-                    b.Property<DateTime?>("expiry_date")
+                    b.Property<DateTime>("expiry_date")
                         .HasColumnType("timestamp with time zone");
 
                     b.Property<string>("refresh_token")
+                        .IsRequired()
                         .HasColumnType("text");
 
                     b.Property<int>("user_id")

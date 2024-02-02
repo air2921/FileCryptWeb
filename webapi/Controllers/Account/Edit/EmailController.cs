@@ -65,93 +65,75 @@ namespace webapi.Controllers.Account.Edit
         [HttpPost("start")]
         public async Task<IActionResult> StartEmailChangeProcess([FromQuery] string password)
         {
-            try
+            var user = await _dbContext.Users.FirstOrDefaultAsync(u => u.id == _userInfo.UserId);
+            if (user is null)
             {
-                var user = await _dbContext.Users.FirstOrDefaultAsync(u => u.email == _userInfo.Email);
-                if (user is null)
-                {
-                    _logger.LogWarning($"Non-existent user {_userInfo.Username}#{_userInfo.UserId} was requested to authorized endpoint.\nTrying delete tokens from cookie");
-                    _tokenService.DeleteTokens();
-                    _logger.LogWarning("Tokens was deleted");
-                    return StatusCode(404);
-                }
-
-                bool IsCorrect = _passwordManager.CheckPassword(password, user.password);
-                if (!IsCorrect)
-                    return StatusCode(401, new { message = AccountErrorMessage.PasswordIncorrect });
-
-                int code = _generateCode.GenerateSixDigitCode();
-
-                var emailDto = new EmailDto
-                { 
-                    username = _userInfo.Username,
-                    email = _userInfo.Email,
-                    subject = EmailMessage.ConfirmOldEmailHeader,
-                    message = EmailMessage.ConfirmOldEmailBody + code
-                };
-
-                await _email.SendMessage(emailDto);
-
-                HttpContext.Session.SetInt32(_userInfo.Email, code);
-                _logger.LogInformation($"Code was saved in user session {_userInfo.Username}#{_userInfo.UserId}");
-                _logger.LogInformation($"Email to {_userInfo.Username}#{_userInfo.UserId} was sended on {_userInfo.Email} (1-st step)");
-
-                return StatusCode(200, new { message = AccountSuccessMessage.EmailSended });
+                _logger.LogWarning($"Non-existent user {_userInfo.Username}#{_userInfo.UserId} was requested to authorized endpoint.\nTrying delete tokens from cookie");
+                _tokenService.DeleteTokens();
+                _logger.LogWarning("Tokens was deleted");
+                return StatusCode(404);
             }
-            catch (Exception)
+
+            bool IsCorrect = _passwordManager.CheckPassword(password, user.password);
+            if (!IsCorrect)
+                return StatusCode(401, new { message = AccountErrorMessage.PasswordIncorrect });
+
+            int code = _generateCode.GenerateSixDigitCode();
+
+            await _email.SendMessage(new EmailDto
             {
-                return StatusCode(500);
-            }
+                username = _userInfo.Username,
+                email = _userInfo.Email,
+                subject = EmailMessage.ConfirmOldEmailHeader,
+                message = EmailMessage.ConfirmOldEmailBody + code
+            });
+
+            HttpContext.Session.SetInt32(_userInfo.Email, code);
+            _logger.LogInformation($"Code was saved in user session {_userInfo.Username}#{_userInfo.UserId}");
+            _logger.LogInformation($"Email to {_userInfo.Username}#{_userInfo.UserId} was sended on {_userInfo.Email} (1-st step)");
+
+            return StatusCode(200, new { message = AccountSuccessMessage.EmailSended });
         }
 
         [HttpPost("confirm/old")]
         public async Task<IActionResult> ConfirmOldEmail([FromQuery] string email, [FromQuery] int code)
         {
-            try
+            int correctCode = int.TryParse(HttpContext.Session.GetString(_userInfo.Email), out var parsedValue) ? parsedValue : 0;
+            _logger.LogInformation($"Code were received from user session {_userInfo.Username}#{_userInfo.UserId}. code: {correctCode}");
+
+            if (!_validation.IsSixDigit(correctCode))
+                return StatusCode(500, new { message = AccountErrorMessage.Error });
+
+            if (!code.Equals(correctCode))
+                return StatusCode(401, new { message = AccountErrorMessage.CodeIncorrect });
+
+            _logger.LogInformation($"User {_userInfo.Username}#{_userInfo.UserId} confirmed code (2-nd step)");
+
+            //Here is 2 steps in single endpoint, for best user experience,
+            //if this doesn't fit your business logic, you can split that logic into two different endpoints
+
+            email = email.ToLowerInvariant();
+
+            var user = await _dbContext.Users.FirstOrDefaultAsync(u => u.email == email);
+            if (user is not null)
+                return StatusCode(409, new { message = AccountErrorMessage.UserExists });
+
+            int confirmationCode = _generateCode.GenerateSixDigitCode();
+
+            await _email.SendMessage(new EmailDto
             {
-                int correctCode = (int)HttpContext.Session.GetInt32(_userInfo.Email);
-                _logger.LogInformation($"Code were received from user session {_userInfo.Username}#{_userInfo.UserId}. code: {correctCode}");
+                username = _userInfo.Username,
+                email = email,
+                subject = EmailMessage.ConfirmNewEmailHeader,
+                message = EmailMessage.ConfirmNewEmailBody + confirmationCode
+            });
 
-                if (!_validation.IsSixDigit(correctCode))
-                    return StatusCode(500, new { message = AccountErrorMessage.Error });
+            HttpContext.Session.SetInt32(_userInfo.UserId.ToString(), confirmationCode);
+            HttpContext.Session.SetString(EMAIL, email);
+            _logger.LogInformation($"Code and email was saved in user session {_userInfo.Username}#{_userInfo.UserId}");
 
-                if (!code.Equals(correctCode))
-                    return StatusCode(401, new { message = AccountErrorMessage.CodeIncorrect });
-
-                _logger.LogInformation($"User {_userInfo.Username}#{_userInfo.UserId} confirmed code (2-nd step)");
-
-                //Here is 2 steps in single endpoint, for best user experience,
-                //if this doesn't fit your business logic, you can split that logic into two different endpoints
-
-                email = email.ToLowerInvariant();
-
-                var user = await _dbContext.Users.FirstOrDefaultAsync(u => u.email == email);
-                if (user is not null)
-                    return StatusCode(409, new { message = AccountErrorMessage.UserExists });
-
-                int confirmationCode = _generateCode.GenerateSixDigitCode();
-
-                var emailDto = new EmailDto
-                {
-                    username = _userInfo.Username,
-                    email = email,
-                    subject = EmailMessage.ConfirmNewEmailHeader,
-                    message = EmailMessage.ConfirmNewEmailBody + confirmationCode
-                };
-
-                await _email.SendMessage(emailDto);
-
-                HttpContext.Session.SetInt32(_userInfo.UserId.ToString(), confirmationCode);
-                HttpContext.Session.SetString(EMAIL, email);
-                _logger.LogInformation($"Code and email was saved in user session {_userInfo.Username}#{_userInfo.UserId}");
-
-                _logger.LogInformation($"Email to {_userInfo.Username}#{_userInfo.UserId} was sended on {email} (3-rd step)");
-                return StatusCode(200, new { message = AccountSuccessMessage.EmailSended });
-            }
-            catch (Exception)
-            {
-                return StatusCode(500);
-            }
+            _logger.LogInformation($"Email to {_userInfo.Username}#{_userInfo.UserId} was sended on {email} (3-rd step)");
+            return StatusCode(200, new { message = AccountSuccessMessage.EmailSended });
         }
 
         [HttpPut("confirm/new")]
@@ -159,7 +141,7 @@ namespace webapi.Controllers.Account.Edit
         {
             try
             {
-                int correctCode = (int)HttpContext.Session.GetInt32(_userInfo.UserId.ToString());
+                int correctCode = int.TryParse(HttpContext.Session.GetString(_userInfo.UserId.ToString()), out var parsedValue) ? parsedValue : 0;
                 string? email = HttpContext.Session.GetString(EMAIL);
                 _logger.LogInformation($"Code and email were received from user session {_userInfo.Username}#{_userInfo.UserId}. code: {correctCode}, email: {email}");
 
@@ -178,7 +160,7 @@ namespace webapi.Controllers.Account.Edit
                 var clientInfo = Parser.GetDefault().Parse(HttpContext.Request.Headers["User-Agent"].ToString());
                 var ua = _userAgent.GetBrowserData(clientInfo);
 
-                var notificationModel = new NotificationModel
+                await _createNotification.Create(new NotificationModel
                 {
                     message_header = "Someone changed your account email/login",
                     message = $"Someone changed your email at {DateTime.UtcNow} from {ua.Browser} {ua.Version} on OS {ua.OS}." +
@@ -187,9 +169,7 @@ namespace webapi.Controllers.Account.Edit
                     send_time = DateTime.UtcNow,
                     is_checked = false,
                     receiver_id = _userInfo.UserId
-                };
-
-                await _createNotification.Create(notificationModel);
+                });
 
                 await _tokenService.UpdateJwtToken();
                 _logger.LogInformation("jwt with a new claims was updated");

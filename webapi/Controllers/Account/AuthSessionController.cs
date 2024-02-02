@@ -1,6 +1,8 @@
 ﻿using Microsoft.AspNetCore.Authorization;
+using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
+using System.Net.Http;
 using UAParser;
 using webapi.DB;
 using webapi.DTO;
@@ -16,7 +18,6 @@ namespace webapi.Controllers.Account
 {
     [Route("api/auth")]
     [ApiController]
-    [ValidateAntiForgeryToken]
     public class AuthSessionController : ControllerBase
     {
         private const string CODE = "Code";
@@ -66,6 +67,7 @@ namespace webapi.Controllers.Account
         #region Factical login endpoints and helped method
 
         [HttpPost("login")]
+        [ValidateAntiForgeryToken]
         public async Task<IActionResult> Login(AuthDTO userDTO)
         {
             try
@@ -89,15 +91,13 @@ namespace webapi.Controllers.Account
 
                 int code = _generateCode.GenerateSixDigitCode();
 
-                var emailDto = new EmailDto
+                await _emailSender.SendMessage(new EmailDto
                 {
                     username = user.username,
                     email = user.email,
                     subject = EmailMessage.Verify2FaHeader,
                     message = EmailMessage.Verify2FaBody + code
-                };
-
-                await _emailSender.SendMessage(emailDto);
+                });
 
                 HttpContext.Session.SetString(ID, user.id.ToString());
                 HttpContext.Session.SetString(CODE, _passwordManager.HashingPassword(code.ToString()));
@@ -111,6 +111,7 @@ namespace webapi.Controllers.Account
         }
 
         [HttpPost("verify/2fa")]
+        [ValidateAntiForgeryToken]
         public async Task<IActionResult> VerifyTwoFA([FromQuery] int code)
         {
             string? correctCode = HttpContext.Session.GetString(CODE);
@@ -138,7 +139,17 @@ namespace webapi.Controllers.Account
             {
                 var ua = _userAgent.GetBrowserData(clientInfo);
 
-                var notificationModel = new NotificationModel
+                string refreshToken = _tokenService.GenerateRefreshToken();
+
+                await _updateToken.Update(new TokenModel
+                {
+                    user_id = user.id,
+                    refresh_token = _tokenService.HashingToken(refreshToken),
+                    expiry_date = DateTime.UtcNow + Constants.RefreshExpiry
+                }, true);
+                _logger.LogInformation("Refresh token was updated in db");
+
+                await _createNotification.Create(new NotificationModel
                 {
                     message_header = "Someone has accessed your account",
                     message = $"Someone signed in to your account {user.username}#{user.id} at {DateTime.UtcNow} from {ua.Browser} {ua.Version} on OS {ua.OS}",
@@ -146,25 +157,26 @@ namespace webapi.Controllers.Account
                     send_time = DateTime.UtcNow,
                     is_checked = false,
                     receiver_id = user.id
-                };
-
-                string refreshToken = _tokenService.GenerateRefreshToken();
-
-                var tokenModel = new TokenModel
-                {
-                    user_id = user.id,
-                    refresh_token = _tokenService.HashingToken(refreshToken),
-                    expiry_date = DateTime.UtcNow + Constants.RefreshExpiry
-                };
-
-                await _updateToken.Update(tokenModel, true);
-                _logger.LogInformation("Refresh token was updated in db");
-
-                await _createNotification.Create(notificationModel);
+                });
                 _logger.LogInformation("Created notification about logged in account");
 
                 Response.Cookies.Append(Constants.JWT_COOKIE_KEY, _tokenService.GenerateJwtToken(user, Constants.JwtExpiry), _tokenService.SetCookieOptions(Constants.JwtExpiry));
                 Response.Cookies.Append(Constants.REFRESH_COOKIE_KEY, refreshToken, _tokenService.SetCookieOptions(Constants.RefreshExpiry));
+
+                var cookieOptions = new CookieOptions
+                {
+                    MaxAge = Constants.JwtExpiry,
+                    Secure = true,
+                    HttpOnly = false,
+                    SameSite = SameSiteMode.None,
+                    IsEssential = false
+                };
+
+                Response.Cookies.Append(Constants.IS_AUTHORIZED, true.ToString(), cookieOptions);
+                Response.Cookies.Append(Constants.USER_ID_COOKIE_KEY, user.id.ToString(), cookieOptions);
+                Response.Cookies.Append(Constants.USERNAME_COOKIE_KEY, user.username, cookieOptions);
+                Response.Cookies.Append(Constants.ROLE_COOKIE_KEY, user.role, cookieOptions);
+
                 _logger.LogInformation("Jwt and refresh was sended to client");
 
                 return StatusCode(201);
@@ -183,11 +195,12 @@ namespace webapi.Controllers.Account
 
         [HttpPut("logout")]
         [Authorize]
+        [ValidateAntiForgeryToken]
         public async Task<IActionResult> Logout()
         {
             try
             {
-                var tokenModel = new TokenModel() { user_id = _userInfo.UserId, refresh_token = null, expiry_date = DateTime.UtcNow.AddYears(-100) };
+                var tokenModel = new TokenModel() { user_id = _userInfo.UserId, refresh_token = Guid.NewGuid().ToString(), expiry_date = DateTime.UtcNow.AddYears(-100) };
 
                 await _updateToken.Update(tokenModel, true);
                 _logger.LogInformation($"{_userInfo.Username}#{_userInfo.UserId} refresh token was revoked");
@@ -205,6 +218,10 @@ namespace webapi.Controllers.Account
                 _logger.LogDebug("Tokens was deleted");
 
                 return StatusCode(404, new { message = ex.Message });
+            }
+            catch (TokenException)
+            {
+                return StatusCode(500);
             }
             finally
             {

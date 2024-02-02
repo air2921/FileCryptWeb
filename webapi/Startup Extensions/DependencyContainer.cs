@@ -21,10 +21,7 @@ namespace webapi
         public static void Singleton(IServiceCollection services)
         {
             services.AddSingleton<IHttpContextAccessor, HttpContextAccessor>();
-            services.AddSingleton<IValidation, Validation>();
             services.AddSingleton<IRedisDbContext, RedisDbContext>();
-            services.AddSingleton<IGenerateKey, GenerateCodesAndKeys>();
-            services.AddSingleton<IGenerateSixDigitCode, GenerateCodesAndKeys>();
         }
 
         public static void Scoped(IServiceCollection services)
@@ -77,6 +74,9 @@ namespace webapi
             services.AddScoped<ICryptographyControllerBase, CryptographyHelper>();
             services.AddScoped<ICryptographyParamsProvider, CryptographyHelper>();
             services.AddScoped<IFileService, FileService>();
+            services.AddScoped<IValidation, Validation>();
+            services.AddScoped<IGenerateSixDigitCode, GenerateCodesAndKeys>();
+            services.AddScoped<IGenerateKey, GenerateCodesAndKeys>();
             services.AddScoped<IPasswordManager, PasswordManager>();
             services.AddScoped<IVirusCheck, ClamAV>();
             services.AddScoped<IUserInfo, UserData>();

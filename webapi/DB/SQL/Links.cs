@@ -17,8 +17,15 @@ namespace webapi.DB.SQL
 
         public async Task Create(LinkModel linkModel)
         {
-            await _dbContext.AddAsync(linkModel);
-            await _dbContext.SaveChangesAsync();
+            try
+            {
+                await _dbContext.AddAsync(linkModel);
+                await _dbContext.SaveChangesAsync();
+            }
+            catch (DbUpdateException)
+            {
+                throw new LinkException(ExceptionLinkMessages.AlreadyExists);
+            }
         }
 
         public async Task<LinkModel> ReadById(int id, bool? byForeign)
