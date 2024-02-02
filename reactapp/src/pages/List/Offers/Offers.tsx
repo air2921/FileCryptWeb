@@ -9,7 +9,7 @@ import Font from '../../../components/Font/Font';
 const Offers = () => {
     const [errorMessage, setErrorMessage] = useState('');
     const [offersList, setOffers] = useState(null);
-    const [userId, setUserId] = useState(0);
+    const [userId, setUserId] = useState<number>();
     const [skip, setSkip] = useState(0);
     const step = 10;
     const [message, setMessage] = useState('');

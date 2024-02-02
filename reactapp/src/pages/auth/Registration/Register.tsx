@@ -13,7 +13,7 @@ const Register = () => {
     const [username, setUsername] = useState('');
     const [is2Fa, set2Fa] = useState(false);
     const [successStatusCode, setStatusCode] = useState(false);
-    const [errorMessage, setErrorMessage] = useState<string | null>(null);
+    const [errorMessage, setErrorMessage] = useState('');
 
     const handleSubmit = async (e: FormEvent) => {
         e.preventDefault();

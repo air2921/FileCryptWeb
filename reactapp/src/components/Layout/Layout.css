@@ -1,4 +1,4 @@
-.layout-container {
+﻿.layout-container {
     background: #000;
     display: flex;
     min-height: 100vh;
@@ -11,7 +11,6 @@
     align-items: center;
     justify-content: center;
     height: 100%;
-    z-index: 999;
     display: flex;
 }
 
@@ -21,30 +20,179 @@
     margin-right: 8px;
 }
 
+    .links-container a {
+        color: #fff;
+        text-decoration: none;
+        transition: color 0.3s ease;
+    }
 
-.aside-visible-btn {
+        .links-container a:hover {
+            color: #075ce2;
+        }
+
+.link {
+    display: flex;
+    align-items: center;
+}
+
+    .link h4 {
+        margin-left: 8px;
+        margin-top: 4px;
+    }
+
+    .link Font {
+        margin-right: 8px;
+        margin-bottom: 4px;
+    }
+
+.aside-visible-container {
+    justify-content: flex-start;
+    margin-left: 0px;
     margin-top: 15px;
-    z-Index: 1000;
+    left: 30px;
     position: fixed;
     transform: translateY(-50%);
+}
+
+.aside-visible-btn {
+    padding: 3px;
+}
+
+    .aside-visible-btn:hover {
+        border-color: transparent;
+    }
+
+.head {
+    color: #fff;
+    background: #000;
+    padding: 1rem;
+    position: fixed;
+    width: 100%;
+    height: 25px;
+    border-bottom: 1px solid #fff;
+}
+
+.header-links {
+    justify-content: flex-start;
+    margin-left: 80px;
+    margin-top: 0px;
+    position: fixed;
+}
+
+    .header-links a {
+        margin-right: 20px;
+        text-decoration: none;
+        color: #fff;
+        transition: color 0.3s ease;
+    }
+
+        .header-links a:hover {
+            color: #075ce2;
+        }
+
+.head-center {
+    display: flex;
+    justify-content: center;
+    align-items: center;
+}
+
+.find-container {
+    display: flex;
+    justify-content: center;
+    align-items: center;
+}
+
+.find-input {
+    margin-right: 5px;
+    margin-top: -10px;
+    border-radius: 6px;
+}
+
+    .find-input.error {
+        margin-right: 5px;
+        margin-top: -10px;
+        border-radius: 6px;
+        border-color: #f00;
+        border: 1.5px solid #f00;
+    }
+
+.find-btn {
+    margin-left: 5px;
+    margin-top: -5px;
+    padding: 3px;
+    background-color: transparent;
+}
+
+    .find-btn:hover {
+        border-color: transparent;
+    }
+
+.notification-container {
+    margin-top: -5px;
+    margin-left: 30px;
+}
+
+    .notification-container a {
+        text-decoration: none;
+        color: #fff;
+        transition: color 0.3s ease;
+    }
+
+        .notification-container a:hover {
+            color: #075ce2;
+        }
+
+.signout-btn-container {
+    display: flex;
+    justify-content: flex-end;
+    margin-right: 50px;
+    margin-top: -38px;
+}
+
+.signout-btn {
+    padding: 8px;
+    border-radius: 12px;
+    border: 1px solid #808080;
+    background-color: transparent;
+    transition: background-color 0.5s ease, border-color 0.5s ease;
+}
+
+    .signout-btn:hover {
+        background-color: #f00;
+        border: 1px solid #f00;
+    }
+
+.is-auth-container {
+    display: flex;
+    justify-content: flex-end;
+    margin-right: 50px;
+    margin-top: -5px;
+}
+
+.signup-btn,
+.signin-btn {
+    padding: 8px;
+    border-radius: 12px;
+    border: 1px solid #808080;
+    background-color: transparent;
+    transition: background-color 0.5s ease, border-color 0.5s ease;
+}
+
+    .signup-btn:hover,
+    .signin-btn:hover {
+        background-color: #075ce2;
+        border: 1px solid #075ce2;
+    }
+
+.signup-btn-container,
+.signin-btn-container {
+    margin-left: 10px;
 }
 
 .header-outlet-container {
     flex: 1;
     display: flex;
     flex-Direction: column;
-}
-
-.head {
-    color: #fff;
-    background: #000;
-    padding: 1rem;
-    text-Align: center;
-    position: fixed;
-    width: 100%;
-    height: 25px;
-    z-Index: 1000;
-    border-bottom: 1px solid #fff;
 }
 
 .outlet {

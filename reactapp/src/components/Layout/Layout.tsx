@@ -4,9 +4,7 @@ import { Link, Outlet, useNavigate } from 'react-router-dom';
 import cookie from 'react-cookies'
 import useAuth from '../UseAuth/UseAuth'
 import AxiosRequest from '../../api/AxiosRequest';
-import Button from '../Helpers/Button';
 import './Layout.css'
-import Input from '../Helpers/Input';
 function Layout() {
     const [username, setUsername] = useState(cookie.load('auth_username'));
     const [id, setId] = useState(cookie.load('auth_user_id'));
@@ -14,6 +12,7 @@ function Layout() {
     const [profilePath, setPath] = useState('');
     const [isAsideVisible, setAsideVisible] = useState(sessionStorage.getItem('isAsideVisible') === 'true');
     const [inputValue, setInputValue] = useState('');
+    const [inputError, setInputError] = useState(false);
 
     const isAuth = useAuth();
     const navigate = useNavigate();
@@ -54,6 +53,12 @@ function Layout() {
 
     const findUser = async () => {
         if (inputValue === '') {
+            setInputError(true);
+
+            setTimeout(() => {
+                setInputError(false);
+            }, 3000)
+
             return;
         }
 
@@ -130,7 +135,7 @@ function Layout() {
                                             <h4>API</h4>
                                         </Link>
                                     </div>
-                                    {role === 'Admin' || role === 'HighestAdmin' && (
+                                    {(role === 'Admin' || role === 'HighestAdmin') && (
                                         <div className="link">
                                             <Link to="/admin">
                                                 <Font font={'admin_panel_settings'} />
@@ -147,47 +152,52 @@ function Layout() {
             <div className="header-outlet-container">
                 <header className="head">
                     {isAuth && (
-                        <div className="aside-visible-btn">
-                            <Button onClick={() => setAsideVisible(!isAsideVisible)}>
+                        <div className="aside-visible-container">
+                            <button className="aside-visible-btn" onClick={() => setAsideVisible(!isAsideVisible)}>
                                 <Font font={'menu'} />
-                            </Button>
+                            </button>
                         </div>
                     )}
                     <nav>
                         <div>
-                            <span className="header-links">
+                            <div className="header-links">
                                 <Link to="/">FILECRYPT</Link>
                                 <Link to="/about">About</Link>
                                 <Link to="/policy">Policy</Link>
-                            </span>
+                            </div>
                             {isAuth && (
-                                <>
-                                    <span className="user-find">
-                                        <Input type="text" id="user" require={true} value={inputValue} onChange={(e) => setInputValue(e.target.value)} />
-                                        <Button onClick={findUser}><Font font={'search'} /></Button>
-                                    </span>
-                                    <span className="notifications">
+                                <div className="head-center">
+                                    <div className="find-container">
+                                        <input className={inputError ? 'find-input error' : 'find-input'}
+                                            type="text" id="user"
+                                            required={true}
+                                            value={inputValue}
+                                            onChange={(e) => setInputValue(e.target.value)}
+                                        />
+                                        <button className="find-btn" onClick={findUser}><Font font={'search'} /></button>
+                                    </div>
+                                    <div className="notification-container">
                                         <Link to="/notifications"><Font font={'notifications'} /></Link>
-                                    </span>
-                                </>
+                                    </div>
+                                </div>
                             )}
-                            <span>
-                                {!isAuth && (
-                                    <>
-                                        <div className="signup-btn">
-                                            <Button onClick={() => navigate('/auth/signup')}>Sign Up</Button>
-                                        </div>
-                                        <div className="signin-btn">
-                                            <Button onClick={() => navigate('/auth/login')}>Sign In</Button>
-                                        </div>
-                                    </>
-                                )}
+                            <div className="auth-btn-container">
                                 {isAuth && (
-                                    <span className="signout-btn">
-                                        <Button onClick={logout}>Sign Out</Button>
-                                    </span>
+                                    <div className="signout-btn-container">
+                                        <button className="signout-btn" onClick={logout}>Sign Out</button>
+                                    </div>
                                 )}
-                            </span>
+                                {!isAuth && (
+                                    <div className="is-auth-container">
+                                        <div className="signup-btn-container">
+                                            <button className="signup-btn" onClick={() => navigate('/auth/signup')}>Sign Up</button>
+                                        </div>
+                                        <div className="signin-btn-container">
+                                            <button className="signin-btn" onClick={() => navigate('/auth/login')}>Sign In</button>
+                                        </div>
+                                    </div>
+                                )}
+                            </div>
                         </div>
                     </nav>
                 </header>
