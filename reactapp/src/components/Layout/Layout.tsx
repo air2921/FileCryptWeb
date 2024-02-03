@@ -5,6 +5,7 @@ import cookie from 'react-cookies'
 import useAuth from '../UseAuth/UseAuth'
 import AxiosRequest from '../../api/AxiosRequest';
 import './Layout.css'
+
 function Layout() {
     const [username, setUsername] = useState(cookie.load('auth_username'));
     const [id, setId] = useState(cookie.load('auth_user_id'));
@@ -82,13 +83,25 @@ function Layout() {
                 navigate(`/user/${response.data.id}/${response.data.username}`);
             }
         }
+        else {
+
+            //Здесь возможно будет поиск списка юзеров по юзернейму
+
+            setInputError(true);
+
+            setTimeout(() => {
+                setInputError(false);
+            }, 3000)
+
+            return;
+        }
     };
 
     const logout = async () => {
         const response = await AxiosRequest({ endpoint: 'api/auth/logout', method: 'PUT', withCookie: true, requestBody: null })
 
         if (response.isSuccess) {
-            navigate('/')
+            navigate('/auth/login')
         }
     }
 

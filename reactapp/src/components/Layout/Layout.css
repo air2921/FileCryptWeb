@@ -38,7 +38,7 @@
     .link h4 {
         margin-left: 8px;
         margin-top: 4px;
-    }
+    }ц
 
     .link Font {
         margin-right: 8px;
@@ -60,6 +60,10 @@
 
     .aside-visible-btn:hover {
         border-color: transparent;
+    }
+
+    .aside-visible-btn:focus {
+        outline: none;
     }
 
 .head {
@@ -107,18 +111,26 @@
     width: 140px;
     margin-right: 5px;
     margin-top: -10px;
-    border-radius: 6px;
+    border-radius: 12px;
     border-color: transparent;
 }
+
+    .find-input:focus {
+        outline: none;
+    }
 
     .find-input.error {
         height: 24px;
         width: 140px;
         margin-right: 5px;
         margin-top: -10px;
-        border-radius: 6px;
+        border-radius: 12px;
         border-color: #f00;
-        border: 1.5px solid #f00;
+        border: 2.4px solid #f00;
+    }
+
+    .find-input.error:focus {
+        outline: none;
     }
 
 .find-btn {
@@ -131,6 +143,10 @@
     .find-btn:hover {
         border-color: transparent;
     }
+
+        .find-btn:focus {
+            outline: none;
+        }
 
 .notification-container {
     margin-top: -5px;
@@ -154,14 +170,6 @@
     margin-top: -38px;
 }
 
-.signout-btn {
-    padding: 8px;
-    border-radius: 12px;
-    border: 1px solid #808080;
-    background-color: transparent;
-    transition: background-color 0.5s ease, border-color 0.5s ease;
-}
-
     .signout-btn:hover {
         background-color: #f00;
         border: 1px solid #f00;
@@ -175,13 +183,20 @@
 }
 
 .signup-btn,
-.signin-btn {
+.signin-btn,
+.signout-btn {
     padding: 8px;
     border-radius: 12px;
     border: 1px solid #808080;
     background-color: transparent;
     transition: background-color 0.5s ease, border-color 0.5s ease;
 }
+
+    .signup-btn:focus,
+    .signin-btn:focus,
+    .signout-btn:focus {
+        outline: none;
+    }
 
     .signup-btn:hover,
     .signin-btn:hover {

@@ -63,6 +63,10 @@ namespace webapi.DB.SQL
                 throw new ApiException(ExceptionApiMessages.ApiNotFound);
 
             api.api_key = apiModel.api_key;
+            api.type = apiModel.type;
+            api.expiry_date = apiModel.expiry_date;
+            api.max_request_of_day = apiModel.max_request_of_day;
+            api.is_blocked = apiModel.is_blocked;
 
             await _redisCache.DeleteCache(api.api_key);
 

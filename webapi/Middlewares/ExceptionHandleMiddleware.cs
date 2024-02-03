@@ -24,7 +24,7 @@
 
                 context.Response.StatusCode = 500;
                 context.Response.ContentType = "application/json";
-                await context.Response.WriteAsJsonAsync(new { message = "Unexpected error.\nDon't worry, we already working on it" });
+                await context.Response.WriteAsJsonAsync(new { message = "Unexpected error. Don't worry, we already working on it" });
                 return;
             }
         }

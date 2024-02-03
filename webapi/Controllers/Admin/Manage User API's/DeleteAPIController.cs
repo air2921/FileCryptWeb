@@ -33,7 +33,7 @@ namespace webapi.Controllers.Admin.Manage_User_s_API
             _deleteAPIByName = deleteAPIByName;
         }
 
-        [HttpDelete("revoke/apikey")]
+        [HttpDelete("revoke/key")]
         public async Task<IActionResult> RevokeAPI([FromQuery] int userId, [FromQuery] int? apiId, [FromQuery] string? apikey )
         {
             try
