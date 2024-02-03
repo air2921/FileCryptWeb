@@ -4,7 +4,7 @@ import AxiosRequest from '../../api/AxiosRequest';
 import { useNavigate } from 'react-router-dom';
 
 const useAuth = () => {
-    const [isAuthenticated, setIsAuthenticated] = useState(false);
+    const [isAuthenticated, setIsAuthenticated] = useState<null | boolean>(null);
     const navigate = useNavigate();
 
     const getAuthCookie = () => {

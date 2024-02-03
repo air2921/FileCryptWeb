@@ -19,6 +19,13 @@ import useAuth from './components/UseAuth/UseAuth';
 function App() {
     const isAuth = useAuth();
 
+    if (isAuth === null) {
+        return (
+            <>
+            </>
+        )
+    }
+
     return (
         <>
             <Routes>

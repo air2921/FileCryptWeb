@@ -1,10 +1,6 @@
 import React, { ChangeEvent, FormEvent, useEffect, useState } from 'react';
 import AxiosRequest from '../../../api/AxiosRequest';
 import UserData from '../../../components/User/UserData';
-import Username from '../../../components/Settings/Username';
-import Password from '../../../components/Settings/Password';
-import Email from '../../../components/Settings/Email';
-import TwoFA from '../../../components/Settings/TwoFA';
 import Button from '../../../components/Helpers/Button';
 import Message from '../../../components/Message/Message';
 import Font from '../../../components/Font/Font';
@@ -12,6 +8,11 @@ import CheckBox from '../../../components/Helpers/CheckBox';
 import Input from '../../../components/Helpers/Input';
 import Modal from '../../../components/Modal/Modal';
 import UserKeys from '../../../components/User/UserKeys';
+import Verify from '../../../components/Verify/Verify';
+
+interface TwoFaProps {
+    is_enabled_2fa: boolean
+}
 
 const Settings = () => {
     const [errorMessage, setErrorMessage] = useState('');
@@ -52,6 +53,210 @@ const Settings = () => {
 
     const { keys } = userKeys as { keys: any };
     const { user } = userData as { user: any };
+
+    const Username = () => {
+
+        const [username, setUsername] = useState('');
+
+        const [message, setMessage] = useState('');
+        const [font, setFont] = useState('')
+
+        const handleSubmit = async (e: FormEvent) => {
+            e.preventDefault();
+
+            const response = await AxiosRequest({ endpoint: `api/account/edit/username?username=${username}`, method: 'PUT', withCookie: true, requestBody: { username: username } })
+
+            if (response.isSuccess) {
+                setMessage(response.data.message);
+                setFont('done')
+            }
+            else {
+                setMessage(response.data);
+                setFont('error');
+            }
+        }
+
+        return (
+            <div className="username">
+                <form onSubmit={handleSubmit}>
+                    <Input text='Your new username' type="text" id="username" require={true} value={username} onChange={(e) => setUsername(e.target.value)} />
+                    <Button>Save Username</Button>
+                </form>
+                {message && <Message message={message} font={font} />}
+            </div>
+        );
+    }
+
+    function TwoFA({ is_enabled_2fa }: TwoFaProps) {
+        const [message, setMessage] = useState('');
+        const [font, setFont] = useState('');
+        const [password, setPassword] = useState('');
+        const [successStatus, setStatus] = useState(false);
+        const [is2Fa, set2Fa] = useState(true);
+        const [visibleForm, setFormVisible] = useState(false);
+
+        const handleSubmit = async (e: FormEvent) => {
+            e.preventDefault();
+
+            const response = await AxiosRequest({ endpoint: `api/account/edit/2fa/start?password=${password}`, method: 'POST', withCookie: true, requestBody: null })
+
+            if (response.isSuccess) {
+                setStatus(true);
+                setMessage('');
+                setFont('');
+            }
+            else {
+                setMessage(response.data);
+                setFont('error');
+            }
+
+            setTimeout(() => {
+                setMessage('');
+                setFont('');
+            }, 5000);
+        }
+
+        const set2FaStatus = (twoFaStatus: boolean, formVisible: boolean) => {
+            set2Fa(twoFaStatus);
+            setFormVisible(formVisible);
+        }
+
+        return (
+            <div>
+                {is_enabled_2fa && !visibleForm && < Button onClick={() => set2FaStatus(false, true)}>Disable 2FA</Button>}
+                {!is_enabled_2fa && !visibleForm && < Button onClick={() => set2FaStatus(true, true)}>Enable 2FA</Button>}
+                {visibleForm && (
+                    <form onSubmit={handleSubmit}>
+                        <Input text='Confirm password' type="password" id="password" require={true} value={password} onChange={(e) => setPassword(e.target.value)} />
+                        <Button>Send message</Button>
+                    </form>
+                )}
+                {message && <Message message={message} font={font} />}
+                <Modal isActive={successStatus} setActive={setStatus}>
+                    <Verify endpoint={`api/account/edit/2fa/confirm/${is2Fa}`} method={'PUT'} />
+                </Modal>
+                {message && <Message message={message} font={font} />}
+            </div>
+        );
+    }
+
+    const Password = () => {
+        const [message, setMessage] = useState('');
+        const [font, setFont] = useState('')
+
+        const [oldPassword, setOld] = useState('');
+        const [newPassword, setNew] = useState('');
+
+        const handleSubmit = async (e: FormEvent) => {
+            e.preventDefault();
+
+            const response = await AxiosRequest({
+                endpoint: `api/account/edit/password`,
+                method: 'PUT',
+                withCookie: true,
+                requestBody: {
+                    OldPassword: oldPassword,
+                    NewPassword: newPassword
+                }
+            })
+
+            if (response.isSuccess) {
+                setMessage(response.data.message);
+                setFont('done')
+            }
+            else {
+                setMessage(response.data);
+                setFont('error');
+            }
+        }
+
+        return (
+            <div className="password">
+                <form onSubmit={handleSubmit}>
+                    <Input text='Confirm Password' type="password" id="old" require={true} value={oldPassword} onChange={(e) => setOld(e.target.value)} />
+                    <Input text='New Password' type="password" id="new" require={true} value={newPassword} onChange={(e) => setNew(e.target.value)} />
+                    <Button>Save Password</Button>
+                </form>
+                {message && <Message message={message} font={font} />}
+            </div>
+        );
+    }
+
+    const Confirm = () => {
+
+        const [errorMessage, setErrorMessage] = useState('');
+        const [successStatus, setStatus] = useState(false);
+
+        const [email, setEmail] = useState('');
+        const [code, setCode] = useState(0);
+
+        const handleSubmit = async (e: FormEvent) => {
+            e.preventDefault();
+
+            const response = await AxiosRequest({ endpoint: `api/account/edit/email/confirm/old?email=${email}&code=${code}`, method: 'POST', withCookie: true, requestBody: null })
+
+            if (response.isSuccess) {
+                setStatus(true);
+            }
+            else {
+                setErrorMessage(response.data);
+            }
+        }
+
+        return (
+            <div>
+                {successStatus ? (
+                    <Verify endpoint='api/account/edit/email/confirm/new' method='PUT' />
+                ) : (
+                    <div className="email-and-code">
+                        <form onSubmit={handleSubmit}>
+                            <Input text='Your new email' type="email" id="email" require={true} value={email} onChange={(e) => setEmail(e.target.value)} />
+                            <Input text='Confirmation code' type="number" id="code" require={true} value={code} onChange={(e) => setCode(parseInt(e.target.value, 10))} />
+                            <Button>Confirm</Button>
+                        </form>
+                        {errorMessage && <Message message={errorMessage} font='error' />}
+                    </div>
+                )}
+            </div>
+        );
+    }
+
+    const Email = () => {
+
+        const [errorMessage, setErrorMessage] = useState('');
+        const [successStatus, setStatus] = useState(false);
+
+        const [password, setPassword] = useState('');
+
+        const handleSubmit = async (e: FormEvent) => {
+            e.preventDefault();
+
+            const response = await AxiosRequest({ endpoint: `api/account/edit/email/start?password=${password}`, method: 'POST', withCookie: true, requestBody: null })
+
+            if (response.isSuccess) {
+                setStatus(true);
+            }
+            else {
+                setErrorMessage(response.data);
+            }
+        }
+
+        return (
+            <div>
+                {successStatus ? (
+                    <Confirm />
+                ) : (
+                    <div className="email">
+                        <form onSubmit={handleSubmit}>
+                            <Input text='Confirm password' type="password" id="password" require={true} value={password} onChange={(e) => setPassword(e.target.value)} />
+                            <Button>Confirm</Button>
+                        </form>
+                        {errorMessage && <Message message={errorMessage} font='error' />}
+                    </div>
+                )}
+            </div>
+        );
+    }
 
     const KeyTypes = () => {
         const [activeModal, setActive] = useState(false);
