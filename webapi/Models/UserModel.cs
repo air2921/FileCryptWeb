@@ -33,7 +33,7 @@ namespace webapi.Models
         public TokenModel? Tokens { get; set; }
 
         [JsonIgnore]
-        public ApiModel? API { get; set; }
+        public ICollection<ApiModel>? API { get; set; }
 
         [JsonIgnore]
         public ICollection<LinkModel>? Links { get; set; }

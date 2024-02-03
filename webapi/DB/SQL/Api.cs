@@ -22,6 +22,12 @@ namespace webapi.DB.SQL
         {
             try
             {
+                var api = await _dbContext.API.Where(a => a.user_id == apiModel.user_id)
+                    .ToListAsync();
+
+                if (api.Count >= 5)
+                    throw new ApiException("No more than 5 API Key for one user");
+
                 await _dbContext.AddAsync(apiModel);
                 await _dbContext.SaveChangesAsync();
             }
@@ -33,21 +39,21 @@ namespace webapi.DB.SQL
 
         public async Task<ApiModel> ReadById(int id, bool? byForeign)
         {
-            var api = _dbContext.API.AsQueryable();
-
-            if (byForeign == false)
-            {
-                return await api.FirstOrDefaultAsync(a => a.api_id == id) ??
-                    throw new ApiException(ExceptionApiMessages.ApiNotFound);
-            }
-
-            return await api.FirstOrDefaultAsync(a => a.user_id == id) ??
+            return await _dbContext.API.FirstOrDefaultAsync(a => a.api_id == id) ??
                 throw new ApiException(ExceptionApiMessages.ApiNotFound);
         }
 
         public async Task<IEnumerable<ApiModel>> ReadAll(int? user_id, int skip, int count)
         {
-            return await _dbContext.API
+            var api = _dbContext.API.AsQueryable();
+
+            if (user_id.HasValue)
+                return await api.Where(a => a.user_id == user_id)
+                    .Skip(skip)
+                    .Take(count)
+                    .ToListAsync();
+
+            return await api
                 .Skip(skip)
                 .Take(count)
                 .ToListAsync();
@@ -55,9 +61,7 @@ namespace webapi.DB.SQL
 
         public async Task Update(ApiModel apiModel, bool? byForeign)
         {
-            var api = byForeign == true
-                ? await _dbContext.API.FirstOrDefaultAsync(a => a.user_id == apiModel.user_id)
-                : await _dbContext.API.FirstOrDefaultAsync(a => a.api_id == apiModel.api_id);
+            var api = await _dbContext.API.FirstOrDefaultAsync(a => a.api_id == apiModel.api_id);
 
             if (api is null)
                 throw new ApiException(ExceptionApiMessages.ApiNotFound);
@@ -75,7 +79,7 @@ namespace webapi.DB.SQL
 
         public async Task DeleteById(int id, int? user_id)
         {
-            var api = await _dbContext.API.FirstOrDefaultAsync(a => a.user_id == id) ??
+            var api = await _dbContext.API.FirstOrDefaultAsync(a => a.api_id == id) ??
                 throw new ApiException(ExceptionApiMessages.ApiNotFound);
 
             await _redisCache.DeleteCache(api.api_key);

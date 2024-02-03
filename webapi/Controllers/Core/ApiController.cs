@@ -1,6 +1,7 @@
 ﻿using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 using Newtonsoft.Json;
+using webapi.DB.SQL;
 using webapi.Exceptions;
 using webapi.Interfaces.Redis;
 using webapi.Interfaces.Services;
@@ -61,16 +62,17 @@ namespace webapi.Controllers.Core
             {
                 return StatusCode(404, new { message = ex.Message });
             }
-            catch (ApiException)
+            catch (ApiException ex)
             {
-                return StatusCode(500);
+                return StatusCode(500, new { message = ex.Message });
             }
         }
 
-        [HttpGet]
-        public async Task<IActionResult> GetAPI()
+        [HttpGet("{apiId}")]
+        public async Task<IActionResult> GetAPI([FromRoute] int apiId)
         {
-            var cacheKey = $"API_Settings_{_userInfo.UserId}";
+            var cacheKey = $"API_Key_Settings_{apiId}";
+            int apiCallLeft = 0;
 
             try
             {
@@ -83,18 +85,45 @@ namespace webapi.Controllers.Core
                 }
 
                 if (cacheApi is not null)
-                    return StatusCode(200, new { api = JsonConvert.DeserializeObject<ApiModel>(cacheApi) });
+                {
+                    var cacheResult = JsonConvert.DeserializeObject<ApiModel>(cacheApi);
+                    apiCallLeft = await ApiCallLeftCheck(cacheResult);
 
-                var api = await _readAPI.ReadById(_userInfo.UserId, true);
+                    return StatusCode(200, new { api = cacheResult, apiCallLeft });
+                }
 
-                await _redisCache.CacheData(cacheKey, api, TimeSpan.FromMinutes(10));
+                var api = await _readAPI.ReadById(apiId, null);
+                apiCallLeft = await ApiCallLeftCheck(api);
 
-                return StatusCode(200, new { api });
+                await _redisCache.CacheData(cacheKey, api, TimeSpan.FromMinutes(5));
+
+                return StatusCode(200, new { api, apiCallLeft });
             }
             catch (ApiException ex)
             {
                 return StatusCode(404, new { message = ex.Message });
             }
+        }
+
+        [HttpGet("all")]
+        public async Task<IActionResult> GetAllApi()
+        {
+            var cacheKey = $"API_Keys_{_userInfo.UserId}";
+            var cacheApi = await _redisCache.GetCachedData(cacheKey);
+            bool clearCache = bool.TryParse(HttpContext.Session.GetString(Constants.CACHE_API), out var parsedValue) ? parsedValue : true;
+            if (clearCache)
+            {
+                await _redisCache.DeleteCache(cacheKey);
+                HttpContext.Session.SetString(Constants.CACHE_API, false.ToString());
+            }
+
+            if (cacheApi is not null)
+                return StatusCode(200, new { api = JsonConvert.DeserializeObject<IEnumerable<ApiModel>>(cacheApi) });
+
+            var api = await _readAPI.ReadAll(_userInfo.UserId, 0, 5);
+            await _redisCache.CacheData(cacheKey, api, TimeSpan.FromMinutes(5));
+
+            return StatusCode(200, new { api });
         }
 
         [HttpDelete("revoke")]
@@ -125,6 +154,19 @@ namespace webapi.Controllers.Core
                 return new ApiSettings(DateTime.UtcNow.AddDays(30), 1000);
 
             throw new InvalidRouteException();
+        }
+
+        private async Task<int> ApiCallLeftCheck(ApiModel apiModel)
+        {
+            var cacheApiCallLeft = await _redisCache.GetCachedData($"{DateTime.Today.ToString("yyyy-MM-dd")}_{apiModel.api_key}");
+            if (cacheApiCallLeft is not null)
+            {
+                return JsonConvert.DeserializeObject<int>(cacheApiCallLeft);
+            }
+            else
+            {
+                return apiModel.max_request_of_day;
+            }
         }
     }
 

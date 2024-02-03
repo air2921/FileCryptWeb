@@ -61,10 +61,10 @@ namespace webapi.DB
                 .HasIndex(t => t.refresh_token)
                 .IsUnique();
 
-            modelBuilder.Entity<UserModel>()
-                .HasOne(u => u.API)
-                .WithOne(a => a.User)
-                .HasForeignKey<ApiModel>(a => a.user_id)
+            modelBuilder.Entity<ApiModel>()
+                .HasOne(a => a.User)
+                .WithMany(a => a.API)
+                .HasForeignKey(a => a.user_id)
                 .OnDelete(DeleteBehavior.Cascade);
 
             modelBuilder.Entity<ApiModel>()

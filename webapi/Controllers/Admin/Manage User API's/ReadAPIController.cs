@@ -33,12 +33,12 @@ namespace webapi.Controllers.Admin.Manage_User_s_API
         }
 
         [HttpGet("{id}")]
-        public async Task<IActionResult> GetApiSettings([FromRoute] int id, [FromQuery] bool byRelation)
+        public async Task<IActionResult> GetApiSettings([FromRoute] int id)
         {
             try
             {
-                var api = await _read.ReadById(id, byRelation);
-                _logger.LogWarning($"{_userInfo.Username}#{_userInfo.UserId} requested API settings from user#{id}");
+                var api = await _read.ReadById(id, null);
+                _logger.LogWarning($"{_userInfo.Username}#{_userInfo.UserId} requested API settings apiID#{id}");
 
                 return StatusCode(200, new { api });
             }
