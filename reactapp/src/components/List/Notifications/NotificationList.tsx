@@ -1,8 +1,8 @@
 import React from 'react';
-import DateComponent from '../../Date/Date';
 import Button from '../../Helpers/Button';
 import Message from '../../Message/Message';
 import Font from '../../Font/Font';
+import DateComponent from '../../Helpers/Date/Date';
 
 function NotificationList({ notifications, deleteNotification }: NotificationListProps) {
 
@@ -43,8 +43,8 @@ function NotificationList({ notifications, deleteNotification }: NotificationLis
                             <div className="info">
                                 <div className="body">{notification.message}</div>
                                 <div className="id">
-                                    <div className="notification-id">NID#{notification.notification_id}</div>
-                                    <div className="user-id">UID#{notification.receiver_id}</div>
+                                    <div className="notification-id">Notification ID#{notification.notification_id}</div>
+                                    <div className="user-id">User ID#{notification.receiver_id}</div>
                                 </div>
                             </div>
                             <div className="time"><DateComponent date={notification.send_time} /></div>

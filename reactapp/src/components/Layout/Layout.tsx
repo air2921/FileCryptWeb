@@ -77,10 +77,12 @@ function Layout() {
 
             if (response.statusCode === 404) {
                 navigate('*');
+                setInputValue('');
             }
 
             if (response.statusCode === 200) {
                 navigate(`/user/${response.data.id}/${response.data.username}`);
+                setInputValue('');
             }
         }
         else {
@@ -115,7 +117,7 @@ function Layout() {
             {isAuth && (
                 <div>
                     {isAsideVisible && (
-                        <aside className="sidebar" style={{ width: isAsideVisible ? "120px" : 0 }}>
+                        <aside className="sidebar" style={{ width: isAsideVisible ? "100px" : 0 }}>
                             <nav>
                                 <div className="links-container">
                                     <div className="link">

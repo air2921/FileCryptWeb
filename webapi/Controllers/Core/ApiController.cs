@@ -1,7 +1,6 @@
 ﻿using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 using Newtonsoft.Json;
-using webapi.DB.SQL;
 using webapi.Exceptions;
 using webapi.Interfaces.Redis;
 using webapi.Interfaces.Services;
@@ -76,7 +75,6 @@ namespace webapi.Controllers.Core
 
             try
             {
-                var cacheApi = await _redisCache.GetCachedData(cacheKey);
                 bool clearCache = bool.TryParse(HttpContext.Session.GetString(Constants.CACHE_API), out var parsedValue) ? parsedValue : true;
                 if (clearCache)
                 {
@@ -84,17 +82,23 @@ namespace webapi.Controllers.Core
                     HttpContext.Session.SetString(Constants.CACHE_API, false.ToString());
                 }
 
+                var cacheApi = await _redisCache.GetCachedData(cacheKey);
                 if (cacheApi is not null)
                 {
                     var cacheResult = JsonConvert.DeserializeObject<ApiModel>(cacheApi);
+                    if (cacheResult.user_id != _userInfo.UserId)
+                        return StatusCode(404);
+
                     apiCallLeft = await ApiCallLeftCheck(cacheResult);
 
                     return StatusCode(200, new { api = cacheResult, apiCallLeft });
                 }
 
                 var api = await _readAPI.ReadById(apiId, null);
-                apiCallLeft = await ApiCallLeftCheck(api);
+                if (api.user_id != _userInfo.UserId)
+                    return StatusCode(404);
 
+                apiCallLeft = await ApiCallLeftCheck(api);
                 await _redisCache.CacheData(cacheKey, api, TimeSpan.FromMinutes(5));
 
                 return StatusCode(200, new { api, apiCallLeft });
@@ -109,7 +113,8 @@ namespace webapi.Controllers.Core
         public async Task<IActionResult> GetAllApi()
         {
             var cacheKey = $"API_Keys_{_userInfo.UserId}";
-            var cacheApi = await _redisCache.GetCachedData(cacheKey);
+            var apiObjects = new List<ApiObject>();
+
             bool clearCache = bool.TryParse(HttpContext.Session.GetString(Constants.CACHE_API), out var parsedValue) ? parsedValue : true;
             if (clearCache)
             {
@@ -117,21 +122,29 @@ namespace webapi.Controllers.Core
                 HttpContext.Session.SetString(Constants.CACHE_API, false.ToString());
             }
 
+            var cacheApi = await _redisCache.GetCachedData(cacheKey);
             if (cacheApi is not null)
-                return StatusCode(200, new { api = JsonConvert.DeserializeObject<IEnumerable<ApiModel>>(cacheApi) });
+            {
+                var apiCacheModel = JsonConvert.DeserializeObject<IEnumerable<ApiModel>>(cacheApi);
+                apiObjects = await GetApiData(apiCacheModel);
+
+                return StatusCode(200, new { api = apiObjects });
+            }
 
             var api = await _readAPI.ReadAll(_userInfo.UserId, 0, 5);
+            apiObjects = await GetApiData(api);
+
             await _redisCache.CacheData(cacheKey, api, TimeSpan.FromMinutes(5));
 
-            return StatusCode(200, new { api });
+            return StatusCode(200, new { api = apiObjects });
         }
 
-        [HttpDelete("revoke")]
-        public async Task<IActionResult> RevokeAPI()
+        [HttpDelete("revoke/{apiId}")]
+        public async Task<IActionResult> RevokeAPI([FromRoute] int apiId)
         {
             try
             {
-                await _deleteAPI.DeleteById(_userInfo.UserId, null);
+                await _deleteAPI.DeleteById(apiId, _userInfo.UserId);
                 HttpContext.Session.SetString(Constants.CACHE_API, true.ToString());
 
                 return StatusCode(200);
@@ -161,14 +174,62 @@ namespace webapi.Controllers.Core
             var cacheApiCallLeft = await _redisCache.GetCachedData($"{DateTime.Today.ToString("yyyy-MM-dd")}_{apiModel.api_key}");
             if (cacheApiCallLeft is not null)
             {
-                return JsonConvert.DeserializeObject<int>(cacheApiCallLeft);
+                return apiModel.max_request_of_day - JsonConvert.DeserializeObject<int>(cacheApiCallLeft);
             }
             else
             {
                 return apiModel.max_request_of_day;
             }
         }
+
+        private async Task<List<ApiObject>> GetApiData(IEnumerable<ApiModel> apiModels)
+        {
+            var listApiObject = new List<ApiObject>();
+
+            foreach (var apiModel in apiModels)
+            {
+                int requestCount = 0;
+
+                var cacheResult = await _redisCache.GetCachedData($"{DateTime.Today.ToString("yyyy-MM-dd")}_{apiModel.api_key}");
+                if (cacheResult is not null)
+                {
+                    requestCount = apiModel.max_request_of_day - JsonConvert.DeserializeObject<int>(cacheResult);
+                }
+                else
+                {
+                    requestCount = apiModel.max_request_of_day;
+                }
+
+                listApiObject.Add(new ApiObject
+                {
+                    api_id = apiModel.api_id,
+                    api_key = apiModel.api_key,
+                    type = apiModel.type,
+                    expiry_date = apiModel.expiry_date,
+                    is_blocked = apiModel.is_blocked,
+                    last_time_activity = apiModel.last_time_activity,
+                    max_request_of_day = apiModel.max_request_of_day,
+                    apiCallLeft = requestCount,
+                    user_id = apiModel.user_id
+                });
+            }
+
+            return listApiObject;
+        }
     }
 
     public record ApiSettings(DateTime? Expiry, int MaxRequest);
+
+    public class ApiObject
+    {
+        public int api_id { get; set; }
+        public string api_key { get; set; }
+        public string type { get; set; }
+        public DateTime? expiry_date { get; set; }
+        public bool is_blocked { get; set; }
+        public DateTime last_time_activity { get; set; }
+        public int max_request_of_day { get; set; }
+        public int apiCallLeft { get; set; }
+        public int user_id { get; set; }
+    }
 }

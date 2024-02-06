@@ -49,10 +49,7 @@ const Files = () => {
             setFont('error')
         }
 
-        setTimeout(() => {
-            setMessage('');
-            setFont('');
-        }, 5000)
+        resetMessageAfterDelay();
     }
 
     const downloadFile = (file: Blob, filename: string) => {
@@ -100,10 +97,7 @@ const Files = () => {
             }
         }
 
-        setTimeout(() => {
-            setMessage('');
-            setFont('');
-        }, 5000)
+        resetMessageAfterDelay();
     }
 
     const handleFileChange = (event: ChangeEvent<HTMLInputElement>, fileType: string, operationType: string) => {
@@ -116,6 +110,13 @@ const Files = () => {
         }
     };
 
+    const resetMessageAfterDelay = () => {
+        setTimeout(() => {
+            setMessage('');
+            setFont('');
+        }, 5000);
+    };
+
     useEffect(() => {
         fetchData();
     }, [lastTimeModified, skip]);
@@ -126,37 +127,49 @@ const Files = () => {
 
     const { files } = filesList as { files: any[] }
 
+    const EncryptFile = () => {
+        return (
+            <div className="encrypt">
+                <p>Encrypt File</p>
+                <Button onClick={() => setEncryptModalActive(true)}>
+                    <Font font={'lock'} />
+                </Button>
+                <Modal isActive={encryptModalActive} setActive={setEncryptModalActive}>
+                    <p>Encrypt via Private Key</p>
+                    <FileButton id={'private-encrypt'} font={'add'} onChange={(e) => handleFileChange(e, 'private', 'encrypt')} fileType={'private'} operationType={'encrypt'} />
+                    <p>Encrypt via Internal Key</p>
+                    <FileButton id={'internal-encrypt'} font={'add'} onChange={(e) => handleFileChange(e, 'internal', 'encrypt')} fileType={'internal'} operationType={'encrypt'} />
+                    <p>Encrypt via Received Key</p>
+                    <FileButton id={'received-encrypt'} font={'add'} onChange={(e) => handleFileChange(e, 'received', 'encrypt')} fileType={'received'} operationType={'encrypt'} />
+                </Modal>
+            </div>
+        );
+    }
+
+    const DecryptFile = () => {
+        return (
+            <div className="decrypt">
+                <p>Decrypt File</p>
+                <Button onClick={() => setDecryptModalActive(true)}>
+                    <Font font={'lock_open'} />
+                </Button>
+                <Modal isActive={decryptModalActive} setActive={setDecryptModalActive}>
+                    <p>Decrypt via Private Key</p>
+                    <FileButton id={'private-decrypt'} font={'add'} onChange={(e) => handleFileChange(e, 'private', 'decrypt')} fileType={'private'} operationType={'decrypt'} />
+                    <p>Decrypt via Internal Key</p>
+                    <FileButton id={'internal-decrypt'} font={'add'} onChange={(e) => handleFileChange(e, 'internal', 'decrypt')} fileType={'internal'} operationType={'decrypt'} />
+                    <p>Decrypt via Received Key</p>
+                    <FileButton id={'received-decrypt'} font={'add'} onChange={(e) => handleFileChange(e, 'received', 'decrypt')} fileType={'received'} operationType={'decrypt'} />
+                </Modal>
+            </div>
+        );
+    }
+
     return (
         <div className="container">
             <div className="cryptography">
-                <div className="encrypt">
-                    <p>Encrypt File</p>
-                    <Button onClick={() => setEncryptModalActive(true)}>
-                        <Font font={'lock'} />
-                    </Button>
-                    <Modal isActive={encryptModalActive} setActive={setEncryptModalActive}>
-                        <p>Encrypt via Private Key</p>
-                        <FileButton id={'private-encrypt'} font={'add'} onChange={(e) => handleFileChange(e, 'private', 'encrypt')} fileType={'private'} operationType={'encrypt'} />
-                        <p>Encrypt via Internal Key</p>
-                        <FileButton id={'internal-encrypt'} font={'add'} onChange={(e) => handleFileChange(e, 'internal', 'encrypt')} fileType={'internal'} operationType={'encrypt'} />
-                        <p>Encrypt via Received Key</p>
-                        <FileButton id={'received-encrypt'} font={'add'} onChange={(e) => handleFileChange(e, 'received', 'encrypt')} fileType={'received'} operationType={'encrypt'} />
-                    </Modal>
-                </div>
-                <div className="decrypt">
-                    <p>Decrypt File</p>
-                    <Button onClick={() => setDecryptModalActive(true)}>
-                        <Font font={'lock_open'} />
-                    </Button>
-                    <Modal isActive={decryptModalActive} setActive={setDecryptModalActive}>
-                        <p>Decrypt via Private Key</p>
-                        <FileButton id={'private-decrypt'} font={'add'} onChange={(e) => handleFileChange(e, 'private', 'decrypt')} fileType={'private'} operationType={'decrypt'} />
-                        <p>Decrypt via Internal Key</p>
-                        <FileButton id={'internal-decrypt'} font={'add'} onChange={(e) => handleFileChange(e, 'internal', 'decrypt')} fileType={'internal'} operationType={'decrypt'} />
-                        <p>Decrypt via Received Key</p>
-                        <FileButton id={'received-decrypt'} font={'add'} onChange={(e) => handleFileChange(e, 'received', 'decrypt')} fileType={'received'} operationType={'decrypt'} />
-                    </Modal>
-                </div>
+                <EncryptFile />
+                <DecryptFile />
             </div>
             {message && font && < Message message={message} font={font} />}
             <div className="files">

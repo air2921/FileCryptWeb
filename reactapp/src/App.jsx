@@ -10,6 +10,7 @@ import User from './pages/User/User';
 import Settings from './pages/User/Settings/Settings';
 import Offers from './pages/List/Offers/Offers';
 import Files from './pages/List/Files/Files';
+import Api from './pages/List/Api/Api'
 import Notifications from './pages/List/Notifications/Notifications';
 import RecoveryAccount from './pages/auth/Recovery/RecoveryAccount'
 import ErrorPage from './pages/no_logic/ErrorPage/ErrorPage'
@@ -40,6 +41,7 @@ function App() {
                             <Route path="offers" element={<Offers />} />
                             <Route path="files" element={<Files />} />
                             <Route path="notifications" element={<Notifications />} />
+                            <Route path="api" element={<Api />} />
                         </>
                     ) : (
                             <Route path="*" element={<ErrorPage statusCode={401} message={'Unauthorized'} />} />

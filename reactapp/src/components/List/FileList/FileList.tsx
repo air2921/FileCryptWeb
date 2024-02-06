@@ -2,7 +2,7 @@ import React from 'react';
 import Message from '../../Message/Message';
 import Button from '../../Helpers/Button';
 import Font from '../../Font/Font';
-import DateComponent from '../../Date/Date';
+import DateComponent from '../../Helpers/Date/Date';
 
 function FileList({ files, isOwner, deleteFile }: FileListProps) {
 
@@ -26,8 +26,8 @@ function FileList({ files, isOwner, deleteFile }: FileListProps) {
                         <div className="file-details">
                             <div className="time"><DateComponent date={file.operation_date} /></div>
                             <div className="brief-file-info">
-                                <div className="file-id">FID#{file.file_id}</div>
-                                <div className="file-id">UID#{file.user_id}</div>
+                                <div className="file-id">File ID#{file.file_id}</div>
+                                <div className="file-id">User ID#{file.user_id}</div>
                             </div>
                         </div>
                         {isOwner && deleteFile && (

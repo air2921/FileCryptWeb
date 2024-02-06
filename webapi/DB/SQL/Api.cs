@@ -79,7 +79,7 @@ namespace webapi.DB.SQL
 
         public async Task DeleteById(int id, int? user_id)
         {
-            var api = await _dbContext.API.FirstOrDefaultAsync(a => a.api_id == id) ??
+            var api = await _dbContext.API.FirstOrDefaultAsync(a => a.api_id == id && a.user_id == user_id) ??
                 throw new ApiException(ExceptionApiMessages.ApiNotFound);
 
             await _redisCache.DeleteCache(api.api_key);

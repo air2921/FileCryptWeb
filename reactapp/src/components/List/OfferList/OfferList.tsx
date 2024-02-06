@@ -1,8 +1,8 @@
 import React from 'react';
-import DateComponent from '../../Date/Date';
 import Message from '../../Message/Message';
 import Button from '../../Helpers/Button';
 import Font from '../../Font/Font';
+import DateComponent from '../../Helpers/Date/Date';
 
 function OfferList({ offers, user_id, isOwner, deleteOffer, acceptOffer }: OfferListProps) {
 
