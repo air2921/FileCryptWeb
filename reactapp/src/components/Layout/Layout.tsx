@@ -115,9 +115,9 @@ function Layout() {
     return (
         <div className="layout-container">
             {isAuth && (
-                <div>
+                <>
                     {isAsideVisible && (
-                        <aside className="sidebar" style={{ width: isAsideVisible ? "100px" : 0 }}>
+                        <aside className="sidebar" style={{ width: isAsideVisible ? "185px" : 0 }}>
                             <nav>
                                 <div className="links-container">
                                     <div className="link">
@@ -162,7 +162,7 @@ function Layout() {
                             </nav>
                         </aside>
                     )}
-                </div>
+                </>
             )}
             <div className="header-outlet-container">
                 <header className="head">
@@ -216,7 +216,7 @@ function Layout() {
                         </div>
                     </nav>
                 </header>
-                <div className="outlet" style={{ marginLeft: isAsideVisible ? '152px' : "32px" }}>
+                <div className="outlet" style={{ marginLeft: isAsideVisible ? '150px' : 0 }}>
                     <Outlet />
                 </div>
             </div>
