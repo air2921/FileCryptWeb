@@ -21,16 +21,29 @@ namespace webapi.DB
 
         protected override void OnModelCreating(ModelBuilder modelBuilder)
         {
-            modelBuilder.Entity<FileModel>()
-                .HasOne(f => f.User)
-                .WithMany(u => u.Files)
-                .HasForeignKey(f => f.user_id)
-                .OnDelete(DeleteBehavior.Cascade);
+
+            #region Has one with one
 
             modelBuilder.Entity<UserModel>()
                 .HasOne(u => u.Keys)
                 .WithOne(k => k.User)
                 .HasForeignKey<KeyModel>(k => k.user_id)
+                .OnDelete(DeleteBehavior.Cascade);
+
+            modelBuilder.Entity<UserModel>()
+                .HasOne(u => u.Tokens)
+                .WithOne(t => t.User)
+                .HasForeignKey<TokenModel>(t => t.user_id)
+                .OnDelete(DeleteBehavior.Cascade);
+
+            #endregion
+
+            #region Has one with many
+
+            modelBuilder.Entity<FileModel>()
+                .HasOne(f => f.User)
+                .WithMany(u => u.Files)
+                .HasForeignKey(f => f.user_id)
                 .OnDelete(DeleteBehavior.Cascade);
 
             modelBuilder.Entity<NotificationModel>()
@@ -51,25 +64,11 @@ namespace webapi.DB
                 .HasForeignKey(n => n.receiver_id)
                 .OnDelete(DeleteBehavior.Cascade);
 
-            modelBuilder.Entity<UserModel>()
-                .HasOne(u => u.Tokens)
-                .WithOne(t => t.User)
-                .HasForeignKey<TokenModel>(t => t.user_id)
-                .OnDelete(DeleteBehavior.Cascade);
-
-            modelBuilder.Entity<TokenModel>()
-                .HasIndex(t => t.refresh_token)
-                .IsUnique();
-
             modelBuilder.Entity<ApiModel>()
                 .HasOne(a => a.User)
                 .WithMany(a => a.API)
                 .HasForeignKey(a => a.user_id)
                 .OnDelete(DeleteBehavior.Cascade);
-
-            modelBuilder.Entity<ApiModel>()
-                .HasIndex(a => a.api_key)
-                .IsUnique();
 
             modelBuilder.Entity<LinkModel>()
                 .HasOne(l => l.User)
@@ -77,9 +76,27 @@ namespace webapi.DB
                 .HasForeignKey(l => l.user_id)
                 .OnDelete(DeleteBehavior.Cascade);
 
+            #endregion
+
+            #region Property indexes
+
+            modelBuilder.Entity<UserModel>()
+                .HasIndex(u => u.email)
+                .IsUnique();
+
+            modelBuilder.Entity<TokenModel>()
+                .HasIndex(t => t.refresh_token)
+                .IsUnique();
+
+            modelBuilder.Entity<ApiModel>()
+                .HasIndex(a => a.api_key)
+                .IsUnique();
+
             modelBuilder.Entity<LinkModel>()
                 .HasIndex(l => l.u_token)
                 .IsUnique();
+
+            #endregion
         }
     }
 }

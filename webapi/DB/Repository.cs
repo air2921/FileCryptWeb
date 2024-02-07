@@ -1,6 +1,7 @@
 ﻿using Microsoft.EntityFrameworkCore;
 using webapi.Exceptions;
 using webapi.Interfaces;
+using static Microsoft.EntityFrameworkCore.DbLoggerCategory;
 
 namespace webapi.DB
 {
@@ -34,14 +35,12 @@ namespace webapi.DB
             if (queryModifier is not null)
                 query = queryModifier(query);
 
-            return await query.FirstOrDefaultAsync() ??
-                throw new EntityException();
+            return await query.FirstOrDefaultAsync();
         }
 
         public async Task<T> GetById(int id)
         {
-            return await _dbSet.FindAsync(id) ??
-                throw new EntityException();
+            return await _dbSet.FindAsync(id);
         }
 
         public async Task<int> Add(T entity, Func<T, int>? GetId = null)
@@ -62,7 +61,7 @@ namespace webapi.DB
             {
                 _logger.LogCritical(ex.ToString(), nameof(_context), nameof(_dbSet));
                 await transaction.RollbackAsync();
-                throw new EntityException();
+                throw new EntityNotCreatedException();
             }
         }
 
@@ -79,7 +78,7 @@ namespace webapi.DB
             {
                 await transaction.RollbackAsync();
                 _logger.LogCritical(ex.ToString(), nameof(_context), nameof(_dbSet));
-                throw new EntityException();
+                throw new EntityNotCreatedException();
             }
         }
 
@@ -100,6 +99,7 @@ namespace webapi.DB
             {
                 await transaction.RollbackAsync();
                 _logger.LogCritical(ex.ToString(), nameof(_context), nameof(_dbSet));
+                throw new EntityNotDeletedException();
             }
         }
 
@@ -124,6 +124,31 @@ namespace webapi.DB
             {
                 await transaction.RollbackAsync();
                 _logger.LogCritical(ex.ToString(), nameof(_context), nameof(_dbSet));
+                throw new EntityNotDeletedException();
+            }
+        }
+
+        public async Task DeleteByFilter(Func<IQueryable<T>, IQueryable<T>> queryModifier)
+        {
+            using var transaction = await _context.Database.BeginTransactionAsync();
+            try
+            {
+                IQueryable<T> query = _dbSet;
+                query = queryModifier(query);
+
+                var entity = await query.FirstOrDefaultAsync();
+                if (entity is not null)
+                {
+                    _dbSet.Remove(entity);
+                    await _context.SaveChangesAsync();
+                    await transaction.CommitAsync();
+                }
+            }
+            catch (Exception ex)
+            {
+                await transaction.RollbackAsync();
+                _logger.LogCritical(ex.ToString(), nameof(_context), nameof(_dbSet));
+                throw new EntityNotDeletedException();
             }
         }
 
@@ -141,7 +166,7 @@ namespace webapi.DB
             {
                 await transaction.RollbackAsync();
                 _logger.LogCritical(ex.ToString(), nameof(_context), nameof(_dbSet));
-                throw new EntityException();
+                throw new EntityNotUpdatedException();
             }
         }
     }

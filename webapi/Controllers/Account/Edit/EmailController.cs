@@ -2,11 +2,10 @@
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
 using UAParser;
-using webapi.DB;
 using webapi.DTO;
 using webapi.Exceptions;
+using webapi.Interfaces;
 using webapi.Interfaces.Services;
-using webapi.Interfaces.SQL;
 using webapi.Localization;
 using webapi.Models;
 using webapi.Services;
@@ -21,10 +20,8 @@ namespace webapi.Controllers.Account.Edit
     {
         private const string EMAIL = "Email";
 
-        private readonly FileCryptDbContext _dbContext;
-        private readonly ICreate<NotificationModel> _createNotification;
-        private readonly IRead<UserModel> _readUser;
-        private readonly IUpdate<UserModel> _update;
+        private readonly IRepository<UserModel> _userRepository;
+        private readonly IRepository<NotificationModel> _notificationRepository;
         private readonly IUserAgent _userAgent;
         private readonly IEmailSender _email;
         private readonly ILogger<EmailController> _logger;
@@ -35,10 +32,8 @@ namespace webapi.Controllers.Account.Edit
         private readonly IValidation _validation;
 
         public EmailController(
-            FileCryptDbContext dbContext,
-            ICreate<NotificationModel> createNotification,
-            IRead<UserModel> readUser,
-            IUpdate<UserModel> update,
+            IRepository<UserModel> userRepository,
+            IRepository<NotificationModel> notificationRepository,
             IUserAgent userAgent,
             IEmailSender email,
             ILogger<EmailController> logger,
@@ -48,10 +43,8 @@ namespace webapi.Controllers.Account.Edit
             IUserInfo userInfo,
             IValidation validation)
         {
-            _dbContext = dbContext;
-            _createNotification = createNotification;
-            _readUser = readUser;
-            _update = update;
+            _userRepository = userRepository;
+            _notificationRepository = notificationRepository;
             _userAgent = userAgent;
             _email = email;
             _logger = logger;
@@ -65,10 +58,9 @@ namespace webapi.Controllers.Account.Edit
         [HttpPost("start")]
         public async Task<IActionResult> StartEmailChangeProcess([FromQuery] string password)
         {
-            var user = await _dbContext.Users.FirstOrDefaultAsync(u => u.id == _userInfo.UserId);
+            var user = await _userRepository.GetById(_userInfo.UserId);
             if (user is null)
             {
-                _logger.LogWarning($"Non-existent user {_userInfo.Username}#{_userInfo.UserId} was requested to authorized endpoint.\nTrying delete tokens from cookie");
                 _tokenService.DeleteTokens();
                 _logger.LogWarning("Tokens was deleted");
                 return StatusCode(404);
@@ -114,7 +106,7 @@ namespace webapi.Controllers.Account.Edit
 
             email = email.ToLowerInvariant();
 
-            var user = await _dbContext.Users.FirstOrDefaultAsync(u => u.email == email);
+            var user = await _userRepository.GetByFilter(query => query.Where(u => u.email.Equals(email)));
             if (user is not null)
                 return StatusCode(409, new { message = AccountErrorMessage.UserExists });
 
@@ -151,16 +143,22 @@ namespace webapi.Controllers.Account.Edit
                 if (!code.Equals(correctCode))
                     return StatusCode(422, new { message = AccountErrorMessage.CodeIncorrect });
 
-                var user = await _readUser.ReadById(_userInfo.UserId, null);
-                user.email = email;
+                var user = await _userRepository.GetById(_userInfo.UserId);
+                if (user is null)
+                {
+                    _tokenService.DeleteTokens();
+                    _logger.LogWarning("Tokens was deleted");
+                    return StatusCode(404);
+                }
 
-                await _update.Update(user, null);
+                user.email = email;
+                await _userRepository.Update(user);
                 _logger.LogInformation("Email was was updated in db");
 
                 var clientInfo = Parser.GetDefault().Parse(HttpContext.Request.Headers["User-Agent"].ToString());
                 var ua = _userAgent.GetBrowserData(clientInfo);
 
-                await _createNotification.Create(new NotificationModel
+                await _notificationRepository.Add(new NotificationModel
                 {
                     message_header = "Someone changed your account email/login",
                     message = $"Someone changed your email at {DateTime.UtcNow} from {ua.Browser} {ua.Version} on OS {ua.OS}." +
@@ -181,12 +179,13 @@ namespace webapi.Controllers.Account.Edit
 
                 return StatusCode(201);
             }
-            catch (UserException ex)
+            catch (EntityNotCreatedException ex)
             {
-                _logger.LogWarning($"Non-existent user {_userInfo.Username}#{_userInfo.UserId} was requested to authorized endpoint.\nTrying delete tokens from cookie");
-                _tokenService.DeleteTokens();
-                _logger.LogWarning("Tokens was deleted");
-                return StatusCode(409, new { message = ex.Message });
+                return StatusCode(500, new { message = ex.Message });
+            }
+            catch (EntityNotUpdatedException ex)
+            {
+                return StatusCode(500, new { message = ex.Message });
             }
             catch (UnauthorizedAccessException ex)
             {

@@ -1,11 +1,10 @@
-﻿using webapi.Exceptions;
-using webapi.Interfaces.Redis;
+﻿using webapi.Interfaces.Redis;
 using webapi.Interfaces.Services;
-using webapi.Interfaces.SQL;
 using webapi.Models;
 using Newtonsoft.Json;
 using webapi.Interfaces.Controllers;
 using webapi.Services;
+using webapi.Interfaces;
 
 namespace webapi.Controllers.Base.CryptographyUtils
 {
@@ -15,26 +14,26 @@ namespace webapi.Controllers.Base.CryptographyUtils
         private readonly string internalType = FileType.Internal.ToString().ToLowerInvariant();
         private readonly string receivedType = FileType.Received.ToString().ToLowerInvariant();
 
+        private readonly IRepository<FileModel> _fileRepository;
+        private readonly IRepository<FileMimeModel> _mimeRepository;
         private readonly IGetSize _getSize;
         private readonly IVirusCheck _virusCheck;
         private readonly IRedisCache _redisCache;
-        private readonly IRead<FileMimeModel> _read;
-        private readonly ICreate<FileModel> _createFile;
         private readonly ILogger<FileService> _logger;
 
         public FileService(
+            IRepository<FileModel> fileRepository,
+            IRepository<FileMimeModel> mimeRepository,
             IGetSize getSize,
             IVirusCheck virusCheck,
             IRedisCache redisCache,
-            IRead<FileMimeModel> read,
-            ICreate<FileModel> createFile,
             ILogger<FileService> logger)
         {
+            _fileRepository = fileRepository;
+            _mimeRepository = mimeRepository;
             _getSize = getSize;
             _virusCheck = virusCheck;
             _redisCache = redisCache;
-            _read = read;
-            _createFile = createFile;
             _logger = logger;
         }
 
@@ -71,32 +70,25 @@ namespace webapi.Controllers.Base.CryptographyUtils
             return _getSize.GetFileSizeInMb(file) < 75;
         }
 
-        private async Task<bool> CheckMIME(string Mime)
+        private async Task<bool> CheckMIME(string mime)
         {
-            try
+            var mimes = await _redisCache.GetCachedData(Constants.MIME_COLLECTION);
+            if (mimes is not null)
             {
-                var mimes = await _redisCache.GetCachedData(Constants.MIME_COLLECTION);
-                if (mimes is not null)
-                {
-                    string[] mimesArray = JsonConvert.DeserializeObject<string[]>(mimes);
-                    if (mimesArray is null || mimesArray.Length.Equals(0))
-                        return false;
+                string[] mimesArray = JsonConvert.DeserializeObject<string[]>(mimes);
+                if (mimesArray is null || mimesArray.Length.Equals(0))
+                    return false;
 
-                    return mimesArray.Contains(Mime);
-                }
-                else
-                {
-                    var mimesDb = await _read.ReadAll(null, 0, 10000);
-                    string[] mimesArray = mimesDb.Select(m => m.mime_name).ToArray()!;
-
-                    await _redisCache.CacheData(Constants.MIME_COLLECTION, mimesArray, TimeSpan.FromDays(3));
-
-                    return mimesArray.Contains(Mime);
-                }
+                return mimesArray.Contains(mime);
             }
-            catch (MimeException)
+            else
             {
-                return false;
+                var mimesDb = await _mimeRepository.GetAll();
+                string[] mimesArray = mimesDb.Select(m => m.mime_name).ToArray();
+
+                await _redisCache.CacheData(Constants.MIME_COLLECTION, mimesArray, TimeSpan.FromDays(3));
+
+                return mimesArray.Contains(mime);
             }
         }
 
@@ -121,7 +113,7 @@ namespace webapi.Controllers.Base.CryptographyUtils
 
         public async Task CreateFile(int userID, string uniqueFileName, string mime, string fileType)
         {
-            await _createFile.Create(new FileModel
+            await _fileRepository.Add(new FileModel
             {
                 user_id = userID,
                 file_name = uniqueFileName,

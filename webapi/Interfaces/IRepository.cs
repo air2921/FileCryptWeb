@@ -9,6 +9,7 @@
         Task AddRange(IEnumerable<T> entities);
         Task Update(T entity);
         Task Delete(int id);
+        Task DeleteByFilter(Func<IQueryable<T>, IQueryable<T>> queryModifier);
         Task DeleteMany(IEnumerable<int> identifiers);
     }
 }

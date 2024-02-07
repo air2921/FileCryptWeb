@@ -1,12 +1,11 @@
 ﻿using Microsoft.AspNetCore.Authorization;
-using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
-using System.Net.Http;
 using UAParser;
 using webapi.DB;
 using webapi.DTO;
 using webapi.Exceptions;
+using webapi.Interfaces;
 using webapi.Interfaces.Redis;
 using webapi.Interfaces.Services;
 using webapi.Interfaces.SQL;
@@ -23,7 +22,9 @@ namespace webapi.Controllers.Account
         private const string CODE = "Code";
         private const string ID = "Id";
 
-        private readonly FileCryptDbContext _dbContext;
+        private readonly IRepository<UserModel> _userRepository;
+        private readonly IRepository<NotificationModel> _notificationRepository;
+        private readonly IRepository<TokenModel> _tokenRepository;
         private readonly ILogger<AuthSessionController> _logger;
         private readonly IUserInfo _userInfo;
         private readonly IUserAgent _userAgent;
@@ -33,11 +34,11 @@ namespace webapi.Controllers.Account
         private readonly IPasswordManager _passwordManager;
         private readonly ITokenService _tokenService;
         private readonly IGenerateSixDigitCode _generateCode;
-        private readonly IUpdate<TokenModel> _updateToken;
-        private readonly ICreate<NotificationModel> _createNotification;
 
         public AuthSessionController(
-            FileCryptDbContext dbContext,
+            IRepository<UserModel> userRepository,
+            IRepository<NotificationModel> notificationRepository,
+            IRepository<TokenModel> tokenRepository,
             ILogger<AuthSessionController> logger,
             IUserInfo userInfo,
             IUserAgent userAgent,
@@ -46,11 +47,11 @@ namespace webapi.Controllers.Account
             IRedisKeys redisKeys,
             IPasswordManager passwordManager,
             ITokenService tokenService,
-            IGenerateSixDigitCode generateCode,
-            IUpdate<TokenModel> updateToken,
-            ICreate<NotificationModel> createNotification)
+            IGenerateSixDigitCode generateCode)
         {
-            _dbContext = dbContext;
+            _userRepository = userRepository;
+            _notificationRepository = notificationRepository;
+            _tokenRepository = tokenRepository;
             _logger = logger;
             _userInfo = userInfo;
             _userAgent = userAgent;
@@ -60,8 +61,6 @@ namespace webapi.Controllers.Account
             _passwordManager = passwordManager;
             _tokenService = tokenService;
             _generateCode = generateCode;
-            _updateToken = updateToken;
-            _createNotification = createNotification;
         }
 
         #region Factical login endpoints and helped method
@@ -71,7 +70,8 @@ namespace webapi.Controllers.Account
         public async Task<IActionResult> Login(AuthDTO userDTO)
         {
             var email = userDTO.email.ToLowerInvariant();
-            var user = await _dbContext.Users.FirstOrDefaultAsync(u => u.email == email);
+
+            var user = await _userRepository.GetByFilter(query => query.Where(u => u.email.Equals(email)));
             if (user is null)
                 return StatusCode(404, new { message = AccountErrorMessage.UserNotFound });
 
@@ -113,7 +113,7 @@ namespace webapi.Controllers.Account
             if (correctCode is null || id is null)
                 return StatusCode(500);
 
-            var user = await _dbContext.Users.FirstOrDefaultAsync(u => u.id == int.Parse(id));
+            var user = await _userRepository.GetById(int.Parse(id));
             if (user is null)
                 return StatusCode(404, new { message = AccountErrorMessage.UserNotFound });
 
@@ -134,15 +134,16 @@ namespace webapi.Controllers.Account
 
                 string refreshToken = _tokenService.GenerateRefreshToken();
 
-                await _updateToken.Update(new TokenModel
+                await _tokenRepository.Update(new TokenModel
                 {
                     user_id = user.id,
                     refresh_token = _tokenService.HashingToken(refreshToken),
                     expiry_date = DateTime.UtcNow + Constants.RefreshExpiry
-                }, true);
+                });
+
                 _logger.LogInformation("Refresh token was updated in db");
 
-                await _createNotification.Create(new NotificationModel
+                await _notificationRepository.Add(new NotificationModel
                 {
                     message_header = "Someone has accessed your account",
                     message = $"Someone signed in to your account {user.username}#{user.id} at {DateTime.UtcNow} from {ua.Browser} {ua.Version} on OS {ua.OS}",
@@ -170,13 +171,15 @@ namespace webapi.Controllers.Account
                 Response.Cookies.Append(Constants.USERNAME_COOKIE_KEY, user.username, cookieOptions);
                 Response.Cookies.Append(Constants.ROLE_COOKIE_KEY, user.role, cookieOptions);
 
-                _logger.LogInformation("Jwt and refresh was sended to client");
-
                 return StatusCode(201);
             }
-            catch (TokenException ex)
+            catch (EntityNotCreatedException ex)
             {
-                return StatusCode(404, new { message = ex.Message });
+                return StatusCode(500, new { message = ex.Message });
+            }
+            catch (EntityNotUpdatedException ex)
+            {
+                return StatusCode(500, new { message = ex.Message });
             }
             finally
             {
@@ -193,17 +196,21 @@ namespace webapi.Controllers.Account
         {
             try
             {
-                var tokenModel = new TokenModel() { user_id = _userInfo.UserId, refresh_token = Guid.NewGuid().ToString(), expiry_date = DateTime.UtcNow.AddYears(-100) };
-
-                await _updateToken.Update(tokenModel, true);
+                await _tokenRepository.Update(new TokenModel
+                {
+                    user_id = _userInfo.UserId,
+                    refresh_token = Guid.NewGuid().ToString(),
+                    expiry_date = DateTime.UtcNow.AddYears(-100)
+                });
                 _logger.LogInformation($"{_userInfo.Username}#{_userInfo.UserId} refresh token was revoked");
 
                 _tokenService.DeleteTokens();
+                HttpContext.Session.Clear();
                 _logger.LogInformation("Tokens was revoked from client");
 
                 return StatusCode(200);
             }
-            catch (UserException ex)
+            catch (EntityNotUpdatedException ex)
             {
                 _logger.LogCritical("When trying to update the data, the user was deleted");
 
@@ -212,16 +219,11 @@ namespace webapi.Controllers.Account
 
                 return StatusCode(404, new { message = ex.Message });
             }
-            catch (TokenException)
-            {
-                return StatusCode(500);
-            }
             finally
             {
                 await _redisCache.DeleteCache(_redisKeys.PrivateKey);
                 await _redisCache.DeleteCache(_redisKeys.InternalKey);
                 await _redisCache.DeleteCache(_redisKeys.ReceivedKey);
-                HttpContext.Session.Clear();
 
                 _logger.LogInformation("Encryption keys was deleted from cache");
             }

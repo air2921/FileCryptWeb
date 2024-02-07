@@ -176,10 +176,8 @@ namespace webapi.Controllers.Core
             {
                 return apiModel.max_request_of_day - JsonConvert.DeserializeObject<int>(cacheApiCallLeft);
             }
-            else
-            {
-                return apiModel.max_request_of_day;
-            }
+
+            return apiModel.max_request_of_day;
         }
 
         private async Task<List<ApiObject>> GetApiData(IEnumerable<ApiModel> apiModels)

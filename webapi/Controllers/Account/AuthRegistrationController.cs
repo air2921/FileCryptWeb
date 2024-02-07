@@ -1,10 +1,10 @@
 ﻿using Microsoft.AspNetCore.Mvc;
-using Microsoft.EntityFrameworkCore;
 using System.Text.RegularExpressions;
-using webapi.DB;
 using webapi.DTO;
+using webapi.Exceptions;
+using webapi.Interfaces;
+using webapi.Interfaces.Cryptography;
 using webapi.Interfaces.Services;
-using webapi.Interfaces.SQL;
 using webapi.Localization;
 using webapi.Models;
 using webapi.Services;
@@ -23,35 +23,51 @@ namespace webapi.Controllers.Account
         private const string IS_2FA = "2FA";
         private const string CODE = "Code";
 
+        private readonly IRepository<UserModel> _userRepository;
+        private readonly IRepository<KeyModel> _keyRepository;
+        private readonly IRepository<TokenModel> _tokenRepository;
+        private readonly IConfiguration _configuration;
+        private readonly IGenerateKey _generateKey;
+        private readonly IEncryptKey _encrypt;
         private readonly ILogger<AuthRegistrationController> _logger;
-        private readonly ICreate<UserModel> _userCreate;
         private readonly IGenerateSixDigitCode _generateCode;
         private readonly IEmailSender _email;
         private readonly IPasswordManager _passwordManager;
-        private readonly FileCryptDbContext _dbContext;
+        private readonly byte[] secretKey;
 
         public AuthRegistrationController(
             ILogger<AuthRegistrationController> logger,
-            ICreate<UserModel> userCreate,
             IGenerateSixDigitCode generateCode,
             IEmailSender email,
             IPasswordManager passwordManager,
-            FileCryptDbContext dbContext)
+            IRepository<UserModel> userRepository,
+            IRepository<KeyModel> keyRepository,
+            IRepository<TokenModel> tokenRepository,
+            IConfiguration configuration,
+            IGenerateKey generateKey,
+            IEncryptKey encrypt)
         {
             _logger = logger;
-            _userCreate = userCreate;
             _generateCode = generateCode;
             _email = email;
             _passwordManager = passwordManager;
-            _dbContext = dbContext;
+
+            _userRepository = userRepository;
+            _keyRepository = keyRepository;
+            _tokenRepository = tokenRepository;
+            _configuration = configuration;
+            _generateKey = generateKey;
+            _encrypt = encrypt;
+            secretKey = Convert.FromBase64String(_configuration[App.ENCRYPTION_KEY]!);
         }
 
         [HttpPost("register")]
         public async Task<IActionResult> Registration([FromBody] RegisterDTO userDTO)
         {
             var email = userDTO.email.ToLowerInvariant();
+            int code = _generateCode.GenerateSixDigitCode();
 
-            var user = await _dbContext.Users.FirstOrDefaultAsync(u => u.email == email);
+            var user = await _userRepository.GetByFilter(query => query.Where(u => u.email.Equals(email)));
             if (user is not null)
                 return StatusCode(409, new { message = AccountErrorMessage.UserExists });
 
@@ -61,10 +77,7 @@ namespace webapi.Controllers.Account
             if (!Regex.IsMatch(userDTO.username, Validation.Username))
                 return StatusCode(400, new { message = AccountErrorMessage.InvalidFormatUsername });
 
-            int code = _generateCode.GenerateSixDigitCode();
-
             string password = _passwordManager.HashingPassword(userDTO.password);
-            _logger.LogInformation("Password was hashed");
 
             await _email.SendMessage(new EmailDto
             {
@@ -108,7 +121,7 @@ namespace webapi.Controllers.Account
                 if (!IsCorrect)
                     return StatusCode(422, new { message = AccountErrorMessage.CodeIncorrect });
 
-                await _userCreate.Create(new UserModel
+                var id = await _userRepository.Add(new UserModel
                 {
                     email = email,
                     password = password,
@@ -116,11 +129,28 @@ namespace webapi.Controllers.Account
                     role = role,
                     is_2fa_enabled = bool.Parse(flag_2fa),
                     is_blocked = false
+                }, e => e.id);
+
+                await _tokenRepository.Add(new TokenModel
+                {
+                    user_id = id,
+                    refresh_token = Guid.NewGuid().ToString(),
+                    expiry_date = DateTime.UtcNow
+                });
+
+                await _keyRepository.Add(new KeyModel
+                {
+                    user_id = id,
+                    private_key = await _encrypt.EncryptionKeyAsync(_generateKey.GenerateKey(), secretKey)
                 });
 
                 _logger.LogInformation("User was added in db");
 
                 return StatusCode(201);
+            }
+            catch (EntityNotCreatedException ex)
+            {
+                return StatusCode(500, new { message = ex.Message });
             }
             finally
             {
