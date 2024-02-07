@@ -1,5 +1,4 @@
 import React from 'react';
-import Button from '../../Helpers/Button';
 import Message from '../../Message/Message';
 import Font from '../../Font/Font';
 import DateComponent from '../../Helpers/Date/Date';
@@ -50,9 +49,9 @@ function NotificationList({ notifications, deleteNotification }: NotificationLis
                             <div className="time"><DateComponent date={notification.send_time} /></div>
                         </div>
                         {notification.priority == 'Info' && deleteNotification && (
-                            <Button onClick={() => deleteNotification(notification.notification_id)}>
+                            <button onClick={() => deleteNotification(notification.notification_id)}>
                                 <Font font={'delete'} />
-                            </Button>
+                            </button>
                         )}
                     </li>
                 ))}

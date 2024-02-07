@@ -1,9 +1,7 @@
 import React, { FormEvent, useEffect, useState } from 'react';
 import OfferList from '../../../components/List/OfferList/OfferList';
-import Input from '../../../components/Helpers/Input';
 import AxiosRequest from '../../../api/AxiosRequest';
 import Message from '../../../components/Message/Message';
-import Button from '../../../components/Helpers/Button';
 import Font from '../../../components/Font/Font';
 
 const Offers = () => {
@@ -109,16 +107,36 @@ const Offers = () => {
         <div className="container">
             <div className="create">
                 <form onSubmit={createOffer}>
-                    <Input text='UID of the offer receiver' type="number" id="offer" require={true} value={userId} onChange={(e) => setUserId(parseInt(e.target.value, 10))} />
-                    <Button>Submit</Button>
+                    <label htmlFor="offer">
+                        UID of the offer receiver
+                        <input
+                            type="text"
+                            id="offer"
+                            required={true}
+                            value={userId}
+                            onChange={(e) => {
+                                const value = e.target.value;
+                                if (value === '') {
+                                    setUserId(undefined);
+                                } else {
+                                    const parsedValue = parseInt(value, 10);
+                                    if (!isNaN(parsedValue)) {
+                                        setUserId(parsedValue);
+                                    }
+                                }
+                            }}
+                            inputMode="numeric"
+                        />
+                    </label>
+                    <button>Submit</button>
                 </form>
             </div>
+            {message && font && < Message message={message} font={font} />}
             <div className="offers">
                 <OfferList offers={offers} user_id={user_id} isOwner={true} deleteOffer={deleteOffer} acceptOffer={acceptOffer} />
-                {skip > 0 && <Button onClick={handleBack}><Font font={'arrow_back'} /></Button>}
-                {offers.length > step - 1 && <Button onClick={handleLoadMore}><Font font={'arrow_forward'} /></Button>}
+                {skip > 0 && <button onClick={handleBack}><Font font={'arrow_back'} /></button>}
+                {offers.length > step - 1 && <button onClick={handleLoadMore}><Font font={'arrow_forward'} /></button>}
             </div>
-            {message && font && < Message message={message} font={font} />}
         </div>
     );
 }

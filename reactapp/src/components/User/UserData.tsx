@@ -1,6 +1,5 @@
 import React from 'react';
 import Font from '../Font/Font';
-import Button from '../Helpers/Button';
 import { useNavigate } from 'react-router-dom';
 
 function UserData({ user, isOwner }: UserDataProps) {
@@ -25,9 +24,9 @@ function UserData({ user, isOwner }: UserDataProps) {
                 </div>
             )}
             {isOwner && (
-                <Button onClick={() => navigate("/settings")}>
+                <button onClick={() => navigate("/settings")}>
                     <Font font={'edit'} />
-                </Button>
+                </button>
             )}
         </div>
     );

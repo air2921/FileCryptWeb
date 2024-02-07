@@ -1,6 +1,5 @@
 import React from 'react';
 import Message from '../../Message/Message';
-import Button from '../../Helpers/Button';
 import Font from '../../Font/Font';
 import DateComponent from '../../Helpers/Date/Date';
 
@@ -33,12 +32,12 @@ function OfferList({ offers, user_id, isOwner, deleteOffer, acceptOffer }: Offer
                             </div>
                         </div>
                         {!offer.is_accepted && user_id === offer.receiver_id && acceptOffer && (
-                            <Button onClick={() => acceptOffer(offer.offer_id)}>Accept</Button>
+                            <button onClick={() => acceptOffer(offer.offer_id)}>Accept</button>
                         )}
                         {isOwner && deleteOffer && (
-                            <Button onClick={() => deleteOffer(offer.offer_id)}>
+                            <button onClick={() => deleteOffer(offer.offer_id)}>
                                 <Font font={'delete'} />
-                            </Button>
+                            </button>
                         )}
                     </li>
                 ))}

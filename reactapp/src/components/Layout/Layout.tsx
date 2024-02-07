@@ -117,7 +117,7 @@ function Layout() {
             {isAuth && (
                 <>
                     {isAsideVisible && (
-                        <aside className="sidebar" style={{ width: isAsideVisible ? "185px" : 0 }}>
+                        <aside className="sidebar" style={{ width: isAsideVisible ? "115px" : 0 }}>
                             <nav>
                                 <div className="links-container">
                                     <div className="link">
@@ -180,29 +180,31 @@ function Layout() {
                                 <Link to="/about">About</Link>
                                 <Link to="/policy">Policy</Link>
                             </div>
-                            {isAuth && (
-                                <div className="head-center">
+                            <div className="head-center">
+                                {isAuth && (
                                     <div className="find-container">
                                         <input className={inputError ? 'find-input error' : 'find-input'}
                                             type="text" id="user"
                                             required={true}
                                             value={inputValue}
                                             onChange={(e) => setInputValue(e.target.value)}
+                                            placeholder="#2921"
                                         />
                                         <button className="find-btn" onClick={findUser}><Font font={'search'} /></button>
                                     </div>
+                                )}
+                                {isAuth && (
                                     <div className="notification-container">
                                         <Link to="/notifications"><Font font={'notifications'} /></Link>
                                     </div>
-                                </div>
-                            )}
+                                )}
+                            </div>
                             <div className="auth-btn-container">
-                                {isAuth && (
+                                {isAuth ? (
                                     <div className="signout-btn-container">
                                         <button className="signout-btn" onClick={logout}>Sign Out</button>
                                     </div>
-                                )}
-                                {!isAuth && (
+                                ) : (
                                     <div className="is-auth-container">
                                         <div className="signup-btn-container">
                                             <button className="signup-btn" onClick={() => navigate('/auth/signup')}>Sign Up</button>

@@ -3,5 +3,6 @@ interface FileProps {
     user_id: number,
     file_name: string,
     operation_date: string,
-    type: string
+    type: string,
+    file_mime: string
 }

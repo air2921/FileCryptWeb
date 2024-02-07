@@ -1,20 +1,24 @@
 ﻿import React, { ChangeEvent, useEffect, useState } from 'react';
 import AxiosRequest from '../../../api/AxiosRequest';
 import AxiosRequestInterceptor from '../../../api/AxiosRequestInterceptor';
-import Button from '../../../components/Helpers/Button';
 import Font from '../../../components/Font/Font';
-import Modal from '../../../components/Modal/Modal';
-import FileButton from '../../../components/Helpers/FileButton';
 import FileList from '../../../components/List/FileList/FileList';
 import Message from '../../../components/Message/Message';
+
+interface FileButtonProps {
+    id: string,
+    font: string,
+    onChange: (event: ChangeEvent<HTMLInputElement>, fileType: string, operationType: string) => void,
+    fileType: string,
+    operationType: string
+}
+
 
 const Files = () => {
     const [skip, setSkip] = useState(0);
     const step = 10;
     const [errorMessage, setErrorMessage] = useState('');
     const [filesList, setFiles] = useState(null);
-    const [encryptModalActive, setEncryptModalActive] = useState(false);
-    const [decryptModalActive, setDecryptModalActive] = useState(false); 
     const [lastTimeModified, setLastTimeModified] = useState(Date.now());
     const [message, setMessage] = useState('');
     const [font, setFont] = useState('');
@@ -114,7 +118,7 @@ const Files = () => {
         setTimeout(() => {
             setMessage('');
             setFont('');
-        }, 5000);
+        }, 3000);
     };
 
     useEffect(() => {
@@ -127,55 +131,71 @@ const Files = () => {
 
     const { files } = filesList as { files: any[] }
 
-    const EncryptFile = () => {
+    function FileButton({ id, font, onChange, fileType, operationType }: FileButtonProps) {
+
+        const clickElement = (elementId: string) => {
+            document.getElementById(elementId)?.click();
+        };
+
         return (
-            <div className="encrypt">
-                <p>Encrypt File</p>
-                <Button onClick={() => setEncryptModalActive(true)}>
-                    <Font font={'lock'} />
-                </Button>
-                <Modal isActive={encryptModalActive} setActive={setEncryptModalActive}>
-                    <p>Encrypt via Private Key</p>
-                    <FileButton id={'private-encrypt'} font={'add'} onChange={(e) => handleFileChange(e, 'private', 'encrypt')} fileType={'private'} operationType={'encrypt'} />
-                    <p>Encrypt via Internal Key</p>
-                    <FileButton id={'internal-encrypt'} font={'add'} onChange={(e) => handleFileChange(e, 'internal', 'encrypt')} fileType={'internal'} operationType={'encrypt'} />
-                    <p>Encrypt via Received Key</p>
-                    <FileButton id={'received-encrypt'} font={'add'} onChange={(e) => handleFileChange(e, 'received', 'encrypt')} fileType={'received'} operationType={'encrypt'} />
-                </Modal>
+            <div>
+                <input
+                    type="file"
+                    id={id}
+                    style={{ display: "none" }}
+                    required={true}
+                    onChange={(event) => onChange(event, fileType, operationType)}
+                />
+                <button onClick={() => clickElement(id)}>
+                    <Font font={font} />
+                </button>
             </div>
         );
     }
 
-    const DecryptFile = () => {
+    const SetFileAndEncrypt = () => {
+        const [operation, setOperation] = useState('encrypt');
+        const [type, setType] = useState('private');
+
         return (
-            <div className="decrypt">
-                <p>Decrypt File</p>
-                <Button onClick={() => setDecryptModalActive(true)}>
-                    <Font font={'lock_open'} />
-                </Button>
-                <Modal isActive={decryptModalActive} setActive={setDecryptModalActive}>
-                    <p>Decrypt via Private Key</p>
-                    <FileButton id={'private-decrypt'} font={'add'} onChange={(e) => handleFileChange(e, 'private', 'decrypt')} fileType={'private'} operationType={'decrypt'} />
-                    <p>Decrypt via Internal Key</p>
-                    <FileButton id={'internal-decrypt'} font={'add'} onChange={(e) => handleFileChange(e, 'internal', 'decrypt')} fileType={'internal'} operationType={'decrypt'} />
-                    <p>Decrypt via Received Key</p>
-                    <FileButton id={'received-decrypt'} font={'add'} onChange={(e) => handleFileChange(e, 'received', 'decrypt')} fileType={'received'} operationType={'decrypt'} />
-                </Modal>
+            <div>
+                <p>Select encryption key</p>
+                <select
+                    className="set-key-type"
+                    id="key"
+                    required={true}
+                    value={type}
+                    onChange={(e) => setType(e.target.value)}>
+
+                    <option value="private">Private</option>
+                    <option value="internal">Internal</option>
+                    <option value="received">Received</option>
+                </select>
+                <p>Select operation</p>
+                <select
+                    className="set-operation-type"
+                    id="operation"
+                    required={true}
+                    value={operation}
+                    onChange={(e) => setOperation(e.target.value)}>
+
+                    <option value="encrypt">Encrypt File</option>
+                    <option value="decrypt">Decrypt File</option>
+                </select>
+
+                <FileButton id={`${type}-${operation}`} font={'add'} onChange={(e) => handleFileChange(e, type, operation)} fileType={type} operationType={operation} />
             </div>
         );
     }
 
     return (
         <div className="container">
-            <div className="cryptography">
-                <EncryptFile />
-                <DecryptFile />
-            </div>
+            <SetFileAndEncrypt />
             {message && font && < Message message={message} font={font} />}
             <div className="files">
                 <FileList files={files} isOwner={true} deleteFile={deleteFile} />
-                {skip > 0 && <Button onClick={handleBack}><Font font={'arrow_back'} /></Button>}
-                {files.length > step - 1 && <Button onClick={handleLoadMore}><Font font={'arrow_forward'} /></Button>}
+                {skip > 0 && <button onClick={handleBack}><Font font={'arrow_back'} />Previous</button>}
+                {files.length > step - 1 && <button onClick={handleLoadMore}>Next<Font font={'arrow_forward'} /></button>}
             </div>
         </div>
     );

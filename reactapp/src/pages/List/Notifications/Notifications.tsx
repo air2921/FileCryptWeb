@@ -1,7 +1,6 @@
 import React, { useEffect, useState } from 'react';
 import NotificationList from '../../../components/List/Notifications/NotificationList';
 import AxiosRequest from '../../../api/AxiosRequest';
-import Button from '../../../components/Helpers/Button';
 import Font from '../../../components/Font/Font';
 import Message from '../../../components/Message/Message';
 
@@ -62,10 +61,10 @@ const Notifications = () => {
 
     return (
         <div className="container">
-            <NotificationList notifications={notifications} deleteNotification={deleteNotification} />
             {message && font && < Message message={message} font={font} />}
-            {skip > 0 && <Button onClick={handleBack}><Font font={'arrow_back'} /></Button>}
-            {notifications.length > step - 1 && <Button onClick={handleLoadMore}><Font font={'arrow_forward'} /></Button>}
+            <NotificationList notifications={notifications} deleteNotification={deleteNotification} />
+            {skip > 0 && <button onClick={handleBack}><Font font={'arrow_back'} /></button>}
+            {notifications.length > step - 1 && <button onClick={handleLoadMore}><Font font={'arrow_forward'} /></button>}
         </div>
     );
 }

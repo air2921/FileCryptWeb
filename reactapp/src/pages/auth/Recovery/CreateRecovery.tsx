@@ -1,6 +1,4 @@
 import React, { FormEvent, useState } from 'react';
-import Input from '../../../components/Helpers/Input';
-import Button from '../../../components/Helpers/Button';
 import Message from '../../../components/Message/Message';
 import AxiosRequest from '../../../api/AxiosRequest';
 
@@ -27,8 +25,17 @@ const CreateRecovery = () => {
     return (
         <div>
             <form onSubmit={handleSubmit}>
-                <Input text='Enter your login' type="email" id="email" require={true} value={email} onChange={(e) => setEmail(e.target.value)} />
-                <Button>Send recovery link</Button>
+                <label htmlFor="email">
+                    {email ? "Email:" : "Email*"}
+                    <input
+                        type="email"
+                        id="email"
+                        required={true}
+                        value={email}
+                        onChange={(e) => setEmail(e.target.value)}
+                    />
+                </label>
+                <button type="submit">Send recovery link</button>
             </form>
             {message && <Message message={message} font={font} />}
         </div>

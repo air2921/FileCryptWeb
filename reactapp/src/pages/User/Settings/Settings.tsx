@@ -1,14 +1,11 @@
 import React, { ChangeEvent, FormEvent, useEffect, useState } from 'react';
 import AxiosRequest from '../../../api/AxiosRequest';
 import UserData from '../../../components/User/UserData';
-import Button from '../../../components/Helpers/Button';
-import Message from '../../../components/Message/Message';
 import Font from '../../../components/Font/Font';
-import CheckBox from '../../../components/Helpers/CheckBox';
-import Input from '../../../components/Helpers/Input';
 import Modal from '../../../components/Modal/Modal';
 import UserKeys from '../../../components/User/UserKeys';
 import Verify from '../../../components/Verify/Verify';
+import Message from '../../../components/Message/Message';
 
 interface TwoFaProps {
     is_enabled_2fa: boolean
@@ -16,9 +13,11 @@ interface TwoFaProps {
 
 const Settings = () => {
     const [errorMessage, setErrorMessage] = useState('');
-
     const [userKeys, setKeys] = useState(null);
     const [userData, setUserData] = useState(null);
+
+    const [message, setMessage] = useState('');
+    const [icon, setIcon] = useState('')
 
     const fetchDataUser = async () => {
         const response = await AxiosRequest({ endpoint: `api/core/users/data/only`, method: 'GET', withCookie: true, requestBody: null });
@@ -55,11 +54,7 @@ const Settings = () => {
     const { user } = userData as { user: any };
 
     const Username = () => {
-
         const [username, setUsername] = useState('');
-
-        const [message, setMessage] = useState('');
-        const [font, setFont] = useState('')
 
         const handleSubmit = async (e: FormEvent) => {
             e.preventDefault();
@@ -68,28 +63,39 @@ const Settings = () => {
 
             if (response.isSuccess) {
                 setMessage(response.data.message);
-                setFont('done')
+                setIcon('done')
             }
             else {
                 setMessage(response.data);
-                setFont('error');
+                setIcon('error');
             }
+
+            setTimeout(() => {
+                setMessage('');
+                setIcon('')
+            }, 3000)
         }
 
         return (
             <div className="username">
                 <form onSubmit={handleSubmit}>
-                    <Input text='Your new username' type="text" id="username" require={true} value={username} onChange={(e) => setUsername(e.target.value)} />
-                    <Button>Save Username</Button>
+                    <label htmlFor="username">
+                        Username:
+                        <input
+                            type="text"
+                            id="username"
+                            required={true}
+                            value={username}
+                            onChange={(e) => setUsername(e.target.value)}
+                        />
+                    </label>
+                    <button type="submit">Save Username</button>
                 </form>
-                {message && <Message message={message} font={font} />}
             </div>
         );
     }
 
     function TwoFA({ is_enabled_2fa }: TwoFaProps) {
-        const [message, setMessage] = useState('');
-        const [font, setFont] = useState('');
         const [password, setPassword] = useState('');
         const [successStatus, setStatus] = useState(false);
         const [is2Fa, set2Fa] = useState(true);
@@ -102,18 +108,16 @@ const Settings = () => {
 
             if (response.isSuccess) {
                 setStatus(true);
-                setMessage('');
-                setFont('');
             }
             else {
                 setMessage(response.data);
-                setFont('error');
+                setIcon('error');
             }
 
             setTimeout(() => {
                 setMessage('');
-                setFont('');
-            }, 5000);
+                setIcon('')
+            }, 3000)
         }
 
         const set2FaStatus = (twoFaStatus: boolean, formVisible: boolean) => {
@@ -123,27 +127,31 @@ const Settings = () => {
 
         return (
             <div>
-                {is_enabled_2fa && !visibleForm && < Button onClick={() => set2FaStatus(false, true)}>Disable 2FA</Button>}
-                {!is_enabled_2fa && !visibleForm && < Button onClick={() => set2FaStatus(true, true)}>Enable 2FA</Button>}
+                {is_enabled_2fa && !visibleForm && <button onClick={() => set2FaStatus(false, true)}>Disable 2FA</button>}
+                {!is_enabled_2fa && !visibleForm && <button onClick={() => set2FaStatus(true, true)}>Enable 2FA</button>}
                 {visibleForm && (
                     <form onSubmit={handleSubmit}>
-                        <Input text='Confirm password' type="password" id="password" require={true} value={password} onChange={(e) => setPassword(e.target.value)} />
-                        <Button>Send message</Button>
+                        <label htmlFor="password">
+                            Confirm password:
+                            <input
+                                type="password"
+                                id="password"
+                                required={true}
+                                value={password}
+                                onChange={(e) => setPassword(e.target.value)}
+                            />
+                        </label>
+                        <button type="submit">Send message</button>
                     </form>
                 )}
-                {message && <Message message={message} font={font} />}
                 <Modal isActive={successStatus} setActive={setStatus}>
                     <Verify endpoint={`api/account/edit/2fa/confirm/${is2Fa}`} method={'PUT'} />
                 </Modal>
-                {message && <Message message={message} font={font} />}
             </div>
         );
     }
 
     const Password = () => {
-        const [message, setMessage] = useState('');
-        const [font, setFont] = useState('')
-
         const [oldPassword, setOld] = useState('');
         const [newPassword, setNew] = useState('');
 
@@ -162,33 +170,53 @@ const Settings = () => {
 
             if (response.isSuccess) {
                 setMessage(response.data.message);
-                setFont('done')
+                setIcon('done')
             }
             else {
                 setMessage(response.data);
-                setFont('error');
+                setIcon('error');
             }
+
+            setTimeout(() => {
+                setMessage('');
+                setIcon('')
+            }, 3000)
         }
 
         return (
             <div className="password">
                 <form onSubmit={handleSubmit}>
-                    <Input text='Confirm Password' type="password" id="old" require={true} value={oldPassword} onChange={(e) => setOld(e.target.value)} />
-                    <Input text='New Password' type="password" id="new" require={true} value={newPassword} onChange={(e) => setNew(e.target.value)} />
-                    <Button>Save Password</Button>
+                    <label htmlFor="old">
+                        Old Password:
+                        <input
+                            type="password"
+                            id="old"
+                            required={true}
+                            value={oldPassword}
+                            onChange={(e) => setOld(e.target.value)}
+                        />
+                    </label>
+                    <label htmlFor="new">
+                        New Password:
+                        <input
+                            type="password"
+                            id="new"
+                            required={true}
+                            value={newPassword}
+                            onChange={(e) => setNew(e.target.value)}
+                        />
+                    </label>
+                    <button type="submit">Save Password</button>
                 </form>
-                {message && <Message message={message} font={font} />}
             </div>
         );
     }
 
     const Confirm = () => {
-
-        const [errorMessage, setErrorMessage] = useState('');
         const [successStatus, setStatus] = useState(false);
 
         const [email, setEmail] = useState('');
-        const [code, setCode] = useState(0);
+        const [code, setCode] = useState<number>();
 
         const handleSubmit = async (e: FormEvent) => {
             e.preventDefault();
@@ -199,8 +227,14 @@ const Settings = () => {
                 setStatus(true);
             }
             else {
-                setErrorMessage(response.data);
+                setMessage(response.data);
+                setIcon('error');
             }
+
+            setTimeout(() => {
+                setMessage('');
+                setIcon('')
+            }, 3000)
         }
 
         return (
@@ -208,22 +242,37 @@ const Settings = () => {
                 {successStatus ? (
                     <Verify endpoint='api/account/edit/email/confirm/new' method='PUT' />
                 ) : (
-                    <div className="email-and-code">
-                        <form onSubmit={handleSubmit}>
-                            <Input text='Your new email' type="email" id="email" require={true} value={email} onChange={(e) => setEmail(e.target.value)} />
-                            <Input text='Confirmation code' type="number" id="code" require={true} value={code} onChange={(e) => setCode(parseInt(e.target.value, 10))} />
-                            <Button>Confirm</Button>
-                        </form>
-                        {errorMessage && <Message message={errorMessage} font='error' />}
-                    </div>
+                        <div className="email-and-code">
+                            <form onSubmit={handleSubmit}>
+                                <label htmlFor="email">
+                                    Your new email:
+                                    <input
+                                        type="email"
+                                        id="email"
+                                        required={true}
+                                        value={email}
+                                        onChange={(e) => setEmail(e.target.value)}
+                                    />
+                                </label>
+                                <label htmlFor="code">
+                                    Confirmation code:
+                                    <input
+                                        type="number"
+                                        id="code"
+                                        required={true}
+                                        value={code}
+                                        onChange={(e) => setCode(parseInt(e.target.value, 10))}
+                                    />
+                                </label>
+                                <button type="submit">Confirm</button>
+                            </form>
+                        </div>
                 )}
             </div>
         );
     }
 
     const Email = () => {
-
-        const [errorMessage, setErrorMessage] = useState('');
         const [successStatus, setStatus] = useState(false);
 
         const [password, setPassword] = useState('');
@@ -237,8 +286,14 @@ const Settings = () => {
                 setStatus(true);
             }
             else {
-                setErrorMessage(response.data);
+                setMessage(response.data);
+                setIcon('error');
             }
+
+            setTimeout(() => {
+                setMessage('');
+                setIcon('')
+            }, 3000)
         }
 
         return (
@@ -246,13 +301,21 @@ const Settings = () => {
                 {successStatus ? (
                     <Confirm />
                 ) : (
-                    <div className="email">
-                        <form onSubmit={handleSubmit}>
-                            <Input text='Confirm password' type="password" id="password" require={true} value={password} onChange={(e) => setPassword(e.target.value)} />
-                            <Button>Confirm</Button>
-                        </form>
-                        {errorMessage && <Message message={errorMessage} font='error' />}
-                    </div>
+                        <div className="email">
+                            <form onSubmit={handleSubmit}>
+                                <label htmlFor="password">
+                                    Confirm password:
+                                    <input
+                                        type="password"
+                                        id="password"
+                                        required={true}
+                                        value={password}
+                                        onChange={(e) => setPassword(e.target.value)}
+                                    />
+                                </label>
+                                <button type="submit">Confirm</button>
+                            </form>
+                        </div>
                 )}
             </div>
         );
@@ -263,7 +326,7 @@ const Settings = () => {
 
         return (
             <>
-                <Button onClick={() => setActive(true)}>Encryption Key Types</Button>
+                <button onClick={() => setActive(true)}>Encryption Key Types</button>
                 <Modal isActive={activeModal} setActive={setActive}>
                     <h2>What is encryption key types ?</h2>
 
@@ -290,8 +353,6 @@ const Settings = () => {
     }
 
     const KeyChange = () => {
-        const [keyMessage, setKeyMessage] = useState('');
-        const [keyFont, setKeyFont] = useState('');
         const [privateKey, setPrivateKey] = useState('');
         const [internalKey, setInternalKey] = useState('');
         const [isAutoPrivate, setIsAutoPrivate] = useState(false);
@@ -308,36 +369,36 @@ const Settings = () => {
             });
 
             if (response.isSuccess) {
-                setKeyMessage(response.data.message);
-                setKeyFont('done');
+                setMessage(response.data.message);
+                setIcon('done');
             }
             else {
-                setKeyMessage(response.data);
-                setKeyFont('error');
+                setMessage(response.data);
+                setIcon('error');
             }
 
             setTimeout(() => {
-                setKeyMessage('');
-                setKeyFont('');
-            }, 5000)
+                setMessage('');
+                setIcon('')
+            }, 3000)
         }
 
         const handleReceivedKeySubmit = async () => {
             const response = await AxiosRequest({ endpoint: 'api/core/keys/received/clean', method: 'PUT', withCookie: true, requestBody: null });
 
             if (response.isSuccess) {
-                setKeyMessage(response.data.message);
-                setKeyFont('done');
+                setMessage(response.data.message);
+                setIcon('done');
             }
             else {
-                setKeyMessage(response.data);
-                setKeyFont('error');
+                setMessage(response.data);
+                setIcon('error');
             }
 
             setTimeout(() => {
-                setKeyMessage('');
-                setKeyFont('');
-            }, 5000)
+                setMessage('');
+                setIcon('')
+            }, 3000)
         }
 
         const handlePrivateKeySubmit = (e: FormEvent) => {
@@ -361,30 +422,62 @@ const Settings = () => {
                 <div className="private">
                     <form onSubmit={handlePrivateKeySubmit}>
                         {!isAutoPrivate && (
-                            <Input text='Set your new private key' type="text" id="private" require={false} value={privateKey} onChange={(e) => setPrivateKey(e.target.value)} />
+                            <label htmlFor="private">
+                                Set your new private key
+                                <input
+                                    type="text"
+                                    id="private"
+                                    required={false}
+                                    value={privateKey}
+                                    onChange={(e) => setPrivateKey(e.target.value)}
+                                />
+                            </label>
                         )}
                         {!privateKey && (
-                            <CheckBox text='Auto-generation key' type="checkbox" id="auto-private" checked={isAutoPrivate} onChange={handlePrivateCheckboxChange} />
+                            <label htmlFor="auto-private">
+                                Auto-generation key
+                                <input
+                                    type="checkbox"
+                                    id="auto-private"
+                                    checked={isAutoPrivate}
+                                    onChange={handlePrivateCheckboxChange}
+                                />
+                            </label>
                         )}
-                        <Button> <Font font={'refresh'} /> </Button>
+                        <button type="submit"><Font font={'refresh'} /></button>
                     </form>
                 </div>
                 <div className="internal">
                     <form onSubmit={handleInternalKeySubmit}>
                         {!isAutoInternal && (
-                            <Input text='Set your new internal key' type="text" id="internal" require={false} value={internalKey} onChange={(e) => setInternalKey(e.target.value)} />
+                            <label htmlFor="internal">
+                                Set your new internal key
+                                <input
+                                    type="text"
+                                    id="internal"
+                                    required={false}
+                                    value={internalKey}
+                                    onChange={(e) => setInternalKey(e.target.value)}
+                                />
+                            </label>
                         )}
                         {!internalKey && (
-                            <CheckBox text='Auto-generation key' type="checkbox" id="auto-internal" checked={isAutoInternal} onChange={handleInternalCheckboxChange} />
+                            <label htmlFor="auto-internal">Auto-generation key
+                                <input
+                                    type="checkbox"
+                                    id="auto-internal"
+                                    checked={isAutoInternal}
+                                    onChange={handleInternalCheckboxChange}
+                                />
+                            </label>
                         )}
-                        <Button> <Font font={'refresh'} /> </Button>
+                        <button type="submit"><Font font={'refresh'} /></button>
                     </form>
                 </div>
                 <div className="received">
                     <p>Delete Received Key</p>
-                    <Button onClick={handleReceivedKeySubmit}> <Font font={'delete'} /> </Button>
+                    <button onClick={handleReceivedKeySubmit}><Font font={'delete'} /></button>
                 </div>
-                <Message message={keyMessage} font={keyFont} />
             </div>
         );
     }
@@ -405,6 +498,7 @@ const Settings = () => {
                 <KeyTypes />
                 <KeyChange />
             </div>
+            {message && <Message message={message} font={icon} />}
         </div>
     );
 }
