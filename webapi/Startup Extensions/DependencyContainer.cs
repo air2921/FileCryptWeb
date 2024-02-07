@@ -13,6 +13,8 @@ using webapi.Services.Third_Party_Services;
 using webapi.Services.DataManager;
 using webapi.Controllers.Base;
 using webapi.Controllers.Base.CryptographyUtils;
+using webapi.Interfaces;
+using webapi.DB;
 
 namespace webapi
 {
@@ -28,6 +30,8 @@ namespace webapi
         {
             services.AddScoped<IRedisKeys, RedisKeys>();
             services.AddScoped<IRedisCache, RedisCache>();
+
+            services.AddScoped(typeof(IRepository<>), typeof(Repository<>));
 
             services.AddScoped<ICreate<UserModel>, Users>();
             services.AddScoped<IDelete<UserModel>, Users>();
