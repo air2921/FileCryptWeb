@@ -163,13 +163,13 @@ namespace webapi.Controllers.Base
                 }
                 throw new InvalidRouteException();
             }
-            catch (UserException)
+            catch (ArgumentNullException)
             {
                 throw;
             }
-            catch (KeyException)
+            catch (ArgumentException)
             {
-                throw;
+                throw new InvalidRouteException();
             }
         }
     }

@@ -1,12 +1,11 @@
 ﻿using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
-using Microsoft.EntityFrameworkCore;
 using Newtonsoft.Json;
 using webapi.DB;
 using webapi.Exceptions;
+using webapi.Interfaces;
 using webapi.Interfaces.Redis;
 using webapi.Interfaces.Services;
-using webapi.Interfaces.SQL;
 using webapi.Localization;
 using webapi.Localization.Exceptions;
 using webapi.Models;
@@ -19,38 +18,32 @@ namespace webapi.Controllers.Core
     [Authorize]
     public class OfferController : ControllerBase
     {
-        private readonly FileCryptDbContext _dbContext;
+        private readonly IRepository<UserModel> _userRepository;
+        private readonly IRepository<OfferModel> _offerRepository;
+        private readonly IRepository<NotificationModel> _notificationRepository;
+        private readonly IRepository<KeyModel> _keyRepository;
+        private readonly ISorting _sorting;
         private readonly IRedisCache _redisCache;
         private readonly IUserInfo _userInfo;
-        private readonly ICreate<OfferModel> _createOffer;
-        private readonly ICreate<NotificationModel> _createNotification;
-        private readonly IRead<UserModel> _readUser;
-        private readonly IRead<KeyModel> _readKeys;
-        private readonly IRead<OfferModel> _readOffer;
-        private readonly IDelete<OfferModel> _deleteOffer;
         private readonly ITokenService _tokenService;
 
         public OfferController(
-            FileCryptDbContext dbContext,
+            IRepository<UserModel> userRepository,
+            IRepository<OfferModel> offerRepository,
+            IRepository<NotificationModel> notificationRepository,
+            IRepository<KeyModel> keyRepository,
+            ISorting sorting,
             IRedisCache redisCache,
             IUserInfo userInfo,
-            ICreate<OfferModel> createOffer,
-            ICreate<NotificationModel> createNotification,
-            IRead<UserModel> readUser,
-            IRead<KeyModel> readKeys,
-            IRead<OfferModel> readOffer,
-            IDelete<OfferModel> deleteOffer,
             ITokenService tokenService)
         {
-            _dbContext = dbContext;
+            _userRepository = userRepository;
+            _offerRepository = offerRepository;
+            _notificationRepository = notificationRepository;
+            _keyRepository = keyRepository;
+            _sorting = sorting;
             _redisCache = redisCache;
             _userInfo = userInfo;
-            _createOffer = createOffer;
-            _createNotification = createNotification;
-            _readUser = readUser;
-            _readKeys = readKeys;
-            _readOffer = readOffer;
-            _deleteOffer = deleteOffer;
             _tokenService = tokenService;
         }
 
@@ -60,12 +53,14 @@ namespace webapi.Controllers.Core
         {
             try
             {
-                if (_userInfo.UserId == receiverId)
+                if (_userInfo.UserId.Equals(receiverId))
                     return StatusCode(409, new { message = "You want send a trade offer to yourself, are you kidding)?" });
 
-                var receiver = await _readUser.ReadById(receiverId, null);
+                var receiver = await _userRepository.GetById(receiverId);
+                if (receiver is null)
+                    return StatusCode(404);
 
-                var keys = await _readKeys.ReadById(_userInfo.UserId, true);
+                var keys = await _keyRepository.GetByFilter(query => query.Where(k => k.user_id.Equals(_userInfo.UserId)));
                 if (keys is null)
                 {
                     _tokenService.DeleteTokens();
@@ -75,7 +70,7 @@ namespace webapi.Controllers.Core
                 if (keys.internal_key is null)
                     return StatusCode(404, new { message = "You don't have a internal key for create an offer" });
 
-                await _createOffer.Create(new OfferModel
+                await _offerRepository.Add(new OfferModel
                 {
                     offer_header = $"Proposal to accept an encryption key from a user: {_userInfo.Username}#{_userInfo.UserId}",
                     offer_body = keys.internal_key,
@@ -86,7 +81,7 @@ namespace webapi.Controllers.Core
                     created_at = DateTime.UtcNow
                 });
 
-                await _createNotification.Create(new NotificationModel
+                await _notificationRepository.Add(new NotificationModel
                 {
                     message_header = "New offer",
                     message = $"You got a new offer from {_userInfo.Username}#{_userInfo.UserId}",
@@ -100,9 +95,9 @@ namespace webapi.Controllers.Core
 
                 return StatusCode(201, new { message = SuccessMessage.SuccessOfferCreated });
             }
-            catch (UserException ex)
+            catch (EntityNotCreatedException ex)
             {
-                return StatusCode(404, new { message = ex.Message });
+                return StatusCode(500, new { message = ex.Message });
             }
         }
 
@@ -110,64 +105,71 @@ namespace webapi.Controllers.Core
         [ValidateAntiForgeryToken]
         public async Task<IActionResult> AcceptOffer([FromRoute] int offerId)
         {
-            var offer = await _dbContext.Offers.FirstOrDefaultAsync(o => o.offer_id == offerId && o.receiver_id == _userInfo.UserId);
-            if (offer is null)
-                return StatusCode(404);
-
-            if (offer.is_accepted == true)
-                return StatusCode(409, new { message = ExceptionOfferMessages.OfferIsAccepted });
-
-            var receiver = await _dbContext.Keys.FirstOrDefaultAsync(u => u.user_id == _userInfo.UserId);
-            if (receiver is null)
+            try
             {
-                _tokenService.DeleteTokens();
-                return StatusCode(404);
+                var offer = await _offerRepository.GetByFilter(query => query.Where(o => o.offer_id == offerId && o.receiver_id == _userInfo.UserId));
+                if (offer is null)
+                    return StatusCode(404);
+
+                if (offer.is_accepted)
+                    return StatusCode(409, new { message = ExceptionOfferMessages.OfferIsAccepted });
+
+                var receiver = await _keyRepository.GetByFilter(query => query.Where(k => k.user_id.Equals(_userInfo.UserId)));
+                if (receiver is null)
+                {
+                    _tokenService.DeleteTokens();
+                    return StatusCode(404);
+                }
+
+                receiver.received_key = offer.offer_body;
+                offer.is_accepted = true;
+
+                await _keyRepository.Update(receiver);
+                await _offerRepository.Update(offer);
+
+                HttpContext.Session.SetString(Constants.CACHE_OFFERS, true.ToString());
+
+                return StatusCode(200, new { message = SuccessMessage.SuccessOfferAccepted });
             }
-
-            receiver.received_key = offer.offer_body;
-            offer.is_accepted = true;
-
-            await _dbContext.SaveChangesAsync();
-            HttpContext.Session.SetString(Constants.CACHE_OFFERS, true.ToString());
-
-            return StatusCode(200, new { message = SuccessMessage.SuccessOfferAccepted });
+            catch (EntityNotUpdatedException ex)
+            {
+                return StatusCode(500, new { message = ex.Message });
+            }
         }
 
         [HttpGet("{offerId}")]
         public async Task<IActionResult> GetOneOffer([FromRoute] int offerId)
         {
             var cacheKey = $"Offer_{offerId}";
-            try
+
+            var cacheOffer = await _redisCache.GetCachedData(cacheKey);
+            if (cacheOffer is not null)
             {
-                var cacheOffer = await _redisCache.GetCachedData(cacheKey);
-                if (cacheOffer is not null)
-                {
-                    var cacheResult = JsonConvert.DeserializeObject<OfferModel>(cacheOffer);
-                    if (cacheResult.sender_id != _userInfo.UserId || cacheResult.sender_id != _userInfo.UserId)
-                        return StatusCode(404);
-
-                    return StatusCode(200, new { offers = cacheResult, userId = _userInfo.UserId });
-                }
-
-                var offer = await _readOffer.ReadById(offerId, false);
-
-                await _redisCache.CacheData(cacheKey, offer, TimeSpan.FromMinutes(10));
-
-                if (offer.sender_id != _userInfo.UserId || offer.receiver_id != _userInfo.UserId)
+                var cacheResult = JsonConvert.DeserializeObject<OfferModel>(cacheOffer);
+                if (cacheResult.sender_id != _userInfo.UserId || cacheResult.sender_id != _userInfo.UserId)
                     return StatusCode(404);
 
-                return StatusCode(200, new { offer, userId = _userInfo.UserId });
+                return StatusCode(200, new { offers = cacheResult, userId = _userInfo.UserId });
             }
-            catch (OfferException ex)
-            {
-                return StatusCode(404, new { message = ex.Message });
-            }
+
+            var offer = await _offerRepository.GetById(offerId);
+            if (offer is null)
+                return StatusCode(404);
+
+            await _redisCache.CacheData(cacheKey, offer, TimeSpan.FromMinutes(10));
+
+            if (offer.sender_id != _userInfo.UserId || offer.receiver_id != _userInfo.UserId)
+                return StatusCode(404);
+
+            return StatusCode(200, new { offer, userId = _userInfo.UserId });
         }
 
         [HttpGet("all")]
-        public async Task<IActionResult> GetAll([FromQuery] int skip, [FromQuery] int count)
+        public async Task<IActionResult> GetAll([FromQuery] int skip, [FromQuery] int count,
+            [FromQuery] bool byDesc, [FromQuery] bool? sended,
+            [FromQuery] bool? isAccepted, [FromQuery] string? type)
         {
-            var cacheKey = $"Offer_{_userInfo.UserId}_{skip}_{count}";
+            var cacheKey = $"Offer_{_userInfo.UserId}_{skip}_{count}_{byDesc}_{sended}_{isAccepted}_{type}";
 
             bool clearCache = bool.TryParse(HttpContext.Session.GetString(Constants.CACHE_OFFERS), out var parsedValue) ? parsedValue : true;
 
@@ -181,7 +183,7 @@ namespace webapi.Controllers.Core
             if (cacheOffers is not null)
                 return StatusCode(200, new { offers = JsonConvert.DeserializeObject<IEnumerable<OfferModel>>(cacheOffers), user_id = _userInfo.UserId });
 
-            var offers = await _readOffer.ReadAll(_userInfo.UserId, skip, count);
+            var offers = await _offerRepository.GetAll(_sorting.SortOffers(_userInfo.UserId, skip, count, byDesc, sended, isAccepted, type));
             foreach (var offer in offers)
             {
                 offer.offer_body = string.Empty;
@@ -199,12 +201,14 @@ namespace webapi.Controllers.Core
         {
             try
             {
-                await _deleteOffer.DeleteById(offerId, _userInfo.UserId);
+                await _offerRepository.DeleteByFilter(query => query.Where
+                (o => o.offer_id.Equals(offerId) && (o.sender_id.Equals(_userInfo.UserId) || o.receiver_id.Equals(_userInfo.UserId))));
+
                 HttpContext.Session.SetString(Constants.CACHE_OFFERS, true.ToString());
 
                 return StatusCode(200, new { message = SuccessMessage.SuccessOfferDeleted });
             }
-            catch (OfferException ex)
+            catch (EntityNotDeletedException ex)
             {
                 return StatusCode(404, new { message = ex.Message });
             }

@@ -4,7 +4,7 @@ import AxiosRequest from '../../../api/AxiosRequest';
 import Message from '../../../components/Message/Message';
 import Verify from '../../../components/Verify/Verify';
 import Modal from '../../../components/Modal/Modal';
-import CreateRecovery from '../Recovery/CreateRecovery';
+import CreateRecovery from '../recovery/CreateRecovery';
 
 const Login = () => {
     const [email, setEmail] = useState('');
@@ -20,12 +20,19 @@ const Login = () => {
         const response = await AxiosRequest({ endpoint: 'api/auth/login', method: 'POST', withCookie: true, requestBody: { email: email, password: password, } });
 
         if (response.isSuccess) {
-            if (response.statusCode === 201) {
-                navigate('/');
-            }
-            else if (response.statusCode === 200) {
+            if (response.data.confirm !== null && response.data.confirm !== undefined) {
                 setVerification(true);
             }
+            else {
+                navigate('/');
+            }
+
+            //if (response.statusCode === 201) {
+            //    navigate('/');
+            //}
+            //else if (response.statusCode === 200) {
+            //    setVerification(true);
+            //}
         }
         else {
             setErrorMessage(response.data);

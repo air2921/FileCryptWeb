@@ -17,6 +17,10 @@ interface FileButtonProps {
 const Files = () => {
     const [skip, setSkip] = useState(0);
     const step = 10;
+    const [orderBy, setOrderBy] = useState(true);
+    const [type, setType] = useState('');
+    const [mime, setMime] = useState('');
+
     const [errorMessage, setErrorMessage] = useState('');
     const [filesList, setFiles] = useState(null);
     const [lastTimeModified, setLastTimeModified] = useState(Date.now());
@@ -24,7 +28,14 @@ const Files = () => {
     const [font, setFont] = useState('');
 
     const fetchData = async () => {
-        const response = await AxiosRequest({ endpoint: `api/core/files/all?skip=${skip}&count=${step}`, method: 'GET', withCookie: true, requestBody: null });
+        console.log(`api/core/files/all?skip=${skip}&count=${step}&byDesc=${orderBy}&type=${type}&mime=${mime}`);
+
+        const response = await AxiosRequest({
+            endpoint: `api/core/files/all?skip=${skip}&count=${step}&byDesc=${orderBy}&type=${type}&mime=${mime}`,
+            method: 'GET',
+            withCookie: true,
+            requestBody: null
+        });
 
         if (response.isSuccess) {
             setFiles(response.data);
@@ -123,7 +134,7 @@ const Files = () => {
 
     useEffect(() => {
         fetchData();
-    }, [lastTimeModified, skip]);
+    }, [lastTimeModified, skip, orderBy, type, mime]);
 
     if (!filesList) {
         return <div className="error">{errorMessage || 'Loading...'}</div>;

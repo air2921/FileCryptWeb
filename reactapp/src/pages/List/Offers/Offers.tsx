@@ -5,18 +5,45 @@ import Message from '../../../components/Message/Message';
 import Font from '../../../components/Font/Font';
 
 const Offers = () => {
+    const [skip, setSkip] = useState(0);
+    const step = 10;
+    const [orderBy, setOrderBy] = useState(true);
+    const [isSended, setSended] = useState<boolean>();
+    const [isAccepted, setAccepted] = useState<boolean>();
+    const [type, setType] = useState('');
+
     const [errorMessage, setErrorMessage] = useState('');
     const [offersList, setOffers] = useState(null);
     const [userId, setUserId] = useState<number>();
-    const [skip, setSkip] = useState(0);
-    const step = 10;
     const [message, setMessage] = useState('');
     const [font, setFont] = useState('');
 
     const [lastOfferModified, setLastOfferModified] = useState(Date.now());
 
     const fetchData = async () => {
-        const response = await AxiosRequest({ endpoint: `api/core/offers/all?skip=${skip}&count=${step}`, method: 'GET', withCookie: true, requestBody: null });
+        var sended;
+        var accepted;
+
+        if (isSended !== undefined && isSended !== null) {
+            sended = isSended;
+        }
+        else {
+            sended = '';
+        }
+
+        if (isAccepted !== undefined && isAccepted !== null) {
+            accepted = isAccepted;
+        }
+        else {
+            accepted = '';
+        }
+
+        const response = await AxiosRequest({
+            endpoint: `api/core/offers/all?skip=${skip}&count=${step}&byDesc=${orderBy}&sended=${sended}&isAccepted=${accepted}&type=${type}`,
+            method: 'GET',
+            withCookie: true,
+            requestBody: null
+        });
 
         if (response.isSuccess) {
             setOffers(response.data);
@@ -95,7 +122,7 @@ const Offers = () => {
 
     useEffect(() => {
         fetchData();
-    }, [lastOfferModified, skip]);
+    }, [lastOfferModified, skip, orderBy, isSended, isAccepted, type]);
 
     if (!offersList) {
         return <div className="error">{errorMessage || 'Loading...'}</div>;

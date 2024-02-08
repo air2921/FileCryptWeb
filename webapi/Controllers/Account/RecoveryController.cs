@@ -9,6 +9,7 @@ using webapi.Interfaces.SQL;
 using webapi.Localization;
 using webapi.Models;
 using webapi.Services;
+using webapi.Services.Security;
 
 namespace webapi.Controllers.Account
 {
@@ -151,12 +152,11 @@ namespace webapi.Controllers.Account
                 await _deleteByName.DeleteByName(token, null);
                 _logger.LogInformation($"Token: {token} was deleted");
 
-                await _tokenRepository.Update(new TokenModel
-                {
-                    user_id = link.user_id,
-                    refresh_token = Guid.NewGuid().ToString(),
-                    expiry_date = DateTime.UtcNow.AddYears(-100)
-                });
+                var tokenModel = await _tokenRepository.GetByFilter(query => query.Where(t => t.user_id.Equals(link.user_id)));
+                tokenModel.refresh_token = Guid.NewGuid().ToString();
+                tokenModel.expiry_date = DateTime.UtcNow.AddYears(-100);
+
+                await _tokenRepository.Update(tokenModel);
 
                 return StatusCode(200);
             }

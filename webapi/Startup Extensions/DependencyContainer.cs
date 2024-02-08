@@ -32,6 +32,7 @@ namespace webapi
             services.AddScoped<IRedisCache, RedisCache>();
 
             services.AddScoped(typeof(IRepository<>), typeof(Repository<>));
+            services.AddScoped<ISorting, Sorting>();
 
             services.AddScoped<ICreate<UserModel>, Users>();
             services.AddScoped<IDelete<UserModel>, Users>();

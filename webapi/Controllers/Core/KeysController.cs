@@ -2,12 +2,11 @@
 using Microsoft.AspNetCore.Mvc;
 using Newtonsoft.Json;
 using System.Text.RegularExpressions;
-using webapi.DB;
 using webapi.Exceptions;
+using webapi.Interfaces;
 using webapi.Interfaces.Cryptography;
 using webapi.Interfaces.Redis;
 using webapi.Interfaces.Services;
-using webapi.Interfaces.SQL;
 using webapi.Localization;
 using webapi.Models;
 using webapi.Services;
@@ -19,10 +18,8 @@ namespace webapi.Controllers.Core
     [Authorize]
     public class KeysController : ControllerBase
     {
+        private readonly IRepository<KeyModel> _keyRepository;
         private readonly IConfiguration _configuration;
-        private readonly IRead<KeyModel> _readKeys;
-        private readonly IUpdate<KeyModel> _updateKeys;
-        private readonly FileCryptDbContext _dbContext;
         private readonly IGenerateKey _generateKey;
         private readonly IRedisCache _redisCache;
         private readonly IRedisKeys _redisKeys;
@@ -30,25 +27,23 @@ namespace webapi.Controllers.Core
         private readonly ITokenService _tokenService;
         private readonly IValidation _validation;
         private readonly IDecryptKey _decryptKey;
+        private readonly IEncryptKey _encryptKey;
         private readonly byte[] secretKey;
 
         public KeysController(
+            IRepository<KeyModel> keyRepository,
             IConfiguration configuration,
-            IRead<KeyModel> readKeys,
-            IUpdate<KeyModel> updateKeys,
-            FileCryptDbContext dbContext,
             IGenerateKey generateKey,
             IRedisCache redisCache,
             IRedisKeys redisKeys,
             IUserInfo userInfo,
             ITokenService tokenService,
             IValidation validation,
-            IDecryptKey decryptKey)
+            IDecryptKey decryptKey,
+            IEncryptKey encryptKey)
         {
+            _keyRepository = keyRepository;
             _configuration = configuration;
-            _readKeys = readKeys;
-            _updateKeys = updateKeys;
-            _dbContext = dbContext;
             _generateKey = generateKey;
             _redisCache = redisCache;
             _redisKeys = redisKeys;
@@ -56,6 +51,7 @@ namespace webapi.Controllers.Core
             _tokenService = tokenService;
             _validation = validation;
             _decryptKey = decryptKey;
+            _encryptKey = encryptKey;
             secretKey = Convert.FromBase64String(_configuration["FileCryptKey"]!);
         }
 
@@ -64,43 +60,37 @@ namespace webapi.Controllers.Core
         {
             var cacheKey = $"Keys_{_userInfo.UserId}";
 
-            try
+            var keys = new KeyModel();
+            var cacheKeys = await _redisCache.GetCachedData(cacheKey);
+            bool clearCache = bool.TryParse(HttpContext.Session.GetString(Constants.CACHE_KEYS), out var parsedValue) ? parsedValue : true;
+
+            if (clearCache)
             {
-                var keys = new KeyModel();
-                var cacheKeys = await _redisCache.GetCachedData(cacheKey);
-                bool clearCache = bool.TryParse(HttpContext.Session.GetString(Constants.CACHE_KEYS), out var parsedValue) ? parsedValue : true;
+                await _redisCache.DeleteCache(cacheKey);
+                HttpContext.Session.SetString(Constants.CACHE_KEYS, false.ToString());
+            }
 
-                if (clearCache)
-                {
-                    await _redisCache.DeleteCache(cacheKey);
-                    HttpContext.Session.SetString(Constants.CACHE_KEYS, false.ToString());
-                }
-
-                if (cacheKeys is not null)
-                {
-                    keys = JsonConvert.DeserializeObject<KeyModel>(cacheKeys);
-                }
-                else
-                {
-                    keys = await _readKeys.ReadById(_userInfo.UserId, true);
-
-                    await _redisCache.CacheData(cacheKey, keys, TimeSpan.FromMinutes(10));
-                }
-
+            if (cacheKeys is not null)
+            {
+                keys = JsonConvert.DeserializeObject<KeyModel>(cacheKeys);
+            }
+            else
+            {
+                keys = await _keyRepository.GetByFilter(query => query.Where(k => k.user_id.Equals(_userInfo.UserId)));
                 if (keys is null)
                     return StatusCode(404);
 
-                string? privateKey = keys.private_key is not null ? await _decryptKey.DecryptionKeyAsync(keys.private_key, secretKey) : null;
-                string? internalKey = keys.internal_key is not null ? await _decryptKey.DecryptionKeyAsync(keys.internal_key, secretKey) : null;
-                string? receivedKey = keys.received_key is not null ? await _decryptKey.DecryptionKeyAsync(keys.received_key, secretKey) : null;
+                await _redisCache.CacheData(cacheKey, keys, TimeSpan.FromMinutes(10));
+            }
 
-                return StatusCode(200, new { keys = new { privateKey, internalKey, receivedKey }});
-            }
-            catch (UserException ex)
-            {
-                _tokenService.DeleteTokens();
-                return StatusCode(404, new { message = ex.Message });
-            }
+            if (keys is null)
+                return StatusCode(404);
+
+            string? privateKey = keys.private_key is not null ? await _decryptKey.DecryptionKeyAsync(keys.private_key, secretKey) : null;
+            string? internalKey = keys.internal_key is not null ? await _decryptKey.DecryptionKeyAsync(keys.internal_key, secretKey) : null;
+            string? receivedKey = keys.received_key is not null ? "hidden" : null;
+
+            return StatusCode(200, new { keys = new { privateKey, internalKey, receivedKey } });
         }
 
         [HttpPut("private")]
@@ -119,23 +109,18 @@ namespace webapi.Controllers.Core
                         return StatusCode(400, new { message = ErrorMessage.InvalidKey });
                 }
 
-                var existingUser = await _readKeys.ReadById(_userInfo.UserId, true);
+                var keys = await _keyRepository.GetByFilter(query => query.Where(k => k.user_id.Equals(_userInfo.UserId)));
+                keys.private_key = await _encryptKey.EncryptionKeyAsync(key, secretKey);
 
-                await _updateKeys.Update(new KeyModel
-                { 
-                    user_id = _userInfo.UserId,
-                    private_key = key,
-                    received_key = existingUser.received_key
-                }, true);
+                await _keyRepository.Update(keys);
 
                 HttpContext.Session.SetString(Constants.CACHE_KEYS, true.ToString());
                 await _redisCache.DeleteCache(_redisKeys.PrivateKey);
 
                 return StatusCode(200, new { message = AccountSuccessMessage.KeyUpdated });
             }
-            catch (UserException ex)
+            catch (EntityNotUpdatedException ex)
             {
-                _tokenService.DeleteTokens();
                 return StatusCode(404, new { message = ex.Message });
             }
         }
@@ -156,24 +141,18 @@ namespace webapi.Controllers.Core
                         return StatusCode(400, new { message = ErrorMessage.InvalidKey });
                 }
 
-                var existingUser = await _readKeys.ReadById(_userInfo.UserId, true);
+                var keys = await _keyRepository.GetByFilter(query => query.Where(k => k.user_id.Equals(_userInfo.UserId)));
+                keys.internal_key = await _encryptKey.EncryptionKeyAsync(key, secretKey);
 
-                await _updateKeys.Update(new KeyModel
-                {
-                    user_id = _userInfo.UserId,
-                    private_key = await _decryptKey.DecryptionKeyAsync(existingUser.private_key, secretKey),
-                    internal_key = key,
-                    received_key = existingUser.received_key,
-                }, true);
+                await _keyRepository.Update(keys);
 
                 HttpContext.Session.SetString(Constants.CACHE_KEYS, true.ToString());
                 await _redisCache.DeleteCache(_redisKeys.InternalKey);
 
                 return StatusCode(200, new { message = AccountSuccessMessage.KeyUpdated });
             }
-            catch (UserException ex)
+            catch (EntityNotUpdatedException ex)
             {
-                _tokenService.DeleteTokens();
                 return StatusCode(404, new { message = ex.Message });
             }
         }
@@ -184,25 +163,20 @@ namespace webapi.Controllers.Core
         {
             try
             {
-                var existingUser = await _readKeys.ReadById(_userInfo.UserId, true);
-                if (existingUser.received_key is null)
+                var keys = await _keyRepository.GetByFilter(query => query.Where(k => k.user_id.Equals(_userInfo.UserId)));
+                if (keys.received_key is null)
                     return StatusCode(409);
+                keys.received_key = null;
 
-                await _updateKeys.Update(new KeyModel
-                {
-                    user_id = _userInfo.UserId,
-                    private_key = await _decryptKey.DecryptionKeyAsync(existingUser.private_key, secretKey),
-                    received_key = null
-                }, true);
+                await _keyRepository.Update(keys);
 
                 HttpContext.Session.SetString(Constants.CACHE_KEYS, true.ToString());
                 await _redisCache.DeleteCache(_redisKeys.InternalKey);
 
                 return StatusCode(200, new { message = AccountSuccessMessage.KeyUpdated });
             }
-            catch (UserException ex)
+            catch (EntityNotUpdatedException ex)
             {
-                _tokenService.DeleteTokens();
                 return StatusCode(404, new { message = ex.Message });
             }
         }

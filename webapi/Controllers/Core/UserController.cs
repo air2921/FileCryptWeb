@@ -2,13 +2,11 @@
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
 using Newtonsoft.Json;
-using System.ComponentModel.DataAnnotations;
 using webapi.DB;
-using webapi.DB.SQL;
 using webapi.Exceptions;
+using webapi.Interfaces;
 using webapi.Interfaces.Redis;
 using webapi.Interfaces.Services;
-using webapi.Interfaces.SQL;
 using webapi.Localization.Exceptions;
 using webapi.Models;
 using webapi.Services;
@@ -21,32 +19,29 @@ namespace webapi.Controllers.Core
     public class UserController : ControllerBase
     {
         private readonly FileCryptDbContext _dbContext;
+        private readonly IRepository<OfferModel> _offerRepository;
+        private readonly IRepository<FileModel> _fileRepository;
+        private readonly IRepository<UserModel> _userRepository;
         private readonly IRedisCache _redisCache;
-        private readonly IDelete<UserModel> _deleteUser;
         private readonly IUserInfo _userInfo;
         private readonly ITokenService _tokenService;
-        private readonly IRead<UserModel> _readUser;
-        private readonly IRead<FileModel> _readFile;
-        private readonly IRead<OfferModel> _readOffer;
 
         public UserController(
             FileCryptDbContext dbContext,
+            IRepository<OfferModel> offerRepository,
+            IRepository<FileModel> fileRepository,
+            IRepository<UserModel> userRepository,
             IRedisCache redisCache,
             IUserInfo userInfo,
-            ITokenService tokenService,
-            IRead<UserModel> readUser,
-            IRead<FileModel> readFile,
-            IRead<OfferModel> readOffer,
-            IDelete<UserModel> deleteUser)
+            ITokenService tokenService)
         {
             _dbContext = dbContext;
+            _offerRepository = offerRepository;
+            _fileRepository = fileRepository;
+            _userRepository = userRepository;
             _redisCache = redisCache;
             _userInfo = userInfo;
             _tokenService = tokenService;
-            _readUser = readUser;
-            _readFile = readFile;
-            _readOffer = readOffer;
-            _deleteUser = deleteUser;
         }
 
         [HttpGet("{userId}/{username}")]
@@ -73,7 +68,9 @@ namespace webapi.Controllers.Core
             }
             else
             {
-                var filesDb = await _readFile.ReadAll(userId, 0, 5);
+                var filesDb = await _fileRepository.GetAll
+                    (query => query.Where(f => f.user_id.Equals(userId)).OrderByDescending(f => f.operation_date).Skip(0).Take(5));
+
                 await _redisCache.CacheData(cacheKeyFiles, filesDb, TimeSpan.FromMinutes(1));
 
                 files = (List<FileModel>)filesDb;
@@ -86,7 +83,9 @@ namespace webapi.Controllers.Core
             }
             else
             {
-                var offersDb = await _readOffer.ReadAll(userId, 0, 5);
+                var offersDb = await _offerRepository.GetAll
+                    (query => query.Where(o => o.receiver_id.Equals(userId) || o.sender_id.Equals(userId)).OrderByDescending(o => o.created_at).Skip(0).Take(5));
+
                 await _redisCache.CacheData(cacheKeyOffers, offersDb, TimeSpan.FromMinutes(1));
 
                 offers = (List<OfferModel>)offersDb;
@@ -126,46 +125,32 @@ namespace webapi.Controllers.Core
         public async Task<IActionResult> GetOnlyUser()
         {
             var cacheKey = $"User_Data_{_userInfo.UserId}";
+            var user = new UserModel();
 
-            try
+            bool clearCache = bool.TryParse(HttpContext.Session.GetString(Constants.CACHE_USER_DATA), out var parsedValue) ? parsedValue : true;
+            if (clearCache)
             {
-                var originalUser = new UserModel();
-
-                bool clearCache = bool.TryParse(HttpContext.Session.GetString(Constants.CACHE_USER_DATA), out var parsedValue) ? parsedValue : true;
-                if (clearCache)
-                {
-                    await _redisCache.DeleteCache(cacheKey);
-                    HttpContext.Session.SetString(Constants.CACHE_USER_DATA, false.ToString());
-                }
-
-                var cache = await _redisCache.GetCachedData(cacheKey);
-                if (cache is null)
-                {
-                    originalUser = await _readUser.ReadById(_userInfo.UserId, null);
-
-                    await _redisCache.CacheData(cacheKey, originalUser, TimeSpan.FromMinutes(3));
-                }
-                else
-                {
-                    originalUser = JsonConvert.DeserializeObject<UserModel>(cache);
-                }
-
-                var user = new
-                {
-                    id = originalUser.id,
-                    username = originalUser.username,
-                    role = originalUser.role,
-                    email = originalUser.email,
-                    is_blocked = originalUser.is_blocked,
-                    is_2fa_enabled = originalUser.is_2fa_enabled,
-                };
-
-                return StatusCode(200, new { user });
+                await _redisCache.DeleteCache(cacheKey);
+                HttpContext.Session.SetString(Constants.CACHE_USER_DATA, false.ToString());
             }
-            catch (UserException ex)
+
+            var cache = await _redisCache.GetCachedData(cacheKey);
+            if (cache is null)
             {
-                return StatusCode(404, new { message = ex.Message });
+                user = await _userRepository.GetById(_userInfo.UserId);
+                if (user is null)
+                    return StatusCode(404);
+
+                await _redisCache.CacheData(cacheKey, user, TimeSpan.FromMinutes(3));
             }
+            else
+            {
+                user = JsonConvert.DeserializeObject<UserModel>(cache);
+            }
+
+            user.password = string.Empty;
+
+            return StatusCode(200, new { user });
         }
 
         [HttpDelete]
@@ -173,15 +158,15 @@ namespace webapi.Controllers.Core
         {
             try
             {
-                await _deleteUser.DeleteById(_userInfo.UserId, null);
+                await _userRepository.Delete(_userInfo.UserId);
                 _tokenService.DeleteTokens();
                 HttpContext.Session.Clear();
 
                 return StatusCode(204);
             }
-            catch (UserException)
+            catch (EntityNotDeletedException ex)
             {
-                return StatusCode(404);
+                return StatusCode(500, new { message = ex.Message });
             }
         }
 
@@ -195,8 +180,7 @@ namespace webapi.Controllers.Core
             {
                 var users = new List<UserObject>();
 
-                var usersDb = await _dbContext.Users.Where(u => u.username == username)
-                .ToListAsync();
+                var usersDb = await _userRepository.GetAll(query => query.Where(u => u.username.Equals(username)));
 
                 foreach (var user in usersDb)
                 {
@@ -214,20 +198,16 @@ namespace webapi.Controllers.Core
 
             if (string.IsNullOrWhiteSpace(username) && userId != 0)
             {
-                try
-                {
-                    var user = await _readUser.ReadById(userId, null);
-                    return StatusCode(200, new { username = user.username, id = user.id });
-                }
-                catch (UserException ex)
-                {
-                    return StatusCode(404, new { message = ex.Message });
-                }
+                var user = await _userRepository.GetById(userId);
+                if (user is null)
+                    return StatusCode(404, new { message = ExceptionUserMessages.UserNotFound });
+
+                return StatusCode(200, new { username = user.username, id = user.id });
             }
 
             if (!string.IsNullOrWhiteSpace(username) && userId != 0)
             {
-                var user = await _dbContext.Users.FirstOrDefaultAsync(u => u.id == userId && u.username == username);
+                var user = await _dbContext.Users.FirstOrDefaultAsync(u => u.id.Equals(userId) && u.username.Equals(username));
                 if (user is null)
                     return StatusCode(404, new { message = ExceptionUserMessages.UserNotFound });
 

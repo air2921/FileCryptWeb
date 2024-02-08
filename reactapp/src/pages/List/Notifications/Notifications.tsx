@@ -5,16 +5,35 @@ import Font from '../../../components/Font/Font';
 import Message from '../../../components/Message/Message';
 
 const Notifications = () => {
-    const [errorMessage, setErrorMessage] = useState('');
-    const [notificationList, setNotifications] = useState(null);
     const [skip, setSkip] = useState(0);
     const step = 10;
+    const [orderBy, setOrderBy] = useState(true);
+    const [priority, setPriority] = useState('');
+    const [isChecked, setChecked] = useState<boolean>();
+
+    const [errorMessage, setErrorMessage] = useState('');
+    const [notificationList, setNotifications] = useState(null);
     const [lastTimeModified, setLastTimeModified] = useState(Date.now());
     const [message, setMessage] = useState('');
     const [font, setFont] = useState('');
 
     const fetchData = async () => {
-        const response = await AxiosRequest({ endpoint: `api/core/notifications/all?skip=${skip}&count=${step}`, method: 'GET', withCookie: true, requestBody: null });
+
+        var checked;
+
+        if (isChecked !== undefined && isChecked !== null) {
+            checked = isChecked;
+        }
+        else {
+            checked = '';
+        }
+
+        const response = await AxiosRequest({
+            endpoint: `api/core/notifications/all?skip=${skip}&count=${step}&byDesc=${orderBy}&priority=${priority}&isChecked=${checked}`,
+            method: 'GET',
+            withCookie: true,
+            requestBody: null
+        });
 
         if (response.isSuccess) {
             setNotifications(response.data);
@@ -51,7 +70,7 @@ const Notifications = () => {
 
     useEffect(() => {
         fetchData();
-    }, [lastTimeModified, skip]);
+    }, [lastTimeModified, skip, orderBy, priority, isChecked]);
 
     if (!notificationList) {
         return <div className="error">{errorMessage || 'Loading...'}</div>;

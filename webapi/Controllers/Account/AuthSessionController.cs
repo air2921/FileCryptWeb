@@ -1,14 +1,11 @@
 ﻿using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
-using Microsoft.EntityFrameworkCore;
 using UAParser;
-using webapi.DB;
 using webapi.DTO;
 using webapi.Exceptions;
 using webapi.Interfaces;
 using webapi.Interfaces.Redis;
 using webapi.Interfaces.Services;
-using webapi.Interfaces.SQL;
 using webapi.Localization;
 using webapi.Models;
 using webapi.Services;
@@ -100,7 +97,7 @@ namespace webapi.Controllers.Account
             HttpContext.Session.SetString(ID, user.id.ToString());
             HttpContext.Session.SetString(CODE, _passwordManager.HashingPassword(code.ToString()));
 
-            return StatusCode(200, new { message = AccountSuccessMessage.EmailSended });
+            return StatusCode(200, new { message = AccountSuccessMessage.EmailSended, confirm = true });
         }
 
         [HttpPost("verify/2fa")]
@@ -134,12 +131,11 @@ namespace webapi.Controllers.Account
 
                 string refreshToken = _tokenService.GenerateRefreshToken();
 
-                await _tokenRepository.Update(new TokenModel
-                {
-                    user_id = user.id,
-                    refresh_token = _tokenService.HashingToken(refreshToken),
-                    expiry_date = DateTime.UtcNow + Constants.RefreshExpiry
-                });
+                var tokenModel = await _tokenRepository.GetByFilter(query => query.Where(t => t.user_id.Equals(user.id)));
+                tokenModel.refresh_token = _tokenService.HashingToken(refreshToken);
+                tokenModel.expiry_date = DateTime.UtcNow + Constants.RefreshExpiry;
+
+                await _tokenRepository.Update(tokenModel);
 
                 _logger.LogInformation("Refresh token was updated in db");
 
@@ -171,7 +167,7 @@ namespace webapi.Controllers.Account
                 Response.Cookies.Append(Constants.USERNAME_COOKIE_KEY, user.username, cookieOptions);
                 Response.Cookies.Append(Constants.ROLE_COOKIE_KEY, user.role, cookieOptions);
 
-                return StatusCode(201);
+                return StatusCode(200);
             }
             catch (EntityNotCreatedException ex)
             {
@@ -196,12 +192,11 @@ namespace webapi.Controllers.Account
         {
             try
             {
-                await _tokenRepository.Update(new TokenModel
-                {
-                    user_id = _userInfo.UserId,
-                    refresh_token = Guid.NewGuid().ToString(),
-                    expiry_date = DateTime.UtcNow.AddYears(-100)
-                });
+                var tokenModel = await _tokenRepository.GetByFilter(query => query.Where(t => t.user_id.Equals(_userInfo.UserId)));
+                tokenModel.refresh_token = Guid.NewGuid().ToString();
+                tokenModel.expiry_date = DateTime.UtcNow.AddYears(-100);
+
+                await _tokenRepository.Update(tokenModel);
                 _logger.LogInformation($"{_userInfo.Username}#{_userInfo.UserId} refresh token was revoked");
 
                 _tokenService.DeleteTokens();
@@ -212,8 +207,6 @@ namespace webapi.Controllers.Account
             }
             catch (EntityNotUpdatedException ex)
             {
-                _logger.LogCritical("When trying to update the data, the user was deleted");
-
                 _tokenService.DeleteTokens();
                 _logger.LogDebug("Tokens was deleted");
 

@@ -1,9 +1,8 @@
 ﻿using Microsoft.AspNetCore.Cors;
 using Microsoft.AspNetCore.Mvc;
-using Microsoft.EntityFrameworkCore;
 using Newtonsoft.Json;
-using webapi.DB;
 using webapi.Exceptions;
+using webapi.Interfaces;
 using webapi.Interfaces.Controllers;
 using webapi.Interfaces.Cryptography;
 using webapi.Interfaces.Redis;
@@ -17,22 +16,22 @@ namespace webapi.Controllers.Public_API
     [Route("api/public/cryptography/{type}")]
     public class CryptographyController : ControllerBase
     {
+        private readonly IRepository<ApiModel> _apiRepository;
         private readonly ICryptographyControllerBase _cryptographyController;
         private readonly IRedisCache _redisCache;
-        private readonly FileCryptDbContext _dbContext;
         private readonly IEncrypt _encrypt;
         private readonly IDecrypt _decrypt;
 
         public CryptographyController(
+            IRepository<ApiModel> apiRepository,
             ICryptographyControllerBase cryptographyController,
             IRedisCache redisCache,
-            FileCryptDbContext dbContext,
             IEncrypt encrypt,
             IDecrypt decrypt)
         {
+            _apiRepository = apiRepository;
             _cryptographyController = cryptographyController;
             _redisCache = redisCache;
-            _dbContext = dbContext;
             _encrypt = encrypt;
             _decrypt = decrypt;
         }
@@ -59,6 +58,10 @@ namespace webapi.Controllers.Public_API
             {
                 return StatusCode(422, new { message = ex.Message });
             }
+            catch (InvalidOperationException)
+            {
+                return StatusCode(500, new { message = "Unexpected error" });
+            }
         }
 
         [HttpPost("decrypt")]
@@ -83,31 +86,45 @@ namespace webapi.Controllers.Public_API
             {
                 return StatusCode(422, new { message = ex.Message });
             }
+            catch (InvalidOperationException)
+            {
+                return StatusCode(500, new { message = "Unexpected error" });
+            }
         }
 
         private async Task<ApiData> IsValidAPI(string apiKey)
         {
-            var api = await _dbContext.API.FirstOrDefaultAsync(a => a.api_key == apiKey);
-            if (api is null)
-                throw new ApiException("API Key not found");
-
-            if (api.is_blocked)
-                throw new ApiException("API Key has been revoked and is no longer available");
-
-            if (api.type == ApiType.Classic.ToString() || api.type == ApiType.Production.ToString())
+            try
             {
-                if (api.expiry_date < DateTime.UtcNow)
+                var api = await _apiRepository.GetByFilter(query => query.Where(a => a.api_key.Equals(apiKey)));
+                if (api is null)
+                    throw new ApiException("API Key not found");
+
+                if (api.is_blocked)
+                    throw new ApiException("API Key has been revoked and is no longer available");
+
+                if (api.type == ApiType.Classic.ToString() || api.type == ApiType.Production.ToString())
                 {
-                    _dbContext.Remove(api);
-                    await _dbContext.SaveChangesAsync();
-                    throw new ApiException("API Key expired");
+                    if (api.expiry_date < DateTime.UtcNow)
+                    {
+                        await _apiRepository.Delete(api.api_id);
+                        throw new ApiException("API Key expired");
+                    }
                 }
+
+                api.last_time_activity = DateTime.UtcNow;
+                await _apiRepository.Update(api);
+
+                return new ApiData(api.user_id, api.max_request_of_day);
             }
-
-            api.last_time_activity = DateTime.UtcNow;
-            await _dbContext.SaveChangesAsync();
-
-            return new ApiData(api.user_id, api.max_request_of_day);
+            catch (EntityNotDeletedException)
+            {
+                throw new InvalidOperationException();
+            }
+            catch (EntityNotUpdatedException)
+            {
+                throw new InvalidOperationException();
+            }
         }
 
         private async Task ControlRequestCount(string apiKey, int maxRequest)

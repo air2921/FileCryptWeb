@@ -1,7 +1,6 @@
 ﻿using Microsoft.EntityFrameworkCore;
 using webapi.Exceptions;
 using webapi.Interfaces;
-using static Microsoft.EntityFrameworkCore.DbLoggerCategory;
 
 namespace webapi.DB
 {
@@ -158,7 +157,9 @@ namespace webapi.DB
 
             try
             {
-                _dbSet.Update(entity);
+                _dbSet.Attach(entity);
+                _context.Entry(entity).State = EntityState.Modified;
+
                 await _context.SaveChangesAsync();
                 await transaction.CommitAsync();
             }

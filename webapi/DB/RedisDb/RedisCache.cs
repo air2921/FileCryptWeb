@@ -1,6 +1,7 @@
 ﻿using Newtonsoft.Json;
 using StackExchange.Redis;
 using webapi.Exceptions;
+using webapi.Interfaces;
 using webapi.Interfaces.Cryptography;
 using webapi.Interfaces.Redis;
 using webapi.Interfaces.SQL;
@@ -12,78 +13,73 @@ namespace webapi.DB.RedisDb
 {
     public class RedisCache : IRedisCache
     {
+        private readonly IRepository<KeyModel> _keyRepository;
         private readonly IRedisDbContext _context;
         private readonly IRedisKeys _redisKeys;
         private readonly IConfiguration _configuration;
         private readonly IDecryptKey _decrypt;
         private readonly byte[] secretKey;
         private readonly IDatabase _db;
-        private readonly IRead<KeyModel> _readKeys;
 
         public RedisCache(
+            IRepository<KeyModel> keyRepository,
             IRedisDbContext context,
             IRedisKeys redisKeys,
             IConfiguration configuration,
-            IDecryptKey decrypt,
-            IRead<KeyModel> readKeys)
+            IDecryptKey decrypt)
         {
+            _keyRepository = keyRepository;
             _context = context;
             _redisKeys = redisKeys;
             _configuration = configuration;
             _decrypt = decrypt;
-            _readKeys = readKeys;
             secretKey = Convert.FromBase64String(_configuration[App.ENCRYPTION_KEY]!);
             _db = context.GetDatabase();
         }
 
         public async Task<string> CacheKey(string key, int userId)
         {
-            try
+            var value = await _db.StringGetAsync(key);
+
+            if (value.HasValue)
+                return value!;
+
+            var keys = await _keyRepository.GetByFilter(query => query.Where(k => k.user_id.Equals(userId)));
+            if (keys is null)
+                throw new ArgumentNullException();
+
+            string? encryptionKey = null;
+
+            if (key == _redisKeys.PrivateKey)
             {
-                var value = await _db.StringGetAsync(key);
+                if (string.IsNullOrEmpty(keys.private_key))
+                    throw new KeyException(ExceptionKeyMessages.KeyNotFound);
 
-                if (value.HasValue)
-                    return value!;
-
-                var keys = await _readKeys.ReadById(userId, true);
-
-                string? encryptionKey = null;
-
-                if (key == _redisKeys.PrivateKey)
-                {
-                    if (string.IsNullOrEmpty(keys.private_key))
-                        throw new KeyException(ExceptionKeyMessages.KeyNotFound);
-
-                    encryptionKey = keys.private_key;
-                }
-                else if (key == _redisKeys.InternalKey)
-                {
-                    if (string.IsNullOrEmpty(keys.internal_key))
-                        throw new KeyException(ExceptionKeyMessages.KeyNotFound);
-
-                    encryptionKey = keys.internal_key;
-                }
-                else if (key == _redisKeys.ReceivedKey)
-                {
-                    if (string.IsNullOrEmpty(keys.received_key))
-                        throw new KeyException(ExceptionKeyMessages.KeyNotFound);
-
-                    encryptionKey = keys.received_key;
-                }
-                else
-                {
-                    throw new ArgumentException();
-                }
-
-                var decryptedKey = await _decrypt.DecryptionKeyAsync(encryptionKey!, secretKey);
-                await _db.StringSetAsync(key, decryptedKey, TimeSpan.FromMinutes(10));
-
-                return decryptedKey;
+                encryptionKey = keys.private_key;
             }
-            catch (UserException)
+            else if (key == _redisKeys.InternalKey)
             {
-                throw;
+                if (string.IsNullOrEmpty(keys.internal_key))
+                    throw new KeyException(ExceptionKeyMessages.KeyNotFound);
+
+                encryptionKey = keys.internal_key;
             }
+            else if (key == _redisKeys.ReceivedKey)
+            {
+                if (string.IsNullOrEmpty(keys.received_key))
+                    throw new KeyException(ExceptionKeyMessages.KeyNotFound);
+
+                encryptionKey = keys.received_key;
+            }
+            else
+            {
+                throw new ArgumentException();
+            }
+
+            var decryptedKey = await _decrypt.DecryptionKeyAsync(encryptionKey!, secretKey);
+            await _db.StringSetAsync(key, decryptedKey, TimeSpan.FromMinutes(10));
+
+            return decryptedKey;
         }
 
         public async Task CacheData(string key, object value, TimeSpan expire)

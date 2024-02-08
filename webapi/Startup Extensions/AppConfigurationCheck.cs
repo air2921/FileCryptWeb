@@ -7,6 +7,11 @@ namespace webapi
 {
     public class AppConfigurationCheck
     {
+        /// <summary>
+        /// Using GetAwaiter().GetResult() or .Result is bad practice and may cause a deadlock
+        /// </summary>
+        /// <exception cref="InvalidConfigurationException"></exception>
+
         public static void ConfigurationCheck()
         {
             IConfiguration configuration = new ConfigurationBuilder()
@@ -29,15 +34,35 @@ namespace webapi
                  string.IsNullOrWhiteSpace(emailAdress) || string.IsNullOrWhiteSpace(FileCryptKey) ||
                  !Regex.IsMatch(emailAdress, emailPattern) || !Regex.IsMatch(FileCryptKey, keyPattern);
 
-            Task.Run(async () =>
-            {
-                var clam = new ClamClient("localhost", 3310);
-                bool isConnected = await clam.TryPingAsync();
+#if DEBUG
 
-                if (!isConnected || InvalidConfiguration)
-                {
-                    Console.WriteLine("Invalid Configuration:\n\n" +
-                    $"ClamAV Server responsed to server ping ?: {isConnected}\n\n" +
+            // Uncomment this if you want throwing exception if cannot ping clamAV server, but remember about may deadlock
+
+            //Task.Run(async () =>
+            //{
+            //    var clam = new ClamClient("localhost", 3310);
+            //    bool isConnected = await clam.TryPingAsync();
+
+            //    if (!isConnected || InvalidConfiguration)
+            //    {
+            //        Console.WriteLine("Invalid Configuration:\n\n" +
+            //            $"Secret Key is valid ?: {!string.IsNullOrWhiteSpace(secretKey)}\nSecretKey Value: {secretKey}\n\n" +
+            //            $"Email Password is valid ?: {!string.IsNullOrWhiteSpace(emailPassword)}\nEmail Password Value: {emailPassword}\n\n" +
+            //            $"Email Address is valid ?: {!string.IsNullOrWhiteSpace(emailAdress) && Regex.IsMatch(emailAdress, emailPattern)}\nEmail Address Value: {emailAdress}\n\n" +
+            //            $"FileCrypt Key is valid ?: {!string.IsNullOrWhiteSpace(FileCryptKey) && Regex.IsMatch(FileCryptKey, keyPattern)}\nFileCrypt Key Value: {FileCryptKey}\n\n" +
+            //            $"Redis Server is valid ?: {!string.IsNullOrWhiteSpace(redisServer)}\nRedis Server Value: {redisServer}\n\n" +
+            //            $"PostgreSQL Connection String is valid ?: {!string.IsNullOrWhiteSpace(postgres)}\nPostgreSQL Connection String Value: {postgres}\n");
+
+            //        throw new InvalidConfigurationException();
+            //    }
+
+            //}).GetAwaiter().GetResult();
+
+#endif
+
+            if (InvalidConfiguration)
+            {
+                Console.WriteLine("Invalid Configuration:\n\n" +
                     $"Secret Key is valid ?: {!string.IsNullOrWhiteSpace(secretKey)}\nSecretKey Value: {secretKey}\n\n" +
                     $"Email Password is valid ?: {!string.IsNullOrWhiteSpace(emailPassword)}\nEmail Password Value: {emailPassword}\n\n" +
                     $"Email Address is valid ?: {!string.IsNullOrWhiteSpace(emailAdress) && Regex.IsMatch(emailAdress, emailPattern)}\nEmail Address Value: {emailAdress}\n\n" +
@@ -45,9 +70,8 @@ namespace webapi
                     $"Redis Server is valid ?: {!string.IsNullOrWhiteSpace(redisServer)}\nRedis Server Value: {redisServer}\n\n" +
                     $"PostgreSQL Connection String is valid ?: {!string.IsNullOrWhiteSpace(postgres)}\nPostgreSQL Connection String Value: {postgres}\n");
 
-                    throw new InvalidConfigurationException();
-                }
-            }).GetAwaiter().GetResult();
+                throw new InvalidConfigurationException();
+            }
 
             Console.WriteLine("Configuration is valid\n");
         }
