@@ -1,6 +1,7 @@
 import React, { useEffect, useState } from 'react';
 import ApiList from '../../../components/List/ApiList/ApiList';
 import AxiosRequest from '../../../api/AxiosRequest';
+import Message from '../../../components/Message/Message';
 
 const Api = () => {
     const [errorMessage, setErrorMessage] = useState('');
@@ -84,6 +85,7 @@ const Api = () => {
                 </select>
                 <button onClick={createApi}>Submit</button>
             </div>
+            {message && font && < Message message={message} font={font} />}
             <ApiList apis={api} deleteApi={deleteApi} />
         </>
     );

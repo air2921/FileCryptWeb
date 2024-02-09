@@ -16,7 +16,6 @@
 
 .links-container {
     width: 100%;
-    margin-right: 80px;
 }
 
     .links-container a {
@@ -72,8 +71,19 @@
     position: fixed;
     width: 100%;
     height: 25px;
-    border-bottom: 3px solid #fff;
+    overflow: hidden;
 }
+
+    .head::after {
+        content: '';
+        display: block;
+        width: 66%;
+        height: 3px;
+        background: #fff;
+        position: absolute;
+        bottom: 0;
+        left: 17%;
+    }
 
 .header-links {
     justify-content: flex-start;
@@ -218,4 +228,11 @@
     transition: margin-left 0.3s ease;
     margin-Top: 55px;
     flex: 1;
+}
+
+@media only screen and (max-width: 768px) {
+    .head-center,
+    .auth-btn-container {
+        display: none;
+    }
 }

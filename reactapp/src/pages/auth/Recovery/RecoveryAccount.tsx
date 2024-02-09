@@ -1,6 +1,4 @@
 import React, { FormEvent, useState } from 'react';
-import Input from '../../../components/Helpers/Input';
-import Button from '../../../components/Helpers/Button';
 import Message from '../../../components/Message/Message';
 import { useLocation, useNavigate } from 'react-router-dom';
 import AxiosRequest from '../../../api/AxiosRequest';
@@ -31,8 +29,17 @@ const RecoveryAccount = () => {
     return (
         <div>
             <form onSubmit={handleSubmit}>
-                <Input text='Enter new password' type="password" id="password" require={true} value={password} onChange={(e) => setPassword(e.target.value)} />
-                <Button>Submit</Button>
+                <label htmlFor="password">
+                    {password ? "Password:" : "Password*"}
+                    <input
+                        type="password"
+                        id="password"
+                        required={true}
+                        value={password}
+                        onChange={(e) => setPassword(e.target.value)}
+                    />
+                </label>
+                <button type="submit">Submit</button>
             </form>
             {message && <Message message={message} font={font} />}
         </div>

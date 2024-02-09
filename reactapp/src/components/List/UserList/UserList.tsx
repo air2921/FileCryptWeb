@@ -1,6 +1,5 @@
 import React, { useReducer } from 'react';
 import Message from '../../Message/Message';
-import Button from '../../Helpers/Button';
 import { useNavigate } from 'react-router-dom';
 
 function UserList({ users, isAdmin }: UserListProps) {
@@ -17,13 +16,13 @@ function UserList({ users, isAdmin }: UserListProps) {
                 .filter(user => user !== null)
                 .map(user => (
                     <li key={user.id} className="user">
-                        <Button onClick={() => navigate(`user/${user.id}/${user.username}`)}>
+                        <button onClick={() => navigate(`user/${user.id}/${user.username}`)}>
                             <div className="user-header">
                                 {user.is_blocked && (<div className="user-block">Blocked</div>)}
                                 <div className="username-id">{user.username}#{user.id}</div>
                                 <div className="role">{user.role}</div>
                             </div>
-                        </Button>
+                        </button>
                     </li>
                 ))}
         </ul>

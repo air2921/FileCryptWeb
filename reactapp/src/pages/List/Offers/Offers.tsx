@@ -1,24 +1,49 @@
 import React, { FormEvent, useEffect, useState } from 'react';
 import OfferList from '../../../components/List/OfferList/OfferList';
-import Input from '../../../components/Helpers/Input';
 import AxiosRequest from '../../../api/AxiosRequest';
 import Message from '../../../components/Message/Message';
-import Button from '../../../components/Helpers/Button';
 import Font from '../../../components/Font/Font';
 
 const Offers = () => {
+    const [skip, setSkip] = useState(0);
+    const step = 10;
+    const [orderBy, setOrderBy] = useState(true);
+    const [isSended, setSended] = useState<boolean>();
+    const [isAccepted, setAccepted] = useState<boolean>();
+    const [type, setType] = useState('');
+
     const [errorMessage, setErrorMessage] = useState('');
     const [offersList, setOffers] = useState(null);
     const [userId, setUserId] = useState<number>();
-    const [skip, setSkip] = useState(0);
-    const step = 10;
     const [message, setMessage] = useState('');
     const [font, setFont] = useState('');
 
     const [lastOfferModified, setLastOfferModified] = useState(Date.now());
 
     const fetchData = async () => {
-        const response = await AxiosRequest({ endpoint: `api/core/offers/all?skip=${skip}&count=${step}`, method: 'GET', withCookie: true, requestBody: null });
+        var sended;
+        var accepted;
+
+        if (isSended !== undefined && isSended !== null) {
+            sended = isSended;
+        }
+        else {
+            sended = '';
+        }
+
+        if (isAccepted !== undefined && isAccepted !== null) {
+            accepted = isAccepted;
+        }
+        else {
+            accepted = '';
+        }
+
+        const response = await AxiosRequest({
+            endpoint: `api/core/offers/all?skip=${skip}&count=${step}&byDesc=${orderBy}&sended=${sended}&isAccepted=${accepted}&type=${type}`,
+            method: 'GET',
+            withCookie: true,
+            requestBody: null
+        });
 
         if (response.isSuccess) {
             setOffers(response.data);
@@ -97,7 +122,7 @@ const Offers = () => {
 
     useEffect(() => {
         fetchData();
-    }, [lastOfferModified, skip]);
+    }, [lastOfferModified, skip, orderBy, isSended, isAccepted, type]);
 
     if (!offersList) {
         return <div className="error">{errorMessage || 'Loading...'}</div>;
@@ -109,16 +134,36 @@ const Offers = () => {
         <div className="container">
             <div className="create">
                 <form onSubmit={createOffer}>
-                    <Input text='UID of the offer receiver' type="number" id="offer" require={true} value={userId} onChange={(e) => setUserId(parseInt(e.target.value, 10))} />
-                    <Button>Submit</Button>
+                    <label htmlFor="offer">
+                        UID of the offer receiver
+                        <input
+                            type="text"
+                            id="offer"
+                            required={true}
+                            value={userId}
+                            onChange={(e) => {
+                                const value = e.target.value;
+                                if (value === '') {
+                                    setUserId(undefined);
+                                } else {
+                                    const parsedValue = parseInt(value, 10);
+                                    if (!isNaN(parsedValue)) {
+                                        setUserId(parsedValue);
+                                    }
+                                }
+                            }}
+                            inputMode="numeric"
+                        />
+                    </label>
+                    <button>Submit</button>
                 </form>
             </div>
+            {message && font && < Message message={message} font={font} />}
             <div className="offers">
                 <OfferList offers={offers} user_id={user_id} isOwner={true} deleteOffer={deleteOffer} acceptOffer={acceptOffer} />
-                {skip > 0 && <Button onClick={handleBack}><Font font={'arrow_back'} /></Button>}
-                {offers.length > step - 1 && <Button onClick={handleLoadMore}><Font font={'arrow_forward'} /></Button>}
+                {skip > 0 && <button onClick={handleBack}><Font font={'arrow_back'} /></button>}
+                {offers.length > step - 1 && <button onClick={handleLoadMore}><Font font={'arrow_forward'} /></button>}
             </div>
-            {message && font && < Message message={message} font={font} />}
         </div>
     );
 }

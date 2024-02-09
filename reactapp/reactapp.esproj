@@ -19,7 +19,5 @@
     <Folder Include="src\components\UseAuth\" />
     <Folder Include="src\components\List\Notifications\" />
     <Folder Include="src\components\List\OfferList\" />
-    <Folder Include="src\pages\auth\Recovery\" />
-    <Folder Include="src\pages\List\Api\" />
   </ItemGroup>
 </Project>

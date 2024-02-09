@@ -1,12 +1,10 @@
 import React, { FormEvent, useState } from 'react';
 import { useNavigate } from 'react-router-dom'
 import AxiosRequest from '../../../api/AxiosRequest';
-import Input from '../../../components/Helpers/Input';
 import Message from '../../../components/Message/Message';
-import Button from '../../../components/Helpers/Button';
 import Verify from '../../../components/Verify/Verify';
 import Modal from '../../../components/Modal/Modal';
-import CreateRecovery from '../Recovery/CreateRecovery';
+import CreateRecovery from '../recovery/CreateRecovery';
 
 const Login = () => {
     const [email, setEmail] = useState('');
@@ -22,12 +20,19 @@ const Login = () => {
         const response = await AxiosRequest({ endpoint: 'api/auth/login', method: 'POST', withCookie: true, requestBody: { email: email, password: password, } });
 
         if (response.isSuccess) {
-            if (response.statusCode === 201) {
-                navigate('/');
-            }
-            else if (response.statusCode === 200) {
+            if (response.data.confirm !== null && response.data.confirm !== undefined) {
                 setVerification(true);
             }
+            else {
+                navigate('/');
+            }
+
+            //if (response.statusCode === 201) {
+            //    navigate('/');
+            //}
+            //else if (response.statusCode === 200) {
+            //    setVerification(true);
+            //}
         }
         else {
             setErrorMessage(response.data);
@@ -43,13 +48,30 @@ const Login = () => {
             <div className="login-container">
                 <p className="welcome-text">Sign in to FileCryptWeb</p>
                 <form onSubmit={handleSubmit}>
-                    <Input text='Email address' type="email" id="email" require={true} value={email} onChange={(e) => setEmail(e.target.value)} />
-                    <Input text='Password' type="password" id="password" require={true} value={password} onChange={(e) => setPassword(e.target.value)} />
-                    <Button>Sign In</Button>
+                    <label htmlFor="email">
+                        {email ? "Email:" : "Email*"}
+                        <input
+                            type="email"
+                            id="email"
+                            required={true}
+                            value={email}
+                            onChange={(e) => setEmail(e.target.value)}
+                        />
+                    </label>
+                    <label htmlFor="password">
+                        {password ? "Password:" : "Password*"}
+                        <input
+                            type="password"
+                            id="password"
+                            required={true}
+                            value={password}
+                            onChange={(e) => setPassword(e.target.value)}
+                        />
+                    </label>
+                    <button type="submit">Sign In</button>
                 </form>
-                {errorMessage && <Message message={errorMessage} font='error' />}
             </div>
-            <Button onClick={() => setRecovery(true)}>Recovery account</Button>
+            <button onClick={() => setRecovery(true)}>Recovery account</button>
             <Modal isActive={recoveryAccount} setActive={setRecovery}>
                 <CreateRecovery />
             </Modal>
@@ -59,6 +81,7 @@ const Login = () => {
             <Modal isActive={verificationRequired} setActive={setVerification}>
                 <Verify endpoint='api/auth/verify/2fa' method='POST' />
             </Modal>
+            {errorMessage && <Message message={errorMessage} font='error' />}
         </div>
     );
 };

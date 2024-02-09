@@ -2,9 +2,9 @@
 using Microsoft.AspNetCore.Mvc;
 using Newtonsoft.Json;
 using webapi.Exceptions;
+using webapi.Interfaces;
 using webapi.Interfaces.Redis;
 using webapi.Interfaces.Services;
-using webapi.Interfaces.SQL;
 using webapi.Models;
 using webapi.Services;
 
@@ -17,22 +17,16 @@ namespace webapi.Controllers.Core
     {
         private readonly IUserInfo _userInfo;
         private readonly IRedisCache _redisCache;
-        private readonly ICreate<ApiModel> _createAPI;
-        private readonly IDelete<ApiModel> _deleteAPI;
-        private readonly IRead<ApiModel> _readAPI;
+        private readonly IRepository<ApiModel> _apiRepository;
 
         public ApiController(
             IUserInfo userInfo,
             IRedisCache redisCache,
-            ICreate<ApiModel> createAPI,
-            IDelete<ApiModel> deleteAPI,
-            IRead<ApiModel> readAPI)
+            IRepository<ApiModel> apiRepository)
         {
             _userInfo = userInfo;
             _redisCache = redisCache;
-            _createAPI = createAPI;
-            _deleteAPI = deleteAPI;
-            _readAPI = readAPI;
+            _apiRepository = apiRepository;
         }
 
         [HttpPost("{type}")]
@@ -42,7 +36,7 @@ namespace webapi.Controllers.Core
             {
                 var apiSettings = SetExpireAPI(type);
 
-                await _createAPI.Create(new ApiModel
+                await _apiRepository.Add(new ApiModel
                 {
                     api_key = Guid.NewGuid().ToString("N") + Guid.NewGuid().ToString(),
                     type = type,
@@ -61,7 +55,7 @@ namespace webapi.Controllers.Core
             {
                 return StatusCode(404, new { message = ex.Message });
             }
-            catch (ApiException ex)
+            catch (EntityNotCreatedException ex)
             {
                 return StatusCode(500, new { message = ex.Message });
             }
@@ -73,40 +67,33 @@ namespace webapi.Controllers.Core
             var cacheKey = $"API_Key_Settings_{apiId}";
             int apiCallLeft = 0;
 
-            try
+            bool clearCache = bool.TryParse(HttpContext.Session.GetString(Constants.CACHE_API), out var parsedValue) ? parsedValue : true;
+            if (clearCache)
             {
-                bool clearCache = bool.TryParse(HttpContext.Session.GetString(Constants.CACHE_API), out var parsedValue) ? parsedValue : true;
-                if (clearCache)
-                {
-                    await _redisCache.DeleteCache(cacheKey);
-                    HttpContext.Session.SetString(Constants.CACHE_API, false.ToString());
-                }
+                await _redisCache.DeleteCache(cacheKey);
+                HttpContext.Session.SetString(Constants.CACHE_API, false.ToString());
+            }
 
-                var cacheApi = await _redisCache.GetCachedData(cacheKey);
-                if (cacheApi is not null)
-                {
-                    var cacheResult = JsonConvert.DeserializeObject<ApiModel>(cacheApi);
-                    if (cacheResult.user_id != _userInfo.UserId)
-                        return StatusCode(404);
-
-                    apiCallLeft = await ApiCallLeftCheck(cacheResult);
-
-                    return StatusCode(200, new { api = cacheResult, apiCallLeft });
-                }
-
-                var api = await _readAPI.ReadById(apiId, null);
-                if (api.user_id != _userInfo.UserId)
+            var cacheApi = await _redisCache.GetCachedData(cacheKey);
+            if (cacheApi is not null)
+            {
+                var cacheResult = JsonConvert.DeserializeObject<ApiModel>(cacheApi);
+                if (cacheResult.user_id != _userInfo.UserId)
                     return StatusCode(404);
 
-                apiCallLeft = await ApiCallLeftCheck(api);
-                await _redisCache.CacheData(cacheKey, api, TimeSpan.FromMinutes(5));
+                apiCallLeft = await ApiCallLeftCheck(cacheResult);
 
-                return StatusCode(200, new { api, apiCallLeft });
+                return StatusCode(200, new { api = cacheResult, apiCallLeft });
             }
-            catch (ApiException ex)
-            {
-                return StatusCode(404, new { message = ex.Message });
-            }
+
+            var api = await _apiRepository.GetByFilter(query => query.Where(a => a.api_id.Equals(apiId) && a.user_id.Equals(_userInfo.UserId)));
+            if (api is null)
+                return StatusCode(404);
+
+            apiCallLeft = await ApiCallLeftCheck(api);
+            await _redisCache.CacheData(cacheKey, api, TimeSpan.FromMinutes(5));
+
+            return StatusCode(200, new { api, apiCallLeft });
         }
 
         [HttpGet("all")]
@@ -131,7 +118,7 @@ namespace webapi.Controllers.Core
                 return StatusCode(200, new { api = apiObjects });
             }
 
-            var api = await _readAPI.ReadAll(_userInfo.UserId, 0, 5);
+            var api = await _apiRepository.GetAll(query => query.Where(a => a.user_id.Equals(_userInfo.UserId)));
             apiObjects = await GetApiData(api);
 
             await _redisCache.CacheData(cacheKey, api, TimeSpan.FromMinutes(5));
@@ -144,12 +131,12 @@ namespace webapi.Controllers.Core
         {
             try
             {
-                await _deleteAPI.DeleteById(apiId, _userInfo.UserId);
+                await _apiRepository.DeleteByFilter(query => query.Where(a => a.user_id.Equals(_userInfo.UserId) || a.api_id.Equals(apiId)));
                 HttpContext.Session.SetString(Constants.CACHE_API, true.ToString());
 
                 return StatusCode(200);
             }
-            catch (ApiException ex)
+            catch (EntityNotDeletedException ex)
             {
                 return StatusCode(404, new { message = ex.Message });
             }
@@ -176,10 +163,8 @@ namespace webapi.Controllers.Core
             {
                 return apiModel.max_request_of_day - JsonConvert.DeserializeObject<int>(cacheApiCallLeft);
             }
-            else
-            {
-                return apiModel.max_request_of_day;
-            }
+
+            return apiModel.max_request_of_day;
         }
 
         private async Task<List<ApiObject>> GetApiData(IEnumerable<ApiModel> apiModels)

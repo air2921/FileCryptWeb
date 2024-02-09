@@ -3,9 +3,9 @@ using Microsoft.AspNetCore.Mvc;
 using Newtonsoft.Json;
 using webapi.DB;
 using webapi.Exceptions;
+using webapi.Interfaces;
 using webapi.Interfaces.Redis;
 using webapi.Interfaces.Services;
-using webapi.Interfaces.SQL;
 using webapi.Models;
 using webapi.Services;
 
@@ -16,24 +16,21 @@ namespace webapi.Controllers.Core
     [Authorize]
     public class NotificationController : ControllerBase
     {
-        private readonly FileCryptDbContext _dbContext;
+        private readonly IRepository<NotificationModel> _notificationRepository;
+        private readonly ISorting _sorting;
         private readonly IRedisCache _redisCache;
         private readonly IUserInfo _userInfo;
-        private readonly IRead<NotificationModel> _readNotification;
-        private readonly IDelete<NotificationModel> _deleteNotification;
 
         public NotificationController(
-            FileCryptDbContext dbContext,
+            IRepository<NotificationModel> notificationRepository,
+            ISorting sorting,
             IRedisCache redisCache,
-            IUserInfo userInfo,
-            IRead<NotificationModel> readNotification,
-            IDelete<NotificationModel> deleteNotification)
+            IUserInfo userInfo)
         {
-            _dbContext = dbContext;
+            _notificationRepository = notificationRepository;
+            _sorting = sorting;
             _redisCache = redisCache;
             _userInfo = userInfo;
-            _readNotification = readNotification;
-            _deleteNotification = deleteNotification;
         }
 
         [HttpGet("{notificationId}")]
@@ -41,38 +38,35 @@ namespace webapi.Controllers.Core
         {
             var cacheKey = $"Notification_{notificationId}";
 
-            try
+            var cacheNotification = await _redisCache.GetCachedData(cacheKey);
+            if (cacheNotification is not null)
             {
-                var cacheNotification = await _redisCache.GetCachedData(cacheKey);
-                if (cacheNotification is not null)
-                {
-                    var cacheResult = JsonConvert.DeserializeObject<NotificationModel>(cacheNotification);
+                var cacheResult = JsonConvert.DeserializeObject<NotificationModel>(cacheNotification);
 
-                    if (cacheResult!.receiver_id != _userInfo.UserId)
-                        return StatusCode(404);
-
-                    return StatusCode(200, new { notification = cacheResult });
-                }    
-
-                var notification = await _readNotification.ReadById(notificationId, null);
-
-                await _redisCache.CacheData(cacheKey, notification, TimeSpan.FromMinutes(10));
-
-                if (notification.receiver_id != _userInfo.UserId)
+                if (cacheResult.receiver_id != _userInfo.UserId)
                     return StatusCode(404);
 
-                return StatusCode(200, new { notification });
+                return StatusCode(200, new { notification = cacheResult });
             }
-            catch (NotificationException ex)
-            {
-                return StatusCode(404, new { message = ex.Message });
-            }
+
+            var notification = await _notificationRepository.GetByFilter
+                (query => query.Where(n => n.notification_id.Equals(notificationId) && n.receiver_id.Equals(_userInfo.UserId)));
+
+            if (notification is null)
+                return StatusCode(404);
+
+            await _redisCache.CacheData(cacheKey, notification, TimeSpan.FromMinutes(10));
+
+            return StatusCode(200, new { notification });
         }
 
         [HttpGet("all")]
-        public async Task<IActionResult> GetAll([FromQuery] int skip, [FromQuery] int count)
+        public async Task<IActionResult> GetAll([FromQuery] int skip, [FromQuery] int count,
+            [FromQuery] bool byDesc, [FromQuery] string? priority,
+            [FromQuery] bool? isChecked)
         {
-            var cacheKey = $"Notifications_{_userInfo.UserId}_{skip}_{count}";
+            var cacheKey = $"Notifications_{_userInfo.UserId}_{skip}_{count}_{byDesc}_{priority}_{isChecked}";
+
             bool clearCache = bool.TryParse(HttpContext.Session.GetString(Constants.CACHE_NOTIFICATIONS), out var parsedValue) ? parsedValue : true;
 
             if (clearCache)
@@ -85,7 +79,7 @@ namespace webapi.Controllers.Core
             if (cacheNotifications is not null)
                 return StatusCode(200, new { notifications = JsonConvert.DeserializeObject<IEnumerable<NotificationModel>>(cacheNotifications) });
 
-            var notifications = await _readNotification.ReadAll(_userInfo.UserId, skip, count);
+            var notifications = await _notificationRepository.GetAll(_sorting.SortNotifications(_userInfo.UserId, skip, count, byDesc, priority, isChecked));
 
             await _redisCache.CacheData(cacheKey, notifications, TimeSpan.FromMinutes(3));
 
@@ -98,12 +92,12 @@ namespace webapi.Controllers.Core
         {
             try
             {
-                await _deleteNotification.DeleteById(notificationId, _userInfo.UserId);
+                await _notificationRepository.DeleteByFilter(query => query.Where(n => n.notification_id.Equals(notificationId) && n.receiver_id.Equals(_userInfo.UserId)));
                 HttpContext.Session.SetString(Constants.CACHE_NOTIFICATIONS, true.ToString());
 
                 return StatusCode(200);
             }
-            catch (NotificationException ex)
+            catch (EntityNotDeletedException ex)
             {
                 return StatusCode(404, new { message = ex.Message });
             }

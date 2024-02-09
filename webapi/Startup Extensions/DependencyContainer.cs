@@ -1,11 +1,8 @@
 ﻿using webapi.DB.RedisDb;
-using webapi.DB.SQL;
 using webapi.Interfaces.Controllers;
 using webapi.Interfaces.Cryptography;
 using webapi.Interfaces.Redis;
 using webapi.Interfaces.Services;
-using webapi.Interfaces.SQL;
-using webapi.Models;
 using webapi.Services;
 using webapi.Services.Cryptography;
 using webapi.Services.Security;
@@ -13,6 +10,8 @@ using webapi.Services.Third_Party_Services;
 using webapi.Services.DataManager;
 using webapi.Controllers.Base;
 using webapi.Controllers.Base.CryptographyUtils;
+using webapi.Interfaces;
+using webapi.DB;
 
 namespace webapi
 {
@@ -29,47 +28,8 @@ namespace webapi
             services.AddScoped<IRedisKeys, RedisKeys>();
             services.AddScoped<IRedisCache, RedisCache>();
 
-            services.AddScoped<ICreate<UserModel>, Users>();
-            services.AddScoped<IDelete<UserModel>, Users>();
-            services.AddScoped<IRead<UserModel>, Users>();
-            services.AddScoped<IUpdate<UserModel>, Users>();
-
-            services.AddScoped<ICreate<KeyModel>, Keys>();
-            services.AddScoped<IRead<KeyModel>, Keys>();
-            services.AddScoped<IUpdate<KeyModel>, Keys>();
-
-            services.AddScoped<ICreate<FileModel>, Files>();
-            services.AddScoped<IDelete<FileModel>, Files>();
-            services.AddScoped<IRead<FileModel>, Files>();
-
-            services.AddScoped<ICreate<NotificationModel>, Notifications>();
-            services.AddScoped<IDelete<NotificationModel>, Notifications>();
-            services.AddScoped<IRead<NotificationModel>, Notifications>();
-
-            services.AddScoped<ICreate<OfferModel>, Offers>();
-            services.AddScoped<IDelete<OfferModel>, Offers>();
-            services.AddScoped<IRead<OfferModel>, Offers>();
-
-            services.AddScoped<ICreate<FileMimeModel>, Mimes>();
-            services.AddScoped<IInsertBase<FileMimeModel>, Mimes>();
-            services.AddScoped<IDelete<FileMimeModel>, Mimes>();
-            services.AddScoped<IDeleteByName<FileMimeModel>, Mimes>();
-            services.AddScoped<IRead<FileMimeModel>, Mimes>();
-
-            services.AddScoped<ICreate<TokenModel>, Tokens>();
-            services.AddScoped<IRead<TokenModel>, Tokens>();
-            services.AddScoped<IUpdate<TokenModel>, Tokens>();
-
-            services.AddScoped<ICreate<ApiModel>, Api>();
-            services.AddScoped<IDelete<ApiModel>, Api>();
-            services.AddScoped<IDeleteByName<ApiModel>, Api>();
-            services.AddScoped<IRead<ApiModel>, Api>();
-            services.AddScoped<IUpdate<ApiModel>, Api>();
-
-            services.AddScoped<ICreate<LinkModel>, Links>();
-            services.AddScoped<IDelete<LinkModel>, Links>();
-            services.AddScoped<IDeleteByName<LinkModel>, Links>();
-            services.AddScoped<IRead<LinkModel>, Links>();
+            services.AddScoped(typeof(IRepository<>), typeof(Repository<>));
+            services.AddScoped<ISorting, Sorting>();
 
             services.AddScoped<ICryptographyControllerBase, CryptographyHelper>();
             services.AddScoped<ICryptographyParamsProvider, CryptographyHelper>();

@@ -19,9 +19,8 @@ function ApiList({ apis, deleteApi }: ApiListProps) {
 
     const ModalContent = () => {
 
-        if (!apiData) {
+        if (!apiData)
             return;
-        }
 
         return (
             <div>
@@ -31,8 +30,8 @@ function ApiList({ apis, deleteApi }: ApiListProps) {
                     </div>
                 )}
                 <div className="id">
-                    <div className="apiId">API ID#{apiData.api_id}</div>
-                    <div className="user-id">API Owner: {apiData.user_id}</div>
+                    <div className="apiId">API ID: #{apiData.api_id}</div>
+                    <div className="user-id">API Owner: #{apiData.user_id}</div>
                 </div>
                 <div className="api-key">API Key: {apiData.api_key}</div>
                 <div className="api-type">API Key type: {apiData.type}</div>

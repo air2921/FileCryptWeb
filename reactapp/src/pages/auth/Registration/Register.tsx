@@ -1,10 +1,7 @@
 ﻿import React, { ChangeEvent, FormEvent, useState } from 'react';
 import Verify from '../../../components/Verify/Verify';
-import Input from '../../../components/Helpers/Input';
 import AxiosRequest from '../../../api/AxiosRequest';
 import Message from '../../../components/Message/Message';
-import Button from '../../../components/Helpers/Button';
-import CheckBox from '../../../components/Helpers/CheckBox';
 import Modal from '../../../components/Modal/Modal';
 
 const Register = () => {
@@ -38,7 +35,7 @@ const Register = () => {
         }
     };
 
-    const handleInternalCheckboxChange = (e: ChangeEvent<HTMLInputElement>) => {
+    const handleCheckboxChange = (e: ChangeEvent<HTMLInputElement>) => {
         set2Fa(e.target.checked);
     };
 
@@ -47,11 +44,47 @@ const Register = () => {
             <div className="register-container">
                 <p className="welcome-text">Welcome to FileCryptWeb !</p>
                 <form onSubmit={handleSubmit}>
-                    <Input text='Username' type="text" id="username" require={true} value={username} onChange={(e) => setUsername(e.target.value)} />
-                    <Input text='Email address' type="email" id="email" require={true} value={email} onChange={(e) => setEmail(e.target.value)} />
-                    <Input text='Password' type="password" id="password" require={true} value={password} onChange={(e) => setPassword(e.target.value)} />
-                    <CheckBox type="checkbox" id="2fa" checked={is2Fa} onChange={handleInternalCheckboxChange} />
-                    <Button>Continue</Button>
+                    <label>
+                        {username ? "Username:" : "Username*"}
+                        <input
+                            type="text"
+                            id="username"
+                            required={true}
+                            value={username}
+                            onChange={(e) => setUsername(e.target.value)}
+                            placeholder="air2921"
+                        />
+                    </label>
+                    <label>
+                        {email ? "Email:" : "Email*"}
+                        <input
+                            type="email"
+                            id="email"
+                            required={true}
+                            value={email}
+                            onChange={(e) => setEmail(e.target.value)}
+                            placeholder="Air2921@gmail.com"
+                        />
+                    </label>
+                    <label>
+                        {password ? "Password:" : "Password*"}
+                        <input
+                            type="password"
+                            id="password"
+                            required={true}
+                            value={password}
+                            onChange={(e) => setPassword(e.target.value)}
+                        />
+                    </label>
+                    <label htmlFor="2fa">
+                        <input
+                            type="checkbox"
+                            id="2fa"
+                            checked={is2Fa}
+                            onChange={handleCheckboxChange}
+                        />
+                    </label>
+                    <button type="submit">Continue</button>
                 </form>
                 {errorMessage && <Message message={errorMessage} font='error' />}
             </div>

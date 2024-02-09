@@ -4,7 +4,6 @@ using webapi.Exceptions;
 using webapi.Interfaces.Controllers;
 using webapi.Interfaces.Redis;
 using webapi.Interfaces.Services;
-using webapi.Interfaces.SQL;
 using webapi.Localization;
 using webapi.Models;
 using webapi.Services;
@@ -26,7 +25,6 @@ namespace webapi.Controllers.Base
         private readonly IValidation _validation;
         private readonly IRedisCache _redisCache;
         private readonly IRedisKeys _redisKeys;
-        private readonly IRead<KeyModel> _readKeys;
         private readonly IUserInfo _userInfo;
 
         public CryptographyHelper(
@@ -35,7 +33,6 @@ namespace webapi.Controllers.Base
             IValidation validation,
             IRedisCache redisCache,
             IRedisKeys redisKeys,
-            IRead<KeyModel> readKeys,
             IUserInfo userInfo)
         {
             _fileService = fileService;
@@ -43,7 +40,6 @@ namespace webapi.Controllers.Base
             _validation = validation;
             _redisCache = redisCache;
             _redisKeys = redisKeys;
-            _readKeys = readKeys;
             _userInfo = userInfo;
         }
 
@@ -167,13 +163,13 @@ namespace webapi.Controllers.Base
                 }
                 throw new InvalidRouteException();
             }
-            catch (UserException)
+            catch (ArgumentNullException)
             {
                 throw;
             }
-            catch (KeyException)
+            catch (ArgumentException)
             {
-                throw;
+                throw new InvalidRouteException();
             }
         }
     }

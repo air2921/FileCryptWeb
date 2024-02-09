@@ -1,18 +1,18 @@
 import React from 'react';
 import { Routes, Route } from 'react-router-dom';
 
-import Register from './pages/auth/Registration/Register';
-import Login from './pages/auth/Login/Login';
+import Register from './pages/auth/registration/Register';
+import Login from './pages/auth/login/Login';
 import Home from './pages/no_logic/Home';
 import About from './pages/no_logic/About';
 import Policy from './pages/no_logic/Policy'
-import User from './pages/User/User';
-import Settings from './pages/User/Settings/Settings';
-import Offers from './pages/List/Offers/Offers';
-import Files from './pages/List/Files/Files';
-import Api from './pages/List/Api/Api'
-import Notifications from './pages/List/Notifications/Notifications';
-import RecoveryAccount from './pages/auth/Recovery/RecoveryAccount'
+import User from './pages/user/profile/User';
+import Settings from './pages/user/settings/Settings';
+import Offers from './pages/list/offers/Offers';
+import Files from './pages/list/files/Files';
+import Api from './pages/list/api/Api'
+import Notifications from './pages/list/notifications/Notifications';
+import RecoveryAccount from './pages/auth/recovery/RecoveryAccount'
 import ErrorPage from './pages/no_logic/ErrorPage/ErrorPage'
 import Layout from './components/Layout/Layout';
 import useAuth from './components/UseAuth/UseAuth';

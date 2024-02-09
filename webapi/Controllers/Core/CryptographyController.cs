@@ -46,13 +46,9 @@ namespace webapi.Controllers.Core
 
                 return encryptedFile;
             }
-            catch (UserException ex)
+            catch (ArgumentNullException)
             {
-                return StatusCode(404, new { message = ex.Message });
-            }
-            catch (KeyException ex)
-            {
-                return StatusCode(404, new { message = ex.Message });
+                return StatusCode(404, new { message = "Encryption key not found" });
             }
             catch (InvalidRouteException ex)
             {
@@ -73,13 +69,9 @@ namespace webapi.Controllers.Core
 
                 return decryptedFile;
             }
-            catch (UserException ex)
+            catch (ArgumentNullException)
             {
-                return StatusCode(404, new { message = ex.Message });
-            }
-            catch (KeyException ex)
-            {
-                return StatusCode(404, new { message = ex.Message });
+                return StatusCode(404, new { message = "Encryption key not found" });
             }
             catch (InvalidRouteException ex)
             {

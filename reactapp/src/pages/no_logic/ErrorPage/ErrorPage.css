@@ -1,5 +1,5 @@
 .error-container {
-    background-color: black;
+    background-color: #000000;
     color: white;
     display: flex;
     flex-direction: column;
@@ -23,13 +23,20 @@
     cursor: pointer;
     text-decoration: none;
     margin: 0 auto;
+    border-radius: 24px;
+    transition: background-color 0.3s ease, color 0.3s ease;
 }
 
-.error-description h2 {
-    font-size: 2em;
-    color: gray;
-    flex: 1;
-}
+    .main-button:hover {
+        color: #c6c6c6;
+        background-color: #075ce2;
+    }
+
+    .error-description h2 {
+        font-size: 2em;
+        color: #ffffff;
+        flex: 1;
+    }
 
 .divider {
     width: 80px;

@@ -4,8 +4,8 @@ using Microsoft.AspNetCore.Mvc;
 using System.Net.Sockets;
 using webapi.DTO;
 using webapi.Exceptions;
+using webapi.Interfaces;
 using webapi.Interfaces.Services;
-using webapi.Interfaces.SQL;
 using webapi.Localization;
 using webapi.Models;
 
@@ -17,16 +17,20 @@ namespace webapi.Controllers.Admin
     [ValidateAntiForgeryToken]
     public class SendEmailController : ControllerBase
     {
+        private readonly IRepository<NotificationModel> _notificationRepository;
         private readonly ILogger<SendEmailController> _logger;
         private readonly IEmailSender _emailSender;
-        private readonly ICreate<NotificationModel> _createNotification;
         private readonly IUserInfo _userInfo;
 
-        public SendEmailController(ILogger<SendEmailController> logger, IEmailSender emailSender, ICreate<NotificationModel> createNotification, IUserInfo userInfo)
+        public SendEmailController(
+            IRepository<NotificationModel> notificationRepository,
+            ILogger<SendEmailController> logger,
+            IEmailSender emailSender,
+            IUserInfo userInfo)
         {
+            _notificationRepository = notificationRepository;
             _logger = logger;
             _emailSender = emailSender;
-            _createNotification = createNotification;
             _userInfo = userInfo;
         }
 
@@ -45,7 +49,7 @@ namespace webapi.Controllers.Admin
 
                 _logger.LogWarning($"{_userInfo.Username}#{_userInfo.UserId} sent message via work email to {username}#{notifyDTO.receiver_id} on {email}");
 
-                await _createNotification.Create(new NotificationModel
+                await _notificationRepository.Add(new NotificationModel
                 {
                     receiver_id = notifyDTO.receiver_id,
                     message_header = "You have a notification from administrator",
@@ -54,13 +58,14 @@ namespace webapi.Controllers.Admin
                     priority = notifyDTO.priority,
                     is_checked = false
                 });
+
                 _logger.LogInformation($"Created notification. Sender: {_userInfo.Username}#{_userInfo.UserId}. Receiver:{username}#{notifyDTO.receiver_id} ");
 
                 return StatusCode(201, new { message = SuccessMessage.SuccessEmailSendedAndCreatedNotification });
             }
-            catch (UserException ex)
+            catch (EntityNotCreatedException ex)
             {
-                return StatusCode(404, new { message = ex.Message });
+                return StatusCode(500, new { message = ex.Message });
             }
             catch (AuthenticationException)
             {
