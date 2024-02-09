@@ -21,7 +21,7 @@ namespace webapi.Controllers.Admin
             _sorting = sorting;
         }
 
-        [HttpGet("offerId")]
+        [HttpGet("{offerId}")]
         public async Task<IActionResult> GetOffer([FromRoute] int offerId)
         {
             var offer = await _offerRepository.GetById(offerId);
@@ -39,7 +39,7 @@ namespace webapi.Controllers.Admin
             return StatusCode(200, new { offers = await _offerRepository.GetAll(_sorting.SortOffers(userId, skip, count, byDesc, sended, isAccepted, type)) });
         }
 
-        [HttpDelete("offerId")]
+        [HttpDelete("{offerId}")]
         [ValidateAntiForgeryToken]
         public async Task<IActionResult> DeleteOffer([FromRoute] int offerId)
         {

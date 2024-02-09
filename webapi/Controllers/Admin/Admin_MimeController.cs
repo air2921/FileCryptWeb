@@ -137,7 +137,7 @@ namespace webapi.Controllers.Admin
             return StatusCode(200, new { mimes = await _mimeRepository.GetAll(query => query.Skip(skip.Value).Take(count.Value)) });
         }
 
-        [HttpDelete("mimeId")]
+        [HttpDelete("{mimeId}")]
         [ValidateAntiForgeryToken]
         [Authorize(Roles = "HighestAdmin,Admin")]
         public async Task<IActionResult> DeleteMime([FromRoute] int mimeId)

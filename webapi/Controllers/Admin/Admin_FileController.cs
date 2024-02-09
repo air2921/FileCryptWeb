@@ -23,7 +23,7 @@ namespace webapi.Controllers.Admin
             _logger = logger;
         }
 
-        [HttpGet("fileId")]
+        [HttpGet("{fileId}")]
         public async Task<IActionResult> GetFile([FromRoute] int fileId)
         {
             var file = await _fileRepository.GetById(fileId);
@@ -39,7 +39,7 @@ namespace webapi.Controllers.Admin
             return StatusCode(200, new { files = await _fileRepository.GetAll(_sorting.SortFiles(userId, skip, count, byDesc, null, null)) });
         }
 
-        [HttpDelete("fileId")]
+        [HttpDelete("{fileId}")]
         [ValidateAntiForgeryToken]
         public async Task<IActionResult> DeleteFile([FromRoute] int fileId)
         {

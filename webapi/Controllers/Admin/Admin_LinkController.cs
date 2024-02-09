@@ -29,24 +29,21 @@ namespace webapi.Controllers.Admin
         [HttpGet]
         public async Task<IActionResult> GetLink([FromQuery] int? linkId, [FromQuery] string? token)
         {
+            LinkModel link = null;
+
             if (linkId.HasValue)
             {
-                var link = await _linkRepository.GetById(linkId.Value);
-                if (link is null)
-                    return StatusCode(404);
-
-                return StatusCode(200, new { link });
+                link = await _linkRepository.GetById(linkId.Value);
             }
             else if (!string.IsNullOrWhiteSpace(token))
             {
-                var link = await _linkRepository.GetByFilter(query => query.Where(l => l.u_token.Equals(token)));
-                if (link is null)
-                    return StatusCode(404);
-
-                return StatusCode(200, new { link });
+                link = await _linkRepository.GetByFilter(query => query.Where(l => l.u_token.Equals(token)));
             }
 
-            return StatusCode(404);
+            if (link is null)
+                return StatusCode(404);
+
+            return StatusCode(200, new { link });
         }
 
         [HttpGet("many")]

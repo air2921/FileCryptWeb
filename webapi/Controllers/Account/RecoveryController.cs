@@ -5,7 +5,6 @@ using webapi.DTO;
 using webapi.Exceptions;
 using webapi.Interfaces;
 using webapi.Interfaces.Services;
-using webapi.Interfaces.SQL;
 using webapi.Localization;
 using webapi.Models;
 using webapi.Services;
@@ -26,7 +25,6 @@ namespace webapi.Controllers.Account
         private readonly IUserAgent _userAgent;
         private readonly IEmailSender _emailSender;
         private readonly IPasswordManager _passwordManager;
-        private readonly IDeleteByName<LinkModel> _deleteByName;
         private readonly IGenerateKey _generateKey;
         private readonly IFileManager _fileManager;
 
@@ -39,7 +37,6 @@ namespace webapi.Controllers.Account
             IUserAgent userAgent,
             IEmailSender emailSender,
             IPasswordManager passwordManager,
-            IDeleteByName<LinkModel> deleteByName,
             IGenerateKey generateKey,
             IFileManager fileManager)
         {
@@ -51,7 +48,6 @@ namespace webapi.Controllers.Account
             _userAgent = userAgent;
             _emailSender = emailSender;
             _passwordManager = passwordManager;
-            _deleteByName = deleteByName;
             _generateKey = generateKey;
             _fileManager = fileManager;
         }
@@ -149,7 +145,7 @@ namespace webapi.Controllers.Account
                     receiver_id = link.user_id
                 });
 
-                await _deleteByName.DeleteByName(token, null);
+                await _linkRepository.DeleteByFilter(query => query.Where(l => l.u_token.Equals(token)));
                 _logger.LogInformation($"Token: {token} was deleted");
 
                 var tokenModel = await _tokenRepository.GetByFilter(query => query.Where(t => t.user_id.Equals(link.user_id)));

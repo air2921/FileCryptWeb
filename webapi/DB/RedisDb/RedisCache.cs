@@ -4,7 +4,6 @@ using webapi.Exceptions;
 using webapi.Interfaces;
 using webapi.Interfaces.Cryptography;
 using webapi.Interfaces.Redis;
-using webapi.Interfaces.SQL;
 using webapi.Localization.Exceptions;
 using webapi.Models;
 using webapi.Services;

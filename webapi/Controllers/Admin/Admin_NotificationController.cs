@@ -21,7 +21,7 @@ namespace webapi.Controllers.Admin
             _sorting = sorting;
         }
 
-        [HttpGet("notificationId")]
+        [HttpGet("{notificationId}")]
         public async Task<IActionResult> GetNotification([FromRoute] int notificationId)
         {
             var notification = await _notificationRepository.GetById(notificationId);
@@ -37,7 +37,7 @@ namespace webapi.Controllers.Admin
             return StatusCode(200, new { notification = await _notificationRepository.GetAll(_sorting.SortNotifications(userId, skip, count, byDesc, null, null)) });
         }
 
-        [HttpDelete("notificationId")]
+        [HttpDelete("{notificationId}")]
         [ValidateAntiForgeryToken]
         public async Task<IActionResult> DeleteNotification([FromRoute] int notificationId)
         {

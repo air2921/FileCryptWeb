@@ -22,7 +22,7 @@ namespace webapi.Controllers.Admin
             _userRepository = userRepository;
         }
 
-        [HttpPut("revoke/userId")]
+        [HttpPut("revoke/{userId}")]
         public async Task<IActionResult> RevokeToken([FromRoute] int userId)
         {
             try
