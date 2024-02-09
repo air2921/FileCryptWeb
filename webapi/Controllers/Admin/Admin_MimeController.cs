@@ -138,6 +138,7 @@ namespace webapi.Controllers.Admin
         }
 
         [HttpDelete("mimeId")]
+        [ValidateAntiForgeryToken]
         [Authorize(Roles = "HighestAdmin,Admin")]
         public async Task<IActionResult> DeleteMime([FromRoute] int mimeId)
         {
@@ -153,6 +154,7 @@ namespace webapi.Controllers.Admin
         }
 
         [HttpDelete("many")]
+        [ValidateAntiForgeryToken]
         [Authorize(Roles = "HighestAdmin,Admin")]
         public async Task<IActionResult> DeleteRangeMime([FromBody] IEnumerable<int> identifiers)
         {

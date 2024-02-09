@@ -58,6 +58,7 @@ namespace webapi.Controllers.Admin
         }
 
         [HttpDelete]
+        [ValidateAntiForgeryToken]
         public async Task<IActionResult> DeleteLink([FromQuery] int? linkId, [FromQuery] string? token)
         {
             try
@@ -82,6 +83,7 @@ namespace webapi.Controllers.Admin
         }
 
         [HttpDelete("many")]
+        [ValidateAntiForgeryToken]
         public async Task<IActionResult> DeleteRangeLinks([FromBody] IEnumerable<int> identifiers)
         {
             try

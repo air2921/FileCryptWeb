@@ -107,19 +107,16 @@ namespace webapi.Controllers.Core
         {
             try
             {
-                var offer = await _offerRepository.GetByFilter(query => query.Where(o => o.offer_id == offerId && o.receiver_id == _userInfo.UserId));
+                var offer = await _offerRepository.GetByFilter(query => query.Where(o => o.offer_id.Equals(offerId) && o.receiver_id.Equals(_userInfo.UserId)));
                 if (offer is null)
                     return StatusCode(404);
 
                 if (offer.is_accepted)
                     return StatusCode(409, new { message = ExceptionOfferMessages.OfferIsAccepted });
 
-                var receiver = await _keyRepository.GetByFilter(query => query.Where(k => k.user_id.Equals(_userInfo.UserId)));
+                var receiver = await _keyRepository.GetByFilter(query => query.Where(k => k.user_id.Equals(offer.receiver_id)));
                 if (receiver is null)
-                {
-                    _tokenService.DeleteTokens();
                     return StatusCode(404);
-                }
 
                 receiver.received_key = offer.offer_body;
                 offer.is_accepted = true;
