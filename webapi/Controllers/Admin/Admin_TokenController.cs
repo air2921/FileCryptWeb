@@ -1,10 +1,6 @@
 ﻿using Microsoft.AspNetCore.Authorization;
-using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Mvc;
-using Microsoft.EntityFrameworkCore;
 using webapi.Interfaces;
-using webapi.Interfaces.Services;
-using webapi.Localization.Exceptions;
 using webapi.Localization;
 using webapi.Models;
 using webapi.Exceptions;
@@ -19,13 +15,11 @@ namespace webapi.Controllers.Admin
     {
         private readonly IRepository<TokenModel> _tokenRepository;
         private readonly IRepository<UserModel> _userRepository;
-        private readonly IUserInfo _userInfo;
 
-        public Admin_TokenController(IRepository<TokenModel> tokenRepository, IRepository<UserModel> userRepository, IUserInfo userInfo)
+        public Admin_TokenController(IRepository<TokenModel> tokenRepository, IRepository<UserModel> userRepository)
         {
             _tokenRepository = tokenRepository;
             _userRepository = userRepository;
-            _userInfo = userInfo;
         }
 
         [HttpPut("revoke/userId")]
