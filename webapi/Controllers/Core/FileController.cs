@@ -91,12 +91,6 @@ namespace webapi.Controllers.Core
             if (cacheFiles is not null)
                 return StatusCode(200, new { files = JsonConvert.DeserializeObject<IEnumerable<FileModel>>(cacheFiles) });
 
-            if (!string.IsNullOrWhiteSpace(type))
-                Console.WriteLine($"type is not null\nsorting by type {type}");
-
-            if (!string.IsNullOrWhiteSpace(type))
-                Console.WriteLine($"mime is not null\nsorting by mime {mime}");
-
             var files = await _fileRepository.GetAll(_sorting.SortFiles(_userInfo.UserId, skip, count, byDesc, type, mime));
 
             await _redisCache.CacheData(cacheKey, files, TimeSpan.FromMinutes(3));

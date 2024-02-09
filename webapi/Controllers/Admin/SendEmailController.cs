@@ -1,7 +1,5 @@
-﻿using MailKit.Security;
-using Microsoft.AspNetCore.Authorization;
+﻿using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
-using System.Net.Sockets;
 using webapi.DTO;
 using webapi.Exceptions;
 using webapi.Interfaces;
@@ -67,13 +65,9 @@ namespace webapi.Controllers.Admin
             {
                 return StatusCode(500, new { message = ex.Message });
             }
-            catch (AuthenticationException)
+            catch (SmtpClientException ex)
             {
-                return StatusCode(500, new { message = AccountErrorMessage.Error });
-            }
-            catch (SocketException)
-            {
-                return StatusCode(500, new { message = AccountErrorMessage.Error });
+                return StatusCode(500, new { message = ex.Message });
             }
         }
     }

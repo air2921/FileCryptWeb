@@ -54,7 +54,7 @@ namespace webapi.Controllers.Public_API
             {
                 return StatusCode(404, new { message = ex.Message });
             }
-            catch (ApiException ex)
+            catch (ArgumentException ex)
             {
                 return StatusCode(422, new { message = ex.Message });
             }
@@ -82,7 +82,7 @@ namespace webapi.Controllers.Public_API
             {
                 return StatusCode(404, new { message = ex.Message });
             }
-            catch (ApiException ex)
+            catch (ArgumentException ex)
             {
                 return StatusCode(422, new { message = ex.Message });
             }
@@ -98,17 +98,17 @@ namespace webapi.Controllers.Public_API
             {
                 var api = await _apiRepository.GetByFilter(query => query.Where(a => a.api_key.Equals(apiKey)));
                 if (api is null)
-                    throw new ApiException("API Key not found");
+                    throw new ArgumentException("API Key not found");
 
                 if (api.is_blocked)
-                    throw new ApiException("API Key has been revoked and is no longer available");
+                    throw new ArgumentException("API Key has been revoked and is no longer available");
 
                 if (api.type == ApiType.Classic.ToString() || api.type == ApiType.Production.ToString())
                 {
                     if (api.expiry_date < DateTime.UtcNow)
                     {
                         await _apiRepository.Delete(api.api_id);
-                        throw new ApiException("API Key expired");
+                        throw new ArgumentException("API Key expired");
                     }
                 }
 
@@ -141,7 +141,7 @@ namespace webapi.Controllers.Public_API
                 var requestCount = JsonConvert.DeserializeObject<int>(cacheResult);
 
                 if (requestCount > maxRequest)
-                    throw new ApiException("Max count request of day is exceed");
+                    throw new ArgumentException("Max count request of day is exceed");
 
                 await _redisCache.CacheData(cacheKey, requestCount + 1, timeUntilEndOfDay);
             }

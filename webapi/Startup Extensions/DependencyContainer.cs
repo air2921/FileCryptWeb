@@ -12,6 +12,7 @@ using webapi.Controllers.Base;
 using webapi.Controllers.Base.CryptographyUtils;
 using webapi.Interfaces;
 using webapi.DB;
+using static webapi.Services.Third_Party_Services.EmailSender;
 
 namespace webapi
 {
@@ -39,6 +40,7 @@ namespace webapi
             services.AddScoped<IGenerateKey, GenerateCodesAndKeys>();
             services.AddScoped<IPasswordManager, PasswordManager>();
             services.AddScoped<IVirusCheck, ClamAV>();
+            services.AddScoped<IClamSetting, ClamSetting>();
             services.AddScoped<IUserInfo, UserData>();
             services.AddScoped<IUserAgent, UserAgent>();
             services.AddScoped<IAes, AesCreator>();
@@ -54,6 +56,7 @@ namespace webapi
             services.AddTransient<IEncryptKey, EncryptKey>();
             services.AddTransient<IDecryptKey, EncryptKey>();
             services.AddTransient<IEmailSender, EmailSender>();
+            services.AddTransient<ISmtpClient, SmtpClientWrapper>();
         }
     }
 }

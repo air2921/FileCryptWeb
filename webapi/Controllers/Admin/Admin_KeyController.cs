@@ -96,7 +96,7 @@ namespace webapi.Controllers.Admin
 
                 return StatusCode(200, new { message = SuccessMessage.ReceivedKeyRevoked });
             }
-            catch (UserException ex)
+            catch (EntityNotUpdatedException ex)
             {
                 return StatusCode(404, new { message = ex.Message });
             }

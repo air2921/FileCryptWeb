@@ -66,38 +66,45 @@ namespace webapi.Controllers.Account
         [ValidateAntiForgeryToken]
         public async Task<IActionResult> Login(AuthDTO userDTO)
         {
-            var email = userDTO.email.ToLowerInvariant();
-
-            var user = await _userRepository.GetByFilter(query => query.Where(u => u.email.Equals(email)));
-            if (user is null)
-                return StatusCode(404, new { message = AccountErrorMessage.UserNotFound });
-
-            if (user.is_blocked)
-                return StatusCode(403, new { message = AccountErrorMessage.UserBlocked });
-
-            bool IsCorrect = _passwordManager.CheckPassword(userDTO.password, user.password!);
-            if (!IsCorrect)
-                return StatusCode(401, new { message = AccountErrorMessage.PasswordIncorrect });
-
-            var clientInfo = Parser.GetDefault().Parse(HttpContext.Request.Headers["User-Agent"].ToString());
-
-            if (!user.is_2fa_enabled)
-                return await CreateTokens(clientInfo, user);
-
-            int code = _generateCode.GenerateSixDigitCode();
-
-            await _emailSender.SendMessage(new EmailDto
+            try
             {
-                username = user.username,
-                email = user.email,
-                subject = EmailMessage.Verify2FaHeader,
-                message = EmailMessage.Verify2FaBody + code
-            });
+                var email = userDTO.email.ToLowerInvariant();
 
-            HttpContext.Session.SetString(ID, user.id.ToString());
-            HttpContext.Session.SetString(CODE, _passwordManager.HashingPassword(code.ToString()));
+                var user = await _userRepository.GetByFilter(query => query.Where(u => u.email.Equals(email)));
+                if (user is null)
+                    return StatusCode(404, new { message = AccountErrorMessage.UserNotFound });
 
-            return StatusCode(200, new { message = AccountSuccessMessage.EmailSended, confirm = true });
+                if (user.is_blocked)
+                    return StatusCode(403, new { message = AccountErrorMessage.UserBlocked });
+
+                bool IsCorrect = _passwordManager.CheckPassword(userDTO.password, user.password!);
+                if (!IsCorrect)
+                    return StatusCode(401, new { message = AccountErrorMessage.PasswordIncorrect });
+
+                var clientInfo = Parser.GetDefault().Parse(HttpContext.Request.Headers["User-Agent"].ToString());
+
+                if (!user.is_2fa_enabled)
+                    return await CreateTokens(clientInfo, user);
+
+                int code = _generateCode.GenerateSixDigitCode();
+
+                await _emailSender.SendMessage(new EmailDto
+                {
+                    username = user.username,
+                    email = user.email,
+                    subject = EmailMessage.Verify2FaHeader,
+                    message = EmailMessage.Verify2FaBody + code
+                });
+
+                HttpContext.Session.SetString(ID, user.id.ToString());
+                HttpContext.Session.SetString(CODE, _passwordManager.HashingPassword(code.ToString()));
+
+                return StatusCode(200, new { message = AccountSuccessMessage.EmailSended, confirm = true });
+            }
+            catch (SmtpClientException ex)
+            {
+                return StatusCode(500, new { message = ex.Message });
+            }
         }
 
         [HttpPost("verify/2fa")]

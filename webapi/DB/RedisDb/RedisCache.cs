@@ -1,6 +1,5 @@
 ﻿using Newtonsoft.Json;
 using StackExchange.Redis;
-using webapi.Exceptions;
 using webapi.Interfaces;
 using webapi.Interfaces.Cryptography;
 using webapi.Interfaces.Redis;
@@ -52,21 +51,21 @@ namespace webapi.DB.RedisDb
             if (key == _redisKeys.PrivateKey)
             {
                 if (string.IsNullOrEmpty(keys.private_key))
-                    throw new KeyException(ExceptionKeyMessages.KeyNotFound);
+                    throw new ArgumentNullException(ExceptionKeyMessages.KeyNotFound);
 
                 encryptionKey = keys.private_key;
             }
             else if (key == _redisKeys.InternalKey)
             {
                 if (string.IsNullOrEmpty(keys.internal_key))
-                    throw new KeyException(ExceptionKeyMessages.KeyNotFound);
+                    throw new ArgumentNullException(ExceptionKeyMessages.KeyNotFound);
 
                 encryptionKey = keys.internal_key;
             }
             else if (key == _redisKeys.ReceivedKey)
             {
                 if (string.IsNullOrEmpty(keys.received_key))
-                    throw new KeyException(ExceptionKeyMessages.KeyNotFound);
+                    throw new ArgumentNullException(ExceptionKeyMessages.KeyNotFound);
 
                 encryptionKey = keys.received_key;
             }

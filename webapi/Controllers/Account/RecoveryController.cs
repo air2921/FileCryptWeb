@@ -8,7 +8,6 @@ using webapi.Interfaces.Services;
 using webapi.Localization;
 using webapi.Models;
 using webapi.Services;
-using webapi.Services.Security;
 
 namespace webapi.Controllers.Account
 {
@@ -98,6 +97,10 @@ namespace webapi.Controllers.Account
                 return StatusCode(201, new { message = AccountSuccessMessage.EmailSendedRecovery });
             }
             catch (EntityNotCreatedException ex)
+            {
+                return StatusCode(500, new { message = ex.Message });
+            }
+            catch (SmtpClientException ex)
             {
                 return StatusCode(500, new { message = ex.Message });
             }

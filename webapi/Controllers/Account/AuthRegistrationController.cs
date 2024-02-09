@@ -64,40 +64,47 @@ namespace webapi.Controllers.Account
         [HttpPost("register")]
         public async Task<IActionResult> Registration([FromBody] RegisterDTO userDTO)
         {
-            var email = userDTO.email.ToLowerInvariant();
-            int code = _generateCode.GenerateSixDigitCode();
-
-            var user = await _userRepository.GetByFilter(query => query.Where(u => u.email.Equals(email)));
-            if (user is not null)
-                return StatusCode(409, new { message = AccountErrorMessage.UserExists });
-
-            if (!Regex.IsMatch(userDTO.password, Validation.Password))
-                return StatusCode(400, new { message = AccountErrorMessage.InvalidFormatPassword });
-
-            if (!Regex.IsMatch(userDTO.username, Validation.Username))
-                return StatusCode(400, new { message = AccountErrorMessage.InvalidFormatUsername });
-
-            string password = _passwordManager.HashingPassword(userDTO.password);
-
-            await _email.SendMessage(new EmailDto
+            try
             {
-                username = userDTO.username,
-                email = userDTO.email,
-                subject = EmailMessage.VerifyEmailHeader,
-                message = EmailMessage.VerifyEmailBody + code
-            });
-            _logger.LogInformation($"Email was sended on {email} (1-st step)");
+                var email = userDTO.email.ToLowerInvariant();
+                int code = _generateCode.GenerateSixDigitCode();
 
-            HttpContext.Session.SetString(EMAIL, email);
-            HttpContext.Session.SetString(PASSWORD, password);
-            HttpContext.Session.SetString(USERNAME, userDTO.username);
-            HttpContext.Session.SetString(ROLE, Role.User.ToString());
-            HttpContext.Session.SetString(IS_2FA, userDTO.is_2fa_enabled.ToString());
-            HttpContext.Session.SetString(CODE, _passwordManager.HashingPassword(code.ToString()));
+                var user = await _userRepository.GetByFilter(query => query.Where(u => u.email.Equals(email)));
+                if (user is not null)
+                    return StatusCode(409, new { message = AccountErrorMessage.UserExists });
 
-            _logger.LogInformation("Data was saved in user session");
+                if (!Regex.IsMatch(userDTO.password, Validation.Password))
+                    return StatusCode(400, new { message = AccountErrorMessage.InvalidFormatPassword });
 
-            return StatusCode(200, new { message = AccountSuccessMessage.EmailSended });
+                if (!Regex.IsMatch(userDTO.username, Validation.Username))
+                    return StatusCode(400, new { message = AccountErrorMessage.InvalidFormatUsername });
+
+                string password = _passwordManager.HashingPassword(userDTO.password);
+
+                await _email.SendMessage(new EmailDto
+                {
+                    username = userDTO.username,
+                    email = userDTO.email,
+                    subject = EmailMessage.VerifyEmailHeader,
+                    message = EmailMessage.VerifyEmailBody + code
+                });
+                _logger.LogInformation($"Email was sended on {email} (1-st step)");
+
+                HttpContext.Session.SetString(EMAIL, email);
+                HttpContext.Session.SetString(PASSWORD, password);
+                HttpContext.Session.SetString(USERNAME, userDTO.username);
+                HttpContext.Session.SetString(ROLE, Role.User.ToString());
+                HttpContext.Session.SetString(IS_2FA, userDTO.is_2fa_enabled.ToString());
+                HttpContext.Session.SetString(CODE, _passwordManager.HashingPassword(code.ToString()));
+
+                _logger.LogInformation("Data was saved in user session");
+
+                return StatusCode(200, new { message = AccountSuccessMessage.EmailSended });
+            }
+            catch (SmtpClientException ex)
+            {
+                return StatusCode(500, new { message = ex.Message });
+            }
         }
 
         [HttpPost("verify")]

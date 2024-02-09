@@ -53,31 +53,38 @@ namespace webapi.Controllers.Account.Edit
         [HttpPost("start")]
         public async Task<IActionResult> SendVerificationCode([FromQuery] string password)
         {
-            var user = await _userRepository.GetById(_userInfo.UserId);
-            if (user is null)
+            try
             {
-                _tokenService.DeleteTokens();
-                _logger.LogWarning("Tokens was deleted");
-                return StatusCode(404);
+                var user = await _userRepository.GetById(_userInfo.UserId);
+                if (user is null)
+                {
+                    _tokenService.DeleteTokens();
+                    _logger.LogWarning("Tokens was deleted");
+                    return StatusCode(404);
+                }
+
+                bool IsCorrect = _passwordManager.CheckPassword(password, user.password);
+                if (!IsCorrect)
+                    return StatusCode(401, new { message = AccountErrorMessage.PasswordIncorrect });
+
+                int code = _generateCode.GenerateSixDigitCode();
+
+                await _emailSender.SendMessage(new EmailDto
+                {
+                    username = _userInfo.Username,
+                    email = _userInfo.Email,
+                    subject = EmailMessage.Change2FaHeader,
+                    message = EmailMessage.Change2FaBody + code
+                });
+
+                HttpContext.Session.SetString(CODE, code.ToString());
+
+                return StatusCode(200);
             }
-
-            bool IsCorrect = _passwordManager.CheckPassword(password, user.password);
-            if (!IsCorrect)
-                return StatusCode(401, new { message = AccountErrorMessage.PasswordIncorrect });
-
-            int code = _generateCode.GenerateSixDigitCode();
-
-            await _emailSender.SendMessage(new EmailDto
+            catch (SmtpClientException ex)
             {
-                username = _userInfo.Username,
-                email = _userInfo.Email,
-                subject = EmailMessage.Change2FaHeader,
-                message = EmailMessage.Change2FaBody + code
-            });
-
-            HttpContext.Session.SetString(CODE, code.ToString());
-
-            return StatusCode(200);
+                return StatusCode(500, new { message = ex.Message });
+            }
         }
 
         [HttpPut("confirm/{enable}")]
