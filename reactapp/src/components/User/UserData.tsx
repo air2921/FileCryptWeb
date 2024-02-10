@@ -25,7 +25,7 @@ function UserData({ user, isOwner }: UserDataProps) {
             )}
             {isOwner && (
                 <button onClick={() => navigate("/settings")}>
-                    <Font font={'edit'} />
+                    Edit profile
                 </button>
             )}
         </div>

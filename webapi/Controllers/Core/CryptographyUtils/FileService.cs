@@ -111,13 +111,41 @@ namespace webapi.Controllers.Base.CryptographyUtils
             }
         }
 
-        public async Task CreateFile(int userID, string uniqueFileName, string mime, string fileType)
+        public string GetFileCategory(string contentType)
+        {
+            switch (contentType.Split('/')[0])
+            {
+                case "application":
+                    return "application";
+                case "audio":
+                    return "audio";
+                case "font":
+                    return "font";
+                case "image":
+                    return "image";
+                case "message":
+                    return "message";
+                case "model":
+                    return "model";
+                case "multipart":
+                    return "multipart";
+                case "text":
+                    return "text";
+                case "video":
+                    return "video";
+                default:
+                    throw new ArgumentException("Invalid MIME type");
+            }
+        }
+
+        public async Task CreateFile(int userID, string uniqueFileName, string mime, string mimeCategory, string fileType)
         {
             await _fileRepository.Add(new FileModel
             {
                 user_id = userID,
                 file_name = uniqueFileName,
                 file_mime = mime,
+                file_mime_category = mimeCategory,
                 operation_date = DateTime.UtcNow,
                 type = fileType,
             });

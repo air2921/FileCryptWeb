@@ -34,9 +34,10 @@ namespace webapi.Controllers.Admin
         }
 
         [HttpGet("many")]
-        public async Task<IActionResult> GetFiles([FromQuery] int? userId, [FromQuery] int? skip, [FromQuery] int? count, [FromQuery] bool byDesc)
+        public async Task<IActionResult> GetFiles([FromQuery] int? userId, [FromQuery] int? skip, [FromQuery] int? count,
+            [FromQuery] bool byDesc, [FromQuery] string? category)
         {
-            return StatusCode(200, new { files = await _fileRepository.GetAll(_sorting.SortFiles(userId, skip, count, byDesc, null, null)) });
+            return StatusCode(200, new { files = await _fileRepository.GetAll(_sorting.SortFiles(userId, skip, count, byDesc, null, null, category)) });
         }
 
         [HttpDelete("{fileId}")]

@@ -35,25 +35,14 @@ function ApiList({ apis, deleteApi }: ApiListProps) {
                 </div>
                 <div className="api-key">API Key: {apiData.api_key}</div>
                 <div className="api-type">API Key type: {apiData.type}</div>
-                {apiData.expiry_date ? (
-                    <div className="time">
-                        <div className="expiry">
-                            Valid until: <DateComponent date={apiData.expiry_date} />
-                        </div>
-                        <div className="last-time-activity">
-                            Time of last activity: <DateComponent date={apiData.last_time_activity} />
-                        </div>
+                <div className="time">
+                    <div className="expiry">
+                        {apiData.expiry_date ? <div>Valid until: <DateComponent date={apiData.expiry_date} /></div> : <div>Valid until: No time restrictions</div>}
                     </div>
-                ) : (
-                        <div className="time">
-                            <div className="expiry">
-                                Valid untul: No time restrictions
-                            </div>
-                            <div className="last-time-activity">
-                                Time of last activity: <DateComponent date={apiData.last_time_activity} />
-                            </div>
-                        </div>
-                )}
+                    <div className="last-time-activity">
+                        Time of last activity: <DateComponent date={apiData.last_time_activity} />
+                    </div>
+                </div>
                 <div className="request-day-limit">
                     Max request of day: {apiData.max_request_of_day}
                 </div>
@@ -78,15 +67,9 @@ function ApiList({ apis, deleteApi }: ApiListProps) {
                             <div className="apiId">API ID#{api.api_id}</div>
                             <div className="apiKey">Key: {api.api_key}</div>
                             <div className="api-type">API Key Type: {api.type}</div>
-                            {api.expiry_date ? (
-                                <div className="expiry">
-                                    Valid until: <DateComponent date={api.expiry_date} />
-                                </div>
-                            ) : (
-                                <div className="expiry">
-                                    No time restrictions
-                                </div>
-                            )}
+                            <div className="expiry">
+                                {api.expiry_date ? <div>Valid until: <DateComponent date={api.expiry_date} /></div> : <div>Valid until: No time restrictions</div>}
+                            </div>
                             <button className="api-details-btn" onClick={() => openModal(api)}>More</button>
                         </li>
                     ))}

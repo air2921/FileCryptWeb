@@ -17,9 +17,10 @@ interface FileButtonProps {
 const Files = () => {
     const [skip, setSkip] = useState(0);
     const step = 10;
-    const [orderBy, setOrderBy] = useState(true);
+    const [orderBy, setOrderBy] = useState('true');
     const [type, setType] = useState('');
     const [mime, setMime] = useState('');
+    const [mimeCategory, setCategory] = useState('');
 
     const [errorMessage, setErrorMessage] = useState('');
     const [filesList, setFiles] = useState(null);
@@ -28,10 +29,8 @@ const Files = () => {
     const [font, setFont] = useState('');
 
     const fetchData = async () => {
-        console.log(`api/core/files/all?skip=${skip}&count=${step}&byDesc=${orderBy}&type=${type}&mime=${mime}`);
-
         const response = await AxiosRequest({
-            endpoint: `api/core/files/all?skip=${skip}&count=${step}&byDesc=${orderBy}&type=${type}&mime=${mime}`,
+            endpoint: `api/core/files/all?skip=${skip}&count=${step}&byDesc=${orderBy}&type=${type}&category=${mimeCategory}&mime=${mime}`,
             method: 'GET',
             withCookie: true,
             requestBody: null
@@ -134,7 +133,7 @@ const Files = () => {
 
     useEffect(() => {
         fetchData();
-    }, [lastTimeModified, skip, orderBy, type, mime]);
+    }, [lastTimeModified, skip, orderBy, type, mimeCategory, mime]);
 
     if (!filesList) {
         return <div className="error">{errorMessage || 'Loading...'}</div>;
@@ -166,35 +165,94 @@ const Files = () => {
 
     const SetFileAndEncrypt = () => {
         const [operation, setOperation] = useState('encrypt');
-        const [type, setType] = useState('private');
+        const [keyType, setKeyType] = useState('private');
 
         return (
             <div>
-                <p>Select encryption key</p>
+                <p>Encryption key</p>
                 <select
-                    className="set-key-type"
+                    className="key-type"
                     id="key"
                     required={true}
-                    value={type}
-                    onChange={(e) => setType(e.target.value)}>
+                    value={keyType}
+                    onChange={(e) => setKeyType(e.target.value)}>
 
                     <option value="private">Private</option>
                     <option value="internal">Internal</option>
                     <option value="received">Received</option>
                 </select>
-                <p>Select operation</p>
+                <p>Operation</p>
                 <select
-                    className="set-operation-type"
+                    className="operation-type"
                     id="operation"
                     required={true}
                     value={operation}
                     onChange={(e) => setOperation(e.target.value)}>
 
-                    <option value="encrypt">Encrypt File</option>
-                    <option value="decrypt">Decrypt File</option>
+                    <option value="encrypt">Encrypt file</option>
+                    <option value="decrypt">Decrypt file</option>
                 </select>
 
-                <FileButton id={`${type}-${operation}`} font={'add'} onChange={(e) => handleFileChange(e, type, operation)} fileType={type} operationType={operation} />
+                <FileButton id={`${keyType}-${operation}`} font={'add'} onChange={(e) => handleFileChange(e, keyType, operation)} fileType={keyType} operationType={operation} />
+            </div>
+        );
+    }
+
+    const SortFiles = () => {
+        return (
+            <div className="sort">
+                <details>
+                    <summary>
+                        <span>Category</span>
+                    </summary>
+                    <select
+                        className="file-mime-category"
+                        id="category"
+                        required={true}
+                        value={mimeCategory}
+                        onChange={(e) => setCategory(e.target.value)}>
+                        <option value="">All</option>
+                        <option value="application">Application</option>
+                        <option value="audio">Audio</option>
+                        <option value="font">Font</option>
+                        <option value="image">Image</option>
+                        <option value="message">Message</option>
+                        <option value="model">Model</option>
+                        <option value="multipart">Multipart</option>
+                        <option value="text">Text</option>
+                        <option value="video">Video</option>
+                    </select>
+                </details>
+                <details>
+                    <summary>
+                        <span>Type</span>
+                    </summary>
+                    <select
+                        className="file-type"
+                        id="type"
+                        required={true}
+                        value={type}
+                        onChange={(e) => setType(e.target.value)}>
+                        <option value="">All</option>
+                        <option value="private">Private</option>
+                        <option value="internal">Internal</option>
+                        <option value="received">Received</option>
+                    </select>
+                </details>
+                <details>
+                    <summary>
+                        <span>Order by</span>
+                    </summary>
+                    <select
+                        className="order-by"
+                        id="order"
+                        required={true}
+                        value={orderBy}
+                        onChange={(e) => setOrderBy(e.target.value)}>
+                        <option value="false">Order by ascending</option>
+                        <option value="true">Order by descending</option>
+                    </select>
+                </details>
             </div>
         );
     }
@@ -202,11 +260,16 @@ const Files = () => {
     return (
         <div className="container">
             <SetFileAndEncrypt />
-            {message && font && < Message message={message} font={font} />}
             <div className="files">
+                <SortFiles />
                 <FileList files={files} isOwner={true} deleteFile={deleteFile} />
-                {skip > 0 && <button onClick={handleBack}><Font font={'arrow_back'} />Previous</button>}
-                {files.length > step - 1 && <button onClick={handleLoadMore}>Next<Font font={'arrow_forward'} /></button>}
+                <div className="scroll">
+                    {skip > 0 && <button onClick={handleBack}>Previous</button>}
+                    {files.length > step - 1 && <button onClick={handleLoadMore}>Next</button>}
+                </div>
+            </div>
+            <div className="message">
+                {message && font && < Message message={message} font={font} />}
             </div>
         </div>
     );

@@ -231,7 +231,8 @@
 }
 
 @media only screen and (max-width: 768px) {
-    .head-center,
+    .notification-container,
+    .header-links,
     .auth-btn-container {
         display: none;
     }

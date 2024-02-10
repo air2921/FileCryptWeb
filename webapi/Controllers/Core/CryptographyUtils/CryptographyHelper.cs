@@ -58,12 +58,15 @@ namespace webapi.Controllers.Base
                 if (!IsValidRoute)
                     return StatusCode(400, new { message = "Invalid route request" });
 
+                var mimeCategory = _fileService.GetFileCategory(file.ContentType);
+
                 if (!Directory.Exists(DEFAULT_FOLDER))
                     Directory.CreateDirectory(DEFAULT_FOLDER);
 
                 var fileGood = await _fileService.CheckFile(file);
                 if (!fileGood)
                     return StatusCode(415, new { message = ErrorMessage.InfectedOrInvalid });
+
 
                 var sizeNotExceed = _fileService.CheckSize(file);
                 if (!sizeNotExceed)
@@ -75,12 +78,16 @@ namespace webapi.Controllers.Base
 
                 await EncryptFile(filePath, CryptographyFunction, encryptionKey);
 
-                await _fileService.CreateFile(userID, filename, file.ContentType, type);
+                await _fileService.CreateFile(userID, filename, file.ContentType, mimeCategory, type);
 
                 var fileStream = new FileStream(filePath, FileMode.Open, FileAccess.Read,
                     FileShare.None, 4096, FileOptions.DeleteOnClose);
 
                 return File(fileStream, file.ContentType, filename);
+            }
+            catch (ArgumentException ex)
+            {
+                return StatusCode(400, new { message = ex.Message });
             }
             catch (FormatException ex)
             {

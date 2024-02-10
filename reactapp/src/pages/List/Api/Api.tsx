@@ -68,25 +68,36 @@ const Api = () => {
 
     const { api } = apiList as { api: any[] }
 
-    return (
-        <>
+    const CreateApi = () => {
+        return (
             <div className="create-api">
-            <p>Select API type</p>
-                <select
-                    className="set-api-type"
-                    id="type"
-                    required={true}
-                    value={apiType}
-                    onChange={(e) => setApiType(e.target.value)}>
-
-                    <option value="Classic">Classic</option>
-                    <option value="Development">Development</option>
-                    <option value="Production">Production</option>
-                </select>
+                <details>
+                    <summary>
+                        <span>Select API type</span>
+                    </summary>
+                    <select
+                        className="set-api-type"
+                        id="type"
+                        required={true}
+                        value={apiType}
+                        onChange={(e) => setApiType(e.target.value)}>
+                        <option value="Classic">Classic</option>
+                        <option value="Development">Development</option>
+                        <option value="Production">Production</option>
+                    </select>
+                </details>
                 <button onClick={createApi}>Submit</button>
             </div>
-            {message && font && < Message message={message} font={font} />}
+        );
+    }
+
+    return (
+        <>
+            <CreateApi />
             <ApiList apis={api} deleteApi={deleteApi} />
+            <div className="message">
+                {message && font && < Message message={message} font={font} />}
+            </div>
         </>
     );
 }

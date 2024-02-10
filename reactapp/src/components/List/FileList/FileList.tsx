@@ -25,9 +25,12 @@ function FileList({ files, isOwner, deleteFile }: FileListProps) {
         return (
             <div>
                 <div className="file_header">
-                    <div className="file-Name">File: {fileData.file_name}</div>
-                    <div className="file-mime">File MIME: {fileData.file_mime}</div>
-                    <div className="file-type">{fileData.type}</div>
+                    <div className="file-Name">File name: {fileData.file_name}</div>
+                    <div className="mime">
+                        <div className="file-mime">File MIME: {fileData.file_mime}</div>
+                        <div className="file-mime-category">MIME Category: {fileData.file_mime_category}</div>
+                    </div>
+                    <div className="file-type">File type: {fileData.type}</div>
                 </div>
                 <div className="date">
                     <div className="time">Operation Date: <DateComponent date={fileData.operation_date} /></div>
@@ -55,6 +58,7 @@ function FileList({ files, isOwner, deleteFile }: FileListProps) {
                         <li key={file.file_id} className="file">
                             <div className="file_header">
                                 <div className="file-Name">File: {file.file_name}</div>
+                                <div className="file-mime-category">MIME Category: {file.file_mime_category}</div>
                                 <div className="time">Operation Date: <DateComponent date={file.operation_date} /></div>
                             </div>
                             <button onClick={() => openModal(file)}>More</button>

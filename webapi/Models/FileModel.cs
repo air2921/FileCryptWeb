@@ -14,6 +14,8 @@ namespace webapi.Models
 
         public string file_mime { get; set; }
 
+        public string file_mime_category { get; set; }
+
         public string type { get; set; }
 
         public DateTime operation_date { get; set; }

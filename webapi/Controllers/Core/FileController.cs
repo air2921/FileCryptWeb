@@ -76,9 +76,9 @@ namespace webapi.Controllers.Core
 
         [HttpGet("all")]
         public async Task<IActionResult> GetAllFiles([FromQuery] int skip, [FromQuery] int count,
-            [FromQuery] bool byDesc, [FromQuery] string? type, [FromQuery] string? mime)
+            [FromQuery] bool byDesc, [FromQuery] string? type, [FromQuery] string? category, [FromQuery] string? mime)
         {
-            var cacheKey = $"Files_{_userInfo.UserId}_{skip}_{count}_{byDesc}_{type}";
+            var cacheKey = $"Files_{_userInfo.UserId}_{skip}_{count}_{byDesc}_{type}_{category}_{mime}";
 
             bool clearCache = bool.TryParse(HttpContext.Session.GetString(Constants.CACHE_FILES), out var parsedValue) ? parsedValue : true;
             if (clearCache)
@@ -91,7 +91,7 @@ namespace webapi.Controllers.Core
             if (cacheFiles is not null)
                 return StatusCode(200, new { files = JsonConvert.DeserializeObject<IEnumerable<FileModel>>(cacheFiles) });
 
-            var files = await _fileRepository.GetAll(_sorting.SortFiles(_userInfo.UserId, skip, count, byDesc, type, mime));
+            var files = await _fileRepository.GetAll(_sorting.SortFiles(_userInfo.UserId, skip, count, byDesc, type, mime, category));
 
             await _redisCache.CacheData(cacheKey, files, TimeSpan.FromMinutes(3));
 

@@ -7,9 +7,9 @@ function DateComponent({ date }: DateProps) {
     const formattedDate = format(originalDate, "dd.MM.yyyy 'at' h:mm:ss a");
 
     return (
-        <>
+        <div>
             {formattedDate}
-        </>
+        </div>
     );
 }
 

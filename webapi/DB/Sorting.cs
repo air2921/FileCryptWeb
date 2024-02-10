@@ -6,13 +6,13 @@ namespace webapi.DB
     {
         Func<IQueryable<OfferModel>, IQueryable<OfferModel>> SortOffers(int? userId, int? skip, int? count, bool byDesc, bool? sended, bool? isAccepted, string? type);
         Func<IQueryable<NotificationModel>, IQueryable<NotificationModel>> SortNotifications(int? userId, int? skip, int? count, bool byDesc, string? priority, bool? isChecked);
-        Func<IQueryable<FileModel>, IQueryable<FileModel>> SortFiles(int? userId, int? skip, int? count, bool byDesc, string? type, string? mime);
+        Func<IQueryable<FileModel>, IQueryable<FileModel>> SortFiles(int? userId, int? skip, int? count, bool byDesc, string? type, string? mime, string? category);
         Func<IQueryable<LinkModel>, IQueryable<LinkModel>> SortLinks(int? userId, int? skip, int? count, bool byDesc, bool? expired);
     }
 
     public class Sorting : ISorting
     {
-        public Func<IQueryable<FileModel>, IQueryable<FileModel>> SortFiles(int? userId, int? skip, int? count, bool byDesc, string? type, string? mime)
+        public Func<IQueryable<FileModel>, IQueryable<FileModel>> SortFiles(int? userId, int? skip, int? count, bool byDesc, string? type, string? mime, string? category)
         {
             IQueryable<FileModel> sortedQuery;
 
@@ -26,7 +26,10 @@ namespace webapi.DB
                 if (!string.IsNullOrWhiteSpace(type))
                     sortedQuery = sortedQuery.Where(f => f.type.Equals(type));
 
-                if (!string.IsNullOrWhiteSpace(type))
+                if (!string.IsNullOrWhiteSpace(category))
+                    sortedQuery = sortedQuery.Where(f => f.file_mime_category.Equals(category));
+
+                if (!string.IsNullOrWhiteSpace(mime))
                     sortedQuery = sortedQuery.Where(f => f.file_mime.Equals(mime));
 
                 if (skip.HasValue && count.HasValue)
