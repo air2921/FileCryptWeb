@@ -7,4 +7,5 @@ interface UserDataProps {
         is_blocked: boolean
     };
     isOwner: boolean
+    showButton: boolean
 }

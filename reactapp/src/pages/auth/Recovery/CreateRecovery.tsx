@@ -26,7 +26,7 @@ const CreateRecovery = () => {
         <div>
             <form onSubmit={handleSubmit}>
                 <label htmlFor="email">
-                    {email ? "Email:" : "Email*"}
+                    {email ? "Email" : "* Email"}
                     <input
                         type="email"
                         id="email"

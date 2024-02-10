@@ -46,7 +46,7 @@ const User = () => {
     return (
         <div className="profile">
             <div className="user-container">
-                <UserData user={user} isOwner={isOwner} />
+                <UserData user={user} isOwner={isOwner} showButton={isOwner} />
                 <UserKeys keys={keys} />
             </div>
             <div className="file-offer-container">

@@ -1,8 +1,8 @@
 ﻿import React, { ChangeEvent, FormEvent, useState } from 'react';
-import Verify from '../../../components/Verify/Verify';
 import AxiosRequest from '../../../api/AxiosRequest';
 import Message from '../../../components/Message/Message';
 import Modal from '../../../components/Modal/Modal';
+import { useNavigate } from 'react-router-dom';
 
 const Register = () => {
     const [email, setEmail] = useState('');
@@ -11,6 +11,7 @@ const Register = () => {
     const [is2Fa, set2Fa] = useState(false);
     const [successStatusCode, setStatusCode] = useState(false);
     const [errorMessage, setErrorMessage] = useState('');
+    const navigate = useNavigate();
 
     const handleSubmit = async (e: FormEvent) => {
         e.preventDefault();
@@ -39,13 +40,63 @@ const Register = () => {
         set2Fa(e.target.checked);
     };
 
+    const Verify = () => {
+        const [code, setCode] = useState<number>();
+        const [errorVerificationMessage, setVerificationErrorMessage] = useState('');
+
+        const handleSubmit = async (e: FormEvent) => {
+            e.preventDefault();
+
+            const response = await AxiosRequest({ endpoint: `api/auth/verify?code=${code}`, method: 'POST', withCookie: true, requestBody: null });
+
+            if (response.isSuccess) {
+                navigate('/');
+            }
+            else {
+                setVerificationErrorMessage(response.data);
+            }
+        };
+
+        return (
+            <div>
+                <p>Verify Account</p>
+                <form onSubmit={handleSubmit}>
+                    <label htmlFor="code">
+                        Enter your numeric code from your email
+                        <input
+                            type="text"
+                            id="code"
+                            required={true}
+                            value={code}
+                            onChange={(e) => {
+                                const value = e.target.value;
+                                if (value === '') {
+                                    setCode(undefined);
+                                } else {
+                                    const parsedValue = parseInt(value, 10);
+                                    if (!isNaN(parsedValue)) {
+                                        setCode(parsedValue);
+                                    }
+                                }
+                            }}
+                            inputMode="numeric"
+                            placeholder="Code"
+                        />
+                    </label>
+                    <button type="submit">Verify</button>
+                </form>
+                {errorVerificationMessage && <Message message={errorVerificationMessage} font='error' />}
+            </div>
+        );
+    }
+
     return (
         <>
             <div className="register-container">
                 <p className="welcome-text">Welcome to FileCryptWeb !</p>
                 <form onSubmit={handleSubmit}>
                     <label>
-                        {username ? "Username:" : "Username*"}
+                        {username ? "Username" : "* Username"}
                         <input
                             type="text"
                             id="username"
@@ -56,7 +107,7 @@ const Register = () => {
                         />
                     </label>
                     <label>
-                        {email ? "Email:" : "Email*"}
+                        {email ? "* Email" : "* Email"}
                         <input
                             type="email"
                             id="email"
@@ -67,7 +118,7 @@ const Register = () => {
                         />
                     </label>
                     <label>
-                        {password ? "Password:" : "Password*"}
+                        {password ? "Password:" : "* Password"}
                         <input
                             type="password"
                             id="password"
@@ -84,12 +135,12 @@ const Register = () => {
                             onChange={handleCheckboxChange}
                         />
                     </label>
-                    <button type="submit">Continue</button>
+                    <button type="submit">Register</button>
                 </form>
                 {errorMessage && <Message message={errorMessage} font='error' />}
             </div>
             <Modal isActive={successStatusCode} setActive={setStatusCode}>
-                <Verify endpoint='api/auth/verify' method='POST' />
+                <Verify />
             </Modal>
         </>
     );

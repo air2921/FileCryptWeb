@@ -30,7 +30,7 @@ const RecoveryAccount = () => {
         <div>
             <form onSubmit={handleSubmit}>
                 <label htmlFor="password">
-                    {password ? "Password:" : "Password*"}
+                    {password ? "Password" : "* Password"}
                     <input
                         type="password"
                         id="password"
