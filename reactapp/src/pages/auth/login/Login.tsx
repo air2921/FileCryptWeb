@@ -2,7 +2,6 @@ import React, { FormEvent, useState } from 'react';
 import { useNavigate } from 'react-router-dom'
 import AxiosRequest from '../../../api/AxiosRequest';
 import Message from '../../../components/Message/Message';
-import Verify from '../../../components/Verify/Verify';
 import Modal from '../../../components/Modal/Modal';
 import CreateRecovery from '../recovery/CreateRecovery';
 
@@ -36,13 +35,63 @@ const Login = () => {
         }
     };
 
+    const Verify = () => {
+        const [code, setCode] = useState<number>();
+        const [errorVerificationMessage, setVerificationErrorMessage] = useState('');
+
+        const handleSubmit = async (e: FormEvent) => {
+            e.preventDefault();
+
+            const response = await AxiosRequest({ endpoint: `api/auth/verify/2fa?code=${code}`, method: 'POST', withCookie: true, requestBody: null });
+
+            if (response.isSuccess) {
+                navigate('/');
+            }
+            else {
+                setVerificationErrorMessage(response.data);
+            }
+        };
+
+        return (
+            <div>
+                <p>Two-Factor Authentication</p>
+                <form onSubmit={handleSubmit}>
+                    <label htmlFor="code">
+                        Enter your numeric code from your email
+                        <input
+                            type="text"
+                            id="code"
+                            required={true}
+                            value={code}
+                            onChange={(e) => {
+                                const value = e.target.value;
+                                if (value === '') {
+                                    setCode(undefined);
+                                } else {
+                                    const parsedValue = parseInt(value, 10);
+                                    if (!isNaN(parsedValue)) {
+                                        setCode(parsedValue);
+                                    }
+                                }
+                            }}
+                            inputMode="numeric"
+                            placeholder="Code"
+                        />
+                    </label>
+                    <button type="submit">Verify</button>
+                </form>
+                {errorVerificationMessage && <Message message={errorVerificationMessage} font='error' />}
+            </div>
+        );
+    }
+
     return (
         <div className="login">
             <div className="login-container">
                 <p className="welcome-text">Sign in to FileCryptWeb</p>
                 <form onSubmit={handleSubmit}>
                     <label htmlFor="email">
-                        {email ? "Email:" : "Email*"}
+                        {email ? "Email" : "* Email"}
                         <input
                             type="email"
                             id="email"
@@ -52,7 +101,7 @@ const Login = () => {
                         />
                     </label>
                     <label htmlFor="password">
-                        {password ? "Password:" : "Password*"}
+                        {password ? "Password" : "* Password"}
                         <input
                             type="password"
                             id="password"
@@ -62,17 +111,15 @@ const Login = () => {
                         />
                     </label>
                     <button type="submit">Sign In</button>
+                    <button onClick={() => navigate('/login')}></button>
                 </form>
             </div>
+            <Modal isActive={verificationRequired} setActive={setVerification}>
+                <Verify />
+            </Modal>
             <button onClick={() => setRecovery(true)}>Recovery account</button>
             <Modal isActive={recoveryAccount} setActive={setRecovery}>
                 <CreateRecovery />
-            </Modal>
-            <div className="signup-container">
-                <a href="/signup">Create an account</a>
-            </div>
-            <Modal isActive={verificationRequired} setActive={setVerification}>
-                <Verify endpoint='api/auth/verify/2fa' method='POST' />
             </Modal>
             {errorMessage && <Message message={errorMessage} font='error' />}
         </div>
