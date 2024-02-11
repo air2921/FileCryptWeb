@@ -1,8 +1,45 @@
-﻿.layout-container {
+﻿body {
+    overflow: hidden;
+}
+
+.layout-container {
     background: #000;
     display: flex;
     min-height: 100vh;
 }
+
+.mobile-menu {
+    position: fixed;
+    display: flex;
+    background-color: #000;
+    flex-direction: column;
+/*    align-items: center;
+    justify-content: center;*/
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    z-index: 9999;
+}
+
+.mobile-menu-links {
+    width: 100%;
+}
+
+.mobile-link {
+    display: flex;
+    align-items: flex-start;
+}
+
+    .mobile-link h2 {
+        margin-left: 8px;
+        margin-top: 4px;
+    }
+
+    .mobile-link Font {
+        margin-right: 8px;
+        margin-bottom: 4px;
+    }
 
 .sidebar {
     padding: 1rem;
@@ -14,31 +51,31 @@
     display: flex;
 }
 
-.links-container {
+.desktop-sidebar-links-container {
     width: 100%;
 }
 
-    .links-container a {
+    .desktop-sidebar-links-container a {
         color: #fff;
         text-decoration: none;
         transition: color 0.3s ease;
     }
 
-        .links-container a:hover {
+        .desktop-sidebar-links-container a:hover {
             color: #075ce2;
         }
 
-.link {
+.desktop-link {
     display: flex;
     align-items: center;
 }
 
-    .link h4 {
+    .desktop-link h4 {
         margin-left: 8px;
         margin-top: 4px;
     }
 
-    .link Font {
+    .desktop-link Font {
         margin-right: 8px;
         margin-bottom: 4px;
     }
@@ -72,6 +109,7 @@
     width: 100%;
     height: 25px;
     overflow: hidden;
+    z-index: 10000;
 }
 
     .head::after {

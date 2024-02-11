@@ -16,7 +16,7 @@
     <Folder Include="src\components\Modal\" />
     <Folder Include="src\components\List\FileList\" />
     <Folder Include="src\components\Helpers\Date\" />
-    <Folder Include="src\components\UseAuth\" />
+    <Folder Include="src\components\UseResize\" />
     <Folder Include="src\components\List\Notifications\" />
     <Folder Include="src\components\List\OfferList\" />
   </ItemGroup>

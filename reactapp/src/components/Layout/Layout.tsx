@@ -5,6 +5,7 @@ import cookie from 'react-cookies'
 import useAuth from '../UseAuth/UseAuth'
 import AxiosRequest from '../../api/AxiosRequest';
 import './Layout.css'
+import useResize from '../UseResize/useResize';
 
 function Layout() {
     const [username, setUsername] = useState(cookie.load('auth_username'));
@@ -15,7 +16,12 @@ function Layout() {
     const [inputValue, setInputValue] = useState('');
     const [inputError, setInputError] = useState(false);
 
+    const resetAsideVisible = () => {
+        setAsideVisible(false);
+    };
+
     const isAuth = useAuth();
+    const isDesktop = useResize();
     const navigate = useNavigate();
 
     const getAuthStatus = async () => {
@@ -115,43 +121,43 @@ function Layout() {
     return (
         <div className="layout-container">
             {isAuth && (
-                <>
-                    {isAsideVisible && (
+                <div>
+                    {isAsideVisible && isDesktop && (
                         <aside className="sidebar" style={{ width: isAsideVisible ? "115px" : 0 }}>
                             <nav>
-                                <div className="links-container">
-                                    <div className="link">
+                                <div className="desktop-sidebar-links-container">
+                                    <div className="desktop-link">
                                         <Link to={profilePath}>
                                             <Font font={'account_circle'} />
                                             <h4>Profile</h4>
                                         </Link>
                                     </div>
-                                    <div className="link">
+                                    <div className="desktop-link">
                                         <Link to="/settings">
                                             <Font font={'manage_accounts'} />
                                             <h4>Settings</h4>
                                         </Link>
                                     </div>
-                                    <div className="link">
+                                    <div className="desktop-link">
                                         <Link to="/files">
                                             <Font font={'storage'} />
                                             <h4>Files</h4>
                                         </Link>
                                     </div>
-                                    <div className="link">
+                                    <div className="desktop-link">
                                         <Link to="/offers">
                                             <Font font={'storage'} />
                                             <h4>Offers</h4>
                                         </Link>
                                     </div>
-                                    <div className="link">
+                                    <div className="desktop-link">
                                         <Link to="/api">
                                             <Font font={'vpn_key'} />
                                             <h4>API</h4>
                                         </Link>
                                     </div>
                                     {(role === 'Admin' || role === 'HighestAdmin') && (
-                                        <div className="link">
+                                        <div className="desktop-link">
                                             <Link to="/admin">
                                                 <Font font={'admin_panel_settings'} />
                                                 <h4>Admin</h4>
@@ -162,7 +168,96 @@ function Layout() {
                             </nav>
                         </aside>
                     )}
-                </>
+                    {isAsideVisible && !isDesktop && (
+                        <div className="mobile-menu" onClick={resetAsideVisible}> 
+                            <nav>
+                                <div className="mobile-menu-links">
+                                    <div className="mobile-link">
+                                        <Link to={profilePath}>
+                                            <h3>
+                                                <span><Font font={'account_circle'} /> Profile</span>
+                                            </h3>
+                                        </Link>
+                                    </div>
+                                    <div className="mobile-link">
+                                        <Link to="/settings">
+                                            <h3>
+                                                <span><Font font={'manage_accounts'} /> Settings</span>
+                                            </h3>
+                                        </Link>
+                                    </div>
+                                    <div className="mobile-link">
+                                        <Link to="/files">
+                                            <h3>
+                                                <span><Font font={'storage'} /> Files</span>
+                                            </h3>
+                                        </Link>
+                                    </div>
+                                    <div className="mobile-link">
+                                        <Link to="/offers">
+                                            <h3>
+                                                <span><Font font={'storage'} /> Offers</span>
+                                            </h3>
+                                        </Link>
+                                    </div>
+                                    <div className="mobile-link">
+                                        <Link to="/api">
+                                            <h3>
+                                                <span><Font font={'vpn_key'} /> API</span>
+                                            </h3>
+                                        </Link>
+                                    </div>
+                                    {(role === 'Admin' || role === 'HighestAdmin') && (
+                                        <div className="mobile-link">
+                                            <Link to="/admin">
+                                                <h3>
+                                                    <span><Font font={'admin_panel_settings'} /> Admin</span>
+                                                </h3>
+                                            </Link>
+                                        </div>
+                                    )}
+                                    <div className="mobile-link">
+                                        <Link to="/">
+                                            <h3>
+                                                <span><Font font={'home'} /> Home</span>
+                                            </h3>
+                                        </Link>
+                                    </div>
+                                    <div className="mobile-link">
+                                        <Link to="/about">
+                                            <h3>
+                                                <span><Font font={'info'} /> About</span>
+                                            </h3>
+                                        </Link>
+                                    </div>
+                                    <div className="mobile-link">
+                                        <Link to="/policy">
+                                            <h3>
+                                                <span><Font font={'policy'} /> Policy</span>
+                                            </h3>
+                                        </Link>
+                                    </div>
+                                    <div className="mobile-auth-btn-container">
+                                        {isAuth ? (
+                                            <div className="mobile-signout-btn-container">
+                                                <button className="mobile-signout-btn" onClick={logout}>Sign Out</button>
+                                            </div>
+                                        ) : (
+                                                <div className="mobile-is-auth-container">
+                                                    <div className="mobile-signup-btn-container" onClick={resetAsideVisible}>
+                                                        <button className="mobile-signup-btn" onClick={() => navigate('/auth/signup')}>Sign Up</button>
+                                                    </div>
+                                                    <div className="mobile-signin-btn-container" onClick={resetAsideVisible}>
+                                                        <button className="mobile-signin-btn" onClick={() => navigate('/auth/login')}>Sign In</button>
+                                                    </div>
+                                                </div>
+                                        )}
+                                    </div>
+                                </div>
+                            </nav>
+                        </div>
+                    )}
+                </div>
             )}
             <div className="header-outlet-container">
                 <header className="head">
@@ -205,20 +300,20 @@ function Layout() {
                                         <button className="signout-btn" onClick={logout}>Sign Out</button>
                                     </div>
                                 ) : (
-                                    <div className="is-auth-container">
-                                        <div className="signup-btn-container">
-                                            <button className="signup-btn" onClick={() => navigate('/auth/signup')}>Sign Up</button>
+                                        <div className="is-auth-container">
+                                            <div className="signup-btn-container">
+                                                <button className="signup-btn" onClick={() => navigate('/auth/signup')}>Sign Up</button>
+                                            </div>
+                                            <div className="signin-btn-container">
+                                                <button className="signin-btn" onClick={() => navigate('/auth/login')}>Sign In</button>
+                                            </div>
                                         </div>
-                                        <div className="signin-btn-container">
-                                            <button className="signin-btn" onClick={() => navigate('/auth/login')}>Sign In</button>
-                                        </div>
-                                    </div>
                                 )}
                             </div>
                         </div>
                     </nav>
                 </header>
-                <div className="outlet" style={{ marginLeft: isAsideVisible ? '150px' : 0 }}>
+                <div className="outlet" style={{ marginLeft: isAsideVisible && isDesktop ? '150px' : 0 }}>
                     <Outlet />
                 </div>
             </div>
