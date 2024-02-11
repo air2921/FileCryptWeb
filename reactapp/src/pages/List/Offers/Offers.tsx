@@ -13,7 +13,6 @@ const Offers = () => {
 
     const [errorMessage, setErrorMessage] = useState('');
     const [offersList, setOffers] = useState(null);
-    const [userId, setUserId] = useState<number>();
     const [message, setMessage] = useState('');
     const [font, setFont] = useState('');
 
@@ -43,27 +42,6 @@ const Offers = () => {
     const handleBack = () => {
         setSkip(prevSkip => Math.max(0, prevSkip - step));
     };
-
-    const createOffer = async (e: FormEvent) => {
-        e.preventDefault();
-
-        const response = await AxiosRequest({ endpoint: `api/core/offers/new/${userId}`, method: 'POST', withCookie: true, requestBody: null })
-
-        if (response.isSuccess) {
-            setMessage(response.data.message);
-            setFont('done');
-            setLastOfferModified(Date.now());
-        }
-        else {
-            setMessage(response.data)
-            setFont('error');
-        }
-
-        setTimeout(() => {
-            setMessage('');
-            setFont('');
-        }, 5000)
-    }
 
     const deleteOffer = async (offerId: number) => {
         const response = await AxiosRequest({ endpoint: `api/core/offers/${offerId}`, method: 'DELETE', withCookie: true, requestBody: null })
@@ -114,14 +92,37 @@ const Offers = () => {
     const { offers, user_id } = offersList as { offers: any[], user_id: number }
 
     const CreateOffer = () => {
+        const [userId, setUserId] = useState<number>();
+
+        const createOffer = async (e: FormEvent) => {
+            e.preventDefault();
+
+            const response = await AxiosRequest({ endpoint: `api/core/offers/new/${userId}`, method: 'POST', withCookie: true, requestBody: null })
+
+            if (response.isSuccess) {
+                setMessage(response.data.message);
+                setFont('done');
+                setLastOfferModified(Date.now());
+            }
+            else {
+                setMessage(response.data)
+                setFont('error');
+            }
+
+            setTimeout(() => {
+                setMessage('');
+                setFont('');
+            }, 5000)
+        }
+
         return (
             <div className="create">
                 <form onSubmit={createOffer}>
                     <label htmlFor="offer">
-                        UID of the offer receiver
+                        ID user you want send offer
                         <input
                             type="text"
-                            id="offer"
+                            id="code"
                             required={true}
                             value={userId}
                             onChange={(e) => {
@@ -136,6 +137,7 @@ const Offers = () => {
                                 }
                             }}
                             inputMode="numeric"
+                            placeholder="User ID"
                         />
                     </label>
                     <button>Submit</button>

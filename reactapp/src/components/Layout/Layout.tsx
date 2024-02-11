@@ -281,7 +281,7 @@ function Layout() {
                                         <div className="name">
                                             Policy
                                         </div>
-                                    </div>
+                                    </div> 
                                 </Link>
                             </div>
                             <div className="mobile-auth-btn-container">
@@ -307,9 +307,14 @@ function Layout() {
             <div className="header-outlet-container">
                 <header className="head">
                     <div className="aside-visible-container">
-                        <button className="aside-visible-btn" onClick={() => setAsideVisible(!isAsideVisible)}>
-                            <Font font={'menu'} />
-                        </button>
+                        {!isAuth && isDesktop ? (
+                            <>
+                            </>
+                        ) : (
+                                <button className="aside-visible-btn" onClick={() => setAsideVisible(!isAsideVisible)}>
+                                    <Font font={'menu'} />
+                                </button>
+                        )}
                     </div>
                     <nav>
                         <div>
@@ -357,8 +362,8 @@ function Layout() {
                 {isAsideVisible && !isDesktop ? (
                     <>
                     </>
-                ): (
-                        <div className="outlet" style={{ marginLeft: isAsideVisible && isDesktop ? '150px' : 0 }}>
+                ) : (
+                        <div className="outlet" style={{ marginLeft: isAsideVisible && isDesktop && isAuth ? '150px' : 0 }}>
                             <Outlet />
                         </div>
                 )}

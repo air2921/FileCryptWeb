@@ -18,9 +18,10 @@
     opacity: 1;
 }
 
-.modal-content{
+.modal-content {
     padding: 20px;
     border-radius: 12px;
+    border: 1px solid #808080;
     background-color: black;
     transform: scale(0.5);
     transition: 0.4s all;
