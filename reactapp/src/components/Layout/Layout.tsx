@@ -2,10 +2,10 @@
 import Font from '../Font/Font';
 import { Link, Outlet, useNavigate } from 'react-router-dom';
 import cookie from 'react-cookies'
-import useAuth from '../UseAuth/UseAuth'
 import AxiosRequest from '../../api/AxiosRequest';
 import './Layout.css'
 import useResize from '../UseResize/useResize';
+import useAuth from '../UseAuth/useAuth';
 
 function Layout() {
     const [username, setUsername] = useState(cookie.load('auth_username'));
@@ -120,154 +120,197 @@ function Layout() {
 
     return (
         <div className="layout-container">
-            {isAuth && (
-                <div>
-                    {isAsideVisible && isDesktop && (
-                        <aside className="sidebar" style={{ width: isAsideVisible ? "115px" : 0 }}>
-                            <nav>
-                                <div className="desktop-sidebar-links-container">
-                                    <div className="desktop-link">
-                                        <Link to={profilePath}>
-                                            <Font font={'account_circle'} />
-                                            <h4>Profile</h4>
-                                        </Link>
-                                    </div>
-                                    <div className="desktop-link">
-                                        <Link to="/settings">
-                                            <Font font={'manage_accounts'} />
-                                            <h4>Settings</h4>
-                                        </Link>
-                                    </div>
-                                    <div className="desktop-link">
-                                        <Link to="/files">
-                                            <Font font={'storage'} />
-                                            <h4>Files</h4>
-                                        </Link>
-                                    </div>
-                                    <div className="desktop-link">
-                                        <Link to="/offers">
-                                            <Font font={'storage'} />
-                                            <h4>Offers</h4>
-                                        </Link>
-                                    </div>
-                                    <div className="desktop-link">
-                                        <Link to="/api">
-                                            <Font font={'vpn_key'} />
-                                            <h4>API</h4>
-                                        </Link>
-                                    </div>
-                                    {(role === 'Admin' || role === 'HighestAdmin') && (
-                                        <div className="desktop-link">
-                                            <Link to="/admin">
-                                                <Font font={'admin_panel_settings'} />
-                                                <h4>Admin</h4>
-                                            </Link>
-                                        </div>
-                                    )}
+            {isAuth && isAsideVisible && isDesktop && (
+                <aside className="sidebar" style={{ width: isAsideVisible ? "115px" : 0 }}>
+                    <nav>
+                        <div className="desktop-sidebar-links-container">
+                            <div className="desktop-link">
+                                <Link to={profilePath}>
+                                    <Font font={'account_circle'} />
+                                    <h4>Profile</h4>
+                                </Link>
+                            </div>
+                            <div className="desktop-link">
+                                <Link to="/settings">
+                                    <Font font={'manage_accounts'} />
+                                    <h4>Settings</h4>
+                                </Link>
+                            </div>
+                            <div className="desktop-link">
+                                <Link to="/files">
+                                    <Font font={'storage'} />
+                                    <h4>Files</h4>
+                                </Link>
+                            </div>
+                            <div className="desktop-link">
+                                <Link to="/offers">
+                                    <Font font={'storage'} />
+                                    <h4>Offers</h4>
+                                </Link>
+                            </div>
+                            <div className="desktop-link">
+                                <Link to="/api">
+                                    <Font font={'vpn_key'} />
+                                    <h4>API</h4>
+                                </Link>
+                            </div>
+                            {(role === 'Admin' || role === 'HighestAdmin') && (
+                                <div className="desktop-link">
+                                    <Link to="/admin">
+                                        <Font font={'admin_panel_settings'} />
+                                        <h4>Admin</h4>
+                                    </Link>
                                 </div>
-                            </nav>
-                        </aside>
-                    )}
-                    {isAsideVisible && !isDesktop && (
-                        <div className="mobile-menu" onClick={resetAsideVisible}> 
-                            <nav>
-                                <div className="mobile-menu-links">
+                            )}
+                        </div>
+                    </nav>
+                </aside>
+            )}
+            {isAsideVisible && !isDesktop && (
+                <div className="mobile-menu" onClick={resetAsideVisible}>
+                    <nav>
+                        <div className="mobile-menu" onClick={resetAsideVisible}>
+                            {isAuth && (
+                                <>
                                     <div className="mobile-link">
                                         <Link to={profilePath}>
-                                            <h3>
-                                                <span><Font font={'account_circle'} /> Profile</span>
-                                            </h3>
+                                            <div className="link-content">
+                                                <div className="icon">
+                                                    <i className="material-icons-outlined" style={{ background: 'transparent', fontSize: '28px' }}>account_circle</i>
+                                                </div>
+                                                <div className="name">
+                                                    Profile
+                                                </div>
+                                            </div>
                                         </Link>
                                     </div>
                                     <div className="mobile-link">
                                         <Link to="/settings">
-                                            <h3>
-                                                <span><Font font={'manage_accounts'} /> Settings</span>
-                                            </h3>
+                                            <div className="link-content">
+                                                <div className="icon">
+                                                    <i className="material-icons-outlined" style={{ background: 'transparent', fontSize: '28px' }}>manage_accounts</i>
+                                                </div>
+                                                <div className="name">
+                                                    Settings
+                                                </div>
+                                            </div>
                                         </Link>
                                     </div>
                                     <div className="mobile-link">
                                         <Link to="/files">
-                                            <h3>
-                                                <span><Font font={'storage'} /> Files</span>
-                                            </h3>
+                                            <div className="link-content">
+                                                <div className="icon">
+                                                    <i className="material-icons-outlined" style={{ background: 'transparent', fontSize: '28px' }}>storage</i>
+                                                </div>
+                                                <div className="name">
+                                                    Files
+                                                </div>
+                                            </div>
                                         </Link>
                                     </div>
                                     <div className="mobile-link">
                                         <Link to="/offers">
-                                            <h3>
-                                                <span><Font font={'storage'} /> Offers</span>
-                                            </h3>
+                                            <div className="link-content">
+                                                <div className="icon">
+                                                    <i className="material-icons-outlined" style={{ background: 'transparent', fontSize: '28px' }}>storage</i>
+                                                </div>
+                                                <div className="name">
+                                                    Offers
+                                                </div>
+                                            </div>
                                         </Link>
                                     </div>
                                     <div className="mobile-link">
                                         <Link to="/api">
-                                            <h3>
-                                                <span><Font font={'vpn_key'} /> API</span>
-                                            </h3>
+                                            <div className="link-content">
+                                                <div className="icon">
+                                                    <i className="material-icons-outlined" style={{ background: 'transparent', fontSize: '28px' }}>vpn_key</i>
+                                                </div>
+                                                <div className="name">
+                                                    API
+                                                </div>
+                                            </div>
                                         </Link>
                                     </div>
                                     {(role === 'Admin' || role === 'HighestAdmin') && (
                                         <div className="mobile-link">
                                             <Link to="/admin">
-                                                <h3>
-                                                    <span><Font font={'admin_panel_settings'} /> Admin</span>
-                                                </h3>
+                                                <div className="link-content">
+                                                    <div className="icon">
+                                                        <i className="material-icons-outlined" style={{ background: 'transparent', fontSize: '28px' }}>admin_panel_settings</i>
+                                                    </div>
+                                                    <div className="name">
+                                                        Admin
+                                                    </div>
+                                                </div>
                                             </Link>
                                         </div>
                                     )}
-                                    <div className="mobile-link">
-                                        <Link to="/">
-                                            <h3>
-                                                <span><Font font={'home'} /> Home</span>
-                                            </h3>
-                                        </Link>
+                                </>
+                            )}
+                            <div className="mobile-link">
+                                <Link to="/">
+                                    <div className="link-content">
+                                        <div className="icon">
+                                            <i className="material-icons-outlined" style={{ background: 'transparent', fontSize: '28px' }}>home</i>
+                                        </div>
+                                        <div className="name">
+                                            Home
+                                        </div>
                                     </div>
-                                    <div className="mobile-link">
-                                        <Link to="/about">
-                                            <h3>
-                                                <span><Font font={'info'} /> About</span>
-                                            </h3>
-                                        </Link>
+                                </Link>
+                            </div>
+                            <div className="mobile-link">
+                                <Link to="/about">
+                                    <div className="link-content">
+                                        <div className="icon">
+                                            <i className="material-icons-outlined" style={{ background: 'transparent', fontSize: '28px' }}>info</i>
+                                        </div>
+                                        <div className="name">
+                                            About
+                                        </div>
                                     </div>
-                                    <div className="mobile-link">
-                                        <Link to="/policy">
-                                            <h3>
-                                                <span><Font font={'policy'} /> Policy</span>
-                                            </h3>
-                                        </Link>
+                                </Link>
+                            </div>
+                            <div className="mobile-link">
+                                <Link to="/policy">
+                                    <div className="link-content">
+                                        <div className="icon">
+                                            <i className="material-icons-outlined" style={{ background: 'transparent', fontSize: '28px' }}>policy</i>
+                                        </div>
+                                        <div className="name">
+                                            Policy
+                                        </div>
                                     </div>
-                                    <div className="mobile-auth-btn-container">
-                                        {isAuth ? (
-                                            <div className="mobile-signout-btn-container">
-                                                <button className="mobile-signout-btn" onClick={logout}>Sign Out</button>
-                                            </div>
-                                        ) : (
-                                                <div className="mobile-is-auth-container">
-                                                    <div className="mobile-signup-btn-container" onClick={resetAsideVisible}>
-                                                        <button className="mobile-signup-btn" onClick={() => navigate('/auth/signup')}>Sign Up</button>
-                                                    </div>
-                                                    <div className="mobile-signin-btn-container" onClick={resetAsideVisible}>
-                                                        <button className="mobile-signin-btn" onClick={() => navigate('/auth/login')}>Sign In</button>
-                                                    </div>
-                                                </div>
-                                        )}
+                                </Link>
+                            </div>
+                            <div className="mobile-auth-btn-container">
+                                {isAuth ? (
+                                    <div className="mobile-signout-btn-container">
+                                        <button className="mobile-signout-btn" onClick={logout}>Sign Out</button>
                                     </div>
-                                </div>
-                            </nav>
+                                ) : (
+                                    <div className="mobile-is-auth-container">
+                                        <div className="mobile-signup-btn-container" onClick={resetAsideVisible}>
+                                            <button className="mobile-signup-btn" onClick={() => navigate('/auth/signup')}>Sign Up</button>
+                                        </div>
+                                        <div className="mobile-signin-btn-container" onClick={resetAsideVisible}>
+                                            <button className="mobile-signin-btn" onClick={() => navigate('/auth/login')}>Sign In</button>
+                                        </div>
+                                    </div>
+                                )}
+                            </div>
                         </div>
-                    )}
+                    </nav>
                 </div>
             )}
             <div className="header-outlet-container">
                 <header className="head">
-                    {isAuth && (
-                        <div className="aside-visible-container">
-                            <button className="aside-visible-btn" onClick={() => setAsideVisible(!isAsideVisible)}>
-                                <Font font={'menu'} />
-                            </button>
-                        </div>
-                    )}
+                    <div className="aside-visible-container">
+                        <button className="aside-visible-btn" onClick={() => setAsideVisible(!isAsideVisible)}>
+                            <Font font={'menu'} />
+                        </button>
+                    </div>
                     <nav>
                         <div>
                             <div className="header-links">
@@ -276,18 +319,16 @@ function Layout() {
                                 <Link to="/policy">Policy</Link>
                             </div>
                             <div className="head-center">
-                                {isAuth && (
-                                    <div className="find-container">
-                                        <input className={inputError ? 'find-input error' : 'find-input'}
-                                            type="text" id="user"
-                                            required={true}
-                                            value={inputValue}
-                                            onChange={(e) => setInputValue(e.target.value)}
-                                            placeholder="#2921"
-                                        />
-                                        <button className="find-btn" onClick={findUser}><Font font={'search'} /></button>
-                                    </div>
-                                )}
+                                <div className="find-container">
+                                    <input className={inputError ? 'find-input error' : 'find-input'}
+                                        type="text" id="user"
+                                        required={true}
+                                        value={inputValue}
+                                        onChange={(e) => setInputValue(e.target.value)}
+                                        placeholder="#2921"
+                                    />
+                                    <button className="find-btn" onClick={findUser}><Font font={'search'} /></button>
+                                </div>
                                 {isAuth && (
                                     <div className="notification-container">
                                         <Link to="/notifications"><Font font={'notifications'} /></Link>
@@ -313,9 +354,14 @@ function Layout() {
                         </div>
                     </nav>
                 </header>
-                <div className="outlet" style={{ marginLeft: isAsideVisible && isDesktop ? '150px' : 0 }}>
-                    <Outlet />
-                </div>
+                {isAsideVisible && !isDesktop ? (
+                    <>
+                    </>
+                ): (
+                        <div className="outlet" style={{ marginLeft: isAsideVisible && isDesktop ? '150px' : 0 }}>
+                            <Outlet />
+                        </div>
+                )}
             </div>
         </div>
     );

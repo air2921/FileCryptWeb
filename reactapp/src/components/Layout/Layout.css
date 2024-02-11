@@ -1,45 +1,46 @@
-﻿body {
-    overflow: hidden;
-}
-
-.layout-container {
+﻿.layout-container {
     background: #000;
     display: flex;
     min-height: 100vh;
 }
 
 .mobile-menu {
-    position: fixed;
-    display: flex;
+    position: absolute;
+    margin-top: 30px;
     background-color: #000;
     flex-direction: column;
-/*    align-items: center;
-    justify-content: center;*/
+    justify-content: flex-start;
     top: 0;
     left: 0;
     width: 100%;
     height: 100%;
     z-index: 9999;
-}
-
-.mobile-menu-links {
-    width: 100%;
+    overflow: auto;
+    scroll-behavior: smooth;
 }
 
 .mobile-link {
     display: flex;
-    align-items: flex-start;
+    align-items: center;
+    border-bottom: solid 0.6px #808080;
 }
 
-    .mobile-link h2 {
-        margin-left: 8px;
-        margin-top: 4px;
-    }
+.link-content {
+    display: flex;
+    align-items: center;
+    margin: 0;
+    padding: 10px;
+}
 
-    .mobile-link Font {
-        margin-right: 8px;
-        margin-bottom: 4px;
-    }
+.icon {
+    margin-right: 20px;
+    color: #fff;
+}
+
+.name {
+    font-size: 16px;
+    color: #fff;
+}
 
 .sidebar {
     padding: 1rem;
@@ -264,7 +265,7 @@
 
 .outlet {
     transition: margin-left 0.3s ease;
-    margin-Top: 55px;
+    margin-top: 55px;
     flex: 1;
 }
 
