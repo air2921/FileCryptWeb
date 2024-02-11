@@ -42,6 +42,36 @@
     color: #fff;
 }
 
+.mobile-auth-btn-container {
+    display: flex;
+    padding-top: 30px;
+    align-items: center;
+    justify-content: center !important;
+}
+
+.mobile-signout-btn {
+    text-decoration: none;
+    outline: none;
+    border: none;
+    width: 60vw;
+    background-color: #f00;
+}
+
+.mobile-is-auth-container {
+    display: flex;
+}
+
+.mobile-signup-btn,
+.mobile-signin-btn {
+    text-decoration: none;
+    outline: none;
+    border: none;
+    width: 30vw;
+    background-color: #075ce2;
+    border: 1px solid #075ce2;
+    margin-left: 10px;
+}
+
 .sidebar {
     padding: 1rem;
     position: fixed;
