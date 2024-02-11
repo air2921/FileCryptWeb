@@ -14,7 +14,7 @@ namespace webapi.Controllers.Base
     public class CryptographyHelper : ControllerBase, ICryptographyControllerBase, ICryptographyParamsProvider
     {
         private const string DEFAULT_FOLDER = "C:\\FileCryptWeb";
-        private const int TASK_AWAITING = 30000;
+        private const int TASK_AWAITING = 10000;
 
         private readonly string privateType = FileType.Private.ToString().ToLowerInvariant();
         private readonly string internalType = FileType.Internal.ToString().ToLowerInvariant();
@@ -66,7 +66,6 @@ namespace webapi.Controllers.Base
                 var fileGood = await _fileService.CheckFile(file);
                 if (!fileGood)
                     return StatusCode(415, new { message = ErrorMessage.InfectedOrInvalid });
-
 
                 var sizeNotExceed = _fileService.CheckSize(file);
                 if (!sizeNotExceed)

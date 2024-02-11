@@ -14,14 +14,14 @@ namespace webapi.Services.Third_Party_Services
             _clamSetting = clamSetting;
         }
 
-        public async Task<bool> GetResultScan(IFormFile file)
+        public async Task<bool> GetResultScan(IFormFile file, CancellationToken cancellationToken)
         {
             try
             {
                 var fileStream = file.OpenReadStream();
                 var clam = _clamSetting.SetClam();
 
-                var scanResult = await clam.SendAndScanFileAsync(fileStream);
+                var scanResult = await clam.SendAndScanFileAsync(fileStream, cancellationToken);
                 var rerult = scanResult.Result.Equals(ClamScanResults.Clean);
 
                 return rerult;
@@ -37,7 +37,7 @@ namespace webapi.Services.Third_Party_Services
 
     public interface IClamClient
     {
-        Task<ClamScanResult> SendAndScanFileAsync(Stream stream);
+        Task<ClamScanResult> SendAndScanFileAsync(Stream stream, CancellationToken cancellationToken);
     }
 
     public class ClamClientWrapper : IClamClient
@@ -49,11 +49,11 @@ namespace webapi.Services.Third_Party_Services
             _clamClient = clamClient;
         }
 
-        public async Task<ClamScanResult> SendAndScanFileAsync(Stream stream)
+        public async Task<ClamScanResult> SendAndScanFileAsync(Stream stream, CancellationToken cancellationToken)
         {
             try
             {
-                return await _clamClient.SendAndScanFileAsync(stream);
+                return await _clamClient.SendAndScanFileAsync(stream, cancellationToken);
             }
             catch (Exception)
             {

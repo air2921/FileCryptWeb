@@ -13,6 +13,7 @@ namespace webapi.Controllers.Base.CryptographyUtils
         private readonly string privateType = FileType.Private.ToString().ToLowerInvariant();
         private readonly string internalType = FileType.Internal.ToString().ToLowerInvariant();
         private readonly string receivedType = FileType.Received.ToString().ToLowerInvariant();
+        private const int TASK_AWAITING = 10000;
 
         private readonly IRepository<FileModel> _fileRepository;
         private readonly IRepository<FileMimeModel> _mimeRepository;
@@ -53,16 +54,38 @@ namespace webapi.Controllers.Base.CryptographyUtils
 
         public async Task<bool> CheckFile(IFormFile file)
         {
-            if (file.Length == 0 || file.ContentType is null)
-                return false;
+            try
+            {
+                if (file.Length == 0 || file.ContentType is null)
+                    return false;
 
-            if (!await _virusCheck.GetResultScan(file))
-                return false;
+                if (!await CheckMIME(file.ContentType))
+                    return false;
 
-            if (!await CheckMIME(file.ContentType))
-                return false;
+                using var cts = new CancellationTokenSource();
+                var cancellationToken = cts.Token;
 
-            return true;
+                var virusCheckTask = _virusCheck.GetResultScan(file, cancellationToken);
+                var timeoutTask = Task.Delay(TASK_AWAITING);
+                var completedTask = await Task.WhenAny(virusCheckTask, timeoutTask);
+
+                if (completedTask == timeoutTask)
+                {
+                    cts.Cancel();
+                    _logger.LogCritical("Virus check task was cancelled", nameof(CheckFile));
+                    return false;
+                }
+
+                if (!await virusCheckTask)
+                    return false;
+
+                return true;
+            }
+            catch (Exception ex)
+            {
+                _logger.LogCritical(ex.ToString(), nameof(CheckFile));
+                return false;
+            }
         }
 
         public bool CheckSize(IFormFile file)
