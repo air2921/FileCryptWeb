@@ -24,11 +24,18 @@ namespace webapi.Controllers.Admin
         [Authorize(Roles = "HighestAdmin,Admin")]
         public async Task<IActionResult> GetUser([FromRoute] int userId)
         {
-            var user = await _userRepository.GetById(userId);
-            if (user is null)
-                return StatusCode(404);
+            try
+            {
+                var user = await _userRepository.GetById(userId);
+                if (user is null)
+                    return StatusCode(404);
 
-            return StatusCode(200, new { user });
+                return StatusCode(200, new { user });
+            }
+            catch (OperationCanceledException ex)
+            {
+                return StatusCode(500, new { message = ex.Message });
+            }
         }
 
         [HttpDelete("{userId}")]

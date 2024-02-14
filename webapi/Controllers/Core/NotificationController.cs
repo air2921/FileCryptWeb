@@ -35,25 +35,32 @@ namespace webapi.Controllers.Core
         [HttpGet("{notificationId}")]
         public async Task<IActionResult> GetNotification([FromRoute] int notificationId)
         {
-            var cacheKey = $"Notifications_{_userInfo.UserId}_{notificationId}";
-
-            var cacheNotification = await _redisCache.GetCachedData(cacheKey);
-            if (cacheNotification is not null)
+            try
             {
-                var cacheResult = JsonConvert.DeserializeObject<NotificationModel>(cacheNotification);
+                var cacheKey = $"Notifications_{_userInfo.UserId}_{notificationId}";
 
-                return StatusCode(200, new { notification = cacheResult });
+                var cacheNotification = await _redisCache.GetCachedData(cacheKey);
+                if (cacheNotification is not null)
+                {
+                    var cacheResult = JsonConvert.DeserializeObject<NotificationModel>(cacheNotification);
+
+                    return StatusCode(200, new { notification = cacheResult });
+                }
+
+                var notification = await _notificationRepository.GetByFilter
+                    (query => query.Where(n => n.notification_id.Equals(notificationId) && n.receiver_id.Equals(_userInfo.UserId)));
+
+                if (notification is null)
+                    return StatusCode(404);
+
+                await _redisCache.CacheData(cacheKey, notification, TimeSpan.FromMinutes(10));
+
+                return StatusCode(200, new { notification });
             }
-
-            var notification = await _notificationRepository.GetByFilter
-                (query => query.Where(n => n.notification_id.Equals(notificationId) && n.receiver_id.Equals(_userInfo.UserId)));
-
-            if (notification is null)
-                return StatusCode(404);
-
-            await _redisCache.CacheData(cacheKey, notification, TimeSpan.FromMinutes(10));
-
-            return StatusCode(200, new { notification });
+            catch (OperationCanceledException ex)
+            {
+                return StatusCode(500, new { message = ex.Message });
+            }
         }
 
         [HttpGet("all")]
@@ -61,17 +68,24 @@ namespace webapi.Controllers.Core
             [FromQuery] bool byDesc, [FromQuery] string? priority,
             [FromQuery] bool? isChecked)
         {
-            var cacheKey = $"Notifications_{_userInfo.UserId}_{skip}_{count}_{byDesc}_{priority}_{isChecked}";
+            try
+            {
+                var cacheKey = $"Notifications_{_userInfo.UserId}_{skip}_{count}_{byDesc}_{priority}_{isChecked}";
 
-            var cacheNotifications = await _redisCache.GetCachedData(cacheKey);
-            if (cacheNotifications is not null)
-                return StatusCode(200, new { notifications = JsonConvert.DeserializeObject<IEnumerable<NotificationModel>>(cacheNotifications) });
+                var cacheNotifications = await _redisCache.GetCachedData(cacheKey);
+                if (cacheNotifications is not null)
+                    return StatusCode(200, new { notifications = JsonConvert.DeserializeObject<IEnumerable<NotificationModel>>(cacheNotifications) });
 
-            var notifications = await _notificationRepository.GetAll(_sorting.SortNotifications(_userInfo.UserId, skip, count, byDesc, priority, isChecked));
+                var notifications = await _notificationRepository.GetAll(_sorting.SortNotifications(_userInfo.UserId, skip, count, byDesc, priority, isChecked));
 
-            await _redisCache.CacheData(cacheKey, notifications, TimeSpan.FromMinutes(3));
+                await _redisCache.CacheData(cacheKey, notifications, TimeSpan.FromMinutes(3));
 
-            return StatusCode(200, new { notifications });
+                return StatusCode(200, new { notifications });
+            }
+            catch (OperationCanceledException ex)
+            {
+                return StatusCode(500, new { message = ex.Message });
+            }
         }
 
         [HttpDelete("{notificationId}")]

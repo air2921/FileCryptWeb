@@ -94,6 +94,10 @@ namespace webapi.Controllers.Public_API
             {
                 throw new InvalidOperationException();
             }
+            catch (OperationCanceledException ex)
+            {
+                throw new InvalidOperationException();
+            }
         }
 
         private async Task ControlRequestCount(string apiKey, int maxRequest)

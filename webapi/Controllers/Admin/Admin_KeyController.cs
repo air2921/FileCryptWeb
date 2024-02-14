@@ -45,37 +45,44 @@ namespace webapi.Controllers.Admin
         [HttpGet("all/{userId}")]
         public async Task<IActionResult> AllKeys([FromRoute] int userId)
         {
-            HashSet<string> decryptedKeys = new();
-
-            var userKeys = await _keyRepository.GetByFilter(query => query.Where(k => k.user_id.Equals(userId)));
-            if (userKeys is null)
-                return StatusCode(404);
-
-            string?[] encryptionKeys =
+            try
             {
+                HashSet<string> decryptedKeys = new();
+
+                var userKeys = await _keyRepository.GetByFilter(query => query.Where(k => k.user_id.Equals(userId)));
+                if (userKeys is null)
+                    return StatusCode(404);
+
+                string?[] encryptionKeys =
+                {
                 userKeys.private_key,
                 userKeys.internal_key,
                 userKeys.received_key
             };
 
-            foreach (string? encryptedKey in encryptionKeys)
-            {
-                try
+                foreach (string? encryptedKey in encryptionKeys)
                 {
-                    if (encryptedKey is null)
+                    try
+                    {
+                        if (encryptedKey is null)
+                            continue;
+
+                        decryptedKeys.Add(await _decryptKey.DecryptionKeyAsync(encryptedKey, secretKey));
+                    }
+                    catch (CryptographicException ex)
+                    {
+                        _logger.LogCritical(ex.ToString(), nameof(Admin_KeyController));
                         continue;
+                    }
+                }
 
-                    decryptedKeys.Add(await _decryptKey.DecryptionKeyAsync(encryptedKey, secretKey));
-                }
-                catch (CryptographicException ex)
-                {
-                    _logger.LogCritical(ex.ToString(), nameof(Admin_KeyController));
-                    continue;
-                }
+                _logger.LogInformation($"{_userInfo.Username}#{_userInfo.UserId} get keys user#{userId}");
+                return StatusCode(200, new { keys = decryptedKeys });
             }
-
-            _logger.LogInformation($"{_userInfo.Username}#{_userInfo.UserId} get keys user#{userId}");
-            return StatusCode(200, new { keys = decryptedKeys });
+            catch (OperationCanceledException ex)
+            {
+                return StatusCode(500, new { message = ex.Message });
+            }
         }
 
         [HttpPut("revoke/received/{userId}")]

@@ -58,30 +58,37 @@ namespace webapi.Controllers.Core
         [HttpGet("all")]
         public async Task<IActionResult> GetAllKeys()
         {
-            var cacheKey = $"Keys_{_userInfo.UserId}";
-
-            var keys = new KeyModel();
-            var cacheKeys = await _redisCache.GetCachedData(cacheKey);
-
-            if (cacheKeys is null)
+            try
             {
-                keys = await _keyRepository.GetByFilter(query => query.Where(k => k.user_id.Equals(_userInfo.UserId)));
+                var cacheKey = $"Keys_{_userInfo.UserId}";
+
+                var keys = new KeyModel();
+                var cacheKeys = await _redisCache.GetCachedData(cacheKey);
+
+                if (cacheKeys is null)
+                {
+                    keys = await _keyRepository.GetByFilter(query => query.Where(k => k.user_id.Equals(_userInfo.UserId)));
+                    if (keys is null)
+                        return StatusCode(404);
+
+                    await _redisCache.CacheData(cacheKey, keys, TimeSpan.FromMinutes(10));
+                }
+                else
+                    keys = JsonConvert.DeserializeObject<KeyModel>(cacheKeys);
+
                 if (keys is null)
                     return StatusCode(404);
 
-                await _redisCache.CacheData(cacheKey, keys, TimeSpan.FromMinutes(10));
+                string? privateKey = keys.private_key is not null ? await _decryptKey.DecryptionKeyAsync(keys.private_key, secretKey) : null;
+                string? internalKey = keys.internal_key is not null ? await _decryptKey.DecryptionKeyAsync(keys.internal_key, secretKey) : null;
+                string? receivedKey = keys.received_key is not null ? "hidden" : null;
+
+                return StatusCode(200, new { keys = new { privateKey, internalKey, receivedKey } });
             }
-            else
-                keys = JsonConvert.DeserializeObject<KeyModel>(cacheKeys);
-
-            if (keys is null)
-                return StatusCode(404);
-
-            string? privateKey = keys.private_key is not null ? await _decryptKey.DecryptionKeyAsync(keys.private_key, secretKey) : null;
-            string? internalKey = keys.internal_key is not null ? await _decryptKey.DecryptionKeyAsync(keys.internal_key, secretKey) : null;
-            string? receivedKey = keys.received_key is not null ? "hidden" : null;
-
-            return StatusCode(200, new { keys = new { privateKey, internalKey, receivedKey } });
+            catch (OperationCanceledException ex)
+            {
+                return StatusCode(500, new { message = ex.Message });
+            }
         }
 
         [HttpPut("private")]

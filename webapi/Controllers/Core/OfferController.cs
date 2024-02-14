@@ -133,25 +133,32 @@ namespace webapi.Controllers.Core
         [HttpGet("{offerId}")]
         public async Task<IActionResult> GetOneOffer([FromRoute] int offerId)
         {
-            var cacheKey = $"Offers_{offerId}";
-
-            var cacheOffer = await _redisCache.GetCachedData(cacheKey);
-            if (cacheOffer is not null)
+            try
             {
-                var cacheResult = JsonConvert.DeserializeObject<OfferModel>(cacheOffer);
-                if (cacheResult.sender_id != _userInfo.UserId || cacheResult.sender_id != _userInfo.UserId)
+                var cacheKey = $"Offers_{offerId}";
+
+                var cacheOffer = await _redisCache.GetCachedData(cacheKey);
+                if (cacheOffer is not null)
+                {
+                    var cacheResult = JsonConvert.DeserializeObject<OfferModel>(cacheOffer);
+                    if (cacheResult.sender_id != _userInfo.UserId || cacheResult.sender_id != _userInfo.UserId)
+                        return StatusCode(404);
+
+                    return StatusCode(200, new { offers = cacheResult, userId = _userInfo.UserId });
+                }
+
+                var offer = await _offerRepository.GetById(offerId);
+                if (offer is null || offer.sender_id != _userInfo.UserId || offer.receiver_id != _userInfo.UserId)
                     return StatusCode(404);
 
-                return StatusCode(200, new { offers = cacheResult, userId = _userInfo.UserId });
+                await _redisCache.CacheData(cacheKey, offer, TimeSpan.FromMinutes(10));
+
+                return StatusCode(200, new { offer, userId = _userInfo.UserId });
             }
-
-            var offer = await _offerRepository.GetById(offerId);
-            if (offer is null || offer.sender_id != _userInfo.UserId || offer.receiver_id != _userInfo.UserId)
-                return StatusCode(404);
-
-            await _redisCache.CacheData(cacheKey, offer, TimeSpan.FromMinutes(10));
-
-            return StatusCode(200, new { offer, userId = _userInfo.UserId });
+            catch (OperationCanceledException ex)
+            {
+                return StatusCode(500, new { message = ex.Message });
+            }
         }
 
         [HttpGet("all")]
@@ -159,22 +166,29 @@ namespace webapi.Controllers.Core
             [FromQuery] bool byDesc, [FromQuery] bool? sended,
             [FromQuery] bool? isAccepted, [FromQuery] string? type)
         {
-            var cacheKey = $"Offers_{_userInfo.UserId}_{skip}_{count}_{byDesc}_{sended}_{isAccepted}_{type}";
-
-            var cacheOffers = await _redisCache.GetCachedData(cacheKey);
-            if (cacheOffers is not null)
-                return StatusCode(200, new { offers = JsonConvert.DeserializeObject<IEnumerable<OfferModel>>(cacheOffers), user_id = _userInfo.UserId });
-
-            var offers = await _offerRepository.GetAll(_sorting.SortOffers(_userInfo.UserId, skip, count, byDesc, sended, isAccepted, type));
-            foreach (var offer in offers)
+            try
             {
-                offer.offer_body = string.Empty;
-                offer.offer_header = string.Empty;
+                var cacheKey = $"Offers_{_userInfo.UserId}_{skip}_{count}_{byDesc}_{sended}_{isAccepted}_{type}";
+
+                var cacheOffers = await _redisCache.GetCachedData(cacheKey);
+                if (cacheOffers is not null)
+                    return StatusCode(200, new { offers = JsonConvert.DeserializeObject<IEnumerable<OfferModel>>(cacheOffers), user_id = _userInfo.UserId });
+
+                var offers = await _offerRepository.GetAll(_sorting.SortOffers(_userInfo.UserId, skip, count, byDesc, sended, isAccepted, type));
+                foreach (var offer in offers)
+                {
+                    offer.offer_body = string.Empty;
+                    offer.offer_header = string.Empty;
+                }
+
+                await _redisCache.CacheData(cacheKey, offers, TimeSpan.FromMinutes(3));
+
+                return StatusCode(200, new { offers, user_id = _userInfo.UserId });
             }
-
-            await _redisCache.CacheData(cacheKey, offers, TimeSpan.FromMinutes(3));
-
-            return StatusCode(200, new { offers, user_id = _userInfo.UserId });
+            catch (OperationCanceledException ex)
+            {
+                return StatusCode(500, new { message = ex.Message });
+            }
         }
 
         [HttpDelete("{offerId}")]

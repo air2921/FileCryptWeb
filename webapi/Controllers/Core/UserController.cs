@@ -46,97 +46,111 @@ namespace webapi.Controllers.Core
         [HttpGet("{userId}/{username}")]
         public async Task<IActionResult> GetUser([FromRoute] int userId, [FromRoute] string username)
         {
-            var userAndKeys = await _dbContext.Users
-                    .Where(u => u.id == userId && u.username == username)
-                    .Join(_dbContext.Keys, user => user.id, keys => keys.user_id, (user, keys) => new { user, keys })
-                    .FirstOrDefaultAsync();
-
-            if (userAndKeys is null)
-                return StatusCode(404, new { message = ExceptionUserMessages.UserNotFound });
-
-            var cacheKeyFiles = $"Profile_Files_{userId}";
-            var cacheKeyOffers = $"Profile_Offers_{userId}";
-            var list_offers = new List<OfferObject>();
-            var files = new List<FileModel>();
-            var offers = new List<OfferModel>();
-
-            var cacheFiles = await _redisCache.GetCachedData(cacheKeyFiles);
-            if (cacheFiles is null)
+            try
             {
-                var filesDb = await _fileRepository.GetAll
-                    (query => query.Where(f => f.user_id.Equals(userId)).OrderByDescending(f => f.operation_date).Skip(0).Take(5));
+                var userAndKeys = await _dbContext.Users
+        .Where(u => u.id == userId && u.username == username)
+        .Join(_dbContext.Keys, user => user.id, keys => keys.user_id, (user, keys) => new { user, keys })
+        .FirstOrDefaultAsync();
 
-                await _redisCache.CacheData(cacheKeyFiles, filesDb, TimeSpan.FromMinutes(1));
+                if (userAndKeys is null)
+                    return StatusCode(404, new { message = ExceptionUserMessages.UserNotFound });
 
-                files = (List<FileModel>)filesDb;
+                var cacheKeyFiles = $"Profile_Files_{userId}";
+                var cacheKeyOffers = $"Profile_Offers_{userId}";
+                var list_offers = new List<OfferObject>();
+                var files = new List<FileModel>();
+                var offers = new List<OfferModel>();
+
+                var cacheFiles = await _redisCache.GetCachedData(cacheKeyFiles);
+                if (cacheFiles is null)
+                {
+                    var filesDb = await _fileRepository.GetAll
+                        (query => query.Where(f => f.user_id.Equals(userId)).OrderByDescending(f => f.operation_date).Skip(0).Take(5));
+
+                    await _redisCache.CacheData(cacheKeyFiles, filesDb, TimeSpan.FromMinutes(1));
+
+                    files = (List<FileModel>)filesDb;
+                }
+                else
+                    files = JsonConvert.DeserializeObject<List<FileModel>>(cacheFiles);
+
+                var cacheOffers = await _redisCache.GetCachedData(cacheKeyOffers);
+                if (cacheOffers is null)
+                {
+                    var offersDb = await _offerRepository.GetAll
+                        (query => query.Where(o => o.receiver_id.Equals(userId) || o.sender_id.Equals(userId)).OrderByDescending(o => o.created_at).Skip(0).Take(5));
+
+                    await _redisCache.CacheData(cacheKeyOffers, offersDb, TimeSpan.FromMinutes(1));
+
+                    offers = (List<OfferModel>)offersDb;
+                }
+                else
+                    offers = JsonConvert.DeserializeObject<List<OfferModel>>(cacheOffers);
+
+                foreach (var offer in offers)
+                {
+                    list_offers.Add(new OfferObject
+                    {
+                        offer_id = offer.offer_id,
+                        sender_id = offer.sender_id,
+                        receiver_id = offer.receiver_id,
+                        offer_type = offer.offer_type,
+                        created_at = offer.created_at,
+                        is_accepted = offer.is_accepted,
+                    });
+                }
+
+                bool IsOwner = userId.Equals(_userInfo.UserId);
+                bool privateKey = userAndKeys.keys.private_key is not null;
+                bool internalKey = userAndKeys.keys.internal_key is not null;
+                bool receivedKey = userAndKeys.keys.received_key is not null;
+
+                var user = new
+                {
+                    id = userAndKeys.user.id,
+                    username = userAndKeys.user.username,
+                    email = IsOwner ? userAndKeys.user.email : null,
+                    role = userAndKeys.user.role,
+                    is_blocked = userAndKeys.user.is_blocked
+                };
+
+                return StatusCode(200, new { user, IsOwner, keys = new { privateKey, internalKey, receivedKey }, files, offers = list_offers });
             }
-            else
-                files = JsonConvert.DeserializeObject<List<FileModel>>(cacheFiles);
-
-            var cacheOffers = await _redisCache.GetCachedData(cacheKeyOffers);
-            if (cacheOffers is null)
+            catch (OperationCanceledException ex)
             {
-                var offersDb = await _offerRepository.GetAll
-                    (query => query.Where(o => o.receiver_id.Equals(userId) || o.sender_id.Equals(userId)).OrderByDescending(o => o.created_at).Skip(0).Take(5));
-
-                await _redisCache.CacheData(cacheKeyOffers, offersDb, TimeSpan.FromMinutes(1));
-
-                offers = (List<OfferModel>)offersDb;
+                return StatusCode(500, new { message = ex.Message });
             }
-            else
-                offers = JsonConvert.DeserializeObject<List<OfferModel>>(cacheOffers);
-
-            foreach (var offer in offers)
-            {
-                list_offers.Add(new OfferObject
-                { 
-                    offer_id = offer.offer_id,
-                    sender_id = offer.sender_id,
-                    receiver_id = offer.receiver_id,
-                    offer_type = offer.offer_type,
-                    created_at = offer.created_at,
-                    is_accepted = offer.is_accepted,
-                });
-            }
-
-            bool IsOwner = userId.Equals(_userInfo.UserId);
-            bool privateKey = userAndKeys.keys.private_key is not null;
-            bool internalKey = userAndKeys.keys.internal_key is not null;
-            bool receivedKey = userAndKeys.keys.received_key is not null;
-
-            var user = new
-            {
-                id = userAndKeys.user.id,
-                username = userAndKeys.user.username,
-                email = IsOwner ? userAndKeys.user.email : null,
-                role = userAndKeys.user.role,
-                is_blocked = userAndKeys.user.is_blocked
-            };
-
-            return StatusCode(200, new { user, IsOwner, keys = new { privateKey, internalKey, receivedKey }, files, offers = list_offers });
         }
 
         [HttpGet("data/only")]
         public async Task<IActionResult> GetOnlyUser()
         {
-            var cacheKey = $"User_Data_{_userInfo.UserId}";
-            var user = new UserModel();
-
-            var cache = await _redisCache.GetCachedData(cacheKey);
-            if (cache is null)
+            try
             {
-                user = await _userRepository.GetById(_userInfo.UserId);
-                if (user is null)
-                    return StatusCode(404);
+                var cacheKey = $"User_Data_{_userInfo.UserId}";
+                var user = new UserModel();
 
-                await _redisCache.CacheData(cacheKey, user, TimeSpan.FromMinutes(3));
+                var cache = await _redisCache.GetCachedData(cacheKey);
+                if (cache is null)
+                {
+                    user = await _userRepository.GetById(_userInfo.UserId);
+                    if (user is null)
+                        return StatusCode(404);
+
+                    await _redisCache.CacheData(cacheKey, user, TimeSpan.FromMinutes(3));
+                }
+                else
+                    user = JsonConvert.DeserializeObject<UserModel>(cache);
+
+                user.password = string.Empty;
+
+                return StatusCode(200, new { user });
             }
-            else
-                user = JsonConvert.DeserializeObject<UserModel>(cache);
-
-            user.password = string.Empty;
-
-            return StatusCode(200, new { user });
+            catch (OperationCanceledException ex)
+            {
+                return StatusCode(500, new { message = ex.Message });
+            }
         }
 
         [HttpDelete]
@@ -159,48 +173,56 @@ namespace webapi.Controllers.Core
         [HttpGet("find")]
         public async Task<IActionResult> FindUser([FromQuery] string? username, [FromQuery] int userId)
         {
-            if (string.IsNullOrWhiteSpace(username) && userId == 0)
-                return StatusCode(404, new { message = ExceptionUserMessages.UserNotFound });
-
-            if (!string.IsNullOrWhiteSpace(username) && userId == 0)
+            try
             {
-                var users = new List<UserObject>();
+                if (string.IsNullOrWhiteSpace(username) && userId == 0)
+                    return StatusCode(404, new { message = ExceptionUserMessages.UserNotFound });
 
-                var usersDb = await _userRepository.GetAll(query => query.Where(u => u.username.Equals(username)));
-
-                foreach (var user in usersDb)
+                if (!string.IsNullOrWhiteSpace(username) && userId == 0)
                 {
-                    users.Add(new UserObject
+                    var users = new List<UserObject>();
+
+                    var usersDb = await _userRepository.GetAll(query => query.Where(u => u.username.Equals(username)));
+
+                    foreach (var user in usersDb)
                     {
-                        id = user.id,
-                        username = user.username,
-                        role = user.role,
-                        is_blocked = user.is_blocked
-                    });
+                        users.Add(new UserObject
+                        {
+                            id = user.id,
+                            username = user.username,
+                            role = user.role,
+                            is_blocked = user.is_blocked
+                        });
+                    }
+
+                    return StatusCode(200, new { users });
                 }
 
-                return StatusCode(200, new { users });
-            }
+                if (string.IsNullOrWhiteSpace(username) && userId != 0)
+                {
+                    var user = await _userRepository.GetById(userId);
+                    if (user is null)
+                        return StatusCode(404, new { message = ExceptionUserMessages.UserNotFound });
 
-            if (string.IsNullOrWhiteSpace(username) && userId != 0)
+                    return StatusCode(200, new { username = user.username, id = user.id });
+                }
+
+                if (!string.IsNullOrWhiteSpace(username) && userId != 0)
+                {
+                    var user = await _dbContext.Users.FirstOrDefaultAsync(u => u.id.Equals(userId) && u.username.Equals(username));
+                    if (user is null)
+                        return StatusCode(404, new { message = ExceptionUserMessages.UserNotFound });
+
+                    return StatusCode(200, new { username = user.username, id = user.id });
+                }
+
+                return StatusCode(404, new { message = ExceptionUserMessages.UserNotFound });
+            }
+            catch (OperationCanceledException ex)
             {
-                var user = await _userRepository.GetById(userId);
-                if (user is null)
-                    return StatusCode(404, new { message = ExceptionUserMessages.UserNotFound });
-
-                return StatusCode(200, new { username = user.username, id = user.id });
+                return StatusCode(500, new { message = ex.Message });
             }
 
-            if (!string.IsNullOrWhiteSpace(username) && userId != 0)
-            {
-                var user = await _dbContext.Users.FirstOrDefaultAsync(u => u.id.Equals(userId) && u.username.Equals(username));
-                if (user is null)
-                    return StatusCode(404, new { message = ExceptionUserMessages.UserNotFound });
-
-                return StatusCode(200, new { username = user.username, id = user.id });
-            }
-
-            return StatusCode(404, new { message = ExceptionUserMessages.UserNotFound });
         }
     }
 

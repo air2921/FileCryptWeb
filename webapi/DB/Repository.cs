@@ -6,6 +6,17 @@ namespace webapi.DB
 {
     public class Repository<T> : IRepository<T> where T : class
     {
+        private const string REQUEST_TIMED_OUT = "Request timed out";
+        private const int GET_ALL_AWAITING = 20;
+        private const int GET_BY_FILTER_AWAITING = 20;
+        private const int GET_BY_ID_AWAITING = 20;
+        private const int ADD_AWAITING = 20;
+        private const int ADD_RANGE_AWAITING = 20;
+        private const int DELETE_AWAITING = 20;
+        private const int DELETE_RANGE_AWAITING = 90;
+        private const int DELETE_BY_FILTER = 20;
+        private const int UPDATE_AWAITING = 20;
+
         private readonly ILogger<Repository<T>> _logger;
         private readonly FileCryptDbContext _context;
         private readonly DbSet<T> _dbSet;
@@ -17,38 +28,71 @@ namespace webapi.DB
             _dbSet = _context.Set<T>();
         }
 
-        public async Task<IEnumerable<T>> GetAll(Func<IQueryable<T>, IQueryable<T>> queryModifier = null)
+        public async Task<IEnumerable<T>> GetAll(Func<IQueryable<T>, IQueryable<T>> queryModifier = null, CancellationToken cancellationToken = default)
         {
-            IQueryable<T> query = _dbSet;
+            try
+            {
+                using var cts = new CancellationTokenSource(TimeSpan.FromSeconds(GET_ALL_AWAITING));
+                cancellationToken = CancellationTokenSource.CreateLinkedTokenSource(cancellationToken, cts.Token).Token;
 
-            if (queryModifier is not null)
-                query = queryModifier(query);
+                IQueryable<T> query = _dbSet;
 
-            return await query.ToListAsync();
+                if (queryModifier is not null)
+                    query = queryModifier(query);
+
+                return await query.ToListAsync(cancellationToken);
+            }
+            catch (OperationCanceledException)
+            {
+                throw new OperationCanceledException(REQUEST_TIMED_OUT);
+            }
         }
 
-        public async Task<T> GetByFilter(Func<IQueryable<T>, IQueryable<T>>? queryModifier)
+        public async Task<T> GetByFilter(Func<IQueryable<T>, IQueryable<T>>? queryModifier, CancellationToken cancellationToken = default)
         {
-            IQueryable<T> query = _dbSet;
+            try
+            {
+                using var cts = new CancellationTokenSource(TimeSpan.FromSeconds(GET_BY_FILTER_AWAITING));
+                cancellationToken = CancellationTokenSource.CreateLinkedTokenSource(cancellationToken, cts.Token).Token;
 
-            if (queryModifier is not null)
-                query = queryModifier(query);
+                IQueryable<T> query = _dbSet;
 
-            return await query.FirstOrDefaultAsync();
+                if (queryModifier is not null)
+                    query = queryModifier(query);
+
+                return await query.FirstOrDefaultAsync(cancellationToken);
+            }
+            catch (OperationCanceledException)
+            {
+                throw new OperationCanceledException(REQUEST_TIMED_OUT);
+            }
         }
 
-        public async Task<T> GetById(int id)
+        public async Task<T> GetById(int id, CancellationToken cancellationToken = default)
         {
-            return await _dbSet.FindAsync(id);
+            try
+            {
+                using var cts = new CancellationTokenSource(TimeSpan.FromSeconds(GET_BY_ID_AWAITING));
+                cancellationToken = CancellationTokenSource.CreateLinkedTokenSource(cancellationToken, cts.Token).Token;
+
+                return await _dbSet.FindAsync(id, cancellationToken);
+            }
+            catch (OperationCanceledException)
+            {
+                throw new OperationCanceledException(REQUEST_TIMED_OUT);
+            }
         }
 
-        public async Task<int> Add(T entity, Func<T, int>? GetId = null)
+        public async Task<int> Add(T entity, Func<T, int>? GetId = null, CancellationToken cancellationToken = default)
         {
             using var transaction = await _context.Database.BeginTransactionAsync();
             try
             {
-                await _dbSet.AddAsync(entity);
-                await _context.SaveChangesAsync();
+                using var cts = new CancellationTokenSource(TimeSpan.FromSeconds(ADD_AWAITING));
+                cancellationToken = CancellationTokenSource.CreateLinkedTokenSource(cancellationToken, cts.Token).Token;
+
+                await _dbSet.AddAsync(entity, cancellationToken);
+                await _context.SaveChangesAsync(cancellationToken);
                 await transaction.CommitAsync();
 
                 if (GetId is not null)
@@ -56,6 +100,10 @@ namespace webapi.DB
 
                 return 0;
             }
+            catch (OperationCanceledException)
+            {
+                throw new EntityNotCreatedException(REQUEST_TIMED_OUT);
+            }
             catch (Exception ex)
             {
                 _logger.LogCritical(ex.ToString(), nameof(_context), nameof(_dbSet));
@@ -64,15 +112,22 @@ namespace webapi.DB
             }
         }
 
-        public async Task AddRange(IEnumerable<T> entities)
+        public async Task AddRange(IEnumerable<T> entities, CancellationToken cancellationToken = default)
         {
             using var transaction = await _context.Database.BeginTransactionAsync();
             try
             {
-                await _dbSet.AddRangeAsync(entities);
-                await _context.SaveChangesAsync();
+                using var cts = new CancellationTokenSource(TimeSpan.FromSeconds(ADD_RANGE_AWAITING));
+                cancellationToken = CancellationTokenSource.CreateLinkedTokenSource(cancellationToken, cts.Token).Token;
+
+                await _dbSet.AddRangeAsync(entities, cancellationToken);
+                await _context.SaveChangesAsync(cancellationToken);
                 await transaction.CommitAsync();
             }
+            catch (OperationCanceledException)
+            {
+                throw new EntityNotCreatedException(REQUEST_TIMED_OUT);
+            }
             catch (Exception ex)
             {
                 await transaction.RollbackAsync();
@@ -81,18 +136,25 @@ namespace webapi.DB
             }
         }
 
-        public async Task Delete(int id)
+        public async Task Delete(int id, CancellationToken cancellationToken = default)
         {
             using var transaction = await _context.Database.BeginTransactionAsync();
             try
             {
-                var entity = await _dbSet.FindAsync(id);
+                using var cts = new CancellationTokenSource(TimeSpan.FromSeconds(DELETE_AWAITING));
+                cancellationToken = CancellationTokenSource.CreateLinkedTokenSource(cancellationToken, cts.Token).Token;
+
+                var entity = await _dbSet.FindAsync(id, cancellationToken);
                 if (entity is not null)
                 {
                     _dbSet.Remove(entity);
-                    await _context.SaveChangesAsync();
+                    await _context.SaveChangesAsync(cancellationToken);
                     await transaction.CommitAsync();
                 }
+            }
+            catch (OperationCanceledException)
+            {
+                throw new EntityNotDeletedException(REQUEST_TIMED_OUT);
             }
             catch (Exception ex)
             {
@@ -102,12 +164,15 @@ namespace webapi.DB
             }
         }
 
-        public async Task DeleteMany(IEnumerable<int> identifiers)
+        public async Task DeleteMany(IEnumerable<int> identifiers, CancellationToken cancellationToken = default)
         {
             using var transaction = await _context.Database.BeginTransactionAsync();
 
             try
             {
+                using var cts = new CancellationTokenSource(TimeSpan.FromSeconds(DELETE_RANGE_AWAITING));
+                cancellationToken = CancellationTokenSource.CreateLinkedTokenSource(cancellationToken, cts.Token).Token;
+
                 foreach (var id in identifiers)
                 {
                     var entity = await _dbSet.FindAsync(id);
@@ -117,7 +182,11 @@ namespace webapi.DB
                     }
                 }
                 await transaction.CommitAsync();
-                await _context.SaveChangesAsync();
+                await _context.SaveChangesAsync(cancellationToken);
+            }
+            catch (OperationCanceledException)
+            {
+                throw new EntityNotDeletedException(REQUEST_TIMED_OUT);
             }
             catch (Exception ex)
             {
@@ -127,21 +196,28 @@ namespace webapi.DB
             }
         }
 
-        public async Task DeleteByFilter(Func<IQueryable<T>, IQueryable<T>> queryModifier)
+        public async Task DeleteByFilter(Func<IQueryable<T>, IQueryable<T>> queryModifier, CancellationToken cancellationToken = default)
         {
             using var transaction = await _context.Database.BeginTransactionAsync();
             try
             {
+                using var cts = new CancellationTokenSource(TimeSpan.FromSeconds(DELETE_BY_FILTER));
+                cancellationToken = CancellationTokenSource.CreateLinkedTokenSource(cancellationToken, cts.Token).Token;
+
                 IQueryable<T> query = _dbSet;
                 query = queryModifier(query);
 
-                var entity = await query.FirstOrDefaultAsync();
+                var entity = await query.FirstOrDefaultAsync(cancellationToken);
                 if (entity is not null)
                 {
                     _dbSet.Remove(entity);
-                    await _context.SaveChangesAsync();
+                    await _context.SaveChangesAsync(cancellationToken);
                     await transaction.CommitAsync();
                 }
+            }
+            catch (OperationCanceledException)
+            {
+                throw new EntityNotDeletedException(REQUEST_TIMED_OUT);
             }
             catch (Exception ex)
             {
@@ -151,17 +227,24 @@ namespace webapi.DB
             }
         }
 
-        public async Task Update(T entity)
+        public async Task Update(T entity, CancellationToken cancellationToken = default)
         {
             using var transaction = await _context.Database.BeginTransactionAsync();
 
             try
             {
+                using var cts = new CancellationTokenSource(TimeSpan.FromSeconds(UPDATE_AWAITING));
+                cancellationToken = CancellationTokenSource.CreateLinkedTokenSource(cancellationToken, cts.Token).Token;
+
                 _dbSet.Attach(entity);
                 _context.Entry(entity).State = EntityState.Modified;
 
-                await _context.SaveChangesAsync();
+                await _context.SaveChangesAsync(cancellationToken);
                 await transaction.CommitAsync();
+            }
+            catch (OperationCanceledException)
+            {
+                throw new EntityNotUpdatedException(REQUEST_TIMED_OUT);
             }
             catch (Exception ex)
             {

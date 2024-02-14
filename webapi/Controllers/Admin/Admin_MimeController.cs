@@ -117,24 +117,38 @@ namespace webapi.Controllers.Admin
         [Authorize(Roles = "HighestAdmin,Admin")]
         public async Task<IActionResult> GetMime([FromRoute] int mimeId)
         {
-            var mime = await _mimeRepository.GetById(mimeId);
-            if (mime is null)
-                return StatusCode(404);
+            try
+            {
+                var mime = await _mimeRepository.GetById(mimeId);
+                if (mime is null)
+                    return StatusCode(404);
 
-            return StatusCode(200, new { mime });
+                return StatusCode(200, new { mime });
+            }
+            catch (OperationCanceledException ex)
+            {
+                return StatusCode(500, new { message = ex.Message });
+            }
         }
 
         [HttpGet("all")]
         [Authorize(Roles = "HighestAdmin,Admin")]
         public async Task<IActionResult> GetAllMime([FromQuery] int? skip, [FromQuery] int? count)
         {
-            if (!skip.HasValue && !count.HasValue)
-                return StatusCode(200, new { mimes = await _mimeRepository.GetAll() });
+            try
+            {
+                if (!skip.HasValue && !count.HasValue)
+                    return StatusCode(200, new { mimes = await _mimeRepository.GetAll() });
 
-            if (!skip.HasValue || !count.HasValue)
-                return StatusCode(400);
+                if (!skip.HasValue || !count.HasValue)
+                    return StatusCode(400);
 
-            return StatusCode(200, new { mimes = await _mimeRepository.GetAll(query => query.Skip(skip.Value).Take(count.Value)) });
+                return StatusCode(200, new { mimes = await _mimeRepository.GetAll(query => query.Skip(skip.Value).Take(count.Value)) });
+            }
+            catch (OperationCanceledException ex)
+            {
+                return StatusCode(500, new { message = ex.Message });
+            }
         }
 
         [HttpDelete("{mimeId}")]

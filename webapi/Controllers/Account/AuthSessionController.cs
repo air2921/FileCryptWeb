@@ -105,29 +105,40 @@ namespace webapi.Controllers.Account
             {
                 return StatusCode(500, new { message = ex.Message });
             }
+            catch (OperationCanceledException ex)
+            {
+                return StatusCode(500, new { message = ex.Message });
+            }
         }
 
         [HttpPost("verify/2fa")]
         [ValidateAntiForgeryToken]
         public async Task<IActionResult> VerifyTwoFA([FromQuery] int code)
         {
-            string? correctCode = HttpContext.Session.GetString(CODE);
-            string? id = HttpContext.Session.GetString(ID);
+            try
+            {
+                string? correctCode = HttpContext.Session.GetString(CODE);
+                string? id = HttpContext.Session.GetString(ID);
 
-            if (correctCode is null || id is null)
-                return StatusCode(500);
+                if (correctCode is null || id is null)
+                    return StatusCode(500);
 
-            var user = await _userRepository.GetById(int.Parse(id));
-            if (user is null)
-                return StatusCode(404, new { message = AccountErrorMessage.UserNotFound });
+                var user = await _userRepository.GetById(int.Parse(id));
+                if (user is null)
+                    return StatusCode(404, new { message = AccountErrorMessage.UserNotFound });
 
-            bool IsCorrect = _passwordManager.CheckPassword(code.ToString(), correctCode);
-            if (!IsCorrect)
-                return StatusCode(422, new { message = AccountErrorMessage.CodeIncorrect });
+                bool IsCorrect = _passwordManager.CheckPassword(code.ToString(), correctCode);
+                if (!IsCorrect)
+                    return StatusCode(422, new { message = AccountErrorMessage.CodeIncorrect });
 
-            var clientInfo = Parser.GetDefault().Parse(HttpContext.Request.Headers["User-Agent"].ToString());
+                var clientInfo = Parser.GetDefault().Parse(HttpContext.Request.Headers["User-Agent"].ToString());
 
-            return await CreateTokens(clientInfo, user);
+                return await CreateTokens(clientInfo, user);
+            }
+            catch (OperationCanceledException ex)
+            {
+                return StatusCode(500, new { message = ex.Message });
+            }
         }
 
         private async Task<IActionResult> CreateTokens(ClientInfo clientInfo, UserModel user)
@@ -184,6 +195,10 @@ namespace webapi.Controllers.Account
             {
                 return StatusCode(500, new { message = ex.Message });
             }
+            catch (OperationCanceledException ex)
+            {
+                return StatusCode(500, new { message = ex.Message });
+            }
             finally
             {
                 HttpContext.Session.Clear();
@@ -218,6 +233,10 @@ namespace webapi.Controllers.Account
                 _logger.LogDebug("Tokens was deleted");
 
                 return StatusCode(404, new { message = ex.Message });
+            }
+            catch (OperationCanceledException ex)
+            {
+                return StatusCode(500, new { message = ex.Message });
             }
             finally
             {

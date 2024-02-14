@@ -21,27 +21,41 @@ namespace webapi.Controllers.Admin
         [HttpGet]
         public async Task<IActionResult> GetApi([FromQuery] int? apiId, [FromQuery] string? key)
         {
-            ApiModel api = null;
-
-            if (apiId.HasValue)
+            try
             {
-                api = await _apiRepository.GetById(apiId.Value);
+                ApiModel api = null;
+
+                if (apiId.HasValue)
+                {
+                    api = await _apiRepository.GetById(apiId.Value);
+                }
+                else if (!string.IsNullOrWhiteSpace(key))
+                {
+                    api = await _apiRepository.GetByFilter(query => query.Where(a => a.api_key.Equals(key)));
+                }
+
+                if (api is null)
+                    return StatusCode(404);
+
+                return StatusCode(200, new { api });
             }
-            else if (!string.IsNullOrWhiteSpace(key))
+            catch (OperationCanceledException ex)
             {
-                api = await _apiRepository.GetByFilter(query => query.Where(a => a.api_key.Equals(key)));
+                return StatusCode(500, new { message = ex.Message });
             }
-
-            if (api is null)
-                return StatusCode(404);
-
-            return StatusCode(200, new { api });
         }
 
         [HttpGet("many")]
         public async Task<IActionResult> GetRangeApi([FromQuery] int userId)
         {
-            return StatusCode(200, new { api = await _apiRepository.GetAll(query => query.Where(a => a.user_id.Equals(userId))) });
+            try
+            {
+                return StatusCode(200, new { api = await _apiRepository.GetAll(query => query.Where(a => a.user_id.Equals(userId))) });
+            }
+            catch (OperationCanceledException ex)
+            {
+                return StatusCode(500, new { message = ex.Message });
+            }
         }
 
         [HttpDelete("{apiId}")]

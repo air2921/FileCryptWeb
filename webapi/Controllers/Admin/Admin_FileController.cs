@@ -26,18 +26,32 @@ namespace webapi.Controllers.Admin
         [HttpGet("{fileId}")]
         public async Task<IActionResult> GetFile([FromRoute] int fileId)
         {
-            var file = await _fileRepository.GetById(fileId);
-            if (file is null)
-                return StatusCode(404);
+            try
+            {
+                var file = await _fileRepository.GetById(fileId);
+                if (file is null)
+                    return StatusCode(404);
 
-            return StatusCode(200, new { file });
+                return StatusCode(200, new { file });
+            }
+            catch (OperationCanceledException ex)
+            {
+                return StatusCode(500, new { message = ex.Message });
+            }
         }
 
         [HttpGet("many")]
         public async Task<IActionResult> GetFiles([FromQuery] int? userId, [FromQuery] int? skip, [FromQuery] int? count,
             [FromQuery] bool byDesc, [FromQuery] string? category)
         {
-            return StatusCode(200, new { files = await _fileRepository.GetAll(_sorting.SortFiles(userId, skip, count, byDesc, null, null, category)) });
+            try
+            {
+                return StatusCode(200, new { files = await _fileRepository.GetAll(_sorting.SortFiles(userId, skip, count, byDesc, null, null, category)) });
+            }
+            catch (OperationCanceledException ex)
+            {
+                return StatusCode(500, new { message = ex.Message });
+            }
         }
 
         [HttpDelete("{fileId}")]

@@ -94,6 +94,10 @@ namespace webapi.Controllers.Account.Edit
             {
                 return StatusCode(500, new { message = ex.Message });
             }
+            catch (OperationCanceledException ex)
+            {
+                return StatusCode(500, new { message = ex.Message });
+            }
         }
 
         [HttpPost("confirm/old")]
@@ -139,6 +143,10 @@ namespace webapi.Controllers.Account.Edit
                 return StatusCode(200, new { message = AccountSuccessMessage.EmailSended });
             }
             catch (SmtpClientException ex)
+            {
+                return StatusCode(500, new { message = ex.Message });
+            }
+            catch (OperationCanceledException ex)
             {
                 return StatusCode(500, new { message = ex.Message });
             }
@@ -203,6 +211,10 @@ namespace webapi.Controllers.Account.Edit
                 return StatusCode(500, new { message = ex.Message });
             }
             catch (EntityNotUpdatedException ex)
+            {
+                return StatusCode(500, new { message = ex.Message });
+            }
+            catch (OperationCanceledException ex)
             {
                 return StatusCode(500, new { message = ex.Message });
             }

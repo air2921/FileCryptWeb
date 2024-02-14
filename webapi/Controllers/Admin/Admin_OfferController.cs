@@ -24,11 +24,18 @@ namespace webapi.Controllers.Admin
         [HttpGet("{offerId}")]
         public async Task<IActionResult> GetOffer([FromRoute] int offerId)
         {
-            var offer = await _offerRepository.GetById(offerId);
-            if (offer is null)
-                return StatusCode(404);
+            try
+            {
+                var offer = await _offerRepository.GetById(offerId);
+                if (offer is null)
+                    return StatusCode(404);
 
-            return StatusCode(200, new { offer });
+                return StatusCode(200, new { offer });
+            }
+            catch (OperationCanceledException ex)
+            {
+                return StatusCode(500, new { message = ex.Message });
+            }
         }
 
         [HttpGet("many")]
@@ -36,7 +43,14 @@ namespace webapi.Controllers.Admin
             [FromQuery] bool byDesc, [FromQuery] bool? sended,
             [FromQuery] bool? isAccepted, [FromQuery] string? type)
         {
-            return StatusCode(200, new { offers = await _offerRepository.GetAll(_sorting.SortOffers(userId, skip, count, byDesc, sended, isAccepted, type)) });
+            try
+            {
+                return StatusCode(200, new { offers = await _offerRepository.GetAll(_sorting.SortOffers(userId, skip, count, byDesc, sended, isAccepted, type)) });
+            }
+            catch (OperationCanceledException ex)
+            {
+                return StatusCode(500, new { message = ex.Message });
+            }
         }
 
         [HttpDelete("{offerId}")]

@@ -24,17 +24,31 @@ namespace webapi.Controllers.Admin
         [HttpGet("{notificationId}")]
         public async Task<IActionResult> GetNotification([FromRoute] int notificationId)
         {
-            var notification = await _notificationRepository.GetById(notificationId);
-            if (notification is null)
-                return StatusCode(404);
+            try
+            {
+                var notification = await _notificationRepository.GetById(notificationId);
+                if (notification is null)
+                    return StatusCode(404);
 
-            return StatusCode(200, new { notification });
+                return StatusCode(200, new { notification });
+            }
+            catch (OperationCanceledException ex)
+            {
+                return StatusCode(500, new { message = ex.Message });
+            }
         }
 
         [HttpGet("many")]
         public async Task<IActionResult> GetRangeNotification([FromQuery] int? userId, [FromQuery] int? skip, [FromQuery] int? count, bool byDesc)
         {
-            return StatusCode(200, new { notification = await _notificationRepository.GetAll(_sorting.SortNotifications(userId, skip, count, byDesc, null, null)) });
+            try
+            {
+                return StatusCode(200, new { notification = await _notificationRepository.GetAll(_sorting.SortNotifications(userId, skip, count, byDesc, null, null)) });
+            }
+            catch (OperationCanceledException ex)
+            {
+                return StatusCode(500, new { message = ex.Message });
+            }
         }
 
         [HttpDelete("{notificationId}")]

@@ -105,6 +105,10 @@ namespace webapi.Controllers.Account
             {
                 return StatusCode(500, new { message = ex.Message });
             }
+            catch (OperationCanceledException ex)
+            {
+                return StatusCode(500, new { message = ex.Message });
+            }
         }
 
         [HttpPost("verify")]

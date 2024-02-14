@@ -63,49 +63,63 @@ namespace webapi.Controllers.Core
         [HttpGet("{apiId}")]
         public async Task<IActionResult> GetAPI([FromRoute] int apiId)
         {
-            var cacheKey = $"API_Keys_{_userInfo.UserId}_{apiId}";
-            int apiCallLeft = 0;
-
-            var cacheApi = await _redisCache.GetCachedData(cacheKey);
-            if (cacheApi is not null)
+            try
             {
-                var cacheResult = JsonConvert.DeserializeObject<ApiModel>(cacheApi);
-                apiCallLeft = await ApiCallLeftCheck(cacheResult);
+                var cacheKey = $"API_Keys_{_userInfo.UserId}_{apiId}";
+                int apiCallLeft = 0;
 
-                return StatusCode(200, new { api = cacheResult, apiCallLeft });
+                var cacheApi = await _redisCache.GetCachedData(cacheKey);
+                if (cacheApi is not null)
+                {
+                    var cacheResult = JsonConvert.DeserializeObject<ApiModel>(cacheApi);
+                    apiCallLeft = await ApiCallLeftCheck(cacheResult);
+
+                    return StatusCode(200, new { api = cacheResult, apiCallLeft });
+                }
+
+                var api = await _apiRepository.GetByFilter(query => query.Where(a => a.api_id.Equals(apiId) && a.user_id.Equals(_userInfo.UserId)));
+                if (api is null)
+                    return StatusCode(404);
+
+                apiCallLeft = await ApiCallLeftCheck(api);
+                await _redisCache.CacheData(cacheKey, api, TimeSpan.FromMinutes(5));
+
+                return StatusCode(200, new { api, apiCallLeft });
             }
-
-            var api = await _apiRepository.GetByFilter(query => query.Where(a => a.api_id.Equals(apiId) && a.user_id.Equals(_userInfo.UserId)));
-            if (api is null)
-                return StatusCode(404);
-
-            apiCallLeft = await ApiCallLeftCheck(api);
-            await _redisCache.CacheData(cacheKey, api, TimeSpan.FromMinutes(5));
-
-            return StatusCode(200, new { api, apiCallLeft });
+            catch (OperationCanceledException ex)
+            {
+                return StatusCode(500, new { message = ex.Message });
+            }
         }
 
         [HttpGet("all")]
         public async Task<IActionResult> GetAllApi()
         {
-            var cacheKey = $"API_Keys_{_userInfo.UserId}";
-            var apiObjects = new List<ApiObject>();
-
-            var cacheApi = await _redisCache.GetCachedData(cacheKey);
-            if (cacheApi is not null)
+            try
             {
-                var apiCacheModel = JsonConvert.DeserializeObject<IEnumerable<ApiModel>>(cacheApi);
-                apiObjects = await GetApiData(apiCacheModel);
+                var cacheKey = $"API_Keys_{_userInfo.UserId}";
+                var apiObjects = new List<ApiObject>();
+
+                var cacheApi = await _redisCache.GetCachedData(cacheKey);
+                if (cacheApi is not null)
+                {
+                    var apiCacheModel = JsonConvert.DeserializeObject<IEnumerable<ApiModel>>(cacheApi);
+                    apiObjects = await GetApiData(apiCacheModel);
+
+                    return StatusCode(200, new { api = apiObjects });
+                }
+
+                var api = await _apiRepository.GetAll(query => query.Where(a => a.user_id.Equals(_userInfo.UserId)));
+                apiObjects = await GetApiData(api);
+
+                await _redisCache.CacheData(cacheKey, api, TimeSpan.FromMinutes(5));
 
                 return StatusCode(200, new { api = apiObjects });
             }
-
-            var api = await _apiRepository.GetAll(query => query.Where(a => a.user_id.Equals(_userInfo.UserId)));
-            apiObjects = await GetApiData(api);
-
-            await _redisCache.CacheData(cacheKey, api, TimeSpan.FromMinutes(5));
-
-            return StatusCode(200, new { api = apiObjects });
+            catch (OperationCanceledException ex)
+            {
+                return StatusCode(500, new { message = ex.Message });
+            }
         }
 
         [HttpDelete("revoke/{apiId}")]

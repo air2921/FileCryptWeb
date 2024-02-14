@@ -29,21 +29,28 @@ namespace webapi.Controllers.Admin
         [HttpGet]
         public async Task<IActionResult> GetLink([FromQuery] int? linkId, [FromQuery] string? token)
         {
-            LinkModel link = null;
-
-            if (linkId.HasValue)
+            try
             {
-                link = await _linkRepository.GetById(linkId.Value);
+                LinkModel link = null;
+
+                if (linkId.HasValue)
+                {
+                    link = await _linkRepository.GetById(linkId.Value);
+                }
+                else if (!string.IsNullOrWhiteSpace(token))
+                {
+                    link = await _linkRepository.GetByFilter(query => query.Where(l => l.u_token.Equals(token)));
+                }
+
+                if (link is null)
+                    return StatusCode(404);
+
+                return StatusCode(200, new { link });
             }
-            else if (!string.IsNullOrWhiteSpace(token))
+            catch (OperationCanceledException ex)
             {
-                link = await _linkRepository.GetByFilter(query => query.Where(l => l.u_token.Equals(token)));
+                return StatusCode(500, new { message = ex.Message });
             }
-
-            if (link is null)
-                return StatusCode(404);
-
-            return StatusCode(200, new { link });
         }
 
         [HttpGet("many")]
@@ -51,7 +58,14 @@ namespace webapi.Controllers.Admin
             [FromQuery] int? skip, [FromQuery] int? count,
             [FromQuery] bool byDesc, [FromQuery] bool? expired)
         {
-            return StatusCode(200, new { links = await _linkRepository.GetAll(_sorting.SortLinks(userId, skip, count, byDesc, expired)) });
+            try
+            {
+                return StatusCode(200, new { links = await _linkRepository.GetAll(_sorting.SortLinks(userId, skip, count, byDesc, expired)) });
+            }
+            catch (OperationCanceledException ex)
+            {
+                return StatusCode(500, new { message = ex.Message });
+            }
         }
 
         [HttpDelete]

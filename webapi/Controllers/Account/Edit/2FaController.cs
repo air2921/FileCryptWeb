@@ -84,6 +84,10 @@ namespace webapi.Controllers.Account.Edit
             {
                 return StatusCode(500, new { message = ex.Message });
             }
+            catch (OperationCanceledException ex)
+            {
+                return StatusCode(500, new { message = ex.Message });
+            }
         }
 
         [HttpPut("confirm/{enable}")]
@@ -136,6 +140,10 @@ namespace webapi.Controllers.Account.Edit
                 return StatusCode(500, new { message = ex.Message });
             }
             catch (EntityNotUpdatedException ex)
+            {
+                return StatusCode(500, new { message = ex.Message });
+            }
+            catch (OperationCanceledException ex)
             {
                 return StatusCode(500, new { message = ex.Message });
             }

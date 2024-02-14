@@ -70,6 +70,10 @@ namespace webapi.Controllers.Account.Edit
             {
                 return StatusCode(500, new { message = ex.Message });
             }
+            catch (OperationCanceledException ex)
+            {
+                return StatusCode(500, new { message = ex.Message });
+            }
             catch (UnauthorizedAccessException ex)
             {
                 _logger.LogWarning("Error when trying to update jwt.\nTrying delete tokens");
