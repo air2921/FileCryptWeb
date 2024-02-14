@@ -80,6 +80,8 @@
     justify-content: center;
     height: 100%;
     display: flex;
+    width: 0;
+    transition: width 0.5s ease;
 }
 
 .desktop-sidebar-links-container {
@@ -104,11 +106,6 @@
     .desktop-link h4 {
         margin-left: 8px;
         margin-top: 4px;
-    }
-
-    .desktop-link Font {
-        margin-right: 8px;
-        margin-bottom: 4px;
     }
 
 .aside-visible-container {
@@ -295,7 +292,7 @@
 
 .outlet {
     transition: margin-left 0.3s ease;
-    margin-top: 55px;
+    padding-top: 55px;
     flex: 1;
 }
 

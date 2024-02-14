@@ -126,38 +126,38 @@ function Layout() {
                         <div className="desktop-sidebar-links-container">
                             <div className="desktop-link">
                                 <Link to={profilePath}>
-                                    <Font font={'account_circle'} />
+                                    <i className="material-icons-outlined" style={{ background: 'transparent', fontSize: '26px' }}>account_circle</i>
                                     <h4>Profile</h4>
                                 </Link>
                             </div>
                             <div className="desktop-link">
                                 <Link to="/settings">
-                                    <Font font={'manage_accounts'} />
+                                    <i className="material-icons-outlined" style={{ background: 'transparent', fontSize: '26px' }}>manage_accounts</i>
                                     <h4>Settings</h4>
                                 </Link>
                             </div>
                             <div className="desktop-link">
                                 <Link to="/files">
-                                    <Font font={'storage'} />
+                                    <i className="material-icons-outlined" style={{ background: 'transparent', fontSize: '26px' }}>storage</i>
                                     <h4>Files</h4>
                                 </Link>
                             </div>
                             <div className="desktop-link">
                                 <Link to="/offers">
-                                    <Font font={'storage'} />
+                                    <i className="material-icons-outlined" style={{ background: 'transparent', fontSize: '26px' }}>storage</i>
                                     <h4>Offers</h4>
                                 </Link>
                             </div>
                             <div className="desktop-link">
                                 <Link to="/api">
-                                    <Font font={'vpn_key'} />
+                                    <i className="material-icons-outlined" style={{ background: 'transparent', fontSize: '26px' }}>vpn_key</i>
                                     <h4>API</h4>
                                 </Link>
                             </div>
                             {(role === 'Admin' || role === 'HighestAdmin') && (
                                 <div className="desktop-link">
                                     <Link to="/admin">
-                                        <Font font={'admin_panel_settings'} />
+                                        <i className="material-icons-outlined" style={{ background: 'transparent', fontSize: '26px' }}>admin_panel_settings</i>
                                         <h4>Admin</h4>
                                     </Link>
                                 </div>
