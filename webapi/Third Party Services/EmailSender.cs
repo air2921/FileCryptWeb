@@ -4,9 +4,10 @@ using MimeKit;
 using System.Net.Sockets;
 using webapi.DTO;
 using webapi.Exceptions;
+using webapi.Helpers;
 using webapi.Interfaces.Services;
 
-namespace webapi.Services.Third_Party_Services
+namespace webapi.Third_Party_Services
 {
     public class EmailSender : IEmailSender
     {

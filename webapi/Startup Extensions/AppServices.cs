@@ -4,7 +4,7 @@ using Microsoft.EntityFrameworkCore;
 using Microsoft.IdentityModel.Tokens;
 using System.Text;
 using webapi.DB;
-using webapi.Services;
+using webapi.Helpers;
 
 namespace webapi
 {
@@ -42,7 +42,7 @@ namespace webapi
                 {
                     builder.AllowAnyOrigin()
                     .WithMethods("POST")
-                    .WithHeaders(Constants.ENCRYPTION_KEY_HEADER_NAME, Constants.API_HEADER_NAME)
+                    .WithHeaders(ImmutableData.ENCRYPTION_KEY_HEADER_NAME, ImmutableData.API_HEADER_NAME)
                     .SetIsOriginAllowed(origin =>
                     origin.EndsWith("api/public/cryptography/private/decryption") ||
                     origin.EndsWith("api/public/cryptography/internal/decryption") ||
@@ -87,7 +87,7 @@ namespace webapi
                 };
             });
 
-            services.AddAntiforgery(options => { options.HeaderName = Constants.XSRF_HEADER_NAME; });
+            services.AddAntiforgery(options => { options.HeaderName = ImmutableData.XSRF_HEADER_NAME; });
             services.AddMvc();
 
             services.Configure<KestrelServerOptions>(options =>

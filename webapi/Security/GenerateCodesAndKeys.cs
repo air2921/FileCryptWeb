@@ -1,7 +1,7 @@
 ﻿using System.Security.Cryptography;
 using webapi.Interfaces.Services;
 
-namespace webapi.Services.Security
+namespace webapi.Security
 {
     public class GenerateCodesAndKeys : IGenerateSixDigitCode, IGenerateKey
     {

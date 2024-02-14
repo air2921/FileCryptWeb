@@ -1,6 +1,6 @@
-﻿namespace webapi.Services
+﻿namespace webapi.Helpers
 {
-    public static class Constants
+    public static class ImmutableData
     {
         public static readonly TimeSpan JwtExpiry = TimeSpan.FromMinutes(20);
         public static readonly TimeSpan RefreshExpiry = TimeSpan.FromDays(90);
@@ -17,17 +17,40 @@
 
         #endregion
 
+        #region AuthCookie
+
         public const string USERNAME_COOKIE_KEY = "auth_username";
         public const string USER_ID_COOKIE_KEY = "auth_user_id";
         public const string ROLE_COOKIE_KEY = "auth_role";
         public const string IS_AUTHORIZED = "auth_success";
 
+        #endregion
+
+        #region Redis Keys
+
         public const string SERVICE_FREEZE_FLAG = "ServiceFreezed";
         public const string MIME_COLLECTION = "MIME_Collection";
+
+        #endregion
+
+        #region Request Headers
 
         public const string XSRF_HEADER_NAME = "X-XSRF-TOKEN";
         public const string API_HEADER_NAME = "X-API-KEY";
         public const string ENCRYPTION_KEY_HEADER_NAME = "X-ENCRYPTION-KEY";
+
+        #endregion
+
+        #region Redis Keys Prefix
+
+        public const string API_PREFIX = "API_Keys_";
+        public const string FILES_PREFIX = "Files_";
+        public const string KEYS_PREFIX = "Keys_";
+        public const string NOTIFICATIONS_PREFIX = "Notifications_";
+        public const string OFFERS_PREFIX = "Offers_";
+        public const string USER_DATA_PREFIX = "User_Data_";
+
+        #endregion
     }
 
     public static class App

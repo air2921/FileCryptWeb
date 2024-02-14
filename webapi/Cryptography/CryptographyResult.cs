@@ -1,4 +1,4 @@
-﻿namespace webapi.Services.Cryptography
+﻿namespace webapi.Cryptography
 {
     public struct CryptographyResult
     {

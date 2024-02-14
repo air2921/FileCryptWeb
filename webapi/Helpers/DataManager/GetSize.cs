@@ -1,6 +1,6 @@
 ﻿using webapi.Interfaces.Services;
 
-namespace webapi.Services.DataManager
+namespace webapi.Helpers.DataManager
 {
     public class GetSize : IGetSize
     {

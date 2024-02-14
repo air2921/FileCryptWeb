@@ -3,8 +3,8 @@ using webapi.Interfaces.Services;
 using webapi.Models;
 using Newtonsoft.Json;
 using webapi.Interfaces.Controllers;
-using webapi.Services;
 using webapi.Interfaces;
+using webapi.Helpers;
 
 namespace webapi.Controllers.Base.CryptographyUtils
 {
@@ -95,7 +95,7 @@ namespace webapi.Controllers.Base.CryptographyUtils
 
         private async Task<bool> CheckMIME(string mime)
         {
-            var mimes = await _redisCache.GetCachedData(Constants.MIME_COLLECTION);
+            var mimes = await _redisCache.GetCachedData(ImmutableData.MIME_COLLECTION);
             if (mimes is not null)
             {
                 string[] mimesArray = JsonConvert.DeserializeObject<string[]>(mimes);
@@ -109,7 +109,7 @@ namespace webapi.Controllers.Base.CryptographyUtils
                 var mimesDb = await _mimeRepository.GetAll();
                 string[] mimesArray = mimesDb.Select(m => m.mime_name).ToArray();
 
-                await _redisCache.CacheData(Constants.MIME_COLLECTION, mimesArray, TimeSpan.FromDays(3));
+                await _redisCache.CacheData(ImmutableData.MIME_COLLECTION, mimesArray, TimeSpan.FromDays(3));
 
                 return mimesArray.Contains(mime);
             }

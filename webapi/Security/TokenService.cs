@@ -5,10 +5,11 @@ using System.Security.Claims;
 using System.Security.Cryptography;
 using System.Text;
 using webapi.DB;
+using webapi.Helpers;
 using webapi.Interfaces.Services;
 using webapi.Models;
 
-namespace webapi.Services.Security
+namespace webapi.Security
 {
     public class TokenService : ITokenService
     {
@@ -99,7 +100,7 @@ namespace webapi.Services.Security
 
         public async Task UpdateJwtToken()
         {
-            if (!_context.HttpContext.Request.Cookies.TryGetValue(Constants.REFRESH_COOKIE_KEY, out string? refresh))
+            if (!_context.HttpContext.Request.Cookies.TryGetValue(ImmutableData.REFRESH_COOKIE_KEY, out string? refresh))
                 throw new UnauthorizedAccessException("Refresh Token was not found");
 
             var userAndToken = await _dbContext.Tokens
@@ -113,30 +114,30 @@ namespace webapi.Services.Security
                 throw new UnauthorizedAccessException("Refresh Token is invalid");
             }
 
-            if (_context.HttpContext.Request.Cookies.ContainsKey(Constants.JWT_COOKIE_KEY))
-                _context.HttpContext.Response.Cookies.Delete(Constants.JWT_COOKIE_KEY);
+            if (_context.HttpContext.Request.Cookies.ContainsKey(ImmutableData.JWT_COOKIE_KEY))
+                _context.HttpContext.Response.Cookies.Delete(ImmutableData.JWT_COOKIE_KEY);
 
-            string jwt = GenerateJwtToken(userAndToken.user, Constants.JwtExpiry);
-            _context.HttpContext.Response.Cookies.Append(Constants.JWT_COOKIE_KEY, jwt, SetCookieOptions(Constants.JwtExpiry));
+            string jwt = GenerateJwtToken(userAndToken.user, ImmutableData.JwtExpiry);
+            _context.HttpContext.Response.Cookies.Append(ImmutableData.JWT_COOKIE_KEY, jwt, SetCookieOptions(ImmutableData.JwtExpiry));
         }
 
         public void DeleteTokens()
         {
-            _context.HttpContext.Response.Cookies.Delete(Constants.REFRESH_COOKIE_KEY);
-            _context.HttpContext.Response.Cookies.Delete(Constants.JWT_COOKIE_KEY);
+            _context.HttpContext.Response.Cookies.Delete(ImmutableData.REFRESH_COOKIE_KEY);
+            _context.HttpContext.Response.Cookies.Delete(ImmutableData.JWT_COOKIE_KEY);
 
-            _context.HttpContext.Response.Cookies.Delete(Constants.IS_AUTHORIZED);
-            _context.HttpContext.Response.Cookies.Delete(Constants.USERNAME_COOKIE_KEY);
-            _context.HttpContext.Response.Cookies.Delete(Constants.USER_ID_COOKIE_KEY);
-            _context.HttpContext.Response.Cookies.Delete(Constants.ROLE_COOKIE_KEY);
+            _context.HttpContext.Response.Cookies.Delete(ImmutableData.IS_AUTHORIZED);
+            _context.HttpContext.Response.Cookies.Delete(ImmutableData.USERNAME_COOKIE_KEY);
+            _context.HttpContext.Response.Cookies.Delete(ImmutableData.USER_ID_COOKIE_KEY);
+            _context.HttpContext.Response.Cookies.Delete(ImmutableData.ROLE_COOKIE_KEY);
         }
 
         public void DeleteUserDataSession()
         {
-            _context.HttpContext.Response.Cookies.Delete(Constants.IS_AUTHORIZED);
-            _context.HttpContext.Response.Cookies.Delete(Constants.USERNAME_COOKIE_KEY);
-            _context.HttpContext.Response.Cookies.Delete(Constants.USER_ID_COOKIE_KEY);
-            _context.HttpContext.Response.Cookies.Delete(Constants.ROLE_COOKIE_KEY);
+            _context.HttpContext.Response.Cookies.Delete(ImmutableData.IS_AUTHORIZED);
+            _context.HttpContext.Response.Cookies.Delete(ImmutableData.USERNAME_COOKIE_KEY);
+            _context.HttpContext.Response.Cookies.Delete(ImmutableData.USER_ID_COOKIE_KEY);
+            _context.HttpContext.Response.Cookies.Delete(ImmutableData.ROLE_COOKIE_KEY);
         }
     }
 }

@@ -1,5 +1,5 @@
 ﻿using Microsoft.AspNetCore.Antiforgery;
-using webapi.Services;
+using webapi.Helpers;
 
 namespace webapi.Middlewares
 {
@@ -18,7 +18,7 @@ namespace webapi.Middlewares
         public async Task Invoke(HttpContext context)
         {
             context.Response.Cookies.Append(
-            Constants.XSRF_COOKIE_KEY,
+            ImmutableData.XSRF_COOKIE_KEY,
             _antiforgery.GetAndStoreTokens(context).RequestToken,
             new CookieOptions
             {

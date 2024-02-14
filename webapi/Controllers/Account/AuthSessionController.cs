@@ -3,12 +3,12 @@ using Microsoft.AspNetCore.Mvc;
 using UAParser;
 using webapi.DTO;
 using webapi.Exceptions;
+using webapi.Helpers;
 using webapi.Interfaces;
 using webapi.Interfaces.Redis;
 using webapi.Interfaces.Services;
 using webapi.Localization;
 using webapi.Models;
-using webapi.Services;
 
 namespace webapi.Controllers.Account
 {
@@ -140,7 +140,7 @@ namespace webapi.Controllers.Account
 
                 var tokenModel = await _tokenRepository.GetByFilter(query => query.Where(t => t.user_id.Equals(user.id)));
                 tokenModel.refresh_token = _tokenService.HashingToken(refreshToken);
-                tokenModel.expiry_date = DateTime.UtcNow + Constants.RefreshExpiry;
+                tokenModel.expiry_date = DateTime.UtcNow + ImmutableData.RefreshExpiry;
 
                 await _tokenRepository.Update(tokenModel);
 
@@ -157,22 +157,22 @@ namespace webapi.Controllers.Account
                 });
                 _logger.LogInformation("Created notification about logged in account");
 
-                Response.Cookies.Append(Constants.JWT_COOKIE_KEY, _tokenService.GenerateJwtToken(user, Constants.JwtExpiry), _tokenService.SetCookieOptions(Constants.JwtExpiry));
-                Response.Cookies.Append(Constants.REFRESH_COOKIE_KEY, refreshToken, _tokenService.SetCookieOptions(Constants.RefreshExpiry));
+                Response.Cookies.Append(ImmutableData.JWT_COOKIE_KEY, _tokenService.GenerateJwtToken(user, ImmutableData.JwtExpiry), _tokenService.SetCookieOptions(ImmutableData.JwtExpiry));
+                Response.Cookies.Append(ImmutableData.REFRESH_COOKIE_KEY, refreshToken, _tokenService.SetCookieOptions(ImmutableData.RefreshExpiry));
 
                 var cookieOptions = new CookieOptions
                 {
-                    MaxAge = Constants.JwtExpiry,
+                    MaxAge = ImmutableData.JwtExpiry,
                     Secure = true,
                     HttpOnly = false,
                     SameSite = SameSiteMode.None,
                     IsEssential = false
                 };
 
-                Response.Cookies.Append(Constants.IS_AUTHORIZED, true.ToString(), cookieOptions);
-                Response.Cookies.Append(Constants.USER_ID_COOKIE_KEY, user.id.ToString(), cookieOptions);
-                Response.Cookies.Append(Constants.USERNAME_COOKIE_KEY, user.username, cookieOptions);
-                Response.Cookies.Append(Constants.ROLE_COOKIE_KEY, user.role, cookieOptions);
+                Response.Cookies.Append(ImmutableData.IS_AUTHORIZED, true.ToString(), cookieOptions);
+                Response.Cookies.Append(ImmutableData.USER_ID_COOKIE_KEY, user.id.ToString(), cookieOptions);
+                Response.Cookies.Append(ImmutableData.USERNAME_COOKIE_KEY, user.username, cookieOptions);
+                Response.Cookies.Append(ImmutableData.ROLE_COOKIE_KEY, user.role, cookieOptions);
 
                 return StatusCode(200);
             }

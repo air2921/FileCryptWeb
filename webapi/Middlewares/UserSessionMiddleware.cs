@@ -1,5 +1,5 @@
 ﻿using System.Security.Claims;
-using webapi.Services;
+using webapi.Helpers;
 
 namespace webapi.Middlewares
 {
@@ -17,14 +17,14 @@ namespace webapi.Middlewares
         {
             var userContext = httpContext.User;
 
-            string? username = httpContext.Request.Cookies[Constants.USERNAME_COOKIE_KEY];
-            string? userId = httpContext.Request.Cookies[Constants.USER_ID_COOKIE_KEY];
-            string? userRole = httpContext.Request.Cookies[Constants.ROLE_COOKIE_KEY];
-            string? userAuth = httpContext.Request.Cookies[Constants.IS_AUTHORIZED];
+            string? username = httpContext.Request.Cookies[ImmutableData.USERNAME_COOKIE_KEY];
+            string? userId = httpContext.Request.Cookies[ImmutableData.USER_ID_COOKIE_KEY];
+            string? userRole = httpContext.Request.Cookies[ImmutableData.ROLE_COOKIE_KEY];
+            string? userAuth = httpContext.Request.Cookies[ImmutableData.IS_AUTHORIZED];
 
             var cookieOptions = new CookieOptions
             {
-                MaxAge = Constants.JwtExpiry,
+                MaxAge = ImmutableData.JwtExpiry,
                 Secure = true,
                 HttpOnly = false,
                 SameSite = SameSiteMode.None,
@@ -35,27 +35,27 @@ namespace webapi.Middlewares
             {
                 if (userContext.Identity.IsAuthenticated)
                 {
-                    httpContext.Response.Cookies.Append(Constants.IS_AUTHORIZED, true.ToString(), cookieOptions);
+                    httpContext.Response.Cookies.Append(ImmutableData.IS_AUTHORIZED, true.ToString(), cookieOptions);
 
                     if (userContext.HasClaim(u => u.Type == ClaimTypes.Name))
                     {
                         var claimUsername = userContext.FindFirstValue(ClaimTypes.Name);
-                        httpContext.Response.Cookies.Append(Constants.USERNAME_COOKIE_KEY, claimUsername!, cookieOptions);
+                        httpContext.Response.Cookies.Append(ImmutableData.USERNAME_COOKIE_KEY, claimUsername!, cookieOptions);
                     }
                     if (userContext.HasClaim(u => u.Type == ClaimTypes.NameIdentifier))
                     {
                         var claimId = userContext.FindFirstValue(ClaimTypes.NameIdentifier);
-                        httpContext.Response.Cookies.Append(Constants.USER_ID_COOKIE_KEY, claimId!, cookieOptions);
+                        httpContext.Response.Cookies.Append(ImmutableData.USER_ID_COOKIE_KEY, claimId!, cookieOptions);
                     }
                     if (userContext.HasClaim(u => u.Type == ClaimTypes.Role))
                     {
                         var claimRole = userContext.FindFirstValue(ClaimTypes.Role);
-                        httpContext.Response.Cookies.Append(Constants.ROLE_COOKIE_KEY, claimRole!, cookieOptions);
+                        httpContext.Response.Cookies.Append(ImmutableData.ROLE_COOKIE_KEY, claimRole!, cookieOptions);
                     }
                 }
                 else
                 {
-                    httpContext.Response.Cookies.Append(Constants.IS_AUTHORIZED, false.ToString(), cookieOptions);
+                    httpContext.Response.Cookies.Append(ImmutableData.IS_AUTHORIZED, false.ToString(), cookieOptions);
                 }
             }
 

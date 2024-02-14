@@ -1,6 +1,5 @@
 ﻿using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
-using Microsoft.EntityFrameworkCore;
 using UAParser;
 using webapi.DTO;
 using webapi.Exceptions;
@@ -9,7 +8,6 @@ using webapi.Interfaces.Redis;
 using webapi.Interfaces.Services;
 using webapi.Localization;
 using webapi.Models;
-using webapi.Services;
 
 namespace webapi.Controllers.Account.Edit
 {

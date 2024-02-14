@@ -2,12 +2,12 @@
 using Microsoft.AspNetCore.Mvc;
 using Newtonsoft.Json;
 using webapi.Exceptions;
+using webapi.Helpers;
 using webapi.Interfaces;
 using webapi.Interfaces.Controllers;
 using webapi.Interfaces.Cryptography;
 using webapi.Interfaces.Redis;
 using webapi.Models;
-using webapi.Services;
 
 namespace webapi.Controllers.Public_API
 {
@@ -39,8 +39,8 @@ namespace webapi.Controllers.Public_API
         [HttpPost("encrypt")]
         [RequestSizeLimit(75 * 1024 * 1024)]
         public async Task<IActionResult> EncryptFiles(
-            [FromHeader(Name = Constants.ENCRYPTION_KEY_HEADER_NAME)] string encryptionKey,
-            [FromHeader(Name = Constants.API_HEADER_NAME)] string apiKey,
+            [FromHeader(Name = ImmutableData.ENCRYPTION_KEY_HEADER_NAME)] string encryptionKey,
+            [FromHeader(Name = ImmutableData.API_HEADER_NAME)] string apiKey,
             IFormFile file, [FromRoute] string type)
         {
             try
@@ -67,8 +67,8 @@ namespace webapi.Controllers.Public_API
         [HttpPost("decrypt")]
         [RequestSizeLimit(75 * 1024 * 1024)]
         public async Task<IActionResult> DecryptFiles(
-            [FromHeader(Name = Constants.ENCRYPTION_KEY_HEADER_NAME)] string encryptionKey,
-            [FromHeader(Name = Constants.API_HEADER_NAME)] string apiKey,
+            [FromHeader(Name = ImmutableData.ENCRYPTION_KEY_HEADER_NAME)] string encryptionKey,
+            [FromHeader(Name = ImmutableData.API_HEADER_NAME)] string apiKey,
             IFormFile file, [FromRoute] string type)
         {
             try

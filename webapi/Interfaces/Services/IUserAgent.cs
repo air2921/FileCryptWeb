@@ -1,5 +1,5 @@
 ﻿using UAParser;
-using webapi.Services.Security;
+using webapi.Security;
 
 namespace webapi.Interfaces.Services
 {

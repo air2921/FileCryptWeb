@@ -1,8 +1,7 @@
 ﻿using Microsoft.EntityFrameworkCore;
 using webapi.DB;
+using webapi.Helpers;
 using webapi.Interfaces.Services;
-using webapi.Models;
-using webapi.Services;
 
 namespace webapi.Middlewares
 {
@@ -22,7 +21,7 @@ namespace webapi.Middlewares
 
         public async Task Invoke(HttpContext context, FileCryptDbContext dbContext, ITokenService tokenService)
         {
-            if (context.Request.Cookies.TryGetValue(Constants.JWT_COOKIE_KEY, out string? jwt))
+            if (context.Request.Cookies.TryGetValue(ImmutableData.JWT_COOKIE_KEY, out string? jwt))
             {
                 context.Request.Headers.Add("Authorization", $"Bearer {jwt}");
                 AddSecurityHeaders(context);
@@ -32,7 +31,7 @@ namespace webapi.Middlewares
             }
             else
             {
-                if (context.Request.Cookies.TryGetValue(Constants.REFRESH_COOKIE_KEY, out string? refresh))
+                if (context.Request.Cookies.TryGetValue(ImmutableData.REFRESH_COOKIE_KEY, out string? refresh))
                 {
                     if (string.IsNullOrWhiteSpace(refresh))
                     {
@@ -57,10 +56,10 @@ namespace webapi.Middlewares
                         return;
                     }
 
-                    string createdJWT = tokenService.GenerateJwtToken(userAndToken.user, Constants.JwtExpiry);
-                    var jwtCookieOptions = tokenService.SetCookieOptions(Constants.JwtExpiry);
+                    string createdJWT = tokenService.GenerateJwtToken(userAndToken.user, ImmutableData.JwtExpiry);
+                    var jwtCookieOptions = tokenService.SetCookieOptions(ImmutableData.JwtExpiry);
 
-                    context.Response.Cookies.Append(Constants.JWT_COOKIE_KEY, createdJWT, jwtCookieOptions);
+                    context.Response.Cookies.Append(ImmutableData.JWT_COOKIE_KEY, createdJWT, jwtCookieOptions);
 
                     context.Request.Headers.Add("Authorization", $"Bearer {createdJWT}");
                     AddSecurityHeaders(context);

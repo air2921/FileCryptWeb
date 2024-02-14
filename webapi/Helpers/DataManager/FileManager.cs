@@ -3,7 +3,7 @@ using Newtonsoft.Json.Linq;
 using System.Globalization;
 using webapi.Interfaces.Services;
 
-namespace webapi.Services.DataManager
+namespace webapi.Helpers.DataManager
 {
     public class FileManager : IFileManager
     {

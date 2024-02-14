@@ -1,7 +1,7 @@
 ﻿using nClam;
 using webapi.Interfaces.Services;
 
-namespace webapi.Services.Third_Party_Services
+namespace webapi.Third_Party_Services
 {
     public class ClamAV : IVirusCheck
     {

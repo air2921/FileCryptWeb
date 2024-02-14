@@ -1,6 +1,6 @@
 ﻿using webapi.Interfaces.Services;
 
-namespace webapi.Services
+namespace webapi.Helpers
 {
     public class Validation : IValidation
     {

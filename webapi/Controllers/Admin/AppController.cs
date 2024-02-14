@@ -1,8 +1,8 @@
 ﻿using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
+using webapi.Helpers;
 using webapi.Interfaces.Redis;
 using webapi.Interfaces.Services;
-using webapi.Services;
 
 namespace webapi.Controllers.Admin
 {
@@ -28,13 +28,13 @@ namespace webapi.Controllers.Admin
         {
             if (flag && time.HasValue)
             {
-                await _redisCache.CacheData(Constants.SERVICE_FREEZE_FLAG, true, time.Value);
+                await _redisCache.CacheData(ImmutableData.SERVICE_FREEZE_FLAG, true, time.Value);
                 _logger.LogCritical($"{_userInfo.Username}#{_userInfo.UserId} freezed service until {DateTime.UtcNow + time}");
 
                 return StatusCode(200, new { message = $"Service freezed until {DateTime.UtcNow + time}" });
             }
 
-            await _redisCache.DeleteCache(Constants.SERVICE_FREEZE_FLAG);
+            await _redisCache.DeleteCache(ImmutableData.SERVICE_FREEZE_FLAG);
             _logger.LogCritical($"{_userInfo.Username}#{_userInfo.UserId} unfreezed service at {DateTime.UtcNow}");
 
             return StatusCode(200, new { message = "Service unfreezed" });

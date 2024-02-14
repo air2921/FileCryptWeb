@@ -1,7 +1,7 @@
 ﻿using webapi.Interfaces.Services;
 using BC = BCrypt.Net;
 
-namespace webapi.Services.Security
+namespace webapi.Security
 {
     public class PasswordManager : IPasswordManager
     {

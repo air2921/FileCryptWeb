@@ -1,5 +1,5 @@
 ﻿using Microsoft.AspNetCore.Mvc;
-using webapi.Services.Cryptography;
+using webapi.Cryptography;
 
 namespace webapi.Interfaces.Controllers
 {

@@ -1,7 +1,7 @@
 ﻿using System.Security.Cryptography;
 using webapi.Interfaces.Cryptography;
 
-namespace webapi.Services.Cryptography
+namespace webapi.Cryptography
 {
     public class EncryptKey : IEncryptKey, IDecryptKey
     {

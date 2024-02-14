@@ -5,7 +5,6 @@ using webapi.Interfaces.Controllers;
 using webapi.Interfaces.Cryptography;
 using webapi.Interfaces.Redis;
 using webapi.Interfaces.Services;
-using webapi.Services;
 
 namespace webapi.Controllers.Core
 {

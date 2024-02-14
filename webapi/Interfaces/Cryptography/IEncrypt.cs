@@ -1,4 +1,4 @@
-﻿using webapi.Services.Cryptography;
+﻿using webapi.Cryptography;
 
 namespace webapi.Interfaces.Cryptography
 {

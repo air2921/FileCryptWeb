@@ -1,6 +1,6 @@
 ﻿using StackExchange.Redis;
+using webapi.Helpers;
 using webapi.Interfaces.Redis;
-using webapi.Services;
 
 namespace webapi.DB.RedisDb
 {

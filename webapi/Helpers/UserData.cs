@@ -1,7 +1,7 @@
 ﻿using System.Security.Claims;
 using webapi.Interfaces.Services;
 
-namespace webapi.Services
+namespace webapi.Helpers
 {
     public class UserData : IUserInfo
     {

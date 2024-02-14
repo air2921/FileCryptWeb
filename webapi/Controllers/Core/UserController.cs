@@ -9,7 +9,6 @@ using webapi.Interfaces.Redis;
 using webapi.Interfaces.Services;
 using webapi.Localization.Exceptions;
 using webapi.Models;
-using webapi.Services;
 
 namespace webapi.Controllers.Core
 {

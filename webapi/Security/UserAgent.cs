@@ -1,7 +1,7 @@
 ﻿using UAParser;
 using webapi.Interfaces.Services;
 
-namespace webapi.Services.Security
+namespace webapi.Security
 {
     public class UserAgent : IUserAgent
     {

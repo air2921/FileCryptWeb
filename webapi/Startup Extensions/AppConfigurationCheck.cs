@@ -1,7 +1,7 @@
 ﻿using nClam;
 using System.Text.RegularExpressions;
 using webapi.Exceptions;
-using webapi.Services;
+using webapi.Helpers;
 
 namespace webapi
 {

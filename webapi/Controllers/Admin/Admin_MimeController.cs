@@ -5,8 +5,8 @@ using webapi.Interfaces.Services;
 using webapi.Interfaces;
 using webapi.Localization;
 using webapi.Models;
-using webapi.Services;
 using Microsoft.AspNetCore.Authorization;
+using webapi.Helpers;
 
 namespace webapi.Controllers.Admin
 {
@@ -98,7 +98,7 @@ namespace webapi.Controllers.Admin
                     }
 
                     await _mimeRepository.AddRange(mimeModels);
-                    await _redisCache.DeleteCache(Constants.MIME_COLLECTION);
+                    await _redisCache.DeleteCache(ImmutableData.MIME_COLLECTION);
                 }
 
                 return StatusCode(201, new { message = SuccessMessage.SuccessMimeCollectionCreate });
@@ -109,7 +109,7 @@ namespace webapi.Controllers.Admin
             }
             finally
             {
-                await _redisCache.DeleteCache(Constants.MIME_COLLECTION);
+                await _redisCache.DeleteCache(ImmutableData.MIME_COLLECTION);
             }
         }
 
@@ -161,7 +161,7 @@ namespace webapi.Controllers.Admin
             try
             {
                 await _mimeRepository.DeleteMany(identifiers);
-                await _redisCache.DeleteCache(Constants.MIME_COLLECTION);
+                await _redisCache.DeleteCache(ImmutableData.MIME_COLLECTION);
                 return StatusCode(204);
             }
             catch (EntityNotDeletedException ex)
