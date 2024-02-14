@@ -1,5 +1,5 @@
 import React from 'react';
-import Font from '../Font/Font';
+import Font from '../../utils/helpers/icon/Font';
 import { useNavigate } from 'react-router-dom';
 
 function UserData({ user, isOwner, showButton }: UserDataProps) {

@@ -1,9 +1,9 @@
 import React, { FormEvent, useState } from 'react';
 import { useNavigate } from 'react-router-dom'
-import AxiosRequest from '../../../api/AxiosRequest';
-import Message from '../../../components/Message/Message';
+import AxiosRequest from '../../../utils/api/AxiosRequest';
 import Modal from '../../../components/Modal/Modal';
 import CreateRecovery from '../recovery/CreateRecovery';
+import Message from '../../../utils/helpers/message/Message';
 
 const Login = () => {
     const [email, setEmail] = useState('');
@@ -110,14 +110,18 @@ const Login = () => {
                             onChange={(e) => setPassword(e.target.value)}
                         />
                     </label>
-                    <button type="submit">Sign In</button>
-                    <button onClick={() => navigate('/login')}></button>
+                    <div className="login-signup-btn-container">
+                        <button type="submit">Login</button>
+                        <button onClick={() => navigate('/auth/signup')}>Register</button>
+                    </div>
+                    <div className="recovery-btn-container">
+                        <button onClick={() => setRecovery(true)}>Recovery account</button>
+                    </div>
                 </form>
             </div>
             <Modal isActive={verificationRequired} setActive={setVerification}>
                 <Verify />
             </Modal>
-            <button onClick={() => setRecovery(true)}>Recovery account</button>
             <Modal isActive={recoveryAccount} setActive={setRecovery}>
                 <CreateRecovery />
             </Modal>

@@ -1,8 +1,8 @@
 ﻿import React, { ChangeEvent, FormEvent, useState } from 'react';
-import AxiosRequest from '../../../api/AxiosRequest';
-import Message from '../../../components/Message/Message';
 import Modal from '../../../components/Modal/Modal';
 import { useNavigate } from 'react-router-dom';
+import Message from '../../../utils/helpers/message/Message';
+import AxiosRequest from '../../../utils/api/AxiosRequest';
 
 const Register = () => {
     const [email, setEmail] = useState('');

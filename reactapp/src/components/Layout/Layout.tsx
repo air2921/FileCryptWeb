@@ -1,8 +1,8 @@
 ﻿import React, { useEffect, useState } from 'react';
-import Font from '../Font/Font';
+import Font from '../../utils/helpers/icon/Font';
 import { Link, Outlet, useNavigate } from 'react-router-dom';
 import cookie from 'react-cookies'
-import AxiosRequest from '../../api/AxiosRequest';
+import AxiosRequest from '../../utils/api/AxiosRequest';
 import './Layout.css'
 import useResize from '../UseResize/useResize';
 import useAuth from '../UseAuth/useAuth';

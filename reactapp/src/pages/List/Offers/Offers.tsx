@@ -1,7 +1,7 @@
 import React, { FormEvent, useEffect, useState } from 'react';
 import OfferList from '../../../components/List/OfferList/OfferList';
-import AxiosRequest from '../../../api/AxiosRequest';
-import Message from '../../../components/Message/Message';
+import Message from '../../../utils/helpers/message/Message';
+import AxiosRequest from '../../../utils/api/AxiosRequest';
 
 const Offers = () => {
     const [skip, setSkip] = useState(0);

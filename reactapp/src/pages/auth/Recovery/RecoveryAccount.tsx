@@ -1,7 +1,7 @@
 import React, { FormEvent, useState } from 'react';
-import Message from '../../../components/Message/Message';
 import { useLocation, useNavigate } from 'react-router-dom';
-import AxiosRequest from '../../../api/AxiosRequest';
+import Message from '../../../utils/helpers/message/Message';
+import AxiosRequest from '../../../utils/api/AxiosRequest';
 
 const RecoveryAccount = () => {
     const location = useLocation();

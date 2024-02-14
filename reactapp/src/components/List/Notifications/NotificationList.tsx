@@ -1,7 +1,7 @@
 import React from 'react';
-import Message from '../../Message/Message';
-import Font from '../../Font/Font';
-import DateComponent from '../../Helpers/Date/Date';
+import Message from '../../../utils/helpers/message/Message';
+import DateComponent from '../../../utils/helpers/date/Date';
+import Font from '../../../utils/helpers/icon/Font';
 
 function NotificationList({ notifications, deleteNotification }: NotificationListProps) {
 

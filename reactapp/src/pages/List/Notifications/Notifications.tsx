@@ -1,7 +1,7 @@
 import React, { useEffect, useState } from 'react';
 import NotificationList from '../../../components/List/Notifications/NotificationList';
-import AxiosRequest from '../../../api/AxiosRequest';
-import Message from '../../../components/Message/Message';
+import Message from '../../../utils/helpers/message/Message';
+import AxiosRequest from '../../../utils/api/AxiosRequest';
 
 const Notifications = () => {
     const [skip, setSkip] = useState(0);

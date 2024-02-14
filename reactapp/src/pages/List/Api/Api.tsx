@@ -1,7 +1,7 @@
 import React, { useEffect, useState } from 'react';
 import ApiList from '../../../components/List/ApiList/ApiList';
-import AxiosRequest from '../../../api/AxiosRequest';
-import Message from '../../../components/Message/Message';
+import Message from '../../../utils/helpers/message/Message';
+import AxiosRequest from '../../../utils/api/AxiosRequest';
 
 const Api = () => {
     const [errorMessage, setErrorMessage] = useState('');

@@ -1,8 +1,8 @@
 ﻿import React, { useEffect, useState } from 'react';
-import Message from '../../Message/Message';
+import Message from '../../../utils/helpers/message/Message';
 import Modal from '../../Modal/Modal';
-import DateComponent from '../../Helpers/Date/Date';
-import Font from '../../Font/Font';
+import DateComponent from '../../../utils/helpers/date/Date';
+import Font from '../../../utils/helpers/icon/Font';
 
 function ApiList({ apis, deleteApi }: ApiListProps) {
     const [isActive, setActive] = useState(false);

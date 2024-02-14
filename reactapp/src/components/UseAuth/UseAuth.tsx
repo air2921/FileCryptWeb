@@ -1,6 +1,6 @@
 ﻿import { useState, useEffect } from 'react';
 import cookie from 'react-cookies'
-import AxiosRequest from '../../api/AxiosRequest';
+import AxiosRequest from '../../utils/api/AxiosRequest';
 import { useNavigate } from 'react-router-dom';
 
 const useAuth = () => {

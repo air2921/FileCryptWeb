@@ -1,6 +1,6 @@
 import React, { FormEvent, useState } from 'react';
-import Message from '../../../components/Message/Message';
-import AxiosRequest from '../../../api/AxiosRequest';
+import Message from '../../../utils/helpers/message/Message';
+import AxiosRequest from '../../../utils/api/AxiosRequest';
 
 const CreateRecovery = () => {
     const [email, setEmail] = useState('');

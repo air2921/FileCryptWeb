@@ -1,9 +1,9 @@
 ﻿import React, { ChangeEvent, useEffect, useState } from 'react';
-import AxiosRequest from '../../../api/AxiosRequest';
-import AxiosRequestInterceptor from '../../../api/AxiosRequestInterceptor';
-import Font from '../../../components/Font/Font';
+import Message from '../../../utils/helpers/message/Message';
+import AxiosRequest from '../../../utils/api/AxiosRequest';
+import AxiosRequestInterceptor from '../../../utils/api/AxiosRequestInterceptor';
+import Font from '../../../utils/helpers/icon/Font';
 import FileList from '../../../components/List/FileList/FileList';
-import Message from '../../../components/Message/Message';
 
 interface FileButtonProps {
     id: string,

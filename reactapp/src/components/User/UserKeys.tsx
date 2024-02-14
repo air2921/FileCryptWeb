@@ -1,5 +1,5 @@
 import React from 'react';
-import Font from '../Font/Font';
+import Font from '../../utils/helpers/icon/Font';
 
 function UserKeys({ keys }: UserKeysProps) {
     return (
