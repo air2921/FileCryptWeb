@@ -62,11 +62,7 @@ namespace webapi.Controllers.Core
             var offers = new List<OfferModel>();
 
             var cacheFiles = await _redisCache.GetCachedData(cacheKeyFiles);
-            if (cacheFiles is not null)
-            {
-                files = JsonConvert.DeserializeObject<List<FileModel>>(cacheFiles);
-            }
-            else
+            if (cacheFiles is null)
             {
                 var filesDb = await _fileRepository.GetAll
                     (query => query.Where(f => f.user_id.Equals(userId)).OrderByDescending(f => f.operation_date).Skip(0).Take(5));
@@ -75,13 +71,11 @@ namespace webapi.Controllers.Core
 
                 files = (List<FileModel>)filesDb;
             }
+            else
+                files = JsonConvert.DeserializeObject<List<FileModel>>(cacheFiles);
 
             var cacheOffers = await _redisCache.GetCachedData(cacheKeyOffers);
-            if (cacheOffers is not null)
-            {
-                offers = JsonConvert.DeserializeObject<List<OfferModel>>(cacheOffers);
-            }
-            else
+            if (cacheOffers is null)
             {
                 var offersDb = await _offerRepository.GetAll
                     (query => query.Where(o => o.receiver_id.Equals(userId) || o.sender_id.Equals(userId)).OrderByDescending(o => o.created_at).Skip(0).Take(5));
@@ -90,8 +84,10 @@ namespace webapi.Controllers.Core
 
                 offers = (List<OfferModel>)offersDb;
             }
+            else
+                offers = JsonConvert.DeserializeObject<List<OfferModel>>(cacheOffers);
 
-            foreach(var offer in offers)
+            foreach (var offer in offers)
             {
                 list_offers.Add(new OfferObject
                 { 
@@ -127,13 +123,6 @@ namespace webapi.Controllers.Core
             var cacheKey = $"User_Data_{_userInfo.UserId}";
             var user = new UserModel();
 
-            bool clearCache = bool.TryParse(HttpContext.Session.GetString(Constants.CACHE_USER_DATA), out var parsedValue) ? parsedValue : true;
-            if (clearCache)
-            {
-                await _redisCache.DeleteCache(cacheKey);
-                HttpContext.Session.SetString(Constants.CACHE_USER_DATA, false.ToString());
-            }
-
             var cache = await _redisCache.GetCachedData(cacheKey);
             if (cache is null)
             {
@@ -144,9 +133,7 @@ namespace webapi.Controllers.Core
                 await _redisCache.CacheData(cacheKey, user, TimeSpan.FromMinutes(3));
             }
             else
-            {
                 user = JsonConvert.DeserializeObject<UserModel>(cache);
-            }
 
             user.password = string.Empty;
 

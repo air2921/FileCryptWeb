@@ -28,17 +28,6 @@
         public const string XSRF_HEADER_NAME = "X-XSRF-TOKEN";
         public const string API_HEADER_NAME = "X-API-KEY";
         public const string ENCRYPTION_KEY_HEADER_NAME = "X-ENCRYPTION-KEY";
-
-        #region Keys for flags need to update redis cache (Session)
-
-        public const string CACHE_USER_DATA = "Cache_User_Data";
-        public const string CACHE_API = "API_Settings";
-        public const string CACHE_FILES = "Cache_File_List";
-        public const string CACHE_KEYS = "Cache_Keys";
-        public const string CACHE_NOTIFICATIONS = "Cache_Notification_List";
-        public const string CACHE_OFFERS = "Cache_Offer_List";
-
-        #endregion
     }
 
     public static class App

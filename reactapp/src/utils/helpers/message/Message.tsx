@@ -1,5 +1,5 @@
 import React from 'react';
-import Font from '../Font/Font';
+import Font from '../icon/Font';
 
 function Message({ message, font }: MessageProps) {
     return (

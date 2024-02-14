@@ -6,7 +6,6 @@ using webapi.Interfaces;
 using webapi.Interfaces.Redis;
 using webapi.Interfaces.Services;
 using webapi.Models;
-using webapi.Services;
 
 namespace webapi.Controllers.Core
 {
@@ -47,7 +46,7 @@ namespace webapi.Controllers.Core
                     user_id = _userInfo.UserId
                 });
 
-                HttpContext.Session.SetString(Constants.CACHE_API, true.ToString());
+                await _redisCache.DeteteCacheByKeyPattern($"API_Keys_{_userInfo.UserId}");
 
                 return StatusCode(201);
             }
@@ -64,23 +63,13 @@ namespace webapi.Controllers.Core
         [HttpGet("{apiId}")]
         public async Task<IActionResult> GetAPI([FromRoute] int apiId)
         {
-            var cacheKey = $"API_Key_Settings_{apiId}";
+            var cacheKey = $"API_Keys_{_userInfo.UserId}_{apiId}";
             int apiCallLeft = 0;
-
-            bool clearCache = bool.TryParse(HttpContext.Session.GetString(Constants.CACHE_API), out var parsedValue) ? parsedValue : true;
-            if (clearCache)
-            {
-                await _redisCache.DeleteCache(cacheKey);
-                HttpContext.Session.SetString(Constants.CACHE_API, false.ToString());
-            }
 
             var cacheApi = await _redisCache.GetCachedData(cacheKey);
             if (cacheApi is not null)
             {
                 var cacheResult = JsonConvert.DeserializeObject<ApiModel>(cacheApi);
-                if (cacheResult.user_id != _userInfo.UserId)
-                    return StatusCode(404);
-
                 apiCallLeft = await ApiCallLeftCheck(cacheResult);
 
                 return StatusCode(200, new { api = cacheResult, apiCallLeft });
@@ -101,13 +90,6 @@ namespace webapi.Controllers.Core
         {
             var cacheKey = $"API_Keys_{_userInfo.UserId}";
             var apiObjects = new List<ApiObject>();
-
-            bool clearCache = bool.TryParse(HttpContext.Session.GetString(Constants.CACHE_API), out var parsedValue) ? parsedValue : true;
-            if (clearCache)
-            {
-                await _redisCache.DeleteCache(cacheKey);
-                HttpContext.Session.SetString(Constants.CACHE_API, false.ToString());
-            }
 
             var cacheApi = await _redisCache.GetCachedData(cacheKey);
             if (cacheApi is not null)
@@ -132,7 +114,7 @@ namespace webapi.Controllers.Core
             try
             {
                 await _apiRepository.DeleteByFilter(query => query.Where(a => a.user_id.Equals(_userInfo.UserId) || a.api_id.Equals(apiId)));
-                HttpContext.Session.SetString(Constants.CACHE_API, true.ToString());
+                await _redisCache.DeteteCacheByKeyPattern($"API_Keys_{_userInfo.UserId}");
 
                 return StatusCode(200);
             }

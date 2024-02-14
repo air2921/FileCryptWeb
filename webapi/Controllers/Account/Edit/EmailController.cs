@@ -5,6 +5,7 @@ using UAParser;
 using webapi.DTO;
 using webapi.Exceptions;
 using webapi.Interfaces;
+using webapi.Interfaces.Redis;
 using webapi.Interfaces.Services;
 using webapi.Localization;
 using webapi.Models;
@@ -22,6 +23,7 @@ namespace webapi.Controllers.Account.Edit
 
         private readonly IRepository<UserModel> _userRepository;
         private readonly IRepository<NotificationModel> _notificationRepository;
+        private readonly IRedisCache _redisCache;
         private readonly IUserAgent _userAgent;
         private readonly IEmailSender _email;
         private readonly ILogger<EmailController> _logger;
@@ -34,6 +36,7 @@ namespace webapi.Controllers.Account.Edit
         public EmailController(
             IRepository<UserModel> userRepository,
             IRepository<NotificationModel> notificationRepository,
+            IRedisCache redisCache,
             IUserAgent userAgent,
             IEmailSender email,
             ILogger<EmailController> logger,
@@ -45,6 +48,7 @@ namespace webapi.Controllers.Account.Edit
         {
             _userRepository = userRepository;
             _notificationRepository = notificationRepository;
+            _redisCache = redisCache;
             _userAgent = userAgent;
             _email = email;
             _logger = logger;
@@ -183,13 +187,16 @@ namespace webapi.Controllers.Account.Edit
                     receiver_id = _userInfo.UserId
                 });
 
+                await _redisCache.DeteteCacheByKeyPattern($"Notifications_{_userInfo.UserId}");
+
                 await _tokenService.UpdateJwtToken();
                 _logger.LogInformation("jwt with a new claims was updated");
 
                 HttpContext.Session.Remove(_userInfo.UserId.ToString());
                 HttpContext.Session.Remove(EMAIL);
                 _logger.LogInformation($"User session {_userInfo.Username}#{_userInfo.UserId} has been cleared");
-                HttpContext.Session.SetString(Constants.CACHE_USER_DATA, true.ToString());
+
+                await _redisCache.DeteteCacheByKeyPattern($"User_Data_{_userInfo.UserId}");
 
                 return StatusCode(201);
             }

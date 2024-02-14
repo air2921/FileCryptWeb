@@ -3,6 +3,7 @@ using Microsoft.AspNetCore.Mvc;
 using webapi.DTO;
 using webapi.Exceptions;
 using webapi.Interfaces;
+using webapi.Interfaces.Redis;
 using webapi.Interfaces.Services;
 using webapi.Localization;
 using webapi.Models;
@@ -20,6 +21,7 @@ namespace webapi.Controllers.Account.Edit
 
         private readonly IRepository<UserModel> _userRepository;
         private readonly IRepository<NotificationModel> _notificationRepository;
+        private readonly IRedisCache _redisCache;
         private readonly IPasswordManager _passwordManager;
         private readonly IUserInfo _userInfo;
         private readonly ITokenService _tokenService;
@@ -31,6 +33,7 @@ namespace webapi.Controllers.Account.Edit
         public _2FaController(
             IRepository<UserModel> userRepository,
             IRepository<NotificationModel> notificationRepository,
+            IRedisCache redisCache,
             IPasswordManager passwordManager,
             IUserInfo userInfo,
             ITokenService tokenService,
@@ -41,6 +44,7 @@ namespace webapi.Controllers.Account.Edit
         {
             _userRepository = userRepository;
             _notificationRepository = notificationRepository;
+            _redisCache = redisCache;
             _passwordManager = passwordManager;
             _userInfo = userInfo;
             _tokenService = tokenService;
@@ -57,11 +61,7 @@ namespace webapi.Controllers.Account.Edit
             {
                 var user = await _userRepository.GetById(_userInfo.UserId);
                 if (user is null)
-                {
-                    _tokenService.DeleteTokens();
-                    _logger.LogWarning("Tokens was deleted");
                     return StatusCode(404);
-                }
 
                 bool IsCorrect = _passwordManager.CheckPassword(password, user.password);
                 if (!IsCorrect)
@@ -128,7 +128,7 @@ namespace webapi.Controllers.Account.Edit
                     receiver_id = _userInfo.UserId
                 });
 
-                HttpContext.Session.SetString(Constants.CACHE_USER_DATA, true.ToString());
+                await _redisCache.DeteteCacheByKeyPattern($"User_Data_{_userInfo.UserId}");
 
                 return StatusCode(200);
             }

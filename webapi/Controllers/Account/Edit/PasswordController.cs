@@ -1,12 +1,11 @@
 ﻿using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
-using Microsoft.EntityFrameworkCore;
 using System.Text.RegularExpressions;
 using UAParser;
-using webapi.DB;
 using webapi.DTO;
 using webapi.Exceptions;
 using webapi.Interfaces;
+using webapi.Interfaces.Redis;
 using webapi.Interfaces.Services;
 using webapi.Localization;
 using webapi.Models;
@@ -22,6 +21,7 @@ namespace webapi.Controllers.Account.Edit
     {
         private readonly IRepository<UserModel> _userRepository;
         private readonly IRepository<NotificationModel> _notificationRepository;
+        private readonly IRedisCache _redisCache;
         private readonly IUserAgent _userAgent;
         private readonly ILogger<PasswordController> _logger;
         private readonly IPasswordManager _passwordManager;
@@ -31,6 +31,7 @@ namespace webapi.Controllers.Account.Edit
         public PasswordController(
             IRepository<UserModel> userRepository,
             IRepository<NotificationModel> notificationRepository,
+            IRedisCache redisCache,
             IUserAgent userAgent,
             ILogger<PasswordController> logger,
             IPasswordManager passwordManager,
@@ -39,6 +40,7 @@ namespace webapi.Controllers.Account.Edit
         {
             _userRepository = userRepository;
             _notificationRepository = notificationRepository;
+            _redisCache = redisCache;
             _userAgent = userAgent;
             _logger = logger;
             _passwordManager = passwordManager;
@@ -84,6 +86,9 @@ namespace webapi.Controllers.Account.Edit
                     is_checked = false,
                     receiver_id = _userInfo.UserId
                 });
+
+                await _redisCache.DeteteCacheByKeyPattern($"Notifications_{_userInfo.UserId}");
+                await _redisCache.DeteteCacheByKeyPattern($"User_Data_{_userInfo.UserId}");
 
                 return StatusCode(200, new { message = AccountSuccessMessage.PasswordUpdated });
             }

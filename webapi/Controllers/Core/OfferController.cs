@@ -25,7 +25,6 @@ namespace webapi.Controllers.Core
         private readonly ISorting _sorting;
         private readonly IRedisCache _redisCache;
         private readonly IUserInfo _userInfo;
-        private readonly ITokenService _tokenService;
 
         public OfferController(
             IRepository<UserModel> userRepository,
@@ -34,8 +33,7 @@ namespace webapi.Controllers.Core
             IRepository<KeyModel> keyRepository,
             ISorting sorting,
             IRedisCache redisCache,
-            IUserInfo userInfo,
-            ITokenService tokenService)
+            IUserInfo userInfo)
         {
             _userRepository = userRepository;
             _offerRepository = offerRepository;
@@ -44,7 +42,6 @@ namespace webapi.Controllers.Core
             _sorting = sorting;
             _redisCache = redisCache;
             _userInfo = userInfo;
-            _tokenService = tokenService;
         }
 
         [HttpPost("new/{receiverId}")]
@@ -62,10 +59,7 @@ namespace webapi.Controllers.Core
 
                 var keys = await _keyRepository.GetByFilter(query => query.Where(k => k.user_id.Equals(_userInfo.UserId)));
                 if (keys is null)
-                {
-                    _tokenService.DeleteTokens();
                     return StatusCode(404);
-                }
 
                 if (keys.internal_key is null)
                     return StatusCode(404, new { message = "You don't have a internal key for create an offer" });
@@ -91,7 +85,9 @@ namespace webapi.Controllers.Core
                     receiver_id = receiverId
                 });
 
-                HttpContext.Session.SetString(Constants.CACHE_OFFERS, true.ToString());
+                await _redisCache.DeteteCacheByKeyPattern($"Notifications_{receiverId}");
+                await _redisCache.DeteteCacheByKeyPattern($"Offers_{receiverId}");
+                await _redisCache.DeteteCacheByKeyPattern($"Offers_{_userInfo.UserId}");
 
                 return StatusCode(201, new { message = SuccessMessage.SuccessOfferCreated });
             }
@@ -124,7 +120,8 @@ namespace webapi.Controllers.Core
                 await _keyRepository.Update(receiver);
                 await _offerRepository.Update(offer);
 
-                HttpContext.Session.SetString(Constants.CACHE_OFFERS, true.ToString());
+                await _redisCache.DeteteCacheByKeyPattern($"Offers_{offer.sender_id}");
+                await _redisCache.DeteteCacheByKeyPattern($"Offers_{_userInfo.UserId}");
 
                 return StatusCode(200, new { message = SuccessMessage.SuccessOfferAccepted });
             }
@@ -137,7 +134,7 @@ namespace webapi.Controllers.Core
         [HttpGet("{offerId}")]
         public async Task<IActionResult> GetOneOffer([FromRoute] int offerId)
         {
-            var cacheKey = $"Offer_{offerId}";
+            var cacheKey = $"Offers_{offerId}";
 
             var cacheOffer = await _redisCache.GetCachedData(cacheKey);
             if (cacheOffer is not null)
@@ -150,13 +147,10 @@ namespace webapi.Controllers.Core
             }
 
             var offer = await _offerRepository.GetById(offerId);
-            if (offer is null)
+            if (offer is null || offer.sender_id != _userInfo.UserId || offer.receiver_id != _userInfo.UserId)
                 return StatusCode(404);
 
             await _redisCache.CacheData(cacheKey, offer, TimeSpan.FromMinutes(10));
-
-            if (offer.sender_id != _userInfo.UserId || offer.receiver_id != _userInfo.UserId)
-                return StatusCode(404);
 
             return StatusCode(200, new { offer, userId = _userInfo.UserId });
         }
@@ -166,15 +160,7 @@ namespace webapi.Controllers.Core
             [FromQuery] bool byDesc, [FromQuery] bool? sended,
             [FromQuery] bool? isAccepted, [FromQuery] string? type)
         {
-            var cacheKey = $"Offer_{_userInfo.UserId}_{skip}_{count}_{byDesc}_{sended}_{isAccepted}_{type}";
-
-            bool clearCache = bool.TryParse(HttpContext.Session.GetString(Constants.CACHE_OFFERS), out var parsedValue) ? parsedValue : true;
-
-            if (clearCache)
-            {
-                await _redisCache.DeleteCache(cacheKey);
-                HttpContext.Session.SetString(Constants.CACHE_OFFERS, false.ToString());
-            }
+            var cacheKey = $"Offers_{_userInfo.UserId}_{skip}_{count}_{byDesc}_{sended}_{isAccepted}_{type}";
 
             var cacheOffers = await _redisCache.GetCachedData(cacheKey);
             if (cacheOffers is not null)
@@ -201,7 +187,7 @@ namespace webapi.Controllers.Core
                 await _offerRepository.DeleteByFilter(query => query.Where
                 (o => o.offer_id.Equals(offerId) && (o.sender_id.Equals(_userInfo.UserId) || o.receiver_id.Equals(_userInfo.UserId))));
 
-                HttpContext.Session.SetString(Constants.CACHE_OFFERS, true.ToString());
+                await _redisCache.DeteteCacheByKeyPattern($"Offers_{_userInfo.UserId}");
 
                 return StatusCode(200, new { message = SuccessMessage.SuccessOfferDeleted });
             }

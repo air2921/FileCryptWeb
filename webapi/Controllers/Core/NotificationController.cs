@@ -7,7 +7,6 @@ using webapi.Interfaces;
 using webapi.Interfaces.Redis;
 using webapi.Interfaces.Services;
 using webapi.Models;
-using webapi.Services;
 
 namespace webapi.Controllers.Core
 {
@@ -36,15 +35,12 @@ namespace webapi.Controllers.Core
         [HttpGet("{notificationId}")]
         public async Task<IActionResult> GetNotification([FromRoute] int notificationId)
         {
-            var cacheKey = $"Notification_{notificationId}";
+            var cacheKey = $"Notifications_{_userInfo.UserId}_{notificationId}";
 
             var cacheNotification = await _redisCache.GetCachedData(cacheKey);
             if (cacheNotification is not null)
             {
                 var cacheResult = JsonConvert.DeserializeObject<NotificationModel>(cacheNotification);
-
-                if (cacheResult.receiver_id != _userInfo.UserId)
-                    return StatusCode(404);
 
                 return StatusCode(200, new { notification = cacheResult });
             }
@@ -67,14 +63,6 @@ namespace webapi.Controllers.Core
         {
             var cacheKey = $"Notifications_{_userInfo.UserId}_{skip}_{count}_{byDesc}_{priority}_{isChecked}";
 
-            bool clearCache = bool.TryParse(HttpContext.Session.GetString(Constants.CACHE_NOTIFICATIONS), out var parsedValue) ? parsedValue : true;
-
-            if (clearCache)
-            {
-                await _redisCache.DeleteCache(cacheKey);
-                HttpContext.Session.SetString(Constants.CACHE_NOTIFICATIONS, false.ToString());
-            }
-
             var cacheNotifications = await _redisCache.GetCachedData(cacheKey);
             if (cacheNotifications is not null)
                 return StatusCode(200, new { notifications = JsonConvert.DeserializeObject<IEnumerable<NotificationModel>>(cacheNotifications) });
@@ -93,7 +81,7 @@ namespace webapi.Controllers.Core
             try
             {
                 await _notificationRepository.DeleteByFilter(query => query.Where(n => n.notification_id.Equals(notificationId) && n.receiver_id.Equals(_userInfo.UserId)));
-                HttpContext.Session.SetString(Constants.CACHE_NOTIFICATIONS, true.ToString());
+                await _redisCache.DeteteCacheByKeyPattern($"Notifications_{_userInfo.UserId}");
 
                 return StatusCode(200);
             }

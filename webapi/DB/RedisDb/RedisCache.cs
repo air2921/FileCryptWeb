@@ -109,5 +109,18 @@ namespace webapi.DB.RedisDb
             if (value.HasValue)
                 await _db.KeyDeleteAsync(key);
         }
+
+        public async Task DeteteCacheByKeyPattern(string key)
+        {
+            var redisKeys = _db.Execute("KEYS", "*");
+            var result = (string[])redisKeys;
+
+            var keysContainsPattern = result.Where(str => str.Contains(key));
+
+            foreach(var redisKey in keysContainsPattern)
+            {
+                await _db.KeyDeleteAsync(redisKey);
+            }
+        }
     }
 }

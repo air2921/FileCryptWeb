@@ -3,6 +3,7 @@ using Microsoft.AspNetCore.Mvc;
 using System.Text.RegularExpressions;
 using webapi.Exceptions;
 using webapi.Interfaces;
+using webapi.Interfaces.Redis;
 using webapi.Interfaces.Services;
 using webapi.Localization;
 using webapi.Models;
@@ -17,17 +18,20 @@ namespace webapi.Controllers.Account.Edit
     public class UsernameController : ControllerBase
     {
         private readonly IRepository<UserModel> _userRepository;
+        private readonly IRedisCache _redisCache;
         private readonly ILogger<UsernameController> _logger;
         private readonly IUserInfo _userInfo;
         private readonly ITokenService _tokenService;
 
         public UsernameController(
             IRepository<UserModel> userRepository,
+            IRedisCache redisCache,
             ILogger<UsernameController> logger,
             IUserInfo userInfo,
             ITokenService tokenService)
         {
             _userRepository = userRepository;
+            _redisCache = redisCache;
             _logger = logger;
             _userInfo = userInfo;
             _tokenService = tokenService;
@@ -57,7 +61,8 @@ namespace webapi.Controllers.Account.Edit
                 await _tokenService.UpdateJwtToken();
                 _tokenService.DeleteUserDataSession();
                 _logger.LogInformation("jwt with a new claims was updated");
-                HttpContext.Session.SetString(Constants.CACHE_USER_DATA, true.ToString());
+
+                await _redisCache.DeteteCacheByKeyPattern($"User_Data_{_userInfo.UserId}");
 
                 return StatusCode(200, new { message = AccountSuccessMessage.UsernameUpdated });
             }

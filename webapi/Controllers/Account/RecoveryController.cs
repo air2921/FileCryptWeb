@@ -4,6 +4,7 @@ using UAParser;
 using webapi.DTO;
 using webapi.Exceptions;
 using webapi.Interfaces;
+using webapi.Interfaces.Redis;
 using webapi.Interfaces.Services;
 using webapi.Localization;
 using webapi.Models;
@@ -18,6 +19,7 @@ namespace webapi.Controllers.Account
     {
         private readonly IRepository<UserModel> _userRepository;
         private readonly IRepository<NotificationModel> _notificationRepository;
+        private readonly IRedisCache _redisCache;
         private readonly IRepository<LinkModel> _linkRepository;
         private readonly IRepository<TokenModel> _tokenRepository;
         private readonly ILogger<RecoveryController> _logger;
@@ -30,6 +32,7 @@ namespace webapi.Controllers.Account
         public RecoveryController(
             IRepository<UserModel> userRepository,
             IRepository<NotificationModel> notificationRepository,
+            IRedisCache redisCache,
             IRepository<LinkModel> linkRepository,
             IRepository<TokenModel> tokenRepository,
             ILogger<RecoveryController> logger,
@@ -41,6 +44,7 @@ namespace webapi.Controllers.Account
         {
             _userRepository = userRepository;
             _notificationRepository = notificationRepository;
+            _redisCache = redisCache;
             _linkRepository = linkRepository;
             _tokenRepository = tokenRepository;
             _logger = logger;
@@ -93,6 +97,7 @@ namespace webapi.Controllers.Account
                 });
 
                 _logger.LogInformation($"Created new token for {user.username}#{user.id} with life time for 30 minutes");
+                await _redisCache.DeteteCacheByKeyPattern($"Notification_{user.id}");
 
                 return StatusCode(201, new { message = AccountSuccessMessage.EmailSendedRecovery });
             }
@@ -156,6 +161,8 @@ namespace webapi.Controllers.Account
                 tokenModel.expiry_date = DateTime.UtcNow.AddYears(-100);
 
                 await _tokenRepository.Update(tokenModel);
+                await _redisCache.DeteteCacheByKeyPattern($"Notification_{user.id}");
+                await _redisCache.DeteteCacheByKeyPattern($"User_Data_{user.id}");
 
                 return StatusCode(200);
             }

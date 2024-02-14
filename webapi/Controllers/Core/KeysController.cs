@@ -62,19 +62,8 @@ namespace webapi.Controllers.Core
 
             var keys = new KeyModel();
             var cacheKeys = await _redisCache.GetCachedData(cacheKey);
-            bool clearCache = bool.TryParse(HttpContext.Session.GetString(Constants.CACHE_KEYS), out var parsedValue) ? parsedValue : true;
 
-            if (clearCache)
-            {
-                await _redisCache.DeleteCache(cacheKey);
-                HttpContext.Session.SetString(Constants.CACHE_KEYS, false.ToString());
-            }
-
-            if (cacheKeys is not null)
-            {
-                keys = JsonConvert.DeserializeObject<KeyModel>(cacheKeys);
-            }
-            else
+            if (cacheKeys is null)
             {
                 keys = await _keyRepository.GetByFilter(query => query.Where(k => k.user_id.Equals(_userInfo.UserId)));
                 if (keys is null)
@@ -82,6 +71,8 @@ namespace webapi.Controllers.Core
 
                 await _redisCache.CacheData(cacheKey, keys, TimeSpan.FromMinutes(10));
             }
+            else
+                keys = JsonConvert.DeserializeObject<KeyModel>(cacheKeys);
 
             if (keys is null)
                 return StatusCode(404);
@@ -99,22 +90,20 @@ namespace webapi.Controllers.Core
         {
             try
             {
-                if (auto)
-                {
-                    key = _generateKey.GenerateKey();
-                }
-                else
+                if (!auto)
                 {
                     if (string.IsNullOrWhiteSpace(key) || !_validation.IsBase64String(key) || !Regex.IsMatch(key, Validation.EncryptionKey))
                         return StatusCode(400, new { message = ErrorMessage.InvalidKey });
                 }
+                else
+                    key = _generateKey.GenerateKey();
 
                 var keys = await _keyRepository.GetByFilter(query => query.Where(k => k.user_id.Equals(_userInfo.UserId)));
                 keys.private_key = await _encryptKey.EncryptionKeyAsync(key, secretKey);
 
                 await _keyRepository.Update(keys);
 
-                HttpContext.Session.SetString(Constants.CACHE_KEYS, true.ToString());
+                await _redisCache.DeteteCacheByKeyPattern($"Keys_{_userInfo.UserId}");
                 await _redisCache.DeleteCache(_redisKeys.PrivateKey);
 
                 return StatusCode(200, new { message = AccountSuccessMessage.KeyUpdated });
@@ -131,22 +120,20 @@ namespace webapi.Controllers.Core
         {
             try
             {
-                if (auto)
-                {
-                    key = _generateKey.GenerateKey();
-                }
-                else
+                if (!auto)
                 {
                     if (string.IsNullOrWhiteSpace(key) || !_validation.IsBase64String(key) || !Regex.IsMatch(key, Validation.EncryptionKey))
                         return StatusCode(400, new { message = ErrorMessage.InvalidKey });
                 }
+                else
+                    key = _generateKey.GenerateKey();
 
                 var keys = await _keyRepository.GetByFilter(query => query.Where(k => k.user_id.Equals(_userInfo.UserId)));
                 keys.internal_key = await _encryptKey.EncryptionKeyAsync(key, secretKey);
 
                 await _keyRepository.Update(keys);
 
-                HttpContext.Session.SetString(Constants.CACHE_KEYS, true.ToString());
+                await _redisCache.DeteteCacheByKeyPattern($"Keys_{_userInfo.UserId}");
                 await _redisCache.DeleteCache(_redisKeys.InternalKey);
 
                 return StatusCode(200, new { message = AccountSuccessMessage.KeyUpdated });
@@ -170,7 +157,7 @@ namespace webapi.Controllers.Core
 
                 await _keyRepository.Update(keys);
 
-                HttpContext.Session.SetString(Constants.CACHE_KEYS, true.ToString());
+                await _redisCache.DeteteCacheByKeyPattern($"Keys_{_userInfo.UserId}");
                 await _redisCache.DeleteCache(_redisKeys.InternalKey);
 
                 return StatusCode(200, new { message = AccountSuccessMessage.KeyUpdated });

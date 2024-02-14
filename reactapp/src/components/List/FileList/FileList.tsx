@@ -1,7 +1,8 @@
 import React, { useState } from 'react';
-import Message from '../../Message/Message';
 import DateComponent from '../../../utils/helpers/date/Date';
 import Modal from '../../Modal/Modal';
+import Message from '../../../utils/helpers/message/Message';
+import Font from '../../../utils/helpers/icon/Font';
 
 function FileList({ files, isOwner, deleteFile }: FileListProps) {
     const [fileData, setFile] = useState<FileProps | null>(null);

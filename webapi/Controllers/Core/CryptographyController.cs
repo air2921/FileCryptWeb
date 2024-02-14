@@ -3,6 +3,7 @@ using Microsoft.AspNetCore.Mvc;
 using webapi.Exceptions;
 using webapi.Interfaces.Controllers;
 using webapi.Interfaces.Cryptography;
+using webapi.Interfaces.Redis;
 using webapi.Interfaces.Services;
 using webapi.Services;
 
@@ -15,6 +16,7 @@ namespace webapi.Controllers.Core
     {
         private readonly ICryptographyControllerBase _cryptographyController;
         private readonly IUserInfo _userInfo;
+        private readonly IRedisCache _redisCache;
         private readonly IEncrypt _encrypt;
         private readonly IDecrypt _decrypt;
         private readonly ICryptographyParamsProvider _cryptographyParams;
@@ -22,12 +24,14 @@ namespace webapi.Controllers.Core
         public CryptographyController(
             ICryptographyControllerBase cryptographyController,
             IUserInfo userInfo,
+            IRedisCache redisCache,
             IEncrypt encrypt,
             IDecrypt decrypt,
             ICryptographyParamsProvider cryptographyParams)
         {
             _cryptographyController = cryptographyController;
             _userInfo = userInfo;
+            _redisCache = redisCache;
             _encrypt = encrypt;
             _decrypt = decrypt;
             _cryptographyParams = cryptographyParams;
@@ -42,7 +46,7 @@ namespace webapi.Controllers.Core
                 var param = await _cryptographyParams.GetCryptographyParams(type);
 
                 var encryptedFile = await _cryptographyController.EncryptFile(_encrypt.EncryptFileAsync, param.EncryptionKey, file, _userInfo.UserId, type);
-                HttpContext.Session.SetString(Constants.CACHE_FILES, true.ToString());
+                await _redisCache.DeteteCacheByKeyPattern($"Files_{_userInfo.UserId}");
 
                 return encryptedFile;
             }
@@ -65,7 +69,7 @@ namespace webapi.Controllers.Core
                 var param = await _cryptographyParams.GetCryptographyParams(type);
 
                 var decryptedFile = await _cryptographyController.EncryptFile(_decrypt.DecryptFileAsync, param.EncryptionKey, file, _userInfo.UserId, type);
-                HttpContext.Session.SetString(Constants.CACHE_FILES, true.ToString());
+                await _redisCache.DeteteCacheByKeyPattern($"Files_{_userInfo.UserId}");
 
                 return decryptedFile;
             }
