@@ -19,64 +19,33 @@ namespace webapi.Controllers.Public_API
         private readonly IRepository<ApiModel> _apiRepository;
         private readonly ICryptographyControllerBase _cryptographyController;
         private readonly IRedisCache _redisCache;
-        private readonly IEncrypt _encrypt;
-        private readonly IDecrypt _decrypt;
+        private readonly ICypher _cypher;
 
         public CryptographyController(
             IRepository<ApiModel> apiRepository,
             ICryptographyControllerBase cryptographyController,
             IRedisCache redisCache,
-            IEncrypt encrypt,
-            IDecrypt decrypt)
+            ICypher cypher)
         {
             _apiRepository = apiRepository;
             _cryptographyController = cryptographyController;
             _redisCache = redisCache;
-            _encrypt = encrypt;
-            _decrypt = decrypt;
+            _cypher = cypher;
         }
 
-        [HttpPost("encrypt")]
+        [HttpPost("{operation}")]
         [RequestSizeLimit(75 * 1024 * 1024)]
         public async Task<IActionResult> EncryptFiles(
             [FromHeader(Name = ImmutableData.ENCRYPTION_KEY_HEADER_NAME)] string encryptionKey,
             [FromHeader(Name = ImmutableData.API_HEADER_NAME)] string apiKey,
-            IFormFile file, [FromRoute] string type)
+            IFormFile file, [FromRoute] string type, [FromRoute] string operation)
         {
             try
             {
                 var apiData = await IsValidAPI(apiKey);
                 await ControlRequestCount(apiKey, apiData.MaxRequest);
 
-                return await _cryptographyController.EncryptFile(_encrypt.EncryptFileAsync, encryptionKey, file, apiData.UserId, type);
-            }
-            catch (InvalidRouteException ex)
-            {
-                return StatusCode(404, new { message = ex.Message });
-            }
-            catch (ArgumentException ex)
-            {
-                return StatusCode(422, new { message = ex.Message });
-            }
-            catch (InvalidOperationException)
-            {
-                return StatusCode(500, new { message = "Unexpected error" });
-            }
-        }
-
-        [HttpPost("decrypt")]
-        [RequestSizeLimit(75 * 1024 * 1024)]
-        public async Task<IActionResult> DecryptFiles(
-            [FromHeader(Name = ImmutableData.ENCRYPTION_KEY_HEADER_NAME)] string encryptionKey,
-            [FromHeader(Name = ImmutableData.API_HEADER_NAME)] string apiKey,
-            IFormFile file, [FromRoute] string type)
-        {
-            try
-            {
-                var apiData = await IsValidAPI(apiKey);
-                await ControlRequestCount(apiKey, apiData.MaxRequest);
-
-                return await _cryptographyController.EncryptFile(_decrypt.DecryptFileAsync, encryptionKey, file, apiData.UserId, type);
+                return await _cryptographyController.EncryptFile(_cypher.CypherFileAsync, encryptionKey, file, apiData.UserId, type, operation);
             }
             catch (InvalidRouteException ex)
             {

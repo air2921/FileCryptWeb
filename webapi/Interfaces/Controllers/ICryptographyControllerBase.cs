@@ -6,8 +6,8 @@ namespace webapi.Interfaces.Controllers
     public interface ICryptographyControllerBase
     {
         public Task<IActionResult> EncryptFile(
-            Func<string, byte[], CancellationToken, Task<CryptographyResult>> CryptographyFunction,
+            Func<string, byte[], CancellationToken, string, Task<CryptographyResult>> CryptographyFunction,
             string key, IFormFile file,
-            int userID, string type);
+            int userID, string type, string operation);
     }
 }

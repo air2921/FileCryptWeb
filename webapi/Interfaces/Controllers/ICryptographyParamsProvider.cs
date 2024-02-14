@@ -4,6 +4,6 @@ namespace webapi.Interfaces.Controllers
 {
     public interface ICryptographyParamsProvider
     {
-        public Task<CryptographyParams> GetCryptographyParams(string fileType);
+        public Task<CryptographyParams> GetCryptographyParams(string fileType, string operation);
     }
 }

@@ -44,9 +44,9 @@ namespace webapi.Controllers.Base
         }
 
         public async Task<IActionResult> EncryptFile(
-            Func<string, byte[], CancellationToken, Task<CryptographyResult>> CryptographyFunction,
+            Func<string, byte[], CancellationToken, string, Task<CryptographyResult>> CryptographyFunction,
             string key, IFormFile file,
-            int userID, string type)
+            int userID, string type, string operation)
         {
 
             var filename = Guid.NewGuid().ToString() + "_" + file.FileName;
@@ -75,7 +75,7 @@ namespace webapi.Controllers.Base
 
                 await _fileService.UploadFile(filePath, file);
 
-                await EncryptFile(filePath, CryptographyFunction, encryptionKey);
+                await EncryptFile(filePath, operation, CryptographyFunction, encryptionKey);
 
                 await _fileService.CreateFile(userID, filename, file.ContentType, mimeCategory, type);
 
@@ -122,12 +122,12 @@ namespace webapi.Controllers.Base
             return Convert.FromBase64String(key);
         }
 
-        private async Task EncryptFile(string filePath, Func<string, byte[], CancellationToken, Task<CryptographyResult>> CryptographyFunction, byte[] key)
+        private async Task EncryptFile(string filePath, string operation, Func<string, byte[], CancellationToken, string, Task<CryptographyResult>> CryptographyFunction, byte[] key)
         {
             using var cts = new CancellationTokenSource();
             var cancellationToken = cts.Token;
 
-            var cryptographyTask = CryptographyFunction(filePath, key, cancellationToken);
+            var cryptographyTask = CryptographyFunction(filePath, key, cancellationToken, operation);
             var timeoutTask = Task.Delay(TASK_AWAITING);
 
             var completedTask = await Task.WhenAny(cryptographyTask, timeoutTask);
@@ -149,23 +149,37 @@ namespace webapi.Controllers.Base
             }
         }
 
-        public async Task<CryptographyParams> GetCryptographyParams(string fileType)
+        public async Task<CryptographyParams> GetCryptographyParams(string fileType, string operation)
         {
             string lowerFileType = fileType.ToLowerInvariant();
+            bool isValidRoute = false;
+
+            switch (operation)
+            {
+                case "encrypt":
+                    isValidRoute = true;
+                    break;
+                case "decrypt":
+                    isValidRoute = true;
+                    break;
+                default:
+                    isValidRoute = false;
+                    break;
+            }
 
             try
             {
                 if (lowerFileType == privateType)
                 {
-                    return new CryptographyParams(await _redisCache.CacheKey(_redisKeys.PrivateKey, _userInfo.UserId));
+                    return new CryptographyParams(await _redisCache.CacheKey(_redisKeys.PrivateKey, _userInfo.UserId), isValidRoute);
                 }
                 else if (lowerFileType == internalType)
                 {
-                    return new CryptographyParams(await _redisCache.CacheKey(_redisKeys.InternalKey, _userInfo.UserId));
+                    return new CryptographyParams(await _redisCache.CacheKey(_redisKeys.InternalKey, _userInfo.UserId), isValidRoute);
                 }
                 else if (lowerFileType == receivedType)
                 {
-                    return new CryptographyParams(await _redisCache.CacheKey(_redisKeys.ReceivedKey, _userInfo.UserId));
+                    return new CryptographyParams(await _redisCache.CacheKey(_redisKeys.ReceivedKey, _userInfo.UserId), isValidRoute);
                 }
                 throw new InvalidRouteException();
             }
@@ -180,5 +194,5 @@ namespace webapi.Controllers.Base
         }
     }
 
-    public record CryptographyParams(string EncryptionKey);
+    public record CryptographyParams(string EncryptionKey, bool IsValidRoute);
 }
