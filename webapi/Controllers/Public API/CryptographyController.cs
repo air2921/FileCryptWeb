@@ -96,7 +96,7 @@ namespace webapi.Controllers.Public_API
             }
             catch (OperationCanceledException ex)
             {
-                throw new InvalidOperationException();
+                throw new InvalidOperationException(ex.Message);
             }
         }
 

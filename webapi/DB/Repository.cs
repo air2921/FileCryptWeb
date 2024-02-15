@@ -136,7 +136,7 @@ namespace webapi.DB
             }
         }
 
-        public async Task Delete(int id, CancellationToken cancellationToken = default)
+        public async Task<T> Delete(int id, CancellationToken cancellationToken = default)
         {
             using var transaction = await _context.Database.BeginTransactionAsync();
             try
@@ -147,10 +147,12 @@ namespace webapi.DB
                 var entity = await _dbSet.FindAsync(id, cancellationToken);
                 if (entity is not null)
                 {
-                    _dbSet.Remove(entity);
+                    var deletedEntity = _dbSet.Remove(entity).Entity;
                     await _context.SaveChangesAsync(cancellationToken);
                     await transaction.CommitAsync();
+                    return deletedEntity;
                 }
+                return null;
             }
             catch (OperationCanceledException)
             {
@@ -164,7 +166,7 @@ namespace webapi.DB
             }
         }
 
-        public async Task DeleteMany(IEnumerable<int> identifiers, CancellationToken cancellationToken = default)
+        public async Task<IEnumerable<T>> DeleteMany(IEnumerable<int> identifiers, CancellationToken cancellationToken = default)
         {
             using var transaction = await _context.Database.BeginTransactionAsync();
 
@@ -173,16 +175,20 @@ namespace webapi.DB
                 using var cts = new CancellationTokenSource(TimeSpan.FromSeconds(DELETE_RANGE_AWAITING));
                 cancellationToken = CancellationTokenSource.CreateLinkedTokenSource(cancellationToken, cts.Token).Token;
 
+                var deletedEntities = new List<T>();
+
                 foreach (var id in identifiers)
                 {
                     var entity = await _dbSet.FindAsync(id);
                     if (entity != null)
                     {
+                        deletedEntities.Add(entity);
                         _dbSet.Remove(entity);
                     }
                 }
                 await transaction.CommitAsync();
                 await _context.SaveChangesAsync(cancellationToken);
+                return deletedEntities;
             }
             catch (OperationCanceledException)
             {
@@ -196,7 +202,7 @@ namespace webapi.DB
             }
         }
 
-        public async Task DeleteByFilter(Func<IQueryable<T>, IQueryable<T>> queryModifier, CancellationToken cancellationToken = default)
+        public async Task<T> DeleteByFilter(Func<IQueryable<T>, IQueryable<T>> queryModifier, CancellationToken cancellationToken = default)
         {
             using var transaction = await _context.Database.BeginTransactionAsync();
             try
@@ -210,10 +216,12 @@ namespace webapi.DB
                 var entity = await query.FirstOrDefaultAsync(cancellationToken);
                 if (entity is not null)
                 {
-                    _dbSet.Remove(entity);
+                    var deletedEntity = _dbSet.Remove(entity).Entity;
                     await _context.SaveChangesAsync(cancellationToken);
                     await transaction.CommitAsync();
+                    return deletedEntity;
                 }
+                return null;
             }
             catch (OperationCanceledException)
             {
@@ -227,7 +235,7 @@ namespace webapi.DB
             }
         }
 
-        public async Task Update(T entity, CancellationToken cancellationToken = default)
+        public async Task<T> Update(T entity, CancellationToken cancellationToken = default)
         {
             using var transaction = await _context.Database.BeginTransactionAsync();
 
@@ -241,6 +249,7 @@ namespace webapi.DB
 
                 await _context.SaveChangesAsync(cancellationToken);
                 await transaction.CommitAsync();
+                return entity;
             }
             catch (OperationCanceledException)
             {

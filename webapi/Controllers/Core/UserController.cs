@@ -4,6 +4,7 @@ using Microsoft.EntityFrameworkCore;
 using Newtonsoft.Json;
 using webapi.DB;
 using webapi.Exceptions;
+using webapi.Helpers;
 using webapi.Interfaces;
 using webapi.Interfaces.Redis;
 using webapi.Interfaces.Services;
@@ -49,9 +50,9 @@ namespace webapi.Controllers.Core
             try
             {
                 var userAndKeys = await _dbContext.Users
-        .Where(u => u.id == userId && u.username == username)
-        .Join(_dbContext.Keys, user => user.id, keys => keys.user_id, (user, keys) => new { user, keys })
-        .FirstOrDefaultAsync();
+                    .Where(u => u.id == userId && u.username == username)
+                    .Join(_dbContext.Keys, user => user.id, keys => keys.user_id, (user, keys) => new { user, keys })
+                    .FirstOrDefaultAsync();
 
                 if (userAndKeys is null)
                     return StatusCode(404, new { message = ExceptionUserMessages.UserNotFound });
@@ -128,7 +129,7 @@ namespace webapi.Controllers.Core
         {
             try
             {
-                var cacheKey = $"User_Data_{_userInfo.UserId}";
+                var cacheKey = $"{ImmutableData.USER_DATA_PREFIX}{_userInfo.UserId}";
                 var user = new UserModel();
 
                 var cache = await _redisCache.GetCachedData(cacheKey);

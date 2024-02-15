@@ -2,7 +2,9 @@
 using Microsoft.AspNetCore.Mvc;
 using webapi.DB;
 using webapi.Exceptions;
+using webapi.Helpers;
 using webapi.Interfaces;
+using webapi.Interfaces.Redis;
 using webapi.Models;
 
 namespace webapi.Controllers.Admin
@@ -13,11 +15,13 @@ namespace webapi.Controllers.Admin
     public class Admin_OfferController : ControllerBase
     {
         private readonly IRepository<OfferModel> _offerRepository;
+        private readonly IRedisCache _redisCache;
         private readonly ISorting _sorting;
 
-        public Admin_OfferController(IRepository<OfferModel> offerRepository, ISorting sorting)
+        public Admin_OfferController(IRepository<OfferModel> offerRepository, IRedisCache redisCache, ISorting sorting)
         {
             _offerRepository = offerRepository;
+            _redisCache = redisCache;
             _sorting = sorting;
         }
 
@@ -45,7 +49,8 @@ namespace webapi.Controllers.Admin
         {
             try
             {
-                return StatusCode(200, new { offers = await _offerRepository.GetAll(_sorting.SortOffers(userId, skip, count, byDesc, sended, isAccepted, type)) });
+                return StatusCode(200, new { offers = await _offerRepository
+                    .GetAll(_sorting.SortOffers(userId, skip, count, byDesc, sended, isAccepted, type)) });
             }
             catch (OperationCanceledException ex)
             {
@@ -59,7 +64,13 @@ namespace webapi.Controllers.Admin
         {
             try
             {
-                await _offerRepository.Delete(offerId);
+                var offer = await _offerRepository.Delete(offerId);
+                if (offer is not null)
+                {
+                    await _redisCache.DeteteCacheByKeyPattern($"{ImmutableData.OFFERS_PREFIX}{offer.sender_id}");
+                    await _redisCache.DeteteCacheByKeyPattern($"{ImmutableData.OFFERS_PREFIX}{offer.receiver_id}");
+                }
+
                 return StatusCode(204);
             }
             catch (EntityNotDeletedException ex)
@@ -74,7 +85,10 @@ namespace webapi.Controllers.Admin
         {
             try
             {
-                await _offerRepository.DeleteMany(identifiers);
+                var offerList = await _offerRepository.DeleteMany(identifiers);
+                await _redisCache.DeleteRedisCache(offerList, ImmutableData.OFFERS_PREFIX, item => item.sender_id);
+                await _redisCache.DeleteRedisCache(offerList, ImmutableData.OFFERS_PREFIX, item => item.receiver_id);
+
                 return StatusCode(204);
             }
             catch (EntityNotDeletedException ex)

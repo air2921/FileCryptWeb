@@ -50,7 +50,7 @@ namespace webapi.DB
                 sortedQuery = byDesc ? query.OrderByDescending(n => n.send_time) : query.OrderBy(n => n.send_time);
 
                 if (userId.HasValue)
-                    sortedQuery = sortedQuery.Where(n => n.receiver_id.Equals(userId.Value));
+                    sortedQuery = sortedQuery.Where(n => n.user_id.Equals(userId.Value));
 
                 if (!string.IsNullOrWhiteSpace(priority))
                     sortedQuery = sortedQuery.Where(n => n.priority.Equals(priority));

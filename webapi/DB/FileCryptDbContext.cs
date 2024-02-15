@@ -49,7 +49,7 @@ namespace webapi.DB
             modelBuilder.Entity<NotificationModel>()
                 .HasOne(n => n.Receiver)
                 .WithMany()
-                .HasForeignKey(n => n.receiver_id)
+                .HasForeignKey(n => n.user_id)
                 .OnDelete(DeleteBehavior.Cascade);
 
             modelBuilder.Entity<OfferModel>()

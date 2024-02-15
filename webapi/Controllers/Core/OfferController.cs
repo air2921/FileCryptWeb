@@ -3,6 +3,7 @@ using Microsoft.AspNetCore.Mvc;
 using Newtonsoft.Json;
 using webapi.DB;
 using webapi.Exceptions;
+using webapi.Helpers;
 using webapi.Interfaces;
 using webapi.Interfaces.Redis;
 using webapi.Interfaces.Services;
@@ -81,12 +82,12 @@ namespace webapi.Controllers.Core
                     priority = Priority.Trade.ToString(),
                     send_time = DateTime.UtcNow,
                     is_checked = false,
-                    receiver_id = receiverId
+                    user_id = receiverId
                 });
 
-                await _redisCache.DeteteCacheByKeyPattern($"Notifications_{receiverId}");
-                await _redisCache.DeteteCacheByKeyPattern($"Offers_{receiverId}");
-                await _redisCache.DeteteCacheByKeyPattern($"Offers_{_userInfo.UserId}");
+                await _redisCache.DeteteCacheByKeyPattern($"{ImmutableData.NOTIFICATIONS_PREFIX}{receiverId}");
+                await _redisCache.DeteteCacheByKeyPattern($"{ImmutableData.OFFERS_PREFIX}{receiverId}");
+                await _redisCache.DeteteCacheByKeyPattern($"{ImmutableData.OFFERS_PREFIX}{_userInfo.UserId}");
 
                 return StatusCode(201, new { message = SuccessMessage.SuccessOfferCreated });
             }
@@ -119,8 +120,8 @@ namespace webapi.Controllers.Core
                 await _keyRepository.Update(receiver);
                 await _offerRepository.Update(offer);
 
-                await _redisCache.DeteteCacheByKeyPattern($"Offers_{offer.sender_id}");
-                await _redisCache.DeteteCacheByKeyPattern($"Offers_{_userInfo.UserId}");
+                await _redisCache.DeteteCacheByKeyPattern($"{ImmutableData.OFFERS_PREFIX}{offer.sender_id}");
+                await _redisCache.DeteteCacheByKeyPattern($"{ImmutableData.OFFERS_PREFIX}{_userInfo.UserId}");
 
                 return StatusCode(200, new { message = SuccessMessage.SuccessOfferAccepted });
             }
@@ -135,17 +136,11 @@ namespace webapi.Controllers.Core
         {
             try
             {
-                var cacheKey = $"Offers_{offerId}";
+                var cacheKey = $"{ImmutableData.OFFERS_PREFIX}{_userInfo.UserId}_{offerId}";
 
                 var cacheOffer = await _redisCache.GetCachedData(cacheKey);
                 if (cacheOffer is not null)
-                {
-                    var cacheResult = JsonConvert.DeserializeObject<OfferModel>(cacheOffer);
-                    if (cacheResult.sender_id != _userInfo.UserId || cacheResult.sender_id != _userInfo.UserId)
-                        return StatusCode(404);
-
-                    return StatusCode(200, new { offers = cacheResult, userId = _userInfo.UserId });
-                }
+                    return StatusCode(200, new { offers = JsonConvert.DeserializeObject<OfferModel>(cacheOffer) });
 
                 var offer = await _offerRepository.GetById(offerId);
                 if (offer is null || offer.sender_id != _userInfo.UserId || offer.receiver_id != _userInfo.UserId)
@@ -168,7 +163,7 @@ namespace webapi.Controllers.Core
         {
             try
             {
-                var cacheKey = $"Offers_{_userInfo.UserId}_{skip}_{count}_{byDesc}_{sended}_{isAccepted}_{type}";
+                var cacheKey = $"{ImmutableData.OFFERS_PREFIX}{_userInfo.UserId}_{skip}_{count}_{byDesc}_{sended}_{isAccepted}_{type}";
 
                 var cacheOffers = await _redisCache.GetCachedData(cacheKey);
                 if (cacheOffers is not null)
@@ -197,10 +192,11 @@ namespace webapi.Controllers.Core
         {
             try
             {
-                await _offerRepository.DeleteByFilter(query => query.Where
-                (o => o.offer_id.Equals(offerId) && (o.sender_id.Equals(_userInfo.UserId) || o.receiver_id.Equals(_userInfo.UserId))));
+                var offer = await _offerRepository.DeleteByFilter(query => query
+                .Where(o => o.offer_id.Equals(offerId) && (o.sender_id.Equals(_userInfo.UserId) || o.receiver_id.Equals(_userInfo.UserId))));
 
-                await _redisCache.DeteteCacheByKeyPattern($"Offers_{_userInfo.UserId}");
+                await _redisCache.DeteteCacheByKeyPattern($"{ImmutableData.OFFERS_PREFIX}{offer.sender_id}");
+                await _redisCache.DeteteCacheByKeyPattern($"{ImmutableData.OFFERS_PREFIX}{offer.receiver_id}");
 
                 return StatusCode(200, new { message = SuccessMessage.SuccessOfferDeleted });
             }

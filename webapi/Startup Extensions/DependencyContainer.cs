@@ -13,6 +13,7 @@ using webapi.Helpers;
 using webapi.Third_Party_Services;
 using webapi.Helpers.DataManager;
 using static webapi.Third_Party_Services.EmailSender;
+using webapi.Models;
 
 namespace webapi
 {

@@ -53,12 +53,13 @@ namespace webapi.Controllers.Admin
                 if (userKeys is null)
                     return StatusCode(404);
 
-                string?[] encryptionKeys =
+
+                var encryptionKeys = new string?[]
                 {
-                userKeys.private_key,
-                userKeys.internal_key,
-                userKeys.received_key
-            };
+                    userKeys.private_key,
+                    userKeys.internal_key,
+                    userKeys.received_key
+                };
 
                 foreach (string? encryptedKey in encryptionKeys)
                 {
@@ -98,6 +99,7 @@ namespace webapi.Controllers.Admin
                 keys.received_key = null;
                 await _keyRepository.Update(keys);
                 await _redisCache.DeleteCache("receivedKey#" + userId);
+                await _redisCache.DeteteCacheByKeyPattern($"{ImmutableData.KEYS_PREFIX}{keys.user_id}");
 
                 _logger.LogInformation($"{_userInfo.Username}#{_userInfo.UserId} revoked received key from user#{userId}");
 

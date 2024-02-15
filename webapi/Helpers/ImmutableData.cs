@@ -2,8 +2,12 @@
 {
     public static class ImmutableData
     {
+        #region Tokens Expire
+
         public static readonly TimeSpan JwtExpiry = TimeSpan.FromMinutes(20);
         public static readonly TimeSpan RefreshExpiry = TimeSpan.FromDays(90);
+
+        #endregion
 
         #region Tokens keys in cookies
 

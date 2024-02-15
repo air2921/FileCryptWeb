@@ -58,21 +58,14 @@ namespace webapi.Controllers.Account.Edit
 
                 var user = await _userRepository.GetByFilter(query => query.Where(u => u.email.Equals(_userInfo.Email)));
                 if (user is null)
-                {
-                    _tokenService.DeleteTokens();
-                    _logger.LogWarning("Tokens was deleted");
                     return StatusCode(404, new { message = AccountErrorMessage.UserNotFound });
-                }
 
                 bool IsCorrect = _passwordManager.CheckPassword(passwordDto.OldPassword, user.password);
                 if (!IsCorrect)
                     return StatusCode(401, new { message = AccountErrorMessage.PasswordIncorrect });
 
-                _logger.LogInformation($"{_userInfo.Username}#{_userInfo.UserId} Password is correct, action is allowed");
-
                 user.password = _passwordManager.HashingPassword(passwordDto.NewPassword);
                 await _userRepository.Update(user);
-                _logger.LogInformation("Password was hashed and updated in db");
 
                 var clientInfo = Parser.GetDefault().Parse(HttpContext.Request.Headers["User-Agent"].ToString());
                 var ua = _userAgent.GetBrowserData(clientInfo);
@@ -84,11 +77,11 @@ namespace webapi.Controllers.Account.Edit
                     priority = Priority.Security.ToString(),
                     send_time = DateTime.UtcNow,
                     is_checked = false,
-                    receiver_id = _userInfo.UserId
+                    user_id = _userInfo.UserId
                 });
 
-                await _redisCache.DeteteCacheByKeyPattern($"Notifications_{_userInfo.UserId}");
-                await _redisCache.DeteteCacheByKeyPattern($"User_Data_{_userInfo.UserId}");
+                await _redisCache.DeteteCacheByKeyPattern($"{ImmutableData.NOTIFICATIONS_PREFIX}{_userInfo.UserId}");
+                await _redisCache.DeteteCacheByKeyPattern($"{ImmutableData.USER_DATA_PREFIX}{_userInfo.UserId}");
 
                 return StatusCode(200, new { message = AccountSuccessMessage.PasswordUpdated });
             }

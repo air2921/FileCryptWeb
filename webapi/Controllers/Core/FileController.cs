@@ -3,6 +3,7 @@ using Microsoft.AspNetCore.Mvc;
 using Newtonsoft.Json;
 using webapi.DB;
 using webapi.Exceptions;
+using webapi.Helpers;
 using webapi.Interfaces;
 using webapi.Interfaces.Redis;
 using webapi.Interfaces.Services;
@@ -40,7 +41,7 @@ namespace webapi.Controllers.Core
             try
             {
                 await _fileRepository.DeleteByFilter(query => query.Where(f => f.file_id.Equals(fileId) && f.user_id.Equals(_userInfo.UserId)));
-                await _redisCache.DeteteCacheByKeyPattern($"Files_{_userInfo.UserId}");
+                await _redisCache.DeteteCacheByKeyPattern($"{ImmutableData.FILES_PREFIX}{_userInfo.UserId}");
 
                 return StatusCode(200, new { message = SuccessMessage.SuccessFileDeleted });
             }
@@ -55,7 +56,7 @@ namespace webapi.Controllers.Core
         {
             try
             {
-                var cacheKey = $"Files_{_userInfo.UserId}_{fileId}";
+                var cacheKey = $"{ImmutableData.FILES_PREFIX}{_userInfo.UserId}_{fileId}";
 
                 var cacheFile = JsonConvert.DeserializeObject<FileModel>(await _redisCache.GetCachedData(cacheKey));
                 if (cacheFile is not null)
@@ -81,7 +82,7 @@ namespace webapi.Controllers.Core
         {
             try
             {
-                var cacheKey = $"Files_{_userInfo.UserId}_{skip}_{count}_{byDesc}_{type}_{category}_{mime}";
+                var cacheKey = $"{ImmutableData.FILES_PREFIX}{_userInfo.UserId}_{skip}_{count}_{byDesc}_{type}_{category}_{mime}";
 
                 var cacheFiles = await _redisCache.GetCachedData(cacheKey);
                 if (cacheFiles is not null)

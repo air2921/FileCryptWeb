@@ -44,12 +44,12 @@ namespace webapi
                     .WithMethods("POST")
                     .WithHeaders(ImmutableData.ENCRYPTION_KEY_HEADER_NAME, ImmutableData.API_HEADER_NAME)
                     .SetIsOriginAllowed(origin =>
-                    origin.EndsWith("api/public/cryptography/private/decryption") ||
-                    origin.EndsWith("api/public/cryptography/internal/decryption") ||
-                    origin.EndsWith("api/public/cryptography/received/decryption") ||
-                    origin.EndsWith("api/public/cryptography/private/encryption") ||
-                    origin.EndsWith("api/public/cryptography/internal/encryption") ||
-                    origin.EndsWith("api/public/cryptography/received/encryption"));
+                    origin.EndsWith("api/public/cryptography/private/decrypt") ||
+                    origin.EndsWith("api/public/cryptography/internal/decrypt") ||
+                    origin.EndsWith("api/public/cryptography/received/decrypt") ||
+                    origin.EndsWith("api/public/cryptography/private/encrypt") ||
+                    origin.EndsWith("api/public/cryptography/internal/encrypt") ||
+                    origin.EndsWith("api/public/cryptography/received/encrypt"));
                 });
             });
 

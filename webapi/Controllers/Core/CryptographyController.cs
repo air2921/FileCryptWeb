@@ -1,6 +1,7 @@
 ﻿using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 using webapi.Exceptions;
+using webapi.Helpers;
 using webapi.Interfaces.Controllers;
 using webapi.Interfaces.Cryptography;
 using webapi.Interfaces.Redis;
@@ -44,7 +45,7 @@ namespace webapi.Controllers.Core
                     return StatusCode(404);
 
                 var encryptedFile = await _cryptographyController.EncryptFile(_cypher.CypherFileAsync, param.EncryptionKey, file, _userInfo.UserId, type, operation);
-                await _redisCache.DeteteCacheByKeyPattern($"Files_{_userInfo.UserId}");
+                await _redisCache.DeteteCacheByKeyPattern($"{ImmutableData.FILES_PREFIX}{_userInfo.UserId}");
 
                 return encryptedFile;
             }

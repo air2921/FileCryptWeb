@@ -93,11 +93,11 @@ namespace webapi.Controllers.Account
                     priority = Priority.Security.ToString(),
                     send_time = DateTime.UtcNow,
                     is_checked = false,
-                    receiver_id = user.id
+                    user_id = user.id
                 });
 
                 _logger.LogInformation($"Created new token for {user.username}#{user.id} with life time for 30 minutes");
-                await _redisCache.DeteteCacheByKeyPattern($"Notification_{user.id}");
+                await _redisCache.DeteteCacheByKeyPattern($"{ImmutableData.NOTIFICATIONS_PREFIX}{user.id}");
 
                 return StatusCode(201, new { message = AccountSuccessMessage.EmailSendedRecovery });
             }
@@ -134,7 +134,6 @@ namespace webapi.Controllers.Account
                     return StatusCode(422, new { message = AccountErrorMessage.InvalidToken });
                 }
 
-                _logger.LogInformation($"Token: '{token}' is not expired");
 
                 var user = await _userRepository.GetById(link.user_id);
                 if (user is null)
@@ -154,7 +153,7 @@ namespace webapi.Controllers.Account
                     priority = Priority.Security.ToString(),
                     send_time = DateTime.UtcNow,
                     is_checked = false,
-                    receiver_id = link.user_id
+                    user_id = link.user_id
                 });
 
                 await _linkRepository.DeleteByFilter(query => query.Where(l => l.u_token.Equals(token)));
@@ -165,8 +164,9 @@ namespace webapi.Controllers.Account
                 tokenModel.expiry_date = DateTime.UtcNow.AddYears(-100);
 
                 await _tokenRepository.Update(tokenModel);
-                await _redisCache.DeteteCacheByKeyPattern($"Notification_{user.id}");
-                await _redisCache.DeteteCacheByKeyPattern($"User_Data_{user.id}");
+
+                await _redisCache.DeteteCacheByKeyPattern($"{ImmutableData.NOTIFICATIONS_PREFIX}{user.id}");
+                await _redisCache.DeteteCacheByKeyPattern($"{ImmutableData.USER_DATA_PREFIX}{user.id}");
 
                 return StatusCode(200);
             }

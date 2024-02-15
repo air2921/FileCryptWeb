@@ -49,7 +49,7 @@ namespace webapi.Controllers.Admin
 
                 await _notificationRepository.Add(new NotificationModel
                 {
-                    receiver_id = notifyDTO.receiver_id,
+                    user_id = notifyDTO.receiver_id,
                     message_header = "You have a notification from administrator",
                     message = notifyDTO.message,
                     send_time = DateTime.UtcNow,

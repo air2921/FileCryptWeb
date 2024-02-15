@@ -3,6 +3,7 @@ using Microsoft.AspNetCore.Mvc;
 using UAParser;
 using webapi.DTO;
 using webapi.Exceptions;
+using webapi.Helpers;
 using webapi.Interfaces;
 using webapi.Interfaces.Redis;
 using webapi.Interfaces.Services;
@@ -106,7 +107,6 @@ namespace webapi.Controllers.Account.Edit
             try
             {
                 int correctCode = int.TryParse(HttpContext.Session.GetString(_userInfo.Email), out var parsedValue) ? parsedValue : 0;
-                _logger.LogInformation($"Code were received from user session {_userInfo.Username}#{_userInfo.UserId}. code: {correctCode}");
 
                 if (!_validation.IsSixDigit(correctCode))
                     return StatusCode(500, new { message = AccountErrorMessage.Error });
@@ -137,7 +137,6 @@ namespace webapi.Controllers.Account.Edit
 
                 HttpContext.Session.SetInt32(_userInfo.UserId.ToString(), confirmationCode);
                 HttpContext.Session.SetString(EMAIL, email);
-                _logger.LogInformation($"Code and email was saved in user session {_userInfo.Username}#{_userInfo.UserId}");
 
                 _logger.LogInformation($"Email to {_userInfo.Username}#{_userInfo.UserId} was sended on {email} (3-rd step)");
                 return StatusCode(200, new { message = AccountSuccessMessage.EmailSended });
@@ -169,11 +168,7 @@ namespace webapi.Controllers.Account.Edit
 
                 var user = await _userRepository.GetById(_userInfo.UserId);
                 if (user is null)
-                {
-                    _tokenService.DeleteTokens();
-                    _logger.LogWarning("Tokens was deleted");
                     return StatusCode(404);
-                }
 
                 user.email = email;
                 await _userRepository.Update(user);
@@ -190,19 +185,18 @@ namespace webapi.Controllers.Account.Edit
                     priority = Priority.Security.ToString(),
                     send_time = DateTime.UtcNow,
                     is_checked = false,
-                    receiver_id = _userInfo.UserId
+                    user_id = _userInfo.UserId
                 });
 
-                await _redisCache.DeteteCacheByKeyPattern($"Notifications_{_userInfo.UserId}");
 
                 await _tokenService.UpdateJwtToken();
                 _logger.LogInformation("jwt with a new claims was updated");
 
                 HttpContext.Session.Remove(_userInfo.UserId.ToString());
                 HttpContext.Session.Remove(EMAIL);
-                _logger.LogInformation($"User session {_userInfo.Username}#{_userInfo.UserId} has been cleared");
 
-                await _redisCache.DeteteCacheByKeyPattern($"User_Data_{_userInfo.UserId}");
+                await _redisCache.DeteteCacheByKeyPattern($"{ImmutableData.USER_DATA_PREFIX}{_userInfo.UserId}");
+                await _redisCache.DeteteCacheByKeyPattern($"{ImmutableData.NOTIFICATIONS_PREFIX}{_userInfo.UserId}");
 
                 return StatusCode(201);
             }

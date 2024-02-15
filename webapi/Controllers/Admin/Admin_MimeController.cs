@@ -39,10 +39,18 @@ namespace webapi.Controllers.Admin
         [Authorize(Roles = "HighestAdmin")]
         public async Task<IActionResult> CreateNewMime([FromQuery] string mime)
         {
-            await _mimeRepository.Add(new FileMimeModel { mime_name = mime });
-            _logger.LogWarning($"new MIME type: {mime}. Added in db");
+            try
+            {
+                await _mimeRepository.Add(new FileMimeModel { mime_name = mime });
+                await _redisCache.DeleteCache(ImmutableData.MIME_COLLECTION);
+                _logger.LogWarning($"new MIME type: {mime}. Added in db");
 
-            return StatusCode(201, new { message = SuccessMessage.SuccessCreatedNewMime });
+                return StatusCode(201, new { message = SuccessMessage.SuccessCreatedNewMime });
+            }
+            catch (EntityNotCreatedException ex)
+            {
+                return StatusCode(500, new { message = ex.Message });
+            }
         }
 
         [HttpPost("many")]
@@ -143,7 +151,8 @@ namespace webapi.Controllers.Admin
                 if (!skip.HasValue || !count.HasValue)
                     return StatusCode(400);
 
-                return StatusCode(200, new { mimes = await _mimeRepository.GetAll(query => query.Skip(skip.Value).Take(count.Value)) });
+                return StatusCode(200, new { mimes = await _mimeRepository
+                    .GetAll(query => query.Skip(skip.Value).Take(count.Value)) });
             }
             catch (OperationCanceledException ex)
             {
@@ -159,6 +168,7 @@ namespace webapi.Controllers.Admin
             try
             {
                 await _mimeRepository.Delete(mimeId);
+                await _redisCache.DeleteCache(ImmutableData.MIME_COLLECTION);
                 return StatusCode(204);
             }
             catch (EntityNotDeletedException ex)

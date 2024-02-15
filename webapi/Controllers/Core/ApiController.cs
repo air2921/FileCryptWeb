@@ -2,6 +2,7 @@
 using Microsoft.AspNetCore.Mvc;
 using Newtonsoft.Json;
 using webapi.Exceptions;
+using webapi.Helpers;
 using webapi.Interfaces;
 using webapi.Interfaces.Redis;
 using webapi.Interfaces.Services;
@@ -46,7 +47,7 @@ namespace webapi.Controllers.Core
                     user_id = _userInfo.UserId
                 });
 
-                await _redisCache.DeteteCacheByKeyPattern($"API_Keys_{_userInfo.UserId}");
+                await _redisCache.DeteteCacheByKeyPattern($"{ImmutableData.API_PREFIX}{_userInfo.UserId}");
 
                 return StatusCode(201);
             }
@@ -65,7 +66,7 @@ namespace webapi.Controllers.Core
         {
             try
             {
-                var cacheKey = $"API_Keys_{_userInfo.UserId}_{apiId}";
+                var cacheKey = $"{ImmutableData.API_PREFIX}{_userInfo.UserId}_{apiId}";
                 int apiCallLeft = 0;
 
                 var cacheApi = await _redisCache.GetCachedData(cacheKey);
@@ -97,7 +98,7 @@ namespace webapi.Controllers.Core
         {
             try
             {
-                var cacheKey = $"API_Keys_{_userInfo.UserId}";
+                var cacheKey = $"{ImmutableData.API_PREFIX}{_userInfo.UserId}";
                 var apiObjects = new List<ApiObject>();
 
                 var cacheApi = await _redisCache.GetCachedData(cacheKey);
@@ -128,7 +129,7 @@ namespace webapi.Controllers.Core
             try
             {
                 await _apiRepository.DeleteByFilter(query => query.Where(a => a.user_id.Equals(_userInfo.UserId) || a.api_id.Equals(apiId)));
-                await _redisCache.DeteteCacheByKeyPattern($"API_Keys_{_userInfo.UserId}");
+                await _redisCache.DeteteCacheByKeyPattern($"{ImmutableData.API_PREFIX}{_userInfo.UserId}");
 
                 return StatusCode(200);
             }

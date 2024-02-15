@@ -2,6 +2,7 @@
 using Microsoft.AspNetCore.Mvc;
 using webapi.DTO;
 using webapi.Exceptions;
+using webapi.Helpers;
 using webapi.Interfaces;
 using webapi.Interfaces.Redis;
 using webapi.Interfaces.Services;
@@ -128,10 +129,11 @@ namespace webapi.Controllers.Account.Edit
                     priority = Priority.Security.ToString(),
                     send_time = DateTime.UtcNow,
                     is_checked = false,
-                    receiver_id = _userInfo.UserId
+                    user_id = _userInfo.UserId
                 });
 
-                await _redisCache.DeteteCacheByKeyPattern($"User_Data_{_userInfo.UserId}");
+                await _redisCache.DeteteCacheByKeyPattern($"{ImmutableData.USER_DATA_PREFIX}{_userInfo.UserId}");
+                await _redisCache.DeteteCacheByKeyPattern($"{ImmutableData.NOTIFICATIONS_PREFIX}{_userInfo.UserId}");
 
                 return StatusCode(200);
             }

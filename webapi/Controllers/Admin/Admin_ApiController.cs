@@ -1,7 +1,9 @@
 ﻿using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 using webapi.Exceptions;
+using webapi.Helpers;
 using webapi.Interfaces;
+using webapi.Interfaces.Redis;
 using webapi.Models;
 
 namespace webapi.Controllers.Admin
@@ -12,10 +14,12 @@ namespace webapi.Controllers.Admin
     public class Admin_ApiController : ControllerBase
     {
         private readonly IRepository<ApiModel> _apiRepository;
+        private readonly IRedisCache _redisCache;
 
-        public Admin_ApiController(IRepository<ApiModel> apiRepository)
+        public Admin_ApiController(IRepository<ApiModel> apiRepository, IRedisCache redisCache)
         {
             _apiRepository = apiRepository;
+            _redisCache = redisCache;
         }
 
         [HttpGet]
@@ -50,7 +54,8 @@ namespace webapi.Controllers.Admin
         {
             try
             {
-                return StatusCode(200, new { api = await _apiRepository.GetAll(query => query.Where(a => a.user_id.Equals(userId))) });
+                return StatusCode(200, new { api = await _apiRepository
+                    .GetAll(query => query.Where(a => a.user_id.Equals(userId))) });
             }
             catch (OperationCanceledException ex)
             {
@@ -64,7 +69,10 @@ namespace webapi.Controllers.Admin
         {
             try
             {
-                await _apiRepository.Delete(apiId);
+                var deletedApi = await _apiRepository.Delete(apiId);
+                if (deletedApi is not null)
+                    await _redisCache.DeteteCacheByKeyPattern($"{ImmutableData.API_PREFIX}{deletedApi.user_id}");
+
                 return StatusCode(204);
             }
             catch (EntityNotDeletedException ex)
@@ -79,7 +87,8 @@ namespace webapi.Controllers.Admin
         {
             try
             {
-                await _apiRepository.DeleteMany(identifiers);
+                var apiList = await _apiRepository.DeleteMany(identifiers);
+                await _redisCache.DeleteRedisCache(apiList, ImmutableData.API_PREFIX, item => item.user_id);
                 return StatusCode(204);
             }
             catch (EntityNotDeletedException ex)

@@ -20,8 +20,8 @@ namespace webapi.Models
 
         public bool is_checked { get; set; }
 
-        [ForeignKey("receiver_id")]
-        public int receiver_id { get; set; }
+        [ForeignKey("user_id")]
+        public int user_id { get; set; }
 
         [JsonIgnore]
         public virtual UserModel? Receiver { get; set; }

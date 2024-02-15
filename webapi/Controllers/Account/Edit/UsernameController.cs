@@ -40,6 +40,23 @@ namespace webapi.Controllers.Account.Edit
         [HttpPut]
         public async Task<IActionResult> UpdateUsername([FromQuery] string username)
         {
+            var myStack = new
+            {
+                languages = new string[] { "C#", "linq", "TypeScript" },
+                tools = new string[] { "RESTApi/JSONApi", "Swagger", "Postman", "SignalR" },
+                frameworks = new
+                {
+                    backend = new string[] { "ASP.NET Core Web API", "ASP.NET Core MVC" },
+                    frontend = new string[] { "React.js", "html5", "css3" }
+                },
+                db = new
+                {
+                    sql = new string[] { "PostgreSQL", "MS SQL Server" },
+                    noSql = new string[] { "Redis", "MongoDb" },
+                    orm = new string[] { "Entity Framework Core" }
+                },
+            };
+
             try
             {
                 if (!Regex.IsMatch(username, Validation.Username))
@@ -47,22 +64,17 @@ namespace webapi.Controllers.Account.Edit
 
                 var user = await _userRepository.GetById(_userInfo.UserId);
                 if (user is null)
-                {
-                    _tokenService.DeleteTokens();
-                    _logger.LogWarning("Tokens was deleted");
                     return StatusCode(404);
-                }
 
                 user.username = username;
 
                 await _userRepository.Update(user);
-                _logger.LogInformation($"username was updated in db. {username}#{_userInfo.UserId}");
 
                 await _tokenService.UpdateJwtToken();
                 _tokenService.DeleteUserDataSession();
                 _logger.LogInformation("jwt with a new claims was updated");
 
-                await _redisCache.DeteteCacheByKeyPattern($"User_Data_{_userInfo.UserId}");
+                await _redisCache.DeteteCacheByKeyPattern($"{ImmutableData.USER_DATA_PREFIX}{_userInfo.UserId}");
 
                 return StatusCode(200, new { message = AccountSuccessMessage.UsernameUpdated });
             }
@@ -76,7 +88,6 @@ namespace webapi.Controllers.Account.Edit
             }
             catch (UnauthorizedAccessException ex)
             {
-                _logger.LogWarning("Error when trying to update jwt.\nTrying delete tokens");
                 _tokenService.DeleteTokens();
                 _logger.LogWarning("Tokens was deleted");
                 return StatusCode(206, new { message = ex.Message });

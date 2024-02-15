@@ -129,5 +129,20 @@ namespace webapi.DB.RedisDb
                 await _db.KeyDeleteAsync(redisKey);
             }
         }
+
+        public async Task DeleteRedisCache<T>(IEnumerable<T> data, string prefix, Func<T, int> getUserId) where T : class
+        {
+            var users = new HashSet<int>();
+
+            foreach (var item in data)
+            {
+                users.Add(getUserId(item));
+            }
+
+            foreach (var user in users)
+            {
+                await DeteteCacheByKeyPattern($"{prefix}{user}");
+            }
+        }
     }
 }

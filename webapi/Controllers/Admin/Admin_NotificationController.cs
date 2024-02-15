@@ -2,7 +2,9 @@
 using Microsoft.AspNetCore.Mvc;
 using webapi.DB;
 using webapi.Exceptions;
+using webapi.Helpers;
 using webapi.Interfaces;
+using webapi.Interfaces.Redis;
 using webapi.Models;
 
 namespace webapi.Controllers.Admin
@@ -13,11 +15,13 @@ namespace webapi.Controllers.Admin
     public class Admin_NotificationController : ControllerBase
     {
         private readonly IRepository<NotificationModel> _notificationRepository;
+        private readonly IRedisCache _redisCache;
         private readonly ISorting _sorting;
 
-        public Admin_NotificationController(IRepository<NotificationModel> notificationRepository, ISorting sorting)
+        public Admin_NotificationController(IRepository<NotificationModel> notificationRepository, IRedisCache redisCache, ISorting sorting)
         {
             _notificationRepository = notificationRepository;
+            _redisCache = redisCache;
             _sorting = sorting;
         }
 
@@ -43,7 +47,8 @@ namespace webapi.Controllers.Admin
         {
             try
             {
-                return StatusCode(200, new { notification = await _notificationRepository.GetAll(_sorting.SortNotifications(userId, skip, count, byDesc, null, null)) });
+                return StatusCode(200, new { notification = await _notificationRepository
+                    .GetAll(_sorting.SortNotifications(userId, skip, count, byDesc, null, null)) });
             }
             catch (OperationCanceledException ex)
             {
@@ -58,10 +63,10 @@ namespace webapi.Controllers.Admin
             try
             {
                 var notification = await _notificationRepository.GetById(notificationId);
-                if (notification is null)
-                    return StatusCode(404);
+                if (notification is not null)
+                    await _redisCache.DeteteCacheByKeyPattern($"{ImmutableData.NOTIFICATIONS_PREFIX}{notification.user_id}");
 
-                return StatusCode(204, new { notification });
+                return StatusCode(204);
             }
             catch (EntityNotDeletedException ex)
             {
@@ -75,7 +80,8 @@ namespace webapi.Controllers.Admin
         {
             try
             {
-                await _notificationRepository.DeleteMany(identifiers);
+                var notificationList = await _notificationRepository.DeleteMany(identifiers);
+                await _redisCache.DeleteRedisCache(notificationList, ImmutableData.NOTIFICATIONS_PREFIX, item => item.user_id);
                 return StatusCode(204);
             }
             catch (EntityNotDeletedException ex)

@@ -60,7 +60,8 @@ namespace webapi.Controllers.Admin
         {
             try
             {
-                return StatusCode(200, new { links = await _linkRepository.GetAll(_sorting.SortLinks(userId, skip, count, byDesc, expired)) });
+                return StatusCode(200, new { links = await _linkRepository
+                    .GetAll(_sorting.SortLinks(userId, skip, count, byDesc, expired)) });
             }
             catch (OperationCanceledException ex)
             {

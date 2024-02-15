@@ -110,7 +110,7 @@ namespace webapi.Controllers.Core
 
                 await _keyRepository.Update(keys);
 
-                await _redisCache.DeteteCacheByKeyPattern($"Keys_{_userInfo.UserId}");
+                await _redisCache.DeteteCacheByKeyPattern($"{ImmutableData.KEYS_PREFIX}{_userInfo.UserId}");
                 await _redisCache.DeleteCache(_redisKeys.PrivateKey);
 
                 return StatusCode(200, new { message = AccountSuccessMessage.KeyUpdated });
@@ -140,7 +140,7 @@ namespace webapi.Controllers.Core
 
                 await _keyRepository.Update(keys);
 
-                await _redisCache.DeteteCacheByKeyPattern($"Keys_{_userInfo.UserId}");
+                await _redisCache.DeteteCacheByKeyPattern($"{ImmutableData.KEYS_PREFIX}{_userInfo.UserId}");
                 await _redisCache.DeleteCache(_redisKeys.InternalKey);
 
                 return StatusCode(200, new { message = AccountSuccessMessage.KeyUpdated });
@@ -164,7 +164,7 @@ namespace webapi.Controllers.Core
 
                 await _keyRepository.Update(keys);
 
-                await _redisCache.DeteteCacheByKeyPattern($"Keys_{_userInfo.UserId}");
+                await _redisCache.DeteteCacheByKeyPattern($"{ImmutableData.KEYS_PREFIX}{_userInfo.UserId}");
                 await _redisCache.DeleteCache(_redisKeys.InternalKey);
 
                 return StatusCode(200, new { message = AccountSuccessMessage.KeyUpdated });
