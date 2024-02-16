@@ -1,5 +1,6 @@
 ﻿using Microsoft.AspNetCore.Mvc;
 using System.Text.RegularExpressions;
+using webapi.DB;
 using webapi.DTO;
 using webapi.Exceptions;
 using webapi.Helpers;
@@ -26,6 +27,7 @@ namespace webapi.Controllers.Account
         private readonly IRepository<UserModel> _userRepository;
         private readonly IRepository<KeyModel> _keyRepository;
         private readonly IRepository<TokenModel> _tokenRepository;
+        private readonly FileCryptDbContext _dbContext;
         private readonly IConfiguration _configuration;
         private readonly IGenerate _generate;
         private readonly IEncryptKey _encrypt;
@@ -41,6 +43,7 @@ namespace webapi.Controllers.Account
             IRepository<UserModel> userRepository,
             IRepository<KeyModel> keyRepository,
             IRepository<TokenModel> tokenRepository,
+            FileCryptDbContext dbContext,
             IConfiguration configuration,
             IGenerate generate,
             IEncryptKey encrypt)
@@ -51,6 +54,7 @@ namespace webapi.Controllers.Account
             _userRepository = userRepository;
             _keyRepository = keyRepository;
             _tokenRepository = tokenRepository;
+            _dbContext = dbContext;
             _configuration = configuration;
             _generate = generate;
             _encrypt = encrypt;
@@ -128,13 +132,33 @@ namespace webapi.Controllers.Account
                 if (!IsCorrect)
                     return StatusCode(422, new { message = AccountErrorMessage.CodeIncorrect });
 
+                await DbTransaction(email, password, username, role, bool.Parse(flag_2fa));
+
+                return StatusCode(201);
+            }
+            catch (EntityNotCreatedException ex)
+            {
+                return StatusCode(500, new { message = ex.Message });
+            }
+            finally
+            {
+                HttpContext.Session.Clear();
+                _logger.LogInformation("User data deleted from session");
+            }
+        }
+
+        private async Task DbTransaction(string email, string password, string username, string role, bool flag2fa)
+        {
+            using var transaction = await _dbContext.Database.BeginTransactionAsync();
+            try
+            {
                 var id = await _userRepository.Add(new UserModel
                 {
                     email = email,
                     password = password,
                     username = username,
                     role = role,
-                    is_2fa_enabled = bool.Parse(flag_2fa),
+                    is_2fa_enabled = flag2fa,
                     is_blocked = false
                 }, e => e.id);
 
@@ -151,18 +175,12 @@ namespace webapi.Controllers.Account
                     private_key = await _encrypt.EncryptionKeyAsync(_generate.GenerateKey(), secretKey)
                 });
 
-                _logger.LogInformation("User was added in db");
-
-                return StatusCode(201);
+                await transaction.CommitAsync();
             }
-            catch (EntityNotCreatedException ex)
+            catch (EntityNotCreatedException)
             {
-                return StatusCode(500, new { message = ex.Message });
-            }
-            finally
-            {
-                HttpContext.Session.Clear();
-                _logger.LogInformation("User data deleted from session");
+                await transaction.RollbackAsync();
+                throw;
             }
         }
     }

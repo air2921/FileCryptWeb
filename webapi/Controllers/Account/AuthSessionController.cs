@@ -155,8 +155,6 @@ namespace webapi.Controllers.Account
 
                 await _tokenRepository.Update(tokenModel);
 
-                _logger.LogInformation("Refresh token was updated in db");
-
                 await _notificationRepository.Add(new NotificationModel
                 {
                     message_header = "Someone has accessed your account",

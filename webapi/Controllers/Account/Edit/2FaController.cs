@@ -114,8 +114,8 @@ namespace webapi.Controllers.Account.Edit
 
                 if (user.is_2fa_enabled == enable)
                     return StatusCode(409);
-
                 user.is_2fa_enabled = enable;
+
                 await _userRepository.Update(user);
 
                 string message = enable

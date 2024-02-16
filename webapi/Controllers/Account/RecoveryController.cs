@@ -1,6 +1,8 @@
 ﻿using Microsoft.AspNetCore.Mvc;
+using Newtonsoft.Json.Linq;
 using System.Text.RegularExpressions;
 using UAParser;
+using webapi.DB;
 using webapi.DTO;
 using webapi.Exceptions;
 using webapi.Helpers;
@@ -9,6 +11,7 @@ using webapi.Interfaces.Redis;
 using webapi.Interfaces.Services;
 using webapi.Localization;
 using webapi.Models;
+using webapi.Security;
 
 namespace webapi.Controllers.Account
 {
@@ -19,6 +22,7 @@ namespace webapi.Controllers.Account
     {
         private readonly IRepository<UserModel> _userRepository;
         private readonly IRepository<NotificationModel> _notificationRepository;
+        private readonly FileCryptDbContext _dbContext;
         private readonly IRedisCache _redisCache;
         private readonly IRepository<LinkModel> _linkRepository;
         private readonly IRepository<TokenModel> _tokenRepository;
@@ -32,6 +36,7 @@ namespace webapi.Controllers.Account
         public RecoveryController(
             IRepository<UserModel> userRepository,
             IRepository<NotificationModel> notificationRepository,
+            FileCryptDbContext dbContext,
             IRedisCache redisCache,
             IRepository<LinkModel> linkRepository,
             IRepository<TokenModel> tokenRepository,
@@ -44,6 +49,7 @@ namespace webapi.Controllers.Account
         {
             _userRepository = userRepository;
             _notificationRepository = notificationRepository;
+            _dbContext = dbContext;
             _redisCache = redisCache;
             _linkRepository = linkRepository;
             _tokenRepository = tokenRepository;
@@ -66,16 +72,7 @@ namespace webapi.Controllers.Account
 
                 string token = Guid.NewGuid().ToString("N") + Guid.NewGuid().ToString() + _generate.GenerateKey();
 
-                var clientInfo = Parser.GetDefault().Parse(HttpContext.Request.Headers["User-Agent"].ToString());
-                var ua = _userAgent.GetBrowserData(clientInfo);
-
-                await _linkRepository.Add(new LinkModel
-                {
-                    user_id = user.id,
-                    u_token = token,
-                    expiry_date = DateTime.UtcNow.AddMinutes(30),
-                    created_at = DateTime.UtcNow
-                });
+                var ua = _userAgent.GetBrowserData(Parser.GetDefault().Parse(HttpContext.Request.Headers["User-Agent"].ToString()));
 
                 await _emailSender.SendMessage(new EmailDto
                 {
@@ -83,6 +80,14 @@ namespace webapi.Controllers.Account
                     email = user.email,
                     subject = EmailMessage.RecoveryAccountHeader,
                     message = EmailMessage.RecoveryAccountBody + $"{_fileManager.GetReactAppUrl(App.REACT_LAUNCH_JSON_PATH, true)}/auth/recovery?token={token}"
+                });
+
+                await _linkRepository.Add(new LinkModel
+                {
+                    user_id = user.id,
+                    u_token = token,
+                    expiry_date = DateTime.UtcNow.AddMinutes(30),
+                    created_at = DateTime.UtcNow
                 });
 
                 await _notificationRepository.Add(new NotificationModel
@@ -134,36 +139,14 @@ namespace webapi.Controllers.Account
                     return StatusCode(422, new { message = AccountErrorMessage.InvalidToken });
                 }
 
-
                 var user = await _userRepository.GetById(link.user_id);
                 if (user is null)
                     return StatusCode(404, new { message = "Not found" });
-
                 user.password = _passwordManager.HashingPassword(password);
 
-                await _userRepository.Update(user);
+                var ua = _userAgent.GetBrowserData(Parser.GetDefault().Parse(HttpContext.Request.Headers["User-Agent"].ToString()));
 
-                var clientInfo = Parser.GetDefault().Parse(HttpContext.Request.Headers["User-Agent"].ToString());
-                var ua = _userAgent.GetBrowserData(clientInfo);
-
-                await _notificationRepository.Add(new NotificationModel
-                {
-                    message_header = "Someone changed your password",
-                    message = $"Someone changed your password at {DateTime.UtcNow} from {ua.Browser} {ua.Version} on OS {ua.OS}.",
-                    priority = Priority.Security.ToString(),
-                    send_time = DateTime.UtcNow,
-                    is_checked = false,
-                    user_id = link.user_id
-                });
-
-                await _linkRepository.DeleteByFilter(query => query.Where(l => l.u_token.Equals(token)));
-                _logger.LogInformation($"Token: {token} was deleted");
-
-                var tokenModel = await _tokenRepository.GetByFilter(query => query.Where(t => t.user_id.Equals(link.user_id)));
-                tokenModel.refresh_token = Guid.NewGuid().ToString();
-                tokenModel.expiry_date = DateTime.UtcNow.AddYears(-100);
-
-                await _tokenRepository.Update(tokenModel);
+                await DbTransaction(user, token, ua);
 
                 await _redisCache.DeteteCacheByKeyPattern($"{ImmutableData.NOTIFICATIONS_PREFIX}{user.id}");
                 await _redisCache.DeteteCacheByKeyPattern($"{ImmutableData.USER_DATA_PREFIX}{user.id}");
@@ -181,6 +164,44 @@ namespace webapi.Controllers.Account
             catch (OperationCanceledException ex)
             {
                 return StatusCode(500, new { message = ex.Message });
+            }
+        }
+
+        private async Task DbTransaction(UserModel user, string token, BrowserData ua)
+        {
+            using var transaction = await _dbContext.Database.BeginTransactionAsync();
+
+            try
+            {
+                await _userRepository.Update(user);
+
+                await _notificationRepository.Add(new NotificationModel
+                {
+                    message_header = "Someone changed your password",
+                    message = $"Someone changed your password at {DateTime.UtcNow} from {ua.Browser} {ua.Version} on OS {ua.OS}.",
+                    priority = Priority.Security.ToString(),
+                    send_time = DateTime.UtcNow,
+                    is_checked = false,
+                    user_id = user.id
+                });
+
+                await _linkRepository.DeleteByFilter(query => query.Where(l => l.u_token.Equals(token)));
+
+                var tokenModel = await _tokenRepository.GetByFilter(query => query.Where(t => t.user_id.Equals(user.id)));
+                tokenModel.refresh_token = Guid.NewGuid().ToString();
+                tokenModel.expiry_date = DateTime.UtcNow.AddYears(-100);
+
+                await _tokenRepository.Update(tokenModel);
+
+                await transaction.CommitAsync();
+            }
+            catch (EntityNotUpdatedException)
+            {
+                await transaction.RollbackAsync();
+            }
+            catch (EntityNotCreatedException)
+            {
+                await transaction.RollbackAsync();
             }
         }
     }
