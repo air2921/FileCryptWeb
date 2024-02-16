@@ -103,7 +103,7 @@ namespace webapi.Controllers.Admin
 
                 _logger.LogInformation($"{_userInfo.Username}#{_userInfo.UserId} revoked received key from user#{userId}");
 
-                return StatusCode(200, new { message = SuccessMessage.ReceivedKeyRevoked });
+                return StatusCode(200, new { message = Message.REMOVED });
             }
             catch (EntityNotUpdatedException ex)
             {

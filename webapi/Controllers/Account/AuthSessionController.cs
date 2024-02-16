@@ -72,14 +72,14 @@ namespace webapi.Controllers.Account
 
                 var user = await _userRepository.GetByFilter(query => query.Where(u => u.email.Equals(email)));
                 if (user is null)
-                    return StatusCode(404, new { message = AccountErrorMessage.UserNotFound });
+                    return StatusCode(404, new { message = Message.NOT_FOUND });
 
                 if (user.is_blocked)
-                    return StatusCode(403, new { message = AccountErrorMessage.UserBlocked });
+                    return StatusCode(403, new { message = Message.BLOCKED });
 
                 bool IsCorrect = _passwordManager.CheckPassword(userDTO.password, user.password!);
                 if (!IsCorrect)
-                    return StatusCode(401, new { message = AccountErrorMessage.PasswordIncorrect });
+                    return StatusCode(401, new { message = Message.INCORRECT });
 
                 var clientInfo = Parser.GetDefault().Parse(HttpContext.Request.Headers["User-Agent"].ToString());
 
@@ -99,7 +99,7 @@ namespace webapi.Controllers.Account
                 HttpContext.Session.SetString(ID, user.id.ToString());
                 HttpContext.Session.SetString(CODE, _passwordManager.HashingPassword(code.ToString()));
 
-                return StatusCode(200, new { message = AccountSuccessMessage.EmailSended, confirm = true });
+                return StatusCode(200, new { message = Message.EMAIL_SENT, confirm = true });
             }
             catch (SmtpClientException ex)
             {
@@ -125,11 +125,11 @@ namespace webapi.Controllers.Account
 
                 var user = await _userRepository.GetById(int.Parse(id));
                 if (user is null)
-                    return StatusCode(404, new { message = AccountErrorMessage.UserNotFound });
+                    return StatusCode(404, new { message = Message.NOT_FOUND });
 
                 bool IsCorrect = _passwordManager.CheckPassword(code.ToString(), correctCode);
                 if (!IsCorrect)
-                    return StatusCode(422, new { message = AccountErrorMessage.CodeIncorrect });
+                    return StatusCode(422, new { message = Message.INCORRECT });
 
                 var clientInfo = Parser.GetDefault().Parse(HttpContext.Request.Headers["User-Agent"].ToString());
 
@@ -242,8 +242,6 @@ namespace webapi.Controllers.Account
                 await _redisCache.DeleteCache(_redisKeys.PrivateKey);
                 await _redisCache.DeleteCache(_redisKeys.InternalKey);
                 await _redisCache.DeleteCache(_redisKeys.ReceivedKey);
-
-                _logger.LogInformation("Encryption keys was deleted from cache");
             }
         }
 

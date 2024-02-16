@@ -8,7 +8,7 @@ using webapi.Helpers;
 using webapi.Interfaces;
 using webapi.Interfaces.Redis;
 using webapi.Interfaces.Services;
-using webapi.Localization.Exceptions;
+using webapi.Localization;
 using webapi.Models;
 
 namespace webapi.Controllers.Core
@@ -55,7 +55,7 @@ namespace webapi.Controllers.Core
                     .FirstOrDefaultAsync();
 
                 if (userAndKeys is null)
-                    return StatusCode(404, new { message = ExceptionUserMessages.UserNotFound });
+                    return StatusCode(404, new { message = Message.NOT_FOUND });
 
                 var cacheKeyFiles = $"Profile_Files_{userId}";
                 var cacheKeyOffers = $"Profile_Offers_{userId}";
@@ -79,7 +79,8 @@ namespace webapi.Controllers.Core
                 if (cacheOffers is null)
                 {
                     var offersDb = await _offerRepository.GetAll
-                        (query => query.Where(o => o.receiver_id.Equals(userId) || o.sender_id.Equals(userId)).OrderByDescending(o => o.created_at).Skip(0).Take(5));
+                        (query => query.Where(o => o.receiver_id.Equals(userId) || o.sender_id.Equals(userId))
+                        .OrderByDescending(o => o.created_at).Skip(0).Take(5));
 
                     await _redisCache.CacheData(cacheKeyOffers, offersDb, TimeSpan.FromMinutes(1));
 
@@ -169,7 +170,7 @@ namespace webapi.Controllers.Core
             try
             {
                 if (string.IsNullOrWhiteSpace(username) && userId == 0)
-                    return StatusCode(404, new { message = ExceptionUserMessages.UserNotFound });
+                    return StatusCode(404, new { message = Message.NOT_FOUND });
 
                 if (!string.IsNullOrWhiteSpace(username) && userId == 0)
                 {
@@ -188,7 +189,7 @@ namespace webapi.Controllers.Core
                 {
                     var user = await _userRepository.GetById(userId);
                     if (user is null)
-                        return StatusCode(404, new { message = ExceptionUserMessages.UserNotFound });
+                        return StatusCode(404, new { message = Message.NOT_FOUND });
 
                     return StatusCode(200, new { user.username, user.id });
                 }
@@ -197,12 +198,12 @@ namespace webapi.Controllers.Core
                 {
                     var user = await _userRepository.GetByFilter(query => query.Where(u => u.id.Equals(userId) && u.username.Equals(username)));
                     if (user is null)
-                        return StatusCode(404, new { message = ExceptionUserMessages.UserNotFound });
+                        return StatusCode(404, new { message = Message.NOT_FOUND });
 
                     return StatusCode(200, new { user.username, user.id });
                 }
 
-                return StatusCode(404, new { message = ExceptionUserMessages.UserNotFound });
+                return StatusCode(404, new { message = Message.NOT_FOUND });
             }
             catch (OperationCanceledException ex)
             {

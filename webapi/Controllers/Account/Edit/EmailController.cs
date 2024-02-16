@@ -68,12 +68,12 @@ namespace webapi.Controllers.Account.Edit
                 {
                     _tokenService.DeleteTokens();
                     _logger.LogWarning("Tokens was deleted");
-                    return StatusCode(404);
+                    return StatusCode(404, new { message = Message.NOT_FOUND });
                 }
 
                 bool IsCorrect = _passwordManager.CheckPassword(password, user.password);
                 if (!IsCorrect)
-                    return StatusCode(401, new { message = AccountErrorMessage.PasswordIncorrect });
+                    return StatusCode(401, new { message = Message.INCORRECT });
 
                 int code = _generate.GenerateSixDigitCode();
 
@@ -87,9 +87,9 @@ namespace webapi.Controllers.Account.Edit
 
                 HttpContext.Session.SetInt32(_userInfo.Email, code);
                 _logger.LogInformation($"Code was saved in user session {_userInfo.Username}#{_userInfo.UserId}");
-                _logger.LogInformation($"Email to {_userInfo.Username}#{_userInfo.UserId} was sended on {_userInfo.Email} (1-st step)");
+                _logger.LogInformation($"Email to {_userInfo.Username}#{_userInfo.UserId} was sent on {_userInfo.Email} (1-st step)");
 
-                return StatusCode(200, new { message = AccountSuccessMessage.EmailSended });
+                return StatusCode(200, new { message = Message.EMAIL_SENT });
             }
             catch (SmtpClientException ex)
             {
@@ -110,10 +110,10 @@ namespace webapi.Controllers.Account.Edit
                 email = email.ToLowerInvariant();
 
                 if (!_validation.IsSixDigit(correctCode))
-                    return StatusCode(500, new { message = AccountErrorMessage.Error });
+                    return StatusCode(500, new { message = Message.ERROR });
 
                 if (!code.Equals(correctCode))
-                    return StatusCode(401, new { message = AccountErrorMessage.CodeIncorrect });
+                    return StatusCode(401, new { message = Message.INCORRECT });
 
                 _logger.LogInformation($"User {_userInfo.Username}#{_userInfo.UserId} confirmed code (2-nd step)");
 
@@ -122,7 +122,7 @@ namespace webapi.Controllers.Account.Edit
 
                 var user = await _userRepository.GetByFilter(query => query.Where(u => u.email.Equals(email)));
                 if (user is not null)
-                    return StatusCode(409, new { message = AccountErrorMessage.UserExists });
+                    return StatusCode(409, new { message = Message.CONFLICT });
 
                 int confirmationCode = _generate.GenerateSixDigitCode();
 
@@ -138,7 +138,7 @@ namespace webapi.Controllers.Account.Edit
                 HttpContext.Session.SetString(EMAIL, email);
 
                 _logger.LogInformation($"Email to {_userInfo.Username}#{_userInfo.UserId} was sended on {email} (3-rd step)");
-                return StatusCode(200, new { message = AccountSuccessMessage.EmailSended });
+                return StatusCode(200, new { message = Message.EMAIL_SENT });
             }
             catch (SmtpClientException ex)
             {
@@ -160,14 +160,14 @@ namespace webapi.Controllers.Account.Edit
                 _logger.LogInformation($"Code and email were received from user session {_userInfo.Username}#{_userInfo.UserId}. code: {correctCode}, email: {email}");
 
                 if (email is null || !_validation.IsSixDigit(correctCode))
-                    return StatusCode(500, new { message = AccountErrorMessage.Error });
+                    return StatusCode(500, new { message = Message.ERROR });
 
                 if (!code.Equals(correctCode))
-                    return StatusCode(422, new { message = AccountErrorMessage.CodeIncorrect });
+                    return StatusCode(422, new { message = Message.INCORRECT });
 
                 var user = await _userRepository.GetById(_userInfo.UserId);
                 if (user is null)
-                    return StatusCode(404);
+                    return StatusCode(404, new { message = Message.NOT_FOUND });
 
                 user.email = email;
                 await _userRepository.Update(user);

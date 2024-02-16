@@ -65,7 +65,7 @@ namespace webapi.Controllers.Account.Edit
 
                 bool IsCorrect = _passwordManager.CheckPassword(password, user.password);
                 if (!IsCorrect)
-                    return StatusCode(401, new { message = AccountErrorMessage.PasswordIncorrect });
+                    return StatusCode(401, new { message = Message.INCORRECT });
 
                 int code = _generate.GenerateSixDigitCode();
 
@@ -99,10 +99,10 @@ namespace webapi.Controllers.Account.Edit
                 int correctCode = int.TryParse(HttpContext.Session.GetString(CODE), out var parsedValue) ? parsedValue : 0;
 
                 if (!_validation.IsSixDigit(correctCode))
-                    return StatusCode(500, new { message = AccountErrorMessage.Error });
+                    return StatusCode(500, new { message = Message.ERROR });
 
                 if (!code.Equals(correctCode))
-                    return StatusCode(422, new { message = AccountErrorMessage.CodeIncorrect });
+                    return StatusCode(422, new { message = Message.INCORRECT });
 
                 var user = await _userRepository.GetById(_userInfo.UserId);
                 if (user is null)
@@ -113,7 +113,7 @@ namespace webapi.Controllers.Account.Edit
                 }
 
                 if (user.is_2fa_enabled == enable)
-                    return StatusCode(409);
+                    return StatusCode(409, new { message = Message.CONFLICT });
                 user.is_2fa_enabled = enable;
 
                 await _userRepository.Update(user);
@@ -124,7 +124,7 @@ namespace webapi.Controllers.Account.Edit
 
                 await _notificationRepository.Add(new NotificationModel
                 {
-                    message_header = $"Someone changed changed your 2FA status",
+                    message_header = $"2FA Status was updated",
                     message = message,
                     priority = Priority.Security.ToString(),
                     send_time = DateTime.UtcNow,

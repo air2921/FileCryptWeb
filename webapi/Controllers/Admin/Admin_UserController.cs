@@ -50,7 +50,7 @@ namespace webapi.Controllers.Admin
                     return StatusCode(404);
 
                 if (target.role.Equals("HighestAdmin"))
-                    return StatusCode(403, new { message = ErrorMessage.HighestRoleError });
+                    return StatusCode(403, new { message = Message.FORBIDDEN });
 
                 await _userRepository.Delete(userId);
                 return StatusCode(204);
@@ -73,7 +73,7 @@ namespace webapi.Controllers.Admin
                     return StatusCode(404);
 
                 if (target.role.Equals("HighestAdmin"))
-                    return StatusCode(403, new { message = ErrorMessage.HighestRoleError });
+                    return StatusCode(403, new { message = Message.FORBIDDEN });
 
                 target.is_blocked = block;
                 await _userRepository.Update(target);
@@ -111,7 +111,7 @@ namespace webapi.Controllers.Admin
                 return StatusCode(404);
 
             if (target.role.Equals("HighestAdmin"))
-                return StatusCode(403, new { message = ErrorMessage.HighestRoleError });
+                return StatusCode(403, new { message = Message.FORBIDDEN });
 
             target.role = role;
             await _userRepository.Update(target);

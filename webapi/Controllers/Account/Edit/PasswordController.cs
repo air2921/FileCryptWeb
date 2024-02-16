@@ -1,5 +1,6 @@
 ﻿using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
+using Microsoft.VisualBasic;
 using System.Text.RegularExpressions;
 using UAParser;
 using webapi.DTO;
@@ -54,15 +55,15 @@ namespace webapi.Controllers.Account.Edit
             try
             {
                 if (!Regex.IsMatch(passwordDto.NewPassword, Validation.Password))
-                    return StatusCode(422, new { message = AccountErrorMessage.InvalidFormatPassword });
+                    return StatusCode(422, new { message = Message.INVALID_FORMAT });
 
                 var user = await _userRepository.GetByFilter(query => query.Where(u => u.email.Equals(_userInfo.Email)));
                 if (user is null)
-                    return StatusCode(404, new { message = AccountErrorMessage.UserNotFound });
+                    return StatusCode(404, new { message = Message.NOT_FOUND });
 
                 bool IsCorrect = _passwordManager.CheckPassword(passwordDto.OldPassword, user.password);
                 if (!IsCorrect)
-                    return StatusCode(401, new { message = AccountErrorMessage.PasswordIncorrect });
+                    return StatusCode(401, new { message = Message.INCORRECT });
 
                 user.password = _passwordManager.HashingPassword(passwordDto.NewPassword);
                 await _userRepository.Update(user);
@@ -83,7 +84,7 @@ namespace webapi.Controllers.Account.Edit
                 await _redisCache.DeteteCacheByKeyPattern($"{ImmutableData.NOTIFICATIONS_PREFIX}{_userInfo.UserId}");
                 await _redisCache.DeteteCacheByKeyPattern($"{ImmutableData.USER_DATA_PREFIX}{_userInfo.UserId}");
 
-                return StatusCode(200, new { message = AccountSuccessMessage.PasswordUpdated });
+                return StatusCode(200, new { message = Message.UPDATED });
             }
             catch (EntityNotCreatedException ex)
             {

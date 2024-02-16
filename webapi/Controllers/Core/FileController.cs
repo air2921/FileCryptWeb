@@ -43,7 +43,7 @@ namespace webapi.Controllers.Core
                 await _fileRepository.DeleteByFilter(query => query.Where(f => f.file_id.Equals(fileId) && f.user_id.Equals(_userInfo.UserId)));
                 await _redisCache.DeteteCacheByKeyPattern($"{ImmutableData.FILES_PREFIX}{_userInfo.UserId}");
 
-                return StatusCode(200, new { message = SuccessMessage.SuccessFileDeleted });
+                return StatusCode(204);
             }
             catch (EntityNotDeletedException ex)
             {

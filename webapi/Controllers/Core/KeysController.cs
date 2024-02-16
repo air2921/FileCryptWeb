@@ -100,7 +100,7 @@ namespace webapi.Controllers.Core
                 if (!auto)
                 {
                     if (string.IsNullOrWhiteSpace(key) || !_validation.IsBase64String(key) || !Regex.IsMatch(key, Validation.EncryptionKey))
-                        return StatusCode(400, new { message = ErrorMessage.InvalidKey });
+                        return StatusCode(400, new { message = Message.INVALID_FORMAT });
                 }
                 else
                     key = _generate.GenerateKey();
@@ -113,7 +113,7 @@ namespace webapi.Controllers.Core
                 await _redisCache.DeteteCacheByKeyPattern($"{ImmutableData.KEYS_PREFIX}{_userInfo.UserId}");
                 await _redisCache.DeleteCache(_redisKeys.PrivateKey);
 
-                return StatusCode(200, new { message = AccountSuccessMessage.KeyUpdated });
+                return StatusCode(200, new { message = Message.UPDATED });
             }
             catch (EntityNotUpdatedException ex)
             {
@@ -130,7 +130,7 @@ namespace webapi.Controllers.Core
                 if (!auto)
                 {
                     if (string.IsNullOrWhiteSpace(key) || !_validation.IsBase64String(key) || !Regex.IsMatch(key, Validation.EncryptionKey))
-                        return StatusCode(400, new { message = ErrorMessage.InvalidKey });
+                        return StatusCode(400, new { message = Message.INVALID_FORMAT });
                 }
                 else
                     key = _generate.GenerateKey();
@@ -143,7 +143,7 @@ namespace webapi.Controllers.Core
                 await _redisCache.DeteteCacheByKeyPattern($"{ImmutableData.KEYS_PREFIX}{_userInfo.UserId}");
                 await _redisCache.DeleteCache(_redisKeys.InternalKey);
 
-                return StatusCode(200, new { message = AccountSuccessMessage.KeyUpdated });
+                return StatusCode(200, new { message = Message.UPDATED });
             }
             catch (EntityNotUpdatedException ex)
             {
@@ -167,7 +167,7 @@ namespace webapi.Controllers.Core
                 await _redisCache.DeteteCacheByKeyPattern($"{ImmutableData.KEYS_PREFIX}{_userInfo.UserId}");
                 await _redisCache.DeleteCache(_redisKeys.InternalKey);
 
-                return StatusCode(200, new { message = AccountSuccessMessage.KeyUpdated });
+                return StatusCode(200, new { message = Message.UPDATED });
             }
             catch (EntityNotUpdatedException ex)
             {

@@ -65,11 +65,11 @@ namespace webapi.Controllers.Base
 
                 var fileGood = await _fileService.CheckFile(file);
                 if (!fileGood)
-                    return StatusCode(415, new { message = ErrorMessage.InfectedOrInvalid });
+                    return StatusCode(415, new { message = Message.INFECTED_OR_INVALID });
 
                 var sizeNotExceed = _fileService.CheckSize(file);
                 if (!sizeNotExceed)
-                    return StatusCode(422, new { message = ErrorMessage.ExceedMaxSize });
+                    return StatusCode(422, new { message = Message.INVALID_FILE });
 
                 var encryptionKey = CheckAndConvertKey(key);
 
@@ -110,14 +110,14 @@ namespace webapi.Controllers.Base
             catch (Exception ex)
             {
                 _logger.LogError(ex.ToString());
-                return StatusCode(500, new { message = "Unexpected error" });
+                return StatusCode(500, new { message = Message.ERROR });
             }
         }
 
         private byte[] CheckAndConvertKey(string key)
         {
             if (!Regex.IsMatch(key, Validation.EncryptionKey) || !_validation.IsBase64String(key))
-                throw new FormatException(ErrorMessage.InvalidKey);
+                throw new FormatException(Message.INVALID_FORMAT);
 
             return Convert.FromBase64String(key);
         }
@@ -139,13 +139,13 @@ namespace webapi.Controllers.Base
                 if (System.IO.File.Exists(filePath))
                     await Task.Run(() => System.IO.File.Delete(filePath));
 
-                throw new InvalidOperationException(ErrorMessage.TaskTimedOut);
+                throw new InvalidOperationException(Message.TASK_TIMED_OUT);
             }
             else
             {
                 var cryptographyResult = await cryptographyTask;
                 if (!cryptographyResult.Success)
-                    throw new InvalidOperationException(ErrorMessage.BadCryptographyData);
+                    throw new InvalidOperationException(Message.BAD_CRYTOGRAPHY_DATA);
             }
         }
 
