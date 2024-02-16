@@ -26,7 +26,7 @@ namespace webapi.Controllers.Account
         private readonly IUserAgent _userAgent;
         private readonly IEmailSender _emailSender;
         private readonly IPasswordManager _passwordManager;
-        private readonly IGenerateKey _generateKey;
+        private readonly IGenerate _generate;
         private readonly IFileManager _fileManager;
 
         public RecoveryController(
@@ -39,7 +39,7 @@ namespace webapi.Controllers.Account
             IUserAgent userAgent,
             IEmailSender emailSender,
             IPasswordManager passwordManager,
-            IGenerateKey generateKey,
+            IGenerate generate,
             IFileManager fileManager)
         {
             _userRepository = userRepository;
@@ -51,7 +51,7 @@ namespace webapi.Controllers.Account
             _userAgent = userAgent;
             _emailSender = emailSender;
             _passwordManager = passwordManager;
-            _generateKey = generateKey;
+            _generate = generate;
             _fileManager = fileManager;
         }
 
@@ -64,7 +64,7 @@ namespace webapi.Controllers.Account
                 if (user is null)
                     return StatusCode(404, new { message = AccountErrorMessage.UserNotFound });
 
-                string token = Guid.NewGuid().ToString("N") + Guid.NewGuid().ToString() + _generateKey.GenerateKey();
+                string token = Guid.NewGuid().ToString("N") + Guid.NewGuid().ToString() + _generate.GenerateKey();
 
                 var clientInfo = Parser.GetDefault().Parse(HttpContext.Request.Headers["User-Agent"].ToString());
                 var ua = _userAgent.GetBrowserData(clientInfo);

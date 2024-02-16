@@ -59,7 +59,6 @@ namespace webapi.Controllers.Core
 
                 var cacheKeyFiles = $"Profile_Files_{userId}";
                 var cacheKeyOffers = $"Profile_Offers_{userId}";
-                var list_offers = new List<OfferObject>();
                 var files = new List<FileModel>();
                 var offers = new List<OfferModel>();
 
@@ -91,15 +90,8 @@ namespace webapi.Controllers.Core
 
                 foreach (var offer in offers)
                 {
-                    list_offers.Add(new OfferObject
-                    {
-                        offer_id = offer.offer_id,
-                        sender_id = offer.sender_id,
-                        receiver_id = offer.receiver_id,
-                        offer_type = offer.offer_type,
-                        created_at = offer.created_at,
-                        is_accepted = offer.is_accepted,
-                    });
+                    offer.offer_header = string.Empty;
+                    offer.offer_body = string.Empty;
                 }
 
                 bool IsOwner = userId.Equals(_userInfo.UserId);
@@ -116,7 +108,7 @@ namespace webapi.Controllers.Core
                     is_blocked = userAndKeys.user.is_blocked
                 };
 
-                return StatusCode(200, new { user, IsOwner, keys = new { privateKey, internalKey, receivedKey }, files, offers = list_offers });
+                return StatusCode(200, new { user, IsOwner, keys = new { privateKey, internalKey, receivedKey }, files, offers });
             }
             catch (OperationCanceledException ex)
             {
@@ -181,19 +173,12 @@ namespace webapi.Controllers.Core
 
                 if (!string.IsNullOrWhiteSpace(username) && userId == 0)
                 {
-                    var users = new List<UserObject>();
+                    var users = await _userRepository.GetAll(query => query.Where(u => u.username.Equals(username)));
 
-                    var usersDb = await _userRepository.GetAll(query => query.Where(u => u.username.Equals(username)));
-
-                    foreach (var user in usersDb)
+                    foreach (var user in users)
                     {
-                        users.Add(new UserObject
-                        {
-                            id = user.id,
-                            username = user.username,
-                            role = user.role,
-                            is_blocked = user.is_blocked
-                        });
+                        user.password = string.Empty;
+                        user.email = string.Empty;
                     }
 
                     return StatusCode(200, new { users });
@@ -205,16 +190,16 @@ namespace webapi.Controllers.Core
                     if (user is null)
                         return StatusCode(404, new { message = ExceptionUserMessages.UserNotFound });
 
-                    return StatusCode(200, new { username = user.username, id = user.id });
+                    return StatusCode(200, new { user.username, user.id });
                 }
 
                 if (!string.IsNullOrWhiteSpace(username) && userId != 0)
                 {
-                    var user = await _dbContext.Users.FirstOrDefaultAsync(u => u.id.Equals(userId) && u.username.Equals(username));
+                    var user = await _userRepository.GetByFilter(query => query.Where(u => u.id.Equals(userId) && u.username.Equals(username)));
                     if (user is null)
                         return StatusCode(404, new { message = ExceptionUserMessages.UserNotFound });
 
-                    return StatusCode(200, new { username = user.username, id = user.id });
+                    return StatusCode(200, new { user.username, user.id });
                 }
 
                 return StatusCode(404, new { message = ExceptionUserMessages.UserNotFound });
@@ -225,23 +210,5 @@ namespace webapi.Controllers.Core
             }
 
         }
-    }
-
-    public class UserObject
-    {
-        public int id { get; set; }
-        public string username { get; set; }
-        public string role { get; set; }
-        public bool is_blocked { get; set; }
-    }
-
-    public class OfferObject
-    {
-        public int offer_id { get; set; }
-        public int sender_id { get; set; }
-        public int receiver_id { get; set; }
-        public string offer_type { get; set; }
-        public DateTime created_at { get; set; }
-        public bool is_accepted { get; set; }
     }
 }

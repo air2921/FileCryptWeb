@@ -30,7 +30,7 @@ namespace webapi.Controllers.Account
         private readonly IRedisKeys _redisKeys;
         private readonly IPasswordManager _passwordManager;
         private readonly ITokenService _tokenService;
-        private readonly IGenerateSixDigitCode _generateCode;
+        private readonly IGenerate _generate;
 
         public AuthSessionController(
             IRepository<UserModel> userRepository,
@@ -44,7 +44,7 @@ namespace webapi.Controllers.Account
             IRedisKeys redisKeys,
             IPasswordManager passwordManager,
             ITokenService tokenService,
-            IGenerateSixDigitCode generateCode)
+            IGenerate generate)
         {
             _userRepository = userRepository;
             _notificationRepository = notificationRepository;
@@ -57,7 +57,7 @@ namespace webapi.Controllers.Account
             _redisKeys = redisKeys;
             _passwordManager = passwordManager;
             _tokenService = tokenService;
-            _generateCode = generateCode;
+            _generate = generate;
         }
 
         #region Factical login endpoints and helped method
@@ -86,7 +86,7 @@ namespace webapi.Controllers.Account
                 if (!user.is_2fa_enabled)
                     return await CreateTokens(clientInfo, user);
 
-                int code = _generateCode.GenerateSixDigitCode();
+                int code = _generate.GenerateSixDigitCode();
 
                 await _emailSender.SendMessage(new EmailDto
                 {

@@ -26,7 +26,7 @@ namespace webapi.Controllers.Account.Edit
         private readonly IUserInfo _userInfo;
         private readonly ITokenService _tokenService;
         private readonly ILogger<_2FaController> _logger;
-        private readonly IGenerateSixDigitCode _generateCode;
+        private readonly IGenerate _generate;
         private readonly IEmailSender _emailSender;
         private readonly IValidation _validation;
 
@@ -38,7 +38,7 @@ namespace webapi.Controllers.Account.Edit
             IUserInfo userInfo,
             ITokenService tokenService,
             ILogger<_2FaController> logger,
-            IGenerateSixDigitCode generateCode,
+            IGenerate generate,
             IEmailSender emailSender,
             IValidation validation)
         {
@@ -49,7 +49,7 @@ namespace webapi.Controllers.Account.Edit
             _userInfo = userInfo;
             _tokenService = tokenService;
             _logger = logger;
-            _generateCode = generateCode;
+            _generate = generate;
             _emailSender = emailSender;
             _validation = validation;
         }
@@ -67,7 +67,7 @@ namespace webapi.Controllers.Account.Edit
                 if (!IsCorrect)
                     return StatusCode(401, new { message = AccountErrorMessage.PasswordIncorrect });
 
-                int code = _generateCode.GenerateSixDigitCode();
+                int code = _generate.GenerateSixDigitCode();
 
                 await _emailSender.SendMessage(new EmailDto
                 {

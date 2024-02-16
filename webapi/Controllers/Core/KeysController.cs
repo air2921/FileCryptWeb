@@ -20,7 +20,7 @@ namespace webapi.Controllers.Core
     {
         private readonly IRepository<KeyModel> _keyRepository;
         private readonly IConfiguration _configuration;
-        private readonly IGenerateKey _generateKey;
+        private readonly IGenerate _generate;
         private readonly IRedisCache _redisCache;
         private readonly IRedisKeys _redisKeys;
         private readonly IUserInfo _userInfo;
@@ -33,7 +33,7 @@ namespace webapi.Controllers.Core
         public KeysController(
             IRepository<KeyModel> keyRepository,
             IConfiguration configuration,
-            IGenerateKey generateKey,
+            IGenerate generate,
             IRedisCache redisCache,
             IRedisKeys redisKeys,
             IUserInfo userInfo,
@@ -44,7 +44,7 @@ namespace webapi.Controllers.Core
         {
             _keyRepository = keyRepository;
             _configuration = configuration;
-            _generateKey = generateKey;
+            _generate = generate;
             _redisCache = redisCache;
             _redisKeys = redisKeys;
             _userInfo = userInfo;
@@ -103,7 +103,7 @@ namespace webapi.Controllers.Core
                         return StatusCode(400, new { message = ErrorMessage.InvalidKey });
                 }
                 else
-                    key = _generateKey.GenerateKey();
+                    key = _generate.GenerateKey();
 
                 var keys = await _keyRepository.GetByFilter(query => query.Where(k => k.user_id.Equals(_userInfo.UserId)));
                 keys.private_key = await _encryptKey.EncryptionKeyAsync(key, secretKey);
@@ -133,7 +133,7 @@ namespace webapi.Controllers.Core
                         return StatusCode(400, new { message = ErrorMessage.InvalidKey });
                 }
                 else
-                    key = _generateKey.GenerateKey();
+                    key = _generate.GenerateKey();
 
                 var keys = await _keyRepository.GetByFilter(query => query.Where(k => k.user_id.Equals(_userInfo.UserId)));
                 keys.internal_key = await _encryptKey.EncryptionKeyAsync(key, secretKey);

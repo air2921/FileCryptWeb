@@ -3,9 +3,9 @@ using Newtonsoft.Json.Linq;
 using System.Globalization;
 using webapi.Interfaces.Services;
 
-namespace webapi.Helpers.DataManager
+namespace webapi.Helpers
 {
-    public class FileManager : IFileManager
+    public class FileManager : IFileManager, IGetSize
     {
         private readonly ILogger<FileManager> _logger;
 
@@ -61,6 +61,37 @@ namespace webapi.Helpers.DataManager
                 return chromeUrl;
 
             return edgeUrl;
+        }
+
+        private long GetFolderSize(string FolderPath)
+        {
+            long totalSize = 0;
+
+            foreach (var file in Directory.GetFiles(FolderPath))
+            {
+                totalSize += new FileInfo(file).Length;
+            }
+
+            foreach (var subDirectory in Directory.GetDirectories(FolderPath))
+            {
+                totalSize += GetFolderSize(subDirectory);
+            }
+
+            return totalSize;
+        }
+
+        public double GetFileSizeInMb<T>(T file)
+        {
+            switch (file)
+            {
+                case IFormFile formFile:
+                    return (double)formFile.Length / (1024 * 1024);
+                case string filePath:
+                    FileInfo fileInfo = new FileInfo(filePath);
+                    return (double)fileInfo.Length / (1024 * 1024);
+                default:
+                    throw new ArgumentException("Unsupported file type");
+            }
         }
     }
 }

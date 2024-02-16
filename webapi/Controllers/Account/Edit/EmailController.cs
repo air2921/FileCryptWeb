@@ -27,7 +27,7 @@ namespace webapi.Controllers.Account.Edit
         private readonly IEmailSender _email;
         private readonly ILogger<EmailController> _logger;
         private readonly IPasswordManager _passwordManager;
-        private readonly IGenerateSixDigitCode _generateCode;
+        private readonly IGenerate _generate;
         private readonly ITokenService _tokenService;
         private readonly IUserInfo _userInfo;
         private readonly IValidation _validation;
@@ -40,7 +40,7 @@ namespace webapi.Controllers.Account.Edit
             IEmailSender email,
             ILogger<EmailController> logger,
             IPasswordManager passwordManager,
-            IGenerateSixDigitCode generateCode,
+            IGenerate generate,
             ITokenService tokenService,
             IUserInfo userInfo,
             IValidation validation)
@@ -52,7 +52,7 @@ namespace webapi.Controllers.Account.Edit
             _email = email;
             _logger = logger;
             _passwordManager = passwordManager;
-            _generateCode = generateCode;
+            _generate = generate;
             _tokenService = tokenService;
             _userInfo = userInfo;
             _validation = validation;
@@ -75,7 +75,7 @@ namespace webapi.Controllers.Account.Edit
                 if (!IsCorrect)
                     return StatusCode(401, new { message = AccountErrorMessage.PasswordIncorrect });
 
-                int code = _generateCode.GenerateSixDigitCode();
+                int code = _generate.GenerateSixDigitCode();
 
                 await _email.SendMessage(new EmailDto
                 {
@@ -107,6 +107,7 @@ namespace webapi.Controllers.Account.Edit
             try
             {
                 int correctCode = int.TryParse(HttpContext.Session.GetString(_userInfo.Email), out var parsedValue) ? parsedValue : 0;
+                email = email.ToLowerInvariant();
 
                 if (!_validation.IsSixDigit(correctCode))
                     return StatusCode(500, new { message = AccountErrorMessage.Error });
@@ -119,13 +120,11 @@ namespace webapi.Controllers.Account.Edit
                 //Here is 2 steps in single endpoint, for best user experience,
                 //if this doesn't fit your business logic, you can split that logic into two different endpoints
 
-                email = email.ToLowerInvariant();
-
                 var user = await _userRepository.GetByFilter(query => query.Where(u => u.email.Equals(email)));
                 if (user is not null)
                     return StatusCode(409, new { message = AccountErrorMessage.UserExists });
 
-                int confirmationCode = _generateCode.GenerateSixDigitCode();
+                int confirmationCode = _generate.GenerateSixDigitCode();
 
                 await _email.SendMessage(new EmailDto
                 {
@@ -172,10 +171,8 @@ namespace webapi.Controllers.Account.Edit
 
                 user.email = email;
                 await _userRepository.Update(user);
-                _logger.LogInformation("Email was was updated in db");
 
-                var clientInfo = Parser.GetDefault().Parse(HttpContext.Request.Headers["User-Agent"].ToString());
-                var ua = _userAgent.GetBrowserData(clientInfo);
+                var ua = _userAgent.GetBrowserData(Parser.GetDefault().Parse(HttpContext.Request.Headers["User-Agent"].ToString()));
 
                 await _notificationRepository.Add(new NotificationModel
                 {
@@ -187,7 +184,6 @@ namespace webapi.Controllers.Account.Edit
                     is_checked = false,
                     user_id = _userInfo.UserId
                 });
-
 
                 await _tokenService.UpdateJwtToken();
                 _logger.LogInformation("jwt with a new claims was updated");
@@ -214,7 +210,6 @@ namespace webapi.Controllers.Account.Edit
             }
             catch (UnauthorizedAccessException ex)
             {
-                _logger.LogWarning("Error when trying to update jwt.\nTrying delete tokens");
                 _tokenService.DeleteTokens();
                 _logger.LogWarning("Tokens was deleted");
                 return StatusCode(206, new { message = ex.Message });

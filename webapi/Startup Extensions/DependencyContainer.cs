@@ -11,9 +11,7 @@ using webapi.Cryptography;
 using webapi.Security;
 using webapi.Helpers;
 using webapi.Third_Party_Services;
-using webapi.Helpers.DataManager;
 using static webapi.Third_Party_Services.EmailSender;
-using webapi.Models;
 
 namespace webapi
 {
@@ -37,8 +35,9 @@ namespace webapi
             services.AddScoped<ICryptographyParamsProvider, CryptographyHelper>();
             services.AddScoped<IFileService, FileService>();
             services.AddScoped<IValidation, Validation>();
-            services.AddScoped<IGenerateSixDigitCode, GenerateCodesAndKeys>();
-            services.AddScoped<IGenerateKey, GenerateCodesAndKeys>();
+            services.AddScoped<IGenerate, Generate>();
+            services.AddScoped<IGetSize, FileManager>();
+            services.AddScoped<IFileManager, FileManager>();
             services.AddScoped<IPasswordManager, PasswordManager>();
             services.AddScoped<IVirusCheck, ClamAV>();
             services.AddScoped<IClamSetting, ClamSetting>();
@@ -49,9 +48,7 @@ namespace webapi
 
         public static void Transient(IServiceCollection services)
         {
-            services.AddTransient<IGetSize, GetSize>();
             services.AddTransient<ICypher, Cypher>();
-            services.AddTransient<IFileManager, FileManager>();
             services.AddTransient<ITokenService, TokenService>();
             services.AddTransient<IEncryptKey, EncryptKey>();
             services.AddTransient<IDecryptKey, EncryptKey>();

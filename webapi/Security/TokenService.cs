@@ -14,18 +14,18 @@ namespace webapi.Security
     public class TokenService : ITokenService
     {
         private readonly IConfiguration _configuration;
-        private readonly IGenerateKey _generateKey;
+        private readonly IGenerate _generate;
         private readonly FileCryptDbContext _dbContext;
         private readonly IHttpContextAccessor _context;
 
         public TokenService(
             IConfiguration configuration,
-            IGenerateKey generateKey,
+            IGenerate generate,
             FileCryptDbContext dbContext,
             IHttpContextAccessor context)
         {
             _configuration = configuration;
-            _generateKey = generateKey;
+            _generate = generate;
             _dbContext = dbContext;
             _context = context;
         }
@@ -55,7 +55,7 @@ namespace webapi.Security
 
         public string GenerateRefreshToken()
         {
-            var str = Guid.NewGuid().ToString("N") + "_" + _generateKey.GenerateKey() + "_" + Guid.NewGuid().ToString();
+            var str = Guid.NewGuid().ToString("N") + "_" + _generate.GenerateKey() + "_" + Guid.NewGuid().ToString();
 
             return InsertRandomChars(str, 75);
         }

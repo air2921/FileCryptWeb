@@ -27,36 +27,32 @@ namespace webapi.Controllers.Account
         private readonly IRepository<KeyModel> _keyRepository;
         private readonly IRepository<TokenModel> _tokenRepository;
         private readonly IConfiguration _configuration;
-        private readonly IGenerateKey _generateKey;
+        private readonly IGenerate _generate;
         private readonly IEncryptKey _encrypt;
         private readonly ILogger<AuthRegistrationController> _logger;
-        private readonly IGenerateSixDigitCode _generateCode;
         private readonly IEmailSender _email;
         private readonly IPasswordManager _passwordManager;
         private readonly byte[] secretKey;
 
         public AuthRegistrationController(
             ILogger<AuthRegistrationController> logger,
-            IGenerateSixDigitCode generateCode,
             IEmailSender email,
             IPasswordManager passwordManager,
             IRepository<UserModel> userRepository,
             IRepository<KeyModel> keyRepository,
             IRepository<TokenModel> tokenRepository,
             IConfiguration configuration,
-            IGenerateKey generateKey,
+            IGenerate generate,
             IEncryptKey encrypt)
         {
             _logger = logger;
-            _generateCode = generateCode;
             _email = email;
             _passwordManager = passwordManager;
-
             _userRepository = userRepository;
             _keyRepository = keyRepository;
             _tokenRepository = tokenRepository;
             _configuration = configuration;
-            _generateKey = generateKey;
+            _generate = generate;
             _encrypt = encrypt;
             secretKey = Convert.FromBase64String(_configuration[App.ENCRYPTION_KEY]!);
         }
@@ -67,7 +63,7 @@ namespace webapi.Controllers.Account
             try
             {
                 var email = userDTO.email.ToLowerInvariant();
-                int code = _generateCode.GenerateSixDigitCode();
+                int code = _generate.GenerateSixDigitCode();
 
                 var user = await _userRepository.GetByFilter(query => query.Where(u => u.email.Equals(email)));
                 if (user is not null)
@@ -152,7 +148,7 @@ namespace webapi.Controllers.Account
                 await _keyRepository.Add(new KeyModel
                 {
                     user_id = id,
-                    private_key = await _encrypt.EncryptionKeyAsync(_generateKey.GenerateKey(), secretKey)
+                    private_key = await _encrypt.EncryptionKeyAsync(_generate.GenerateKey(), secretKey)
                 });
 
                 _logger.LogInformation("User was added in db");

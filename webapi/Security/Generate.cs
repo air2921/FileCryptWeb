@@ -1,15 +1,16 @@
-﻿using System.Security.Cryptography;
+﻿using System;
+using System.Security.Cryptography;
 using webapi.Interfaces.Services;
 
 namespace webapi.Security
 {
-    public class GenerateCodesAndKeys : IGenerateSixDigitCode, IGenerateKey
+    public class Generate : IGenerate
     {
-        private readonly Random _random = new();
-
         public int GenerateSixDigitCode()
         {
-            return _random.Next(100000, 999999);
+            var random = new Random();
+
+            return random.Next(100000, 999999);
         }
 
         public string GenerateKey()
