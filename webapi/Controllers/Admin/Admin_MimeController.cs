@@ -45,7 +45,7 @@ namespace webapi.Controllers.Admin
                 await _redisCache.DeleteCache(ImmutableData.MIME_COLLECTION);
                 _logger.LogWarning($"new MIME type: {mime}. Added in db");
 
-                return StatusCode(201, new { message = SuccessMessage.SuccessCreatedNewMime });
+                return StatusCode(201, new { message = Message.CREATED });
             }
             catch (EntityNotCreatedException ex)
             {
@@ -109,7 +109,7 @@ namespace webapi.Controllers.Admin
                     await _redisCache.DeleteCache(ImmutableData.MIME_COLLECTION);
                 }
 
-                return StatusCode(201, new { message = SuccessMessage.SuccessMimeCollectionCreate });
+                return StatusCode(201, new { message = Message.CREATED });
             }
             catch (EntityNotCreatedException ex)
             {

@@ -43,7 +43,7 @@ namespace webapi.Controllers.Admin
 
                 await _tokenRepository.Update(targetToken);
 
-                return StatusCode(200, new { message = SuccessMessage.SuccessRefreshRevoked });
+                return StatusCode(200, new { message = Message.REMOVED });
             }
             catch (EntityNotUpdatedException ex)
             {

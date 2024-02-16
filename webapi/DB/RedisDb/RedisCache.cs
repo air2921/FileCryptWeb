@@ -4,7 +4,7 @@ using webapi.Helpers;
 using webapi.Interfaces;
 using webapi.Interfaces.Cryptography;
 using webapi.Interfaces.Redis;
-using webapi.Localization.Exceptions;
+using webapi.Localization;
 using webapi.Models;
 
 namespace webapi.DB.RedisDb
@@ -53,21 +53,21 @@ namespace webapi.DB.RedisDb
                 if (key == _redisKeys.PrivateKey)
                 {
                     if (string.IsNullOrEmpty(keys.private_key))
-                        throw new ArgumentNullException(ExceptionKeyMessages.KeyNotFound);
+                        throw new ArgumentNullException(Message.NOT_FOUND);
 
                     encryptionKey = keys.private_key;
                 }
                 else if (key == _redisKeys.InternalKey)
                 {
                     if (string.IsNullOrEmpty(keys.internal_key))
-                        throw new ArgumentNullException(ExceptionKeyMessages.KeyNotFound);
+                        throw new ArgumentNullException(Message.NOT_FOUND);
 
                     encryptionKey = keys.internal_key;
                 }
                 else if (key == _redisKeys.ReceivedKey)
                 {
                     if (string.IsNullOrEmpty(keys.received_key))
-                        throw new ArgumentNullException(ExceptionKeyMessages.KeyNotFound);
+                        throw new ArgumentNullException(Message.NOT_FOUND);
 
                     encryptionKey = keys.received_key;
                 }

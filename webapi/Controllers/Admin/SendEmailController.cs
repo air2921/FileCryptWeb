@@ -59,7 +59,7 @@ namespace webapi.Controllers.Admin
 
                 _logger.LogInformation($"Created notification. Sender: {_userInfo.Username}#{_userInfo.UserId}. Receiver:{username}#{notifyDTO.receiver_id} ");
 
-                return StatusCode(201, new { message = SuccessMessage.SuccessEmailSendedAndCreatedNotification });
+                return StatusCode(201, new { message = Message.EMAIL_SENT });
             }
             catch (EntityNotCreatedException ex)
             {

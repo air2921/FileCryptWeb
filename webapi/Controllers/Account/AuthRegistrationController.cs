@@ -71,13 +71,10 @@ namespace webapi.Controllers.Account
 
                 var user = await _userRepository.GetByFilter(query => query.Where(u => u.email.Equals(email)));
                 if (user is not null)
-                    return StatusCode(409, new { message = AccountErrorMessage.UserExists });
+                    return StatusCode(409, new { message = Message.USER_EXISTS });
 
-                if (!Regex.IsMatch(userDTO.password, Validation.Password))
-                    return StatusCode(400, new { message = AccountErrorMessage.InvalidFormatPassword });
-
-                if (!Regex.IsMatch(userDTO.username, Validation.Username))
-                    return StatusCode(400, new { message = AccountErrorMessage.InvalidFormatUsername });
+                if (!Regex.IsMatch(userDTO.password, Validation.Password) || !Regex.IsMatch(userDTO.username, Validation.Username))
+                    return StatusCode(400, new { message = Message.INVALID_FORMAT });
 
                 string password = _passwordManager.HashingPassword(userDTO.password);
 
@@ -97,9 +94,7 @@ namespace webapi.Controllers.Account
                 HttpContext.Session.SetString(IS_2FA, userDTO.is_2fa_enabled.ToString());
                 HttpContext.Session.SetString(CODE, _passwordManager.HashingPassword(code.ToString()));
 
-                _logger.LogInformation("Data was saved in user session");
-
-                return StatusCode(200, new { message = AccountSuccessMessage.EmailSended });
+                return StatusCode(200, new { message = Message.EMAIL_SENT });
             }
             catch (SmtpClientException ex)
             {
@@ -122,7 +117,7 @@ namespace webapi.Controllers.Account
             string? flag_2fa = HttpContext.Session.GetString(IS_2FA);
 
             if (email is null || password is null || username is null || role is null || correctCode is null || flag_2fa is null)
-                return StatusCode(422, new { message = AccountErrorMessage.NullUserData });
+                return StatusCode(422, new { message = Message.ERROR });
 
             _logger.LogInformation("User data was succesfully received from session (not null anything)");
 
@@ -130,7 +125,7 @@ namespace webapi.Controllers.Account
             {
                 bool IsCorrect = _passwordManager.CheckPassword(code.ToString(), correctCode);
                 if (!IsCorrect)
-                    return StatusCode(422, new { message = AccountErrorMessage.CodeIncorrect });
+                    return StatusCode(422, new { message = Message.INCORRECT });
 
                 await DbTransaction(email, password, username, role, bool.Parse(flag_2fa));
 

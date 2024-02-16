@@ -43,11 +43,11 @@ namespace webapi.Controllers.Account.Edit
             try
             {
                 if (!Regex.IsMatch(username, Validation.Username))
-                    return StatusCode(400, new { message = AccountErrorMessage.InvalidFormatUsername });
+                    return StatusCode(400, new { message = Message.INVALID_FORMAT });
 
                 var user = await _userRepository.GetById(_userInfo.UserId);
                 if (user is null)
-                    return StatusCode(404);
+                    return StatusCode(404, new { message = Message.NOT_FOUND });
 
                 user.username = username;
 
@@ -59,7 +59,7 @@ namespace webapi.Controllers.Account.Edit
 
                 await _redisCache.DeteteCacheByKeyPattern($"{ImmutableData.USER_DATA_PREFIX}{_userInfo.UserId}");
 
-                return StatusCode(200, new { message = AccountSuccessMessage.UsernameUpdated });
+                return StatusCode(200, new { message = Message.UPDATED });
             }
             catch (EntityNotUpdatedException ex)
             {

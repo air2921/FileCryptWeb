@@ -7,6 +7,7 @@ using webapi.Interfaces;
 using webapi.Interfaces.Controllers;
 using webapi.Interfaces.Cryptography;
 using webapi.Interfaces.Redis;
+using webapi.Localization;
 using webapi.Models;
 
 namespace webapi.Controllers.Public_API
@@ -57,7 +58,7 @@ namespace webapi.Controllers.Public_API
             }
             catch (InvalidOperationException)
             {
-                return StatusCode(500, new { message = "Unexpected error" });
+                return StatusCode(500, new { message = Message.ERROR });
             }
         }
 

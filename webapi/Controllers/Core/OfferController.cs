@@ -8,7 +8,6 @@ using webapi.Interfaces;
 using webapi.Interfaces.Redis;
 using webapi.Interfaces.Services;
 using webapi.Localization;
-using webapi.Localization.Exceptions;
 using webapi.Models;
 
 namespace webapi.Controllers.Core
@@ -89,7 +88,7 @@ namespace webapi.Controllers.Core
                 await _redisCache.DeteteCacheByKeyPattern($"{ImmutableData.OFFERS_PREFIX}{receiverId}");
                 await _redisCache.DeteteCacheByKeyPattern($"{ImmutableData.OFFERS_PREFIX}{_userInfo.UserId}");
 
-                return StatusCode(201, new { message = SuccessMessage.SuccessOfferCreated });
+                return StatusCode(201, new { message = Message.CREATED });
             }
             catch (EntityNotCreatedException ex)
             {
@@ -108,7 +107,7 @@ namespace webapi.Controllers.Core
                     return StatusCode(404);
 
                 if (offer.is_accepted)
-                    return StatusCode(409, new { message = ExceptionOfferMessages.OfferIsAccepted });
+                    return StatusCode(409, new { message = Message.CONFLICT });
 
                 var receiver = await _keyRepository.GetByFilter(query => query.Where(k => k.user_id.Equals(offer.receiver_id)));
                 if (receiver is null)
@@ -123,7 +122,7 @@ namespace webapi.Controllers.Core
                 await _redisCache.DeteteCacheByKeyPattern($"{ImmutableData.OFFERS_PREFIX}{offer.sender_id}");
                 await _redisCache.DeteteCacheByKeyPattern($"{ImmutableData.OFFERS_PREFIX}{_userInfo.UserId}");
 
-                return StatusCode(200, new { message = SuccessMessage.SuccessOfferAccepted });
+                return StatusCode(200, new { message = Message.UPDATED });
             }
             catch (EntityNotUpdatedException ex)
             {
@@ -169,7 +168,8 @@ namespace webapi.Controllers.Core
                 if (cacheOffers is not null)
                     return StatusCode(200, new { offers = JsonConvert.DeserializeObject<IEnumerable<OfferModel>>(cacheOffers), user_id = _userInfo.UserId });
 
-                var offers = await _offerRepository.GetAll(_sorting.SortOffers(_userInfo.UserId, skip, count, byDesc, sended, isAccepted, type));
+                var offers = await _offerRepository.GetAll(_sorting
+                    .SortOffers(_userInfo.UserId, skip, count, byDesc, sended, isAccepted, type));
                 foreach (var offer in offers)
                 {
                     offer.offer_body = string.Empty;
@@ -198,7 +198,7 @@ namespace webapi.Controllers.Core
                 await _redisCache.DeteteCacheByKeyPattern($"{ImmutableData.OFFERS_PREFIX}{offer.sender_id}");
                 await _redisCache.DeteteCacheByKeyPattern($"{ImmutableData.OFFERS_PREFIX}{offer.receiver_id}");
 
-                return StatusCode(200, new { message = SuccessMessage.SuccessOfferDeleted });
+                return StatusCode(204);
             }
             catch (EntityNotDeletedException ex)
             {

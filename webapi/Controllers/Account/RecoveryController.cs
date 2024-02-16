@@ -68,7 +68,7 @@ namespace webapi.Controllers.Account
             {
                 var user = await _userRepository.GetByFilter(query => query.Where(u => u.email.Equals(email.ToLowerInvariant())));
                 if (user is null)
-                    return StatusCode(404, new { message = AccountErrorMessage.UserNotFound });
+                    return StatusCode(404, new { message = Message.NOT_FOUND });
 
                 string token = Guid.NewGuid().ToString("N") + Guid.NewGuid().ToString() + _generate.GenerateKey();
 
@@ -104,7 +104,7 @@ namespace webapi.Controllers.Account
                 _logger.LogInformation($"Created new token for {user.username}#{user.id} with life time for 30 minutes");
                 await _redisCache.DeteteCacheByKeyPattern($"{ImmutableData.NOTIFICATIONS_PREFIX}{user.id}");
 
-                return StatusCode(201, new { message = AccountSuccessMessage.EmailSendedRecovery });
+                return StatusCode(201, new { message = Message.EMAIL_SENT });
             }
             catch (EntityNotCreatedException ex)
             {
@@ -126,22 +126,22 @@ namespace webapi.Controllers.Account
             try
             {
                 if (!Regex.IsMatch(password, Validation.Password))
-                    return StatusCode(400, new { message = AccountErrorMessage.InvalidFormatPassword });
+                    return StatusCode(400, new { message = Message.INVALID_FORMAT });
 
                 var link = await _linkRepository.GetByFilter(query => query.Where(l => l.u_token.Equals(token)));
                 if (link is null)
-                    return StatusCode(404, new { message = AccountErrorMessage.InvalidToken });
+                    return StatusCode(404, new { message = Message.NOT_FOUND });
 
                 if (link.expiry_date < DateTime.UtcNow)
                 {
                     await _linkRepository.Delete(link.link_id);
                     _logger.LogInformation("Expired token was deleted");
-                    return StatusCode(422, new { message = AccountErrorMessage.InvalidToken });
+                    return StatusCode(422, new { message = Message.FORBIDDEN });
                 }
 
                 var user = await _userRepository.GetById(link.user_id);
                 if (user is null)
-                    return StatusCode(404, new { message = "Not found" });
+                    return StatusCode(404, new { message = Message.NOT_FOUND });
                 user.password = _passwordManager.HashingPassword(password);
 
                 var ua = _userAgent.GetBrowserData(Parser.GetDefault().Parse(HttpContext.Request.Headers["User-Agent"].ToString()));
@@ -158,6 +158,10 @@ namespace webapi.Controllers.Account
                 return StatusCode(500, new { message = ex.Message });
             }
             catch (EntityNotUpdatedException ex)
+            {
+                return StatusCode(500, new { message = ex.Message });
+            }
+            catch (EntityNotCreatedException ex)
             {
                 return StatusCode(500, new { message = ex.Message });
             }
@@ -198,10 +202,12 @@ namespace webapi.Controllers.Account
             catch (EntityNotUpdatedException)
             {
                 await transaction.RollbackAsync();
+                throw;
             }
             catch (EntityNotCreatedException)
             {
                 await transaction.RollbackAsync();
+                throw;
             }
         }
     }
