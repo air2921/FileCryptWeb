@@ -40,23 +40,6 @@ namespace webapi.Controllers.Account.Edit
         [HttpPut]
         public async Task<IActionResult> UpdateUsername([FromQuery] string username)
         {
-            var myStack = new
-            {
-                languages = new string[] { "C#", "linq", "TypeScript" },
-                tools = new string[] { "RESTApi/JSONApi", "Swagger", "Postman", "SignalR" },
-                frameworks = new
-                {
-                    backend = new string[] { "ASP.NET Core Web API", "ASP.NET Core MVC" },
-                    frontend = new string[] { "React.js", "html5", "css3" }
-                },
-                db = new
-                {
-                    sql = new string[] { "PostgreSQL", "MS SQL Server" },
-                    noSql = new string[] { "Redis", "MongoDb" },
-                    orm = new string[] { "Entity Framework Core" }
-                },
-            };
-
             try
             {
                 if (!Regex.IsMatch(username, Validation.Username))
