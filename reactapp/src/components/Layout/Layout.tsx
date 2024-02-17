@@ -312,7 +312,7 @@ function Layout() {
                             </>
                         ) : (
                                 <button className="aside-visible-btn" onClick={() => setAsideVisible(!isAsideVisible)}>
-                                    <Font font={'menu'} />
+                                    <i className="material-icons-outlined" style={{ background: 'transparent' }}>menu</i>
                                 </button>
                         )}
                     </div>

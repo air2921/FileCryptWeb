@@ -91,9 +91,11 @@ const Login = () => {
                         <button className="verify-btn" type="submit">Verify</button>
                     </div>
                 </form>
-                <div className="verify-message">
-                    {errorVerificationMessage && <Message message={errorVerificationMessage} font='error' />}
-                </div>
+                {errorVerificationMessage &&
+                    <div className="verify-message">
+                        <Message message={errorVerificationMessage} font='error' />
+                    </div>
+                }
             </div>
         );
     }

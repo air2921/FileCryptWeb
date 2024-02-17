@@ -123,13 +123,13 @@ namespace webapi.Controllers.Account
                 if (correctCode is null || id is null)
                     return StatusCode(500);
 
-                var user = await _userRepository.GetById(int.Parse(id));
-                if (user is null)
-                    return StatusCode(404, new { message = Message.NOT_FOUND });
-
                 bool IsCorrect = _passwordManager.CheckPassword(code.ToString(), correctCode);
                 if (!IsCorrect)
                     return StatusCode(422, new { message = Message.INCORRECT });
+
+                var user = await _userRepository.GetById(int.Parse(id));
+                if (user is null)
+                    return StatusCode(404, new { message = Message.NOT_FOUND });
 
                 var clientInfo = Parser.GetDefault().Parse(HttpContext.Request.Headers["User-Agent"].ToString());
 
