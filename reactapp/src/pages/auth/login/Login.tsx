@@ -140,8 +140,8 @@ const Login = () => {
                         <button className="signup-form-btn" onClick={() => navigate('/auth/signup')}>Register</button>
                     </div>
                 </form>
-                <div className="recovery-btn-container">
-                    <button className="recovery-btn" onClick={() => setRecovery(true)}>Recovery account</button>
+                <div className="login-recovery-btn-container">
+                    <button className="login-recovery-btn" onClick={() => setRecovery(true)}>Recovery account</button>
                 </div>
             </div>
             <Modal isActive={verificationRequired} setActive={setVerification}>
