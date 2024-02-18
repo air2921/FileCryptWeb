@@ -42,7 +42,6 @@ namespace webapi
             services.AddScoped<IVirusCheck, ClamAV>();
             services.AddScoped<IClamSetting, ClamSetting>();
             services.AddScoped<IUserInfo, UserData>();
-            services.AddScoped<IUserAgent, UserAgent>();
             services.AddScoped<IAes, AesCreator>();
         }
 

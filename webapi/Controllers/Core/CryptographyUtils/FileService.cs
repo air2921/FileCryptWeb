@@ -15,6 +15,8 @@ namespace webapi.Controllers.Base.CryptographyUtils
         private readonly string receivedType = FileType.Received.ToString().ToLowerInvariant();
         private const int TASK_AWAITING = 10000;
 
+        #region fields and constructor
+
         private readonly IRepository<FileModel> _fileRepository;
         private readonly IRepository<FileMimeModel> _mimeRepository;
         private readonly IGetSize _getSize;
@@ -37,6 +39,8 @@ namespace webapi.Controllers.Base.CryptographyUtils
             _redisCache = redisCache;
             _logger = logger;
         }
+
+        #endregion
 
         public bool CheckFileType(string type)
         {

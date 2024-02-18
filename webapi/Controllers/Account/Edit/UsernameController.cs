@@ -1,6 +1,7 @@
 ﻿using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 using System.Text.RegularExpressions;
+using webapi.Attributes;
 using webapi.Exceptions;
 using webapi.Helpers;
 using webapi.Interfaces;
@@ -17,6 +18,8 @@ namespace webapi.Controllers.Account.Edit
     [ValidateAntiForgeryToken]
     public class UsernameController : ControllerBase
     {
+        #region fields and constructor
+
         private readonly IRepository<UserModel> _userRepository;
         private readonly IRedisCache _redisCache;
         private readonly ILogger<UsernameController> _logger;
@@ -37,7 +40,14 @@ namespace webapi.Controllers.Account.Edit
             _tokenService = tokenService;
         }
 
+        #endregion
+
         [HttpPut]
+        [ProducesResponseType(typeof(object), 200)]
+        [ProducesResponseType(typeof(object), 400)]
+        [ProducesResponseType(typeof(object), 404)]
+        [ProducesResponseType(typeof(object), 500)]
+        [ProducesResponseType(typeof(object), 206)]
         public async Task<IActionResult> UpdateUsername([FromQuery] string username)
         {
             try
@@ -49,15 +59,9 @@ namespace webapi.Controllers.Account.Edit
                 if (user is null)
                     return StatusCode(404, new { message = Message.NOT_FOUND });
 
-                user.username = username;
-
-                await _userRepository.Update(user);
-
+                await DbUpdate(user, username);
                 await _tokenService.UpdateJwtToken();
-                _tokenService.DeleteUserDataSession();
-                _logger.LogInformation("jwt with a new claims was updated");
-
-                await _redisCache.DeteteCacheByKeyPattern($"{ImmutableData.USER_DATA_PREFIX}{_userInfo.UserId}");
+                await ClearData();
 
                 return StatusCode(200, new { message = Message.UPDATED });
             }
@@ -72,9 +76,29 @@ namespace webapi.Controllers.Account.Edit
             catch (UnauthorizedAccessException ex)
             {
                 _tokenService.DeleteTokens();
-                _logger.LogWarning("Tokens was deleted");
                 return StatusCode(206, new { message = ex.Message });
             }
+        }
+
+        [Helper]
+        private async Task DbUpdate(UserModel user, string username)
+        {
+            try
+            {
+                user.username = username;
+                await _userRepository.Update(user);
+            }
+            catch (EntityNotUpdatedException)
+            {
+                throw;
+            }
+        }
+
+        [Helper]
+        private async Task ClearData()
+        {
+            _tokenService.DeleteUserDataSession();
+            await _redisCache.DeteteCacheByKeyPattern($"{ImmutableData.USER_DATA_PREFIX}{_userInfo.UserId}");
         }
     }
 }

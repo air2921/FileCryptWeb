@@ -1,6 +1,7 @@
 ﻿using Microsoft.AspNetCore.Cors;
 using Microsoft.AspNetCore.Mvc;
 using Newtonsoft.Json;
+using webapi.Attributes;
 using webapi.Exceptions;
 using webapi.Helpers;
 using webapi.Interfaces;
@@ -36,6 +37,11 @@ namespace webapi.Controllers.Public_API
 
         [HttpPost("{operation}")]
         [RequestSizeLimit(75 * 1024 * 1024)]
+        [ProducesResponseType(typeof(FileStreamResult), 200)]
+        [ProducesResponseType(typeof(object), 400)]
+        [ProducesResponseType(typeof(object), 415)]
+        [ProducesResponseType(typeof(object), 422)]
+        [ProducesResponseType(typeof(object), 500)]
         public async Task<IActionResult> EncryptFiles(
             [FromHeader(Name = ImmutableData.ENCRYPTION_KEY_HEADER_NAME)] string encryptionKey,
             [FromHeader(Name = ImmutableData.API_HEADER_NAME)] string apiKey,
@@ -62,6 +68,7 @@ namespace webapi.Controllers.Public_API
             }
         }
 
+        [Helper]
         private async Task<ApiData> IsValidAPI(string apiKey)
         {
             try
@@ -101,6 +108,7 @@ namespace webapi.Controllers.Public_API
             }
         }
 
+        [Helper]
         private async Task ControlRequestCount(string apiKey, int maxRequest)
         {
             var cacheKey = $"{DateTime.Today.ToString("yyyy-MM-dd")}_{apiKey}";
@@ -124,6 +132,8 @@ namespace webapi.Controllers.Public_API
                 await _redisCache.CacheData(cacheKey, 1, timeUntilEndOfDay);
             }
         }
+
+        [AuxiliaryObject]
+        public record ApiData(int UserId, int MaxRequest);
     }
-    public record ApiData(int UserId, int MaxRequest);
 }

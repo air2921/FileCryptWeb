@@ -1,5 +1,7 @@
 ﻿using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
+using webapi.Attributes;
+using webapi.DB;
 using webapi.DTO;
 using webapi.Exceptions;
 using webapi.Helpers;
@@ -19,8 +21,11 @@ namespace webapi.Controllers.Account.Edit
     {
         private const string CODE = "2FaCode";
 
+        #region fields and constructor
+
         private readonly IRepository<UserModel> _userRepository;
         private readonly IRepository<NotificationModel> _notificationRepository;
+        private readonly FileCryptDbContext _dbContext;
         private readonly IRedisCache _redisCache;
         private readonly IPasswordManager _passwordManager;
         private readonly IUserInfo _userInfo;
@@ -33,6 +38,7 @@ namespace webapi.Controllers.Account.Edit
         public _2FaController(
             IRepository<UserModel> userRepository,
             IRepository<NotificationModel> notificationRepository,
+            FileCryptDbContext dbContext,
             IRedisCache redisCache,
             IPasswordManager passwordManager,
             IUserInfo userInfo,
@@ -44,6 +50,7 @@ namespace webapi.Controllers.Account.Edit
         {
             _userRepository = userRepository;
             _notificationRepository = notificationRepository;
+            _dbContext = dbContext;
             _redisCache = redisCache;
             _passwordManager = passwordManager;
             _userInfo = userInfo;
@@ -54,28 +61,27 @@ namespace webapi.Controllers.Account.Edit
             _validation = validation;
         }
 
+        #endregion
+
         [HttpPost("start")]
+        [ProducesResponseType(200)]
+        [ProducesResponseType(typeof(object), 401)]
+        [ProducesResponseType(typeof(object), 404)]
+        [ProducesResponseType(typeof(object), 500)]
         public async Task<IActionResult> SendVerificationCode([FromQuery] string password)
         {
             try
             {
                 var user = await _userRepository.GetById(_userInfo.UserId);
                 if (user is null)
-                    return StatusCode(404);
+                    return StatusCode(404, new { message = Message.NOT_FOUND });
 
                 bool IsCorrect = _passwordManager.CheckPassword(password, user.password);
                 if (!IsCorrect)
                     return StatusCode(401, new { message = Message.INCORRECT });
 
                 int code = _generate.GenerateSixDigitCode();
-
-                await _emailSender.SendMessage(new EmailDto
-                {
-                    username = _userInfo.Username,
-                    email = _userInfo.Email,
-                    subject = EmailMessage.Change2FaHeader,
-                    message = EmailMessage.Change2FaBody + code
-                });
+                await SendMessage(_userInfo.Username, _userInfo.Email, code);
 
                 HttpContext.Session.SetString(CODE, code.ToString());
 
@@ -92,30 +98,50 @@ namespace webapi.Controllers.Account.Edit
         }
 
         [HttpPut("confirm/{enable}")]
+        [ProducesResponseType(200)]
+        [ProducesResponseType(typeof(object), 400)]
+        [ProducesResponseType(typeof(object), 404)]
+        [ProducesResponseType(typeof(object), 500)]
         public async Task<IActionResult> Update2FaState([FromQuery] int code, [FromRoute] bool enable)
         {
             try
             {
                 int correctCode = int.TryParse(HttpContext.Session.GetString(CODE), out var parsedValue) ? parsedValue : 0;
-
-                if (!_validation.IsSixDigit(correctCode))
-                    return StatusCode(500, new { message = Message.ERROR });
-
-                if (!code.Equals(correctCode))
-                    return StatusCode(422, new { message = Message.INCORRECT });
+                if (!_validation.IsSixDigit(correctCode) || !code.Equals(correctCode))
+                    return StatusCode(400, new { message = Message.INCORRECT });
 
                 var user = await _userRepository.GetById(_userInfo.UserId);
                 if (user is null)
-                {
-                    _tokenService.DeleteTokens();
-                    _logger.LogWarning("Tokens was deleted");
-                    return StatusCode(404);
-                }
+                    return StatusCode(404, new { message = Message.NOT_FOUND });
 
+                await DbTransaction(user, enable);
+                await ClearData(HttpContext);
+
+                return StatusCode(200);
+            }
+            catch (EntityNotCreatedException ex)
+            {
+                return StatusCode(500, new { message = ex.Message });
+            }
+            catch (EntityNotUpdatedException ex)
+            {
+                return StatusCode(500, new { message = ex.Message });
+            }
+            catch (OperationCanceledException ex)
+            {
+                return StatusCode(500, new { message = ex.Message });
+            }
+        }
+
+        [Helper]
+        private async Task DbTransaction(UserModel user, bool enable)
+        {
+            using var transaction = await _dbContext.Database.BeginTransactionAsync();
+            try
+            {
                 if (user.is_2fa_enabled == enable)
-                    return StatusCode(409, new { message = Message.CONFLICT });
+                    throw new EntityNotUpdatedException(Message.CONFLICT);
                 user.is_2fa_enabled = enable;
-
                 await _userRepository.Update(user);
 
                 string message = enable
@@ -132,23 +158,50 @@ namespace webapi.Controllers.Account.Edit
                     user_id = _userInfo.UserId
                 });
 
-                await _redisCache.DeteteCacheByKeyPattern($"{ImmutableData.USER_DATA_PREFIX}{_userInfo.UserId}");
-                await _redisCache.DeteteCacheByKeyPattern($"{ImmutableData.NOTIFICATIONS_PREFIX}{_userInfo.UserId}");
+                await transaction.CommitAsync();
+            }
+            catch (EntityNotCreatedException)
+            {
+                await transaction.RollbackAsync();
+                throw;
+            }
+            catch (EntityNotUpdatedException)
+            {
+                await transaction.RollbackAsync();
+                throw;
+            }
+            catch (OperationCanceledException)
+            {
+                await transaction.RollbackAsync();
+                throw;
+            }
+        }
 
-                return StatusCode(200);
-            }
-            catch (EntityNotCreatedException ex)
+        [Helper]
+        private async Task SendMessage(string username, string email, int code)
+        {
+            try
             {
-                return StatusCode(500, new { message = ex.Message });
+                await _emailSender.SendMessage(new EmailDto
+                {
+                    username = username,
+                    email = email,
+                    subject = EmailMessage.Change2FaHeader,
+                    message = EmailMessage.Change2FaBody + code
+                });
             }
-            catch (EntityNotUpdatedException ex)
+            catch (SmtpClientException)
             {
-                return StatusCode(500, new { message = ex.Message });
+                throw;
             }
-            catch (OperationCanceledException ex)
-            {
-                return StatusCode(500, new { message = ex.Message });
-            }
+        }
+
+        [Helper]
+        private async Task ClearData(HttpContext context)
+        {
+            context.Session.Remove(CODE);
+            await _redisCache.DeteteCacheByKeyPattern($"{ImmutableData.USER_DATA_PREFIX}{_userInfo.UserId}");
+            await _redisCache.DeteteCacheByKeyPattern($"{ImmutableData.NOTIFICATIONS_PREFIX}{_userInfo.UserId}");
         }
     }
 }

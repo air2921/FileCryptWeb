@@ -1,6 +1,7 @@
 ﻿using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
-using UAParser;
+using webapi.Attributes;
+using webapi.DB;
 using webapi.DTO;
 using webapi.Exceptions;
 using webapi.Helpers;
@@ -20,10 +21,12 @@ namespace webapi.Controllers.Account.Edit
     {
         private const string EMAIL = "Email";
 
+        #region fields and constuctor
+
         private readonly IRepository<UserModel> _userRepository;
         private readonly IRepository<NotificationModel> _notificationRepository;
+        private readonly FileCryptDbContext _dbContext;
         private readonly IRedisCache _redisCache;
-        private readonly IUserAgent _userAgent;
         private readonly IEmailSender _email;
         private readonly ILogger<EmailController> _logger;
         private readonly IPasswordManager _passwordManager;
@@ -35,8 +38,8 @@ namespace webapi.Controllers.Account.Edit
         public EmailController(
             IRepository<UserModel> userRepository,
             IRepository<NotificationModel> notificationRepository,
+            FileCryptDbContext dbContext,
             IRedisCache redisCache,
-            IUserAgent userAgent,
             IEmailSender email,
             ILogger<EmailController> logger,
             IPasswordManager passwordManager,
@@ -47,8 +50,8 @@ namespace webapi.Controllers.Account.Edit
         {
             _userRepository = userRepository;
             _notificationRepository = notificationRepository;
+            _dbContext = dbContext;
             _redisCache = redisCache;
-            _userAgent = userAgent;
             _email = email;
             _logger = logger;
             _passwordManager = passwordManager;
@@ -58,36 +61,29 @@ namespace webapi.Controllers.Account.Edit
             _validation = validation;
         }
 
+        #endregion
+
         [HttpPost("start")]
+        [ProducesResponseType(typeof(object), 200)]
+        [ProducesResponseType(typeof(object), 404)]
+        [ProducesResponseType(typeof(object), 401)]
+        [ProducesResponseType(typeof(object), 500)]
         public async Task<IActionResult> StartEmailChangeProcess([FromQuery] string password)
         {
             try
             {
                 var user = await _userRepository.GetById(_userInfo.UserId);
                 if (user is null)
-                {
-                    _tokenService.DeleteTokens();
-                    _logger.LogWarning("Tokens was deleted");
                     return StatusCode(404, new { message = Message.NOT_FOUND });
-                }
 
                 bool IsCorrect = _passwordManager.CheckPassword(password, user.password);
                 if (!IsCorrect)
                     return StatusCode(401, new { message = Message.INCORRECT });
 
                 int code = _generate.GenerateSixDigitCode();
-
-                await _email.SendMessage(new EmailDto
-                {
-                    username = _userInfo.Username,
-                    email = _userInfo.Email,
-                    subject = EmailMessage.ConfirmOldEmailHeader,
-                    message = EmailMessage.ConfirmOldEmailBody + code
-                });
+                await SendMessage(_userInfo.Username, _userInfo.Email, EmailMessage.ConfirmOldEmailHeader, EmailMessage.ConfirmOldEmailBody + code);
 
                 HttpContext.Session.SetInt32(_userInfo.Email, code);
-                _logger.LogInformation($"Code was saved in user session {_userInfo.Username}#{_userInfo.UserId}");
-                _logger.LogInformation($"Email to {_userInfo.Username}#{_userInfo.UserId} was sent on {_userInfo.Email} (1-st step)");
 
                 return StatusCode(200, new { message = Message.EMAIL_SENT });
             }
@@ -102,6 +98,10 @@ namespace webapi.Controllers.Account.Edit
         }
 
         [HttpPost("confirm/old")]
+        [ProducesResponseType(typeof(object), 200)]
+        [ProducesResponseType(typeof(object), 400)]
+        [ProducesResponseType(typeof(object), 409)]
+        [ProducesResponseType(typeof(object), 500)]
         public async Task<IActionResult> ConfirmOldEmail([FromQuery] string email, [FromQuery] int code)
         {
             try
@@ -109,35 +109,19 @@ namespace webapi.Controllers.Account.Edit
                 int correctCode = int.TryParse(HttpContext.Session.GetString(_userInfo.Email), out var parsedValue) ? parsedValue : 0;
                 email = email.ToLowerInvariant();
 
-                if (!_validation.IsSixDigit(correctCode))
-                    return StatusCode(500, new { message = Message.ERROR });
-
-                if (!code.Equals(correctCode))
-                    return StatusCode(401, new { message = Message.INCORRECT });
-
-                _logger.LogInformation($"User {_userInfo.Username}#{_userInfo.UserId} confirmed code (2-nd step)");
-
-                //Here is 2 steps in single endpoint, for best user experience,
-                //if this doesn't fit your business logic, you can split that logic into two different endpoints
+                if (!_validation.IsSixDigit(correctCode) || !code.Equals(correctCode))
+                    return StatusCode(400, new { message = Message.INCORRECT });
 
                 var user = await _userRepository.GetByFilter(query => query.Where(u => u.email.Equals(email)));
                 if (user is not null)
                     return StatusCode(409, new { message = Message.CONFLICT });
 
                 int confirmationCode = _generate.GenerateSixDigitCode();
-
-                await _email.SendMessage(new EmailDto
-                {
-                    username = _userInfo.Username,
-                    email = email,
-                    subject = EmailMessage.ConfirmNewEmailHeader,
-                    message = EmailMessage.ConfirmNewEmailBody + confirmationCode
-                });
+                await SendMessage(_userInfo.Username, email, EmailMessage.ConfirmNewEmailHeader, EmailMessage.ConfirmNewEmailBody + confirmationCode);
 
                 HttpContext.Session.SetInt32(_userInfo.UserId.ToString(), confirmationCode);
                 HttpContext.Session.SetString(EMAIL, email);
 
-                _logger.LogInformation($"Email to {_userInfo.Username}#{_userInfo.UserId} was sended on {email} (3-rd step)");
                 return StatusCode(200, new { message = Message.EMAIL_SENT });
             }
             catch (SmtpClientException ex)
@@ -151,48 +135,28 @@ namespace webapi.Controllers.Account.Edit
         }
 
         [HttpPut("confirm/new")]
+        [ProducesResponseType(201)]
+        [ProducesResponseType(typeof(object), 400)]
+        [ProducesResponseType(typeof(object), 404)]
+        [ProducesResponseType(typeof(object), 500)]
+        [ProducesResponseType(typeof(object), 206)]
         public async Task<IActionResult> ConfirmAndUpdateNewEmail([FromQuery] int code)
         {
             try
             {
                 int correctCode = int.TryParse(HttpContext.Session.GetString(_userInfo.UserId.ToString()), out var parsedValue) ? parsedValue : 0;
                 string? email = HttpContext.Session.GetString(EMAIL);
-                _logger.LogInformation($"Code and email were received from user session {_userInfo.Username}#{_userInfo.UserId}. code: {correctCode}, email: {email}");
 
-                if (email is null || !_validation.IsSixDigit(correctCode))
-                    return StatusCode(500, new { message = Message.ERROR });
-
-                if (!code.Equals(correctCode))
-                    return StatusCode(422, new { message = Message.INCORRECT });
+                if (email is null || !_validation.IsSixDigit(correctCode) || !code.Equals(correctCode))
+                    return StatusCode(400, new { message = Message.INCORRECT });
 
                 var user = await _userRepository.GetById(_userInfo.UserId);
                 if (user is null)
                     return StatusCode(404, new { message = Message.NOT_FOUND });
 
-                user.email = email;
-                await _userRepository.Update(user);
-
-                var ua = _userAgent.GetBrowserData(Parser.GetDefault().Parse(HttpContext.Request.Headers["User-Agent"].ToString()));
-
-                await _notificationRepository.Add(new NotificationModel
-                {
-                    message_header = "Someone changed your account email/login",
-                    message = $"Someone changed your email at {DateTime.UtcNow} from {ua.Browser} {ua.Version} on OS {ua.OS}." +
-                    $"New email: '{email}'",
-                    priority = Priority.Security.ToString(),
-                    send_time = DateTime.UtcNow,
-                    is_checked = false,
-                    user_id = _userInfo.UserId
-                });
-
+                await DbTransaction(user, email);
                 await _tokenService.UpdateJwtToken();
-                _logger.LogInformation("jwt with a new claims was updated");
-
-                HttpContext.Session.Remove(_userInfo.UserId.ToString());
-                HttpContext.Session.Remove(EMAIL);
-
-                await _redisCache.DeteteCacheByKeyPattern($"{ImmutableData.USER_DATA_PREFIX}{_userInfo.UserId}");
-                await _redisCache.DeteteCacheByKeyPattern($"{ImmutableData.NOTIFICATIONS_PREFIX}{_userInfo.UserId}");
+                await ClearData(HttpContext);
 
                 return StatusCode(201);
             }
@@ -211,9 +175,74 @@ namespace webapi.Controllers.Account.Edit
             catch (UnauthorizedAccessException ex)
             {
                 _tokenService.DeleteTokens();
-                _logger.LogWarning("Tokens was deleted");
                 return StatusCode(206, new { message = ex.Message });
             }
+        }
+
+        [Helper]
+        private async Task DbTransaction(UserModel user, string email)
+        {
+            using var transaction = await _dbContext.Database.BeginTransactionAsync();
+            try
+            {
+                user.email = email;
+                await _userRepository.Update(user);
+
+                await _notificationRepository.Add(new NotificationModel
+                {
+                    message_header = "Someone changed your account email/login",
+                    message = $"Someone changed your email at {DateTime.UtcNow}." +
+                    $"New email: '{email}'",
+                    priority = Priority.Security.ToString(),
+                    send_time = DateTime.UtcNow,
+                    is_checked = false,
+                    user_id = _userInfo.UserId
+                });
+
+                await transaction.CommitAsync();
+            }
+            catch (EntityNotCreatedException)
+            {
+                await transaction.RollbackAsync();
+                throw;
+            }
+            catch (EntityNotUpdatedException)
+            {
+                await transaction.RollbackAsync();
+                throw;
+            }
+            catch (OperationCanceledException)
+            {
+                await transaction.RollbackAsync();
+                throw;
+            }
+        }
+
+        [Helper]
+        private async Task SendMessage(string username, string email, string header, string body)
+        {
+            try
+            {
+                await _email.SendMessage(new EmailDto
+                {
+                    username = username,
+                    email = email,
+                    subject = header,
+                    message = body
+                });
+            }
+            catch (SmtpClientException)
+            {
+                throw;
+            }
+        }
+
+        [Helper]
+        private async Task ClearData(HttpContext context)
+        {
+            context.Session.Clear();
+            await _redisCache.DeteteCacheByKeyPattern($"{ImmutableData.USER_DATA_PREFIX}{_userInfo.UserId}");
+            await _redisCache.DeteteCacheByKeyPattern($"{ImmutableData.NOTIFICATIONS_PREFIX}{_userInfo.UserId}");
         }
     }
 }

@@ -1,5 +1,6 @@
 ﻿using Microsoft.AspNetCore.Mvc;
 using System.Text.RegularExpressions;
+using webapi.Attributes;
 using webapi.Cryptography;
 using webapi.Exceptions;
 using webapi.Helpers;
@@ -19,6 +20,8 @@ namespace webapi.Controllers.Base
         private readonly string privateType = FileType.Private.ToString().ToLowerInvariant();
         private readonly string internalType = FileType.Internal.ToString().ToLowerInvariant();
         private readonly string receivedType = FileType.Received.ToString().ToLowerInvariant();
+
+        #region fields and constructor
 
         private readonly IFileService _fileService;
         private readonly ILogger<CryptographyHelper> _logger;
@@ -43,6 +46,10 @@ namespace webapi.Controllers.Base
             _userInfo = userInfo;
         }
 
+        #endregion
+
+        [NonAction]
+        [Helper]
         public async Task<IActionResult> EncryptFile(
             Func<string, byte[], CancellationToken, string, Task<CryptographyResult>> CryptographyFunction,
             string key, IFormFile file,
@@ -163,8 +170,7 @@ namespace webapi.Controllers.Base
                     isValidRoute = true;
                     break;
                 default:
-                    isValidRoute = false;
-                    break;
+                    throw new InvalidRouteException();
             }
 
             try

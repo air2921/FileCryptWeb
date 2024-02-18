@@ -2,6 +2,7 @@
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
 using Newtonsoft.Json;
+using webapi.Attributes;
 using webapi.DB;
 using webapi.Exceptions;
 using webapi.Helpers;
@@ -18,6 +19,8 @@ namespace webapi.Controllers.Core
     [Authorize]
     public class UserController : ControllerBase
     {
+        #region fields and constructor
+
         private readonly FileCryptDbContext _dbContext;
         private readonly IRepository<OfferModel> _offerRepository;
         private readonly IRepository<FileModel> _fileRepository;
@@ -44,76 +47,26 @@ namespace webapi.Controllers.Core
             _tokenService = tokenService;
         }
 
+        #endregion
+
         [HttpGet("{userId}/{username}")]
         public async Task<IActionResult> GetUser([FromRoute] int userId, [FromRoute] string username)
         {
             try
             {
-                var userAndKeys = await _dbContext.Users
-                    .Where(u => u.id == userId && u.username == username)
-                    .Join(_dbContext.Keys, user => user.id, keys => keys.user_id, (user, keys) => new { user, keys })
-                    .FirstOrDefaultAsync();
+                var user = await GetUserAndKeys(username, userId);
+                var files = await GetFiles(userId);
+                var offers = await GetOffers(userId);
 
-                if (userAndKeys is null)
-                    return StatusCode(404, new { message = Message.NOT_FOUND });
-
-                var cacheKeyFiles = $"Profile_Files_{userId}";
-                var cacheKeyOffers = $"Profile_Offers_{userId}";
-                var files = new List<FileModel>();
-                var offers = new List<OfferModel>();
-
-                var cacheFiles = await _redisCache.GetCachedData(cacheKeyFiles);
-                if (cacheFiles is null)
-                {
-                    var filesDb = await _fileRepository.GetAll
-                        (query => query.Where(f => f.user_id.Equals(userId)).OrderByDescending(f => f.operation_date).Skip(0).Take(5));
-
-                    await _redisCache.CacheData(cacheKeyFiles, filesDb, TimeSpan.FromMinutes(1));
-
-                    files = (List<FileModel>)filesDb;
-                }
-                else
-                    files = JsonConvert.DeserializeObject<List<FileModel>>(cacheFiles);
-
-                var cacheOffers = await _redisCache.GetCachedData(cacheKeyOffers);
-                if (cacheOffers is null)
-                {
-                    var offersDb = await _offerRepository.GetAll
-                        (query => query.Where(o => o.receiver_id.Equals(userId) || o.sender_id.Equals(userId))
-                        .OrderByDescending(o => o.created_at).Skip(0).Take(5));
-
-                    await _redisCache.CacheData(cacheKeyOffers, offersDb, TimeSpan.FromMinutes(1));
-
-                    offers = (List<OfferModel>)offersDb;
-                }
-                else
-                    offers = JsonConvert.DeserializeObject<List<OfferModel>>(cacheOffers);
-
-                foreach (var offer in offers)
-                {
-                    offer.offer_header = string.Empty;
-                    offer.offer_body = string.Empty;
-                }
-
-                bool IsOwner = userId.Equals(_userInfo.UserId);
-                bool privateKey = userAndKeys.keys.private_key is not null;
-                bool internalKey = userAndKeys.keys.internal_key is not null;
-                bool receivedKey = userAndKeys.keys.received_key is not null;
-
-                var user = new
-                {
-                    id = userAndKeys.user.id,
-                    username = userAndKeys.user.username,
-                    email = IsOwner ? userAndKeys.user.email : null,
-                    role = userAndKeys.user.role,
-                    is_blocked = userAndKeys.user.is_blocked
-                };
-
-                return StatusCode(200, new { user, IsOwner, keys = new { privateKey, internalKey, receivedKey }, files, offers });
+                return StatusCode(200, new { user = user.user, isOwner = user.isOwner, keys = user.keys, files, offers });
             }
             catch (OperationCanceledException ex)
             {
                 return StatusCode(500, new { message = ex.Message });
+            }
+            catch (ArgumentNullException ex)
+            {
+                return StatusCode(404, new { message = ex.Message });
             }
         }
 
@@ -173,35 +126,10 @@ namespace webapi.Controllers.Core
                     return StatusCode(404, new { message = Message.NOT_FOUND });
 
                 if (!string.IsNullOrWhiteSpace(username) && userId == 0)
-                {
-                    var users = await _userRepository.GetAll(query => query.Where(u => u.username.Equals(username)));
-
-                    foreach (var user in users)
-                    {
-                        user.password = string.Empty;
-                        user.email = string.Empty;
-                    }
-
-                    return StatusCode(200, new { users });
-                }
+                    return StatusCode(200, new { users = await GetUserList(username) });
 
                 if (string.IsNullOrWhiteSpace(username) && userId != 0)
-                {
-                    var user = await _userRepository.GetById(userId);
-                    if (user is null)
-                        return StatusCode(404, new { message = Message.NOT_FOUND });
-
-                    return StatusCode(200, new { user.username, user.id });
-                }
-
-                if (!string.IsNullOrWhiteSpace(username) && userId != 0)
-                {
-                    var user = await _userRepository.GetByFilter(query => query.Where(u => u.id.Equals(userId) && u.username.Equals(username)));
-                    if (user is null)
-                        return StatusCode(404, new { message = Message.NOT_FOUND });
-
-                    return StatusCode(200, new { user.username, user.id });
-                }
+                    return StatusCode(200, new { user = await GetUserById(userId) });
 
                 return StatusCode(404, new { message = Message.NOT_FOUND });
             }
@@ -209,7 +137,127 @@ namespace webapi.Controllers.Core
             {
                 return StatusCode(500, new { message = ex.Message });
             }
+            catch (ArgumentException ex)
+            {
+                return StatusCode(404, new { message = ex.Message });
+            }
+        }
 
+        [Helper]
+        private async Task<UserKeysObject> GetUserAndKeys(string username, int userId)
+        {
+            var userAndKeys = await _dbContext.Users
+                .Where(u => u.id == userId && u.username == username)
+                .Join(_dbContext.Keys, user => user.id, keys => keys.user_id, (user, keys) => new { user, keys })
+                .FirstOrDefaultAsync();
+
+            if (userAndKeys is null)
+                throw new ArgumentNullException(Message.NOT_FOUND);
+
+            bool IsOwner = userId.Equals(_userInfo.UserId);
+            bool privateKey = userAndKeys.keys.private_key is not null;
+            bool internalKey = userAndKeys.keys.internal_key is not null;
+            bool receivedKey = userAndKeys.keys.received_key is not null;
+
+            var user = new
+            {
+                id = userAndKeys.user.id,
+                username = userAndKeys.user.username,
+                email = IsOwner ? userAndKeys.user.email : null,
+                role = userAndKeys.user.role,
+                is_blocked = userAndKeys.user.is_blocked
+            };
+
+            var keys = new
+            {
+                privateKey,
+                internalKey,
+                receivedKey
+            };
+
+            return new UserKeysObject { user = user, isOwner = IsOwner, keys = keys };
+        }
+
+        [Helper]
+        private async Task<IEnumerable<OfferModel>> GetOffers(int userId)
+        {
+            var cacheKeyOffers = $"Profile_Offers_{userId}";
+            var offers = new List<OfferModel>();
+
+            var cacheOffers = await _redisCache.GetCachedData(cacheKeyOffers);
+            if (cacheOffers is null)
+            {
+                var offersDb = await _offerRepository.GetAll
+                    (query => query.Where(o => o.receiver_id.Equals(userId) || o.sender_id.Equals(userId))
+                    .OrderByDescending(o => o.created_at).Skip(0).Take(5));
+
+                await _redisCache.CacheData(cacheKeyOffers, offersDb, TimeSpan.FromMinutes(1));
+
+                offers = (List<OfferModel>)offersDb;
+            }
+            else
+                offers = JsonConvert.DeserializeObject<List<OfferModel>>(cacheOffers);
+
+            foreach (var offer in offers)
+            {
+                offer.offer_header = string.Empty;
+                offer.offer_body = string.Empty;
+            }
+
+            return offers;
+        }
+
+        [Helper]
+        private async Task<IEnumerable<FileModel>> GetFiles(int userId)
+        {
+            var cacheKeyFiles = $"Profile_Files_{userId}";
+
+            var cacheFiles = await _redisCache.GetCachedData(cacheKeyFiles);
+            if (cacheFiles is null)
+            {
+                var filesDb = await _fileRepository.GetAll
+                    (query => query.Where(f => f.user_id.Equals(userId)).OrderByDescending(f => f.operation_date).Skip(0).Take(5));
+
+                await _redisCache.CacheData(cacheKeyFiles, filesDb, TimeSpan.FromMinutes(1));
+
+                return filesDb;
+            }
+            else
+                return JsonConvert.DeserializeObject<List<FileModel>>(cacheFiles);
+        }
+
+        [Helper]
+        private async Task<IEnumerable<UserModel>> GetUserList(string? username)
+        {
+            var users = await _userRepository.GetAll(query => query.Where(u => u.username.Equals(username)));
+
+            foreach (var user in users)
+            {
+                user.password = string.Empty;
+                user.email = string.Empty;
+            }
+
+            return users;
+
+            throw new ArgumentException(Message.NOT_FOUND);
+        }
+
+        [Helper]
+        private async Task<UserModel> GetUserById(int userId)
+        {
+            var user = await _userRepository.GetById(userId);
+            if (user is null)
+                throw new ArgumentException(Message.NOT_FOUND);
+
+            return user;
+        }
+
+        [AuxiliaryObject]
+        private class UserKeysObject
+        {
+            public object user { get; set; }
+            public object keys { get; set; }
+            public bool isOwner { get; set; }
         }
     }
 }

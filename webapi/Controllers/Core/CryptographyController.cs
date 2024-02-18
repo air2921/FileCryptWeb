@@ -14,6 +14,8 @@ namespace webapi.Controllers.Core
     [Authorize]
     public class CryptographyController : ControllerBase
     {
+        #region fields and constructor
+
         private readonly ICryptographyControllerBase _cryptographyController;
         private readonly ICypher _cypher;
         private readonly IUserInfo _userInfo;
@@ -34,15 +36,20 @@ namespace webapi.Controllers.Core
             _cryptographyParams = cryptographyParams;
         }
 
+        #endregion
+
         [HttpPost("{operation}")]
         [RequestSizeLimit(75 * 1024 * 1024)]
+        [ProducesResponseType(typeof(FileStreamResult), 200)]
+        [ProducesResponseType(typeof(object), 400)]
+        [ProducesResponseType(typeof(object), 415)]
+        [ProducesResponseType(typeof(object), 422)]
+        [ProducesResponseType(typeof(object), 500)]
         public async Task<IActionResult> EncryptFile([FromRoute] string type, [FromRoute] string operation, IFormFile file)
         {
             try
             {
                 var param = await _cryptographyParams.GetCryptographyParams(type, operation);
-                if (!param.IsValidRoute)
-                    return StatusCode(404);
 
                 var encryptedFile = await _cryptographyController.EncryptFile(_cypher.CypherFileAsync, param.EncryptionKey, file, _userInfo.UserId, type, operation);
                 await _redisCache.DeteteCacheByKeyPattern($"{ImmutableData.FILES_PREFIX}{_userInfo.UserId}");
