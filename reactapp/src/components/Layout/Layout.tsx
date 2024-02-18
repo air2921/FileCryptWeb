@@ -74,6 +74,12 @@ function Layout() {
             const findUsername = inputValue.substring(0, hashtagIndex);
             const findUserId = parseInt(inputValue.substring(hashtagIndex + 1), 10);
 
+            if (!isAuth) {
+                navigate('*');
+                setInputValue('');
+                return;
+            }
+
             const response = await AxiosRequest({
                 endpoint: `api/core/users/find?username=${findUsername}&userId=${findUserId ? findUserId : 0}`,
                 method: 'GET',

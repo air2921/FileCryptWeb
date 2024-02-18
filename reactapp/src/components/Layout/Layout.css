@@ -176,10 +176,10 @@
     height: 24px;
     width: 140px;
     background-color: transparent;
-    border: 1px solid #808080;
+    border: solid 0.8px #808080;
+    border-radius: 8px;
     margin-right: 5px;
     margin-top: -10px;
-    border-radius: 12px;
 }
 
     .find-input:focus {
@@ -190,14 +190,19 @@
         height: 24px;
         width: 140px;
         background-color: transparent;
-        border: 1.2px solid #f00;
+        border: 1px solid #f00;
         margin-right: 5px;
         margin-top: -10px;
-        border-radius: 12px;
+        border-radius: 8px;
     }
 
     .find-input.error:focus {
         outline: none;
+    }
+
+    .find-input::placeholder {
+        color: #808080;
+        text-indent: 6px;
     }
 
 .find-btn {

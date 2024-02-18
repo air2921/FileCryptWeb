@@ -1,4 +1,6 @@
-﻿.login {
+﻿/*Login Form*/
+
+.login {
     display: flex;
 }
 
@@ -81,30 +83,28 @@
 
     .signin-form-btn:focus,
     .signup-form-btn:focus,
-    .recovery-btn:focus {
+    .login-recovery-btn:focus {
         outline: none;
     }
 
-.recovery-btn-container {
+.login-recovery-btn-container {
     display: flex;
     padding-top: 20px;
 }
 
-.recovery-btn {
+.login-recovery-btn {
     color: #808080;
     background-color: transparent;
     text-decoration: underline;
 }
 
-    .recovery-btn:hover {
+    .login-recovery-btn:hover {
         border-color: transparent;
     }
 
-    .verify.login-form {
-        display: flex;
-        flex-direction: column;
-        width: 300px;
-    }
+    /*Login Form*/
+
+    /* Verify Form*/
 
 .verify-header {
     display: flex;
@@ -154,7 +154,6 @@
     background-color: #075ce2;
     border: 1px solid #075ce2;
     border-radius: 12px;
-    transition: background-color 0.5s ease, border-color 0.5s ease;
 }
 
     .verify-btn:focus {
@@ -167,11 +166,82 @@
     padding-top: 20px;
 }
 
-.message {
-    position: fixed;
-    bottom: 50px;
-    right: 50px;
+    /* Verify Form*/
+
+    /* Recovery Form*/
+
+.recovery-header {
+    display: flex;
+    justify-content: flex-start;
+    font-size: 18px;
+    padding-bottom: 20px;
 }
+
+.recovery-email-input {
+    width: 240px;
+    height: 24px;
+    border: solid 0.8px #808080;
+    border-radius: 6px;
+    background-color: transparent;
+    margin-bottom: 16px;
+}
+
+    .recovery-email-container::placeholder {
+        color: #808080;
+        text-indent: 6px;
+    }
+
+    .recovery-email-container:focus {
+        outline: none;
+    }
+
+.recovery-email-container {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+}
+
+.recovery-text {
+    display: flex;
+    justify-content: flex-start;
+    padding-bottom: 20px;
+}
+
+.recovery-btn-container {
+    display: flex;
+    justify-content: center;
+    padding-top: 8px;
+}
+
+.recovery-btn-submit {
+    background-color: transparent;
+    border: 1px solid #808080;
+    border-radius: 12px;
+    transition: background-color 0.5s ease, border-color 0.5s ease;
+}
+
+    .recovery-btn-submit:hover {
+        background-color: #075ce2;
+        border: 1px solid #075ce2;
+    }
+
+    .recovery-btn-submit:focus {
+        outline: none;
+    }
+
+.recovery-message {
+    display: flex;
+    justify-content: center;
+    padding-top: 20px;
+}
+
+    /* Recovery Form*/
+
+    .message {
+        position: fixed;
+        bottom: 50px;
+        right: 50px;
+    }
 
 @media only screen and (max-width: 768px) {
     .signin-form-btn,

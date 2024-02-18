@@ -23,21 +23,32 @@ const CreateRecovery = () => {
     };
 
     return (
-        <div>
-            <form onSubmit={handleSubmit}>
-                <label htmlFor="email">
-                    {email ? "Email" : "* Email"}
-                    <input
-                        type="email"
-                        id="email"
-                        required={true}
-                        value={email}
-                        onChange={(e) => setEmail(e.target.value)}
-                    />
-                </label>
-                <button type="submit">Send recovery link</button>
+        <div className="recovery-container">
+            <div className="recovery-header">
+                Recovery Account
+            </div>
+            <form className="recovery-form" onSubmit={handleSubmit}>
+                <div className="recovery-text">Enter your latest email address</div>
+                <div className="recovery-email-container">
+                    <label htmlFor="recovery-email">
+                        <input className="recovery-email-input"
+                            type="email"
+                            id="recovery-email"
+                            required={true}
+                            value={email}
+                            onChange={(e) => setEmail(e.target.value)}
+                        />
+                    </label>
+                </div>
+                <div className="recovery-btn-container">
+                    <button className="recovery-btn-submit" type="submit">Send recovery link</button>
+                </div>
             </form>
-            {message && <Message message={message} font={font} />}
+            {message &&
+                <div className="recovery-message">
+                    <Message message={message} font={font} />
+                </div>
+            }
         </div>
     );
 }
