@@ -1,7 +1,6 @@
 ﻿using Microsoft.AspNetCore.Mvc;
-using Newtonsoft.Json.Linq;
 using System.Text.RegularExpressions;
-using UAParser;
+using webapi.Attributes;
 using webapi.DB;
 using webapi.DTO;
 using webapi.Exceptions;
@@ -11,7 +10,6 @@ using webapi.Interfaces.Redis;
 using webapi.Interfaces.Services;
 using webapi.Localization;
 using webapi.Models;
-using webapi.Security;
 
 namespace webapi.Controllers.Account
 {
@@ -20,6 +18,8 @@ namespace webapi.Controllers.Account
     [ValidateAntiForgeryToken]
     public class RecoveryController : ControllerBase
     {
+        #region fields and constructor
+
         private readonly IRepository<UserModel> _userRepository;
         private readonly IRepository<NotificationModel> _notificationRepository;
         private readonly FileCryptDbContext _dbContext;
@@ -27,7 +27,6 @@ namespace webapi.Controllers.Account
         private readonly IRepository<LinkModel> _linkRepository;
         private readonly IRepository<TokenModel> _tokenRepository;
         private readonly ILogger<RecoveryController> _logger;
-        private readonly IUserAgent _userAgent;
         private readonly IEmailSender _emailSender;
         private readonly IPasswordManager _passwordManager;
         private readonly IGenerate _generate;
@@ -41,7 +40,6 @@ namespace webapi.Controllers.Account
             IRepository<LinkModel> linkRepository,
             IRepository<TokenModel> tokenRepository,
             ILogger<RecoveryController> logger,
-            IUserAgent userAgent,
             IEmailSender emailSender,
             IPasswordManager passwordManager,
             IGenerate generate,
@@ -54,14 +52,18 @@ namespace webapi.Controllers.Account
             _linkRepository = linkRepository;
             _tokenRepository = tokenRepository;
             _logger = logger;
-            _userAgent = userAgent;
             _emailSender = emailSender;
             _passwordManager = passwordManager;
             _generate = generate;
             _fileManager = fileManager;
         }
 
+        #endregion
+
         [HttpPost("unique/token")]
+        [ProducesResponseType(typeof(object), 201)]
+        [ProducesResponseType(typeof(object), 404)]
+        [ProducesResponseType(typeof(object), 500)]
         public async Task<IActionResult> RecoveryAccount([FromQuery] string email)
         {
             try
@@ -71,37 +73,9 @@ namespace webapi.Controllers.Account
                     return StatusCode(404, new { message = Message.NOT_FOUND });
 
                 string token = Guid.NewGuid().ToString("N") + Guid.NewGuid().ToString() + _generate.GenerateKey();
+                await CreateRecoveryTransaction(user, token);
+                await SendMessage(user.username, user.email, token);
 
-                var ua = _userAgent.GetBrowserData(Parser.GetDefault().Parse(HttpContext.Request.Headers["User-Agent"].ToString()));
-
-                await _emailSender.SendMessage(new EmailDto
-                {
-                    username = user.username,
-                    email = user.email,
-                    subject = EmailMessage.RecoveryAccountHeader,
-                    message = EmailMessage.RecoveryAccountBody + $"{_fileManager.GetReactAppUrl(App.REACT_LAUNCH_JSON_PATH, true)}/auth/recovery?token={token}"
-                });
-
-                await _linkRepository.Add(new LinkModel
-                {
-                    user_id = user.id,
-                    u_token = token,
-                    expiry_date = DateTime.UtcNow.AddMinutes(30),
-                    created_at = DateTime.UtcNow
-                });
-
-                await _notificationRepository.Add(new NotificationModel
-                {
-                    message_header = "Someone trying recovery your account",
-                    message = $"Someone trying recovery your account {user.username}#{user.id} at {DateTime.UtcNow} from {ua.Browser} {ua.Version} on OS {ua.OS}." +
-                    $"Qnique token was sended on {user.email}",
-                    priority = Priority.Security.ToString(),
-                    send_time = DateTime.UtcNow,
-                    is_checked = false,
-                    user_id = user.id
-                });
-
-                _logger.LogInformation($"Created new token for {user.username}#{user.id} with life time for 30 minutes");
                 await _redisCache.DeteteCacheByKeyPattern($"{ImmutableData.NOTIFICATIONS_PREFIX}{user.id}");
 
                 return StatusCode(201, new { message = Message.EMAIL_SENT });
@@ -121,6 +95,11 @@ namespace webapi.Controllers.Account
         }
 
         [HttpPost("account")]
+        [ProducesResponseType(200)]
+        [ProducesResponseType(typeof(object), 400)]
+        [ProducesResponseType(typeof(object), 404)]
+        [ProducesResponseType(typeof(object), 422)]
+        [ProducesResponseType(typeof(object), 500)]
         public async Task<IActionResult> RecoveryAccountByToken([FromQuery] string password, [FromQuery] string token)
         {
             try
@@ -135,18 +114,13 @@ namespace webapi.Controllers.Account
                 if (link.expiry_date < DateTime.UtcNow)
                 {
                     await _linkRepository.Delete(link.link_id);
-                    _logger.LogInformation("Expired token was deleted");
                     return StatusCode(422, new { message = Message.FORBIDDEN });
                 }
 
                 var user = await _userRepository.GetById(link.user_id);
                 if (user is null)
                     return StatusCode(404, new { message = Message.NOT_FOUND });
-                user.password = _passwordManager.HashingPassword(password);
-
-                var ua = _userAgent.GetBrowserData(Parser.GetDefault().Parse(HttpContext.Request.Headers["User-Agent"].ToString()));
-
-                await DbTransaction(user, token, ua);
+                await RecoveryAccountTransaction(user, token, password);
 
                 await _redisCache.DeteteCacheByKeyPattern($"{ImmutableData.NOTIFICATIONS_PREFIX}{user.id}");
                 await _redisCache.DeteteCacheByKeyPattern($"{ImmutableData.USER_DATA_PREFIX}{user.id}");
@@ -171,18 +145,20 @@ namespace webapi.Controllers.Account
             }
         }
 
-        private async Task DbTransaction(UserModel user, string token, BrowserData ua)
+        [Helper]
+        private async Task RecoveryAccountTransaction(UserModel user, string token, string password)
         {
             using var transaction = await _dbContext.Database.BeginTransactionAsync();
 
             try
             {
+                user.password = _passwordManager.HashingPassword(password);
                 await _userRepository.Update(user);
 
                 await _notificationRepository.Add(new NotificationModel
                 {
                     message_header = "Someone changed your password",
-                    message = $"Someone changed your password at {DateTime.UtcNow} from {ua.Browser} {ua.Version} on OS {ua.OS}.",
+                    message = $"Someone changed your password at {DateTime.UtcNow}.",
                     priority = Priority.Security.ToString(),
                     send_time = DateTime.UtcNow,
                     is_checked = false,
@@ -203,6 +179,65 @@ namespace webapi.Controllers.Account
             {
                 await transaction.RollbackAsync();
                 throw;
+            }
+            catch (EntityNotCreatedException)
+            {
+                await transaction.RollbackAsync();
+                throw;
+            }
+            catch (EntityNotDeletedException)
+            {
+                await transaction.RollbackAsync();
+                throw;
+            }
+        }
+
+        [Helper]
+        private async Task SendMessage(string username, string email, string token)
+        {
+            try
+            {
+                await _emailSender.SendMessage(new EmailDto
+                {
+                    username = username,
+                    email = email,
+                    subject = EmailMessage.RecoveryAccountHeader,
+                    message = EmailMessage.RecoveryAccountBody + $"{_fileManager.GetReactAppUrl(App.REACT_LAUNCH_JSON_PATH, true)}/auth/recovery?token={token}"
+                });
+            }
+            catch (SmtpClientException)
+            {
+                throw;
+            }
+        }
+
+        [Helper]
+        private async Task CreateRecoveryTransaction(UserModel user, string token)
+        {
+            using var transaction = await _dbContext.Database.BeginTransactionAsync();
+
+            try
+            {
+                await _linkRepository.Add(new LinkModel
+                {
+                    user_id = user.id,
+                    u_token = token,
+                    expiry_date = DateTime.UtcNow.AddMinutes(30),
+                    created_at = DateTime.UtcNow
+                });
+
+                await _notificationRepository.Add(new NotificationModel
+                {
+                    message_header = "Someone trying recovery your account",
+                    message = $"Someone trying recovery your account {user.username}#{user.id} at {DateTime.UtcNow}." +
+                    $"Unique token was sent on {user.email}",
+                    priority = Priority.Security.ToString(),
+                    send_time = DateTime.UtcNow,
+                    is_checked = false,
+                    user_id = user.id
+                });
+
+                await transaction.CommitAsync();
             }
             catch (EntityNotCreatedException)
             {

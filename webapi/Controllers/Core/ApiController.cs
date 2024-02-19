@@ -1,11 +1,13 @@
 ﻿using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 using Newtonsoft.Json;
+using webapi.Attributes;
 using webapi.Exceptions;
 using webapi.Helpers;
 using webapi.Interfaces;
 using webapi.Interfaces.Redis;
 using webapi.Interfaces.Services;
+using webapi.Localization;
 using webapi.Models;
 
 namespace webapi.Controllers.Core
@@ -15,6 +17,8 @@ namespace webapi.Controllers.Core
     [Authorize]
     public class ApiController : ControllerBase
     {
+        #region fields and constructor
+
         private readonly IUserInfo _userInfo;
         private readonly IRedisCache _redisCache;
         private readonly IRepository<ApiModel> _apiRepository;
@@ -29,7 +33,12 @@ namespace webapi.Controllers.Core
             _apiRepository = apiRepository;
         }
 
+        #endregion
+
         [HttpPost("{type}")]
+        [ProducesResponseType(201)]
+        [ProducesResponseType(typeof(object), 404)]
+        [ProducesResponseType(typeof(object), 500)]
         public async Task<IActionResult> CreateNewAPI([FromRoute] string type)
         {
             try
@@ -62,6 +71,9 @@ namespace webapi.Controllers.Core
         }
 
         [HttpGet("{apiId}")]
+        [ProducesResponseType(typeof(ApiModel), 200)]
+        [ProducesResponseType(typeof(object), 404)]
+        [ProducesResponseType(typeof(object), 500)]
         public async Task<IActionResult> GetAPI([FromRoute] int apiId)
         {
             try
@@ -80,7 +92,7 @@ namespace webapi.Controllers.Core
 
                 var api = await _apiRepository.GetByFilter(query => query.Where(a => a.api_id.Equals(apiId) && a.user_id.Equals(_userInfo.UserId)));
                 if (api is null)
-                    return StatusCode(404);
+                    return StatusCode(404, new { message = Message.NOT_FOUND });
 
                 apiCallLeft = await ApiCallLeftCheck(api);
                 await _redisCache.CacheData(cacheKey, api, TimeSpan.FromMinutes(5));
@@ -94,6 +106,8 @@ namespace webapi.Controllers.Core
         }
 
         [HttpGet("all")]
+        [ProducesResponseType(typeof(IEnumerable<ApiModel>), 200)]
+        [ProducesResponseType(typeof(object), 500)]
         public async Task<IActionResult> GetAllApi()
         {
             try
@@ -124,6 +138,8 @@ namespace webapi.Controllers.Core
         }
 
         [HttpDelete("revoke/{apiId}")]
+        [ProducesResponseType(204)]
+        [ProducesResponseType(typeof(object), 404)]
         public async Task<IActionResult> RevokeAPI([FromRoute] int apiId)
         {
             try
@@ -131,7 +147,7 @@ namespace webapi.Controllers.Core
                 await _apiRepository.DeleteByFilter(query => query.Where(a => a.user_id.Equals(_userInfo.UserId) || a.api_id.Equals(apiId)));
                 await _redisCache.DeteteCacheByKeyPattern($"{ImmutableData.API_PREFIX}{_userInfo.UserId}");
 
-                return StatusCode(200);
+                return StatusCode(204);
             }
             catch (EntityNotDeletedException ex)
             {
@@ -139,13 +155,14 @@ namespace webapi.Controllers.Core
             }
         }
 
+        [Helper]
         private ApiSettings SetExpireAPI(string type)
         {
             if (type.Equals(ApiType.Classic.ToString()))
-                return new ApiSettings(DateTime.UtcNow.AddDays(90), 50);
+                return new ApiSettings(DateTime.UtcNow.AddDays(90), 300);
 
             if (type.Equals(ApiType.Development.ToString()))
-                return new ApiSettings(null, 25);
+                return new ApiSettings(null, 150);
 
             if (type.Equals(ApiType.Production.ToString()))
                 return new ApiSettings(DateTime.UtcNow.AddDays(30), 1000);
@@ -153,34 +170,24 @@ namespace webapi.Controllers.Core
             throw new InvalidRouteException();
         }
 
+        [Helper]
         private async Task<int> ApiCallLeftCheck(ApiModel apiModel)
         {
             var cacheApiCallLeft = await _redisCache.GetCachedData($"{DateTime.Today.ToString("yyyy-MM-dd")}_{apiModel.api_key}");
             if (cacheApiCallLeft is not null)
-            {
                 return apiModel.max_request_of_day - JsonConvert.DeserializeObject<int>(cacheApiCallLeft);
-            }
 
             return apiModel.max_request_of_day;
         }
 
+        [Helper]
         private async Task<List<ApiObject>> GetApiData(IEnumerable<ApiModel> apiModels)
         {
             var listApiObject = new List<ApiObject>();
 
             foreach (var apiModel in apiModels)
             {
-                int requestCount = 0;
-
-                var cacheResult = await _redisCache.GetCachedData($"{DateTime.Today.ToString("yyyy-MM-dd")}_{apiModel.api_key}");
-                if (cacheResult is not null)
-                {
-                    requestCount = apiModel.max_request_of_day - JsonConvert.DeserializeObject<int>(cacheResult);
-                }
-                else
-                {
-                    requestCount = apiModel.max_request_of_day;
-                }
+                int requestCount = await ApiCallLeftCheck(apiModel);
 
                 listApiObject.Add(new ApiObject
                 {
@@ -198,20 +205,22 @@ namespace webapi.Controllers.Core
 
             return listApiObject;
         }
-    }
 
-    public record ApiSettings(DateTime? Expiry, int MaxRequest);
+        [AuxiliaryObject]
+        private class ApiObject
+        {
+            public int api_id { get; set; }
+            public string api_key { get; set; }
+            public string type { get; set; }
+            public DateTime? expiry_date { get; set; }
+            public bool is_blocked { get; set; }
+            public DateTime last_time_activity { get; set; }
+            public int max_request_of_day { get; set; }
+            public int apiCallLeft { get; set; }
+            public int user_id { get; set; }
+        }
 
-    public class ApiObject
-    {
-        public int api_id { get; set; }
-        public string api_key { get; set; }
-        public string type { get; set; }
-        public DateTime? expiry_date { get; set; }
-        public bool is_blocked { get; set; }
-        public DateTime last_time_activity { get; set; }
-        public int max_request_of_day { get; set; }
-        public int apiCallLeft { get; set; }
-        public int user_id { get; set; }
+        [AuxiliaryObject]
+        private record ApiSettings(DateTime? Expiry, int MaxRequest);
     }
 }

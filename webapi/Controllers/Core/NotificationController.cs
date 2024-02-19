@@ -7,6 +7,7 @@ using webapi.Helpers;
 using webapi.Interfaces;
 using webapi.Interfaces.Redis;
 using webapi.Interfaces.Services;
+using webapi.Localization;
 using webapi.Models;
 
 namespace webapi.Controllers.Core
@@ -16,6 +17,8 @@ namespace webapi.Controllers.Core
     [Authorize]
     public class NotificationController : ControllerBase
     {
+        #region fields and constructor
+
         private readonly IRepository<NotificationModel> _notificationRepository;
         private readonly ISorting _sorting;
         private readonly IRedisCache _redisCache;
@@ -33,7 +36,12 @@ namespace webapi.Controllers.Core
             _userInfo = userInfo;
         }
 
+        #endregion
+
         [HttpGet("{notificationId}")]
+        [ProducesResponseType(typeof(NotificationModel), 200)]
+        [ProducesResponseType(typeof(object), 404)]
+        [ProducesResponseType(typeof(object), 500)]
         public async Task<IActionResult> GetNotification([FromRoute] int notificationId)
         {
             try
@@ -48,7 +56,7 @@ namespace webapi.Controllers.Core
                     (query => query.Where(n => n.notification_id.Equals(notificationId) && n.user_id.Equals(_userInfo.UserId)));
 
                 if (notification is null)
-                    return StatusCode(404);
+                    return StatusCode(404, new { message = Message.NOT_FOUND });
 
                 await _redisCache.CacheData(cacheKey, notification, TimeSpan.FromMinutes(10));
 
@@ -61,6 +69,8 @@ namespace webapi.Controllers.Core
         }
 
         [HttpGet("all")]
+        [ProducesResponseType(typeof(IEnumerable<NotificationModel>), 200)]
+        [ProducesResponseType(typeof(object), 500)]
         public async Task<IActionResult> GetAll([FromQuery] int skip, [FromQuery] int count,
             [FromQuery] bool byDesc, [FromQuery] string? priority,
             [FromQuery] bool? isChecked)
@@ -87,6 +97,8 @@ namespace webapi.Controllers.Core
 
         [HttpDelete("{notificationId}")]
         [ValidateAntiForgeryToken]
+        [ProducesResponseType(204)]
+        [ProducesResponseType(typeof(object), 500)]
         public async Task<IActionResult> DeleteNotification([FromRoute] int notificationId)
         {
             try
@@ -94,7 +106,7 @@ namespace webapi.Controllers.Core
                 await _notificationRepository.DeleteByFilter(query => query.Where(n => n.notification_id.Equals(notificationId) && n.user_id.Equals(_userInfo.UserId)));
                 await _redisCache.DeteteCacheByKeyPattern($"{ImmutableData.NOTIFICATIONS_PREFIX}{_userInfo.UserId}");
 
-                return StatusCode(200);
+                return StatusCode(204);
             }
             catch (EntityNotDeletedException ex)
             {

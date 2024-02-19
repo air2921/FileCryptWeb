@@ -1,5 +1,7 @@
 ﻿using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
+using webapi.Attributes;
+using webapi.DB;
 using webapi.Exceptions;
 using webapi.Interfaces;
 using webapi.Localization;
@@ -11,14 +13,23 @@ namespace webapi.Controllers.Admin
     [ApiController]
     public class Admin_UserController : ControllerBase
     {
+        #region fields and constructor
+
         private readonly IRepository<UserModel> _userRepository;
         private readonly IRepository<TokenModel> _tokenRepository;
+        private readonly FileCryptDbContext _dbContext;
 
-        public Admin_UserController(IRepository<UserModel> userRepository, IRepository<TokenModel> tokenRepository)
+        public Admin_UserController(
+            IRepository<UserModel> userRepository,
+            IRepository<TokenModel> tokenRepository,
+            FileCryptDbContext dbContext)
         {
             _userRepository = userRepository;
             _tokenRepository = tokenRepository;
+            _dbContext = dbContext;
         }
+
+        #endregion
 
         [HttpGet("{userId}")]
         [Authorize(Roles = "HighestAdmin,Admin")]
@@ -75,14 +86,29 @@ namespace webapi.Controllers.Admin
                 if (target.role.Equals("HighestAdmin"))
                     return StatusCode(403, new { message = Message.FORBIDDEN });
 
+                await DbTransaction(target, block);
+                return StatusCode(200);
+            }
+            catch (EntityNotUpdatedException ex)
+            {
+                return StatusCode(500, new { message = ex.Message });
+            }
+        }
+
+        [Helper]
+        private async Task DbTransaction(UserModel target, bool block)
+        {
+            using var transaction = await _dbContext.Database.BeginTransactionAsync();
+
+            try
+            {
                 target.is_blocked = block;
                 await _userRepository.Update(target);
 
                 if (block)
                 {
-                    var targetToken = await _tokenRepository.GetByFilter(query => query.Where(t => t.user_id.Equals(userId)));
-                    if (targetToken is null)
-                        return StatusCode(404);
+                    var targetToken = await _tokenRepository.GetByFilter(query => query.Where(t => t.user_id.Equals(target.id))) ??
+                        throw new ArgumentException();
 
                     targetToken.refresh_token = Guid.NewGuid().ToString();
                     targetToken.expiry_date = DateTime.UtcNow.AddYears(-100);
@@ -90,11 +116,17 @@ namespace webapi.Controllers.Admin
                     await _tokenRepository.Update(targetToken);
                 }
 
-                return StatusCode(200);
+                await transaction.CommitAsync();
             }
-            catch (EntityNotUpdatedException ex)
+            catch (EntityNotUpdatedException)
             {
-                return StatusCode(500, new { message = ex.Message });
+                await transaction.RollbackAsync();
+                throw;
+            }
+            catch (OperationCanceledException)
+            {
+                await transaction.RollbackAsync();
+                throw new EntityNotUpdatedException();
             }
         }
 

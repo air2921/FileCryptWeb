@@ -1,6 +1,7 @@
 ﻿using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 using System.Security.Cryptography;
+using webapi.Attributes;
 using webapi.Exceptions;
 using webapi.Helpers;
 using webapi.Interfaces;
@@ -17,6 +18,8 @@ namespace webapi.Controllers.Admin
     [Authorize(Roles = "HighestAdmin")]
     public class Admin_KeyController : ControllerBase
     {
+        #region fields and constructor
+
         private readonly IRepository<KeyModel> _keyRepository;
         private readonly IRedisCache _redisCache;
         private readonly IUserInfo _userInfo;
@@ -42,43 +45,21 @@ namespace webapi.Controllers.Admin
             secretKey = Convert.FromBase64String(_configuration[App.ENCRYPTION_KEY]!);
         }
 
+        #endregion
+
         [HttpGet("all/{userId}")]
+        [ProducesResponseType(typeof(HashSet<string>), 200)]
+        [ProducesResponseType(typeof(object), 404)]
+        [ProducesResponseType(typeof(object), 500)]
         public async Task<IActionResult> AllKeys([FromRoute] int userId)
         {
             try
-            {
-                HashSet<string> decryptedKeys = new();
-
+            {        
                 var userKeys = await _keyRepository.GetByFilter(query => query.Where(k => k.user_id.Equals(userId)));
                 if (userKeys is null)
-                    return StatusCode(404);
+                    return StatusCode(404, new { message = Message.NOT_FOUND });
 
-
-                var encryptionKeys = new string?[]
-                {
-                    userKeys.private_key,
-                    userKeys.internal_key,
-                    userKeys.received_key
-                };
-
-                foreach (string? encryptedKey in encryptionKeys)
-                {
-                    try
-                    {
-                        if (encryptedKey is null)
-                            continue;
-
-                        decryptedKeys.Add(await _decryptKey.DecryptionKeyAsync(encryptedKey, secretKey));
-                    }
-                    catch (CryptographicException ex)
-                    {
-                        _logger.LogCritical(ex.ToString(), nameof(Admin_KeyController));
-                        continue;
-                    }
-                }
-
-                _logger.LogInformation($"{_userInfo.Username}#{_userInfo.UserId} get keys user#{userId}");
-                return StatusCode(200, new { keys = decryptedKeys });
+                return StatusCode(200, new { keys = await GetKeys(userKeys) });
             }
             catch (OperationCanceledException ex)
             {
@@ -88,20 +69,18 @@ namespace webapi.Controllers.Admin
 
         [HttpPut("revoke/received/{userId}")]
         [ValidateAntiForgeryToken]
+        [ProducesResponseType(typeof(object), 200)]
+        [ProducesResponseType(typeof(object), 404)]
         public async Task<IActionResult> RevokeReceivedKey([FromRoute] int userId)
         {
             try
             {
                 var keys = await _keyRepository.GetByFilter(query => query.Where(k => k.user_id.Equals(userId)));
                 if (keys is null)
-                    return StatusCode(404);
+                    return StatusCode(404, new { message = Message.NOT_FOUND });
 
-                keys.received_key = null;
-                await _keyRepository.Update(keys);
-                await _redisCache.DeleteCache("receivedKey#" + userId);
-                await _redisCache.DeteteCacheByKeyPattern($"{ImmutableData.KEYS_PREFIX}{keys.user_id}");
-
-                _logger.LogInformation($"{_userInfo.Username}#{_userInfo.UserId} revoked received key from user#{userId}");
+                await UpdateKeys(keys);
+                await UpdateCache(userId);
 
                 return StatusCode(200, new { message = Message.REMOVED });
             }
@@ -109,6 +88,58 @@ namespace webapi.Controllers.Admin
             {
                 return StatusCode(404, new { message = ex.Message });
             }
+        }
+
+        [Helper]
+        private async Task<HashSet<string>> GetKeys(KeyModel userKeys)
+        {
+            HashSet<string> decryptedKeys = new();
+
+            var encryptionKeys = new string?[]
+            {
+                userKeys.private_key,
+                userKeys.internal_key,
+                userKeys.received_key
+            };
+
+            foreach (string? encryptedKey in encryptionKeys)
+            {
+                try
+                {
+                    if (encryptedKey is null)
+                        continue;
+
+                    decryptedKeys.Add(await _decryptKey.DecryptionKeyAsync(encryptedKey, secretKey));
+                }
+                catch (CryptographicException ex)
+                {
+                    _logger.LogCritical(ex.ToString(), nameof(Admin_KeyController));
+                    continue;
+                }
+            }
+
+            return decryptedKeys;
+        }
+
+        [Helper]
+        private async Task UpdateKeys(KeyModel keys)
+        {
+            try
+            {
+                keys.received_key = null;
+                await _keyRepository.Update(keys);
+            }
+            catch (EntityNotUpdatedException)
+            {
+                throw;
+            }
+        }
+
+        [Helper]
+        private async Task UpdateCache(int userId)
+        {
+            await _redisCache.DeleteCache("receivedKey#" + userId);
+            await _redisCache.DeteteCacheByKeyPattern($"{ImmutableData.KEYS_PREFIX}{userId}");
         }
     }
 }

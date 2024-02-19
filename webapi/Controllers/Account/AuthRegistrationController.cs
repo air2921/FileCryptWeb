@@ -1,5 +1,6 @@
 ﻿using Microsoft.AspNetCore.Mvc;
 using System.Text.RegularExpressions;
+using webapi.Attributes;
 using webapi.DB;
 using webapi.DTO;
 using webapi.Exceptions;
@@ -23,6 +24,8 @@ namespace webapi.Controllers.Account
         private const string ROLE = "Role";
         private const string IS_2FA = "2FA";
         private const string CODE = "Code";
+
+        #region fields and constructor
 
         private readonly IRepository<UserModel> _userRepository;
         private readonly IRepository<KeyModel> _keyRepository;
@@ -61,7 +64,13 @@ namespace webapi.Controllers.Account
             secretKey = Convert.FromBase64String(_configuration[App.ENCRYPTION_KEY]!);
         }
 
+        #endregion
+
         [HttpPost("register")]
+        [ProducesResponseType(typeof(object), 200)]
+        [ProducesResponseType(typeof(object), 400)]
+        [ProducesResponseType(typeof(object), 409)]
+        [ProducesResponseType(typeof(object), 500)]
         public async Task<IActionResult> Registration([FromBody] RegisterDTO userDTO)
         {
             try
@@ -76,23 +85,16 @@ namespace webapi.Controllers.Account
                 if (!Regex.IsMatch(userDTO.password, Validation.Password) || !Regex.IsMatch(userDTO.username, Validation.Username))
                     return StatusCode(400, new { message = Message.INVALID_FORMAT });
 
-                string password = _passwordManager.HashingPassword(userDTO.password);
-
-                await _email.SendMessage(new EmailDto
+                await SendMessage(userDTO.username, userDTO.email, code);
+                SetSession(HttpContext, new SessionObject
                 {
-                    username = userDTO.username,
-                    email = userDTO.email,
-                    subject = EmailMessage.VerifyEmailHeader,
-                    message = EmailMessage.VerifyEmailBody + code
+                    Email = email,
+                    Password = userDTO.password,
+                    Username = userDTO.username,
+                    Role = Role.User.ToString(),
+                    Flag2Fa = userDTO.is_2fa_enabled,
+                    Code = code.ToString()
                 });
-                _logger.LogInformation($"Email was sended on {email} (1-st step)");
-
-                HttpContext.Session.SetString(EMAIL, email);
-                HttpContext.Session.SetString(PASSWORD, password);
-                HttpContext.Session.SetString(USERNAME, userDTO.username);
-                HttpContext.Session.SetString(ROLE, Role.User.ToString());
-                HttpContext.Session.SetString(IS_2FA, userDTO.is_2fa_enabled.ToString());
-                HttpContext.Session.SetString(CODE, _passwordManager.HashingPassword(code.ToString()));
 
                 return StatusCode(200, new { message = Message.EMAIL_SENT });
             }
@@ -107,27 +109,20 @@ namespace webapi.Controllers.Account
         }
 
         [HttpPost("verify")]
+        [ProducesResponseType(201)]
+        [ProducesResponseType(typeof(object), 422)]
+        [ProducesResponseType(typeof(object), 500)]
         public async Task<IActionResult> VerifyAccount([FromQuery] int code)
         {
-            string? email = HttpContext.Session.GetString(EMAIL);
-            string? password = HttpContext.Session.GetString(PASSWORD);
-            string? username = HttpContext.Session.GetString(USERNAME);
-            string? role = HttpContext.Session.GetString(ROLE);
-            string? correctCode = HttpContext.Session.GetString(CODE);
-            string? flag_2fa = HttpContext.Session.GetString(IS_2FA);
-
-            if (email is null || password is null || username is null || role is null || correctCode is null || flag_2fa is null)
-                return StatusCode(422, new { message = Message.ERROR });
-
-            _logger.LogInformation("User data was succesfully received from session (not null anything)");
-
             try
             {
-                bool IsCorrect = _passwordManager.CheckPassword(code.ToString(), correctCode);
+                var session = GetSession(HttpContext);
+
+                bool IsCorrect = _passwordManager.CheckPassword(code.ToString(), session.Code);
                 if (!IsCorrect)
                     return StatusCode(422, new { message = Message.INCORRECT });
 
-                await DbTransaction(email, password, username, role, bool.Parse(flag_2fa));
+                await DbTransaction(session.Email, session.Password, session.Username, session.Role, session.Flag2Fa);
 
                 return StatusCode(201);
             }
@@ -135,13 +130,13 @@ namespace webapi.Controllers.Account
             {
                 return StatusCode(500, new { message = ex.Message });
             }
-            finally
+            catch (ArgumentNullException ex)
             {
-                HttpContext.Session.Clear();
-                _logger.LogInformation("User data deleted from session");
+                return StatusCode(500, new { message = ex.Message });
             }
         }
 
+        [Helper]
         private async Task DbTransaction(string email, string password, string username, string role, bool flag2fa)
         {
             using var transaction = await _dbContext.Database.BeginTransactionAsync();
@@ -177,6 +172,72 @@ namespace webapi.Controllers.Account
                 await transaction.RollbackAsync();
                 throw;
             }
+        }
+
+        [Helper]
+        private async Task SendMessage(string username, string email, int code)
+        {
+            try
+            {
+                await _email.SendMessage(new EmailDto
+                {
+                    username = username,
+                    email = email,
+                    subject = EmailMessage.VerifyEmailHeader,
+                    message = EmailMessage.VerifyEmailBody + code
+                });
+            }
+            catch (SmtpClientException)
+            {
+                throw;
+            }
+        }
+
+        [Helper]
+        private void SetSession(HttpContext context, SessionObject session)
+        {
+            context.Session.SetString(EMAIL, session.Email);
+            context.Session.SetString(PASSWORD, _passwordManager.HashingPassword(session.Password));
+            context.Session.SetString(USERNAME, session.Username);
+            context.Session.SetString(ROLE, session.Role);
+            context.Session.SetString(IS_2FA, session.Flag2Fa.ToString());
+            context.Session.SetString(CODE, _passwordManager.HashingPassword(session.Code));
+        }
+
+        [Helper]
+        private SessionObject GetSession(HttpContext context)
+        {
+            string? email = context.Session.GetString(EMAIL);
+            string? password = context.Session.GetString(PASSWORD);
+            string? username = context.Session.GetString(USERNAME);
+            string? role = context.Session.GetString(ROLE);
+            string? correctCode = context.Session.GetString(CODE);
+            string? flag_2fa = context.Session.GetString(IS_2FA);
+
+            if (email is null || password is null || username is null || role is null || correctCode is null || flag_2fa is null)
+                throw new ArgumentNullException(Message.ERROR);
+
+            return new SessionObject 
+            { 
+                Email = email,
+                Password = password,
+                Username = username,
+                Role = role,
+                Flag2Fa = bool.Parse(flag_2fa),
+                Code = correctCode
+            };
+        }
+
+        [AuxiliaryObject]
+        private class SessionObject
+        {
+            public string Email { get; set; }
+            public string Password { get; set; }
+            public string Username { get; set; }
+            public string Role { get; set; }
+            public bool Flag2Fa { get; set; }
+            public string Code { get; set; }
+
         }
     }
 }

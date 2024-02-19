@@ -5,6 +5,7 @@ using webapi.Exceptions;
 using webapi.Helpers;
 using webapi.Interfaces;
 using webapi.Interfaces.Redis;
+using webapi.Localization;
 using webapi.Models;
 
 namespace webapi.Controllers.Admin
@@ -14,6 +15,8 @@ namespace webapi.Controllers.Admin
     [Authorize(Roles = "HighestAdmin,Admin")]
     public class Admin_OfferController : ControllerBase
     {
+        #region fields and constructor
+
         private readonly IRepository<OfferModel> _offerRepository;
         private readonly IRedisCache _redisCache;
         private readonly ISorting _sorting;
@@ -25,14 +28,19 @@ namespace webapi.Controllers.Admin
             _sorting = sorting;
         }
 
+        #endregion
+
         [HttpGet("{offerId}")]
+        [ProducesResponseType(typeof(OfferModel), 200)]
+        [ProducesResponseType(typeof(object), 404)]
+        [ProducesResponseType(typeof(object), 500)]
         public async Task<IActionResult> GetOffer([FromRoute] int offerId)
         {
             try
             {
                 var offer = await _offerRepository.GetById(offerId);
                 if (offer is null)
-                    return StatusCode(404);
+                    return StatusCode(404, new { message = Message.NOT_FOUND });
 
                 return StatusCode(200, new { offer });
             }
@@ -43,6 +51,8 @@ namespace webapi.Controllers.Admin
         }
 
         [HttpGet("many")]
+        [ProducesResponseType(typeof(IEnumerable<OfferModel>), 200)]
+        [ProducesResponseType(typeof(object), 500)]
         public async Task<IActionResult> GetRangeOffers([FromQuery] int? userId, [FromQuery] int skip, [FromQuery] int count,
             [FromQuery] bool byDesc, [FromQuery] bool? sended,
             [FromQuery] bool? isAccepted, [FromQuery] string? type)
@@ -60,6 +70,8 @@ namespace webapi.Controllers.Admin
 
         [HttpDelete("{offerId}")]
         [ValidateAntiForgeryToken]
+        [ProducesResponseType(204)]
+        [ProducesResponseType(typeof(object), 500)]
         public async Task<IActionResult> DeleteOffer([FromRoute] int offerId)
         {
             try
@@ -81,6 +93,8 @@ namespace webapi.Controllers.Admin
 
         [HttpDelete("many")]
         [ValidateAntiForgeryToken]
+        [ProducesResponseType(204)]
+        [ProducesResponseType(typeof(object), 500)]
         public async Task<IActionResult> DeleteRangeOffers([FromBody] IEnumerable<int> identifiers)
         {
             try

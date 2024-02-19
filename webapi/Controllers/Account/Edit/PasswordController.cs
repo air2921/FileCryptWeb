@@ -1,8 +1,8 @@
 ﻿using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
-using Microsoft.VisualBasic;
 using System.Text.RegularExpressions;
-using UAParser;
+using webapi.Attributes;
+using webapi.DB;
 using webapi.DTO;
 using webapi.Exceptions;
 using webapi.Helpers;
@@ -20,36 +20,42 @@ namespace webapi.Controllers.Account.Edit
     [ValidateAntiForgeryToken]
     public class PasswordController : ControllerBase
     {
+        #region fields and contructor
+
         private readonly IRepository<UserModel> _userRepository;
         private readonly IRepository<NotificationModel> _notificationRepository;
+        private readonly FileCryptDbContext _dbContext;
         private readonly IRedisCache _redisCache;
-        private readonly IUserAgent _userAgent;
         private readonly ILogger<PasswordController> _logger;
         private readonly IPasswordManager _passwordManager;
-        private readonly ITokenService _tokenService;
         private readonly IUserInfo _userInfo;
 
         public PasswordController(
             IRepository<UserModel> userRepository,
             IRepository<NotificationModel> notificationRepository,
+            FileCryptDbContext dbContext,
             IRedisCache redisCache,
-            IUserAgent userAgent,
             ILogger<PasswordController> logger,
             IPasswordManager passwordManager,
-            ITokenService tokenService,
             IUserInfo userInfo)
         {
             _userRepository = userRepository;
             _notificationRepository = notificationRepository;
+            _dbContext = dbContext;
             _redisCache = redisCache;
-            _userAgent = userAgent;
             _logger = logger;
             _passwordManager = passwordManager;
-            _tokenService = tokenService;
             _userInfo = userInfo;
         }
 
+        #endregion
+
         [HttpPut]
+        [ProducesResponseType(typeof(object), 200)]
+        [ProducesResponseType(typeof(object), 422)]
+        [ProducesResponseType(typeof(object), 404)]
+        [ProducesResponseType(typeof(object), 401)]
+        [ProducesResponseType(typeof(object), 500)]
         public async Task<IActionResult> UpdatePassword([FromBody] PasswordDTO passwordDto)
         {
             try
@@ -65,24 +71,8 @@ namespace webapi.Controllers.Account.Edit
                 if (!IsCorrect)
                     return StatusCode(401, new { message = Message.INCORRECT });
 
-                user.password = _passwordManager.HashingPassword(passwordDto.NewPassword);
-                await _userRepository.Update(user);
-
-                var clientInfo = Parser.GetDefault().Parse(HttpContext.Request.Headers["User-Agent"].ToString());
-                var ua = _userAgent.GetBrowserData(clientInfo);
-
-                await _notificationRepository.Add(new NotificationModel
-                {
-                    message_header = "Someone changed your password",
-                    message = $"Someone changed your password at {DateTime.UtcNow} from {ua.Browser}   {ua.Version} on OS {ua.OS}.",
-                    priority = Priority.Security.ToString(),
-                    send_time = DateTime.UtcNow,
-                    is_checked = false,
-                    user_id = _userInfo.UserId
-                });
-
-                await _redisCache.DeteteCacheByKeyPattern($"{ImmutableData.NOTIFICATIONS_PREFIX}{_userInfo.UserId}");
-                await _redisCache.DeteteCacheByKeyPattern($"{ImmutableData.USER_DATA_PREFIX}{_userInfo.UserId}");
+                await DbTransaction(user, passwordDto.NewPassword);
+                await ClearData();
 
                 return StatusCode(200, new { message = Message.UPDATED });
             }
@@ -98,6 +88,46 @@ namespace webapi.Controllers.Account.Edit
             {
                 return StatusCode(500, new { message = ex.Message });
             }
+        }
+
+        [Helper]
+        private async Task DbTransaction(UserModel user, string password)
+        {
+            using var transaction = await _dbContext.Database.BeginTransactionAsync();
+            try
+            {
+                user.password = _passwordManager.HashingPassword(password);
+                await _userRepository.Update(user);
+
+                await _notificationRepository.Add(new NotificationModel
+                {
+                    message_header = "Someone changed your password",
+                    message = $"Someone changed your password at {DateTime.UtcNow}.",
+                    priority = Priority.Security.ToString(),
+                    send_time = DateTime.UtcNow,
+                    is_checked = false,
+                    user_id = _userInfo.UserId
+                });
+
+                await transaction.CommitAsync();
+            }
+            catch (EntityNotUpdatedException)
+            {
+                await transaction.RollbackAsync();
+                throw;
+            }
+            catch (EntityNotCreatedException)
+            {
+                await transaction.RollbackAsync();
+                throw;
+            }
+        }
+
+        [Helper]
+        private async Task ClearData()
+        {
+            await _redisCache.DeteteCacheByKeyPattern($"{ImmutableData.NOTIFICATIONS_PREFIX}{_userInfo.UserId}");
+            await _redisCache.DeteteCacheByKeyPattern($"{ImmutableData.USER_DATA_PREFIX}{_userInfo.UserId}");
         }
     }
 }

@@ -17,6 +17,8 @@ namespace webapi.Controllers.Core
     [Authorize]
     public class FileController : ControllerBase
     {
+        #region fields and constructor
+
         private readonly IRepository<FileModel> _fileRepository;
         private readonly ISorting _sorting;
         private readonly IRedisCache _redisCache;
@@ -34,8 +36,12 @@ namespace webapi.Controllers.Core
             _userInfo = userInfo;
         }
 
+        #endregion
+
         [HttpDelete("{fileId}")]
         [ValidateAntiForgeryToken]
+        [ProducesResponseType(204)]
+        [ProducesResponseType(typeof(object), 500)]
         public async Task<IActionResult> DeleteFileFromHistory([FromRoute] int fileId)
         {
             try
@@ -52,6 +58,9 @@ namespace webapi.Controllers.Core
         }
 
         [HttpGet("{fileId}")]
+        [ProducesResponseType(typeof(FileModel), 200)]
+        [ProducesResponseType(typeof(object), 404)]
+        [ProducesResponseType(typeof(object), 500)]
         public async Task<IActionResult> GetOneFile([FromRoute] int fileId)
         {
             try
@@ -64,7 +73,7 @@ namespace webapi.Controllers.Core
 
                 var file = await _fileRepository.GetByFilter(query => query.Where(f => f.file_id.Equals(fileId) && f.user_id.Equals(_userInfo.UserId)));
                 if (file is null)
-                    return StatusCode(404);
+                    return StatusCode(404, new { message = Message.NOT_FOUND });
 
                 await _redisCache.CacheData(cacheKey, file, TimeSpan.FromMinutes(5));
 
@@ -77,6 +86,8 @@ namespace webapi.Controllers.Core
         }
 
         [HttpGet("all")]
+        [ProducesResponseType(typeof(IEnumerable<FileModel>), 200)]
+        [ProducesResponseType(typeof(object), 500)]
         public async Task<IActionResult> GetAllFiles([FromQuery] int skip, [FromQuery] int count,
             [FromQuery] bool byDesc, [FromQuery] string? type, [FromQuery] string? category, [FromQuery] string? mime)
         {

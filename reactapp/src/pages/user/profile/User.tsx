@@ -21,6 +21,7 @@ const User = () => {
         if (response.isSuccess) {
             setUserData(response.data);
             setStatusCode(true);
+            console.log(response.data);
         }
         else {
             if (response.statusCode === 404) {

@@ -5,6 +5,7 @@ using Newtonsoft.Json;
 using webapi.Interfaces.Controllers;
 using webapi.Interfaces;
 using webapi.Helpers;
+using webapi.Exceptions;
 
 namespace webapi.Controllers.Base.CryptographyUtils
 {
@@ -14,6 +15,8 @@ namespace webapi.Controllers.Base.CryptographyUtils
         private readonly string internalType = FileType.Internal.ToString().ToLowerInvariant();
         private readonly string receivedType = FileType.Received.ToString().ToLowerInvariant();
         private const int TASK_AWAITING = 10000;
+
+        #region fields and constructor
 
         private readonly IRepository<FileModel> _fileRepository;
         private readonly IRepository<FileMimeModel> _mimeRepository;
@@ -37,6 +40,8 @@ namespace webapi.Controllers.Base.CryptographyUtils
             _redisCache = redisCache;
             _logger = logger;
         }
+
+        #endregion
 
         public bool CheckFileType(string type)
         {
@@ -121,19 +126,6 @@ namespace webapi.Controllers.Base.CryptographyUtils
             await file.CopyToAsync(stream);
         }
 
-        public async Task DeleteFile(string filePath)
-        {
-            try
-            {
-                if (File.Exists(filePath))
-                    await Task.Run(() => File.Delete(filePath));
-            }
-            catch (Exception ex)
-            {
-                _logger.LogError(ex.ToString());
-            }
-        }
-
         public string GetFileCategory(string contentType)
         {
             switch (contentType.Split('/')[0])
@@ -163,15 +155,22 @@ namespace webapi.Controllers.Base.CryptographyUtils
 
         public async Task CreateFile(int userID, string uniqueFileName, string mime, string mimeCategory, string fileType)
         {
-            await _fileRepository.Add(new FileModel
+            try
             {
-                user_id = userID,
-                file_name = uniqueFileName,
-                file_mime = mime,
-                file_mime_category = mimeCategory,
-                operation_date = DateTime.UtcNow,
-                type = fileType,
-            });
+                await _fileRepository.Add(new FileModel
+                {
+                    user_id = userID,
+                    file_name = uniqueFileName,
+                    file_mime = mime,
+                    file_mime_category = mimeCategory,
+                    operation_date = DateTime.UtcNow,
+                    type = fileType,
+                });
+            }
+            catch (EntityNotCreatedException)
+            {
+                throw;
+            }
         }
     }
 }

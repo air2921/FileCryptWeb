@@ -5,6 +5,7 @@ using webapi.Exceptions;
 using webapi.Helpers;
 using webapi.Interfaces;
 using webapi.Interfaces.Redis;
+using webapi.Localization;
 using webapi.Models;
 
 namespace webapi.Controllers.Admin
@@ -14,6 +15,8 @@ namespace webapi.Controllers.Admin
     [Authorize(Roles = "HighestAdmin,Admin")]
     public class Admin_NotificationController : ControllerBase
     {
+        #region fields and constructor
+
         private readonly IRepository<NotificationModel> _notificationRepository;
         private readonly IRedisCache _redisCache;
         private readonly ISorting _sorting;
@@ -25,14 +28,19 @@ namespace webapi.Controllers.Admin
             _sorting = sorting;
         }
 
+        #endregion
+
         [HttpGet("{notificationId}")]
+        [ProducesResponseType(typeof(NotificationModel), 200)]
+        [ProducesResponseType(typeof(object), 404)]
+        [ProducesResponseType(typeof(object), 500)]
         public async Task<IActionResult> GetNotification([FromRoute] int notificationId)
         {
             try
             {
                 var notification = await _notificationRepository.GetById(notificationId);
                 if (notification is null)
-                    return StatusCode(404);
+                    return StatusCode(404, new { message = Message.NOT_FOUND });
 
                 return StatusCode(200, new { notification });
             }
@@ -43,6 +51,8 @@ namespace webapi.Controllers.Admin
         }
 
         [HttpGet("many")]
+        [ProducesResponseType(typeof(IEnumerable<NotificationModel>), 200)]
+        [ProducesResponseType(typeof(object), 500)]
         public async Task<IActionResult> GetRangeNotification([FromQuery] int? userId, [FromQuery] int? skip, [FromQuery] int? count, bool byDesc)
         {
             try
@@ -58,6 +68,8 @@ namespace webapi.Controllers.Admin
 
         [HttpDelete("{notificationId}")]
         [ValidateAntiForgeryToken]
+        [ProducesResponseType(204)]
+        [ProducesResponseType(typeof(object), 500)]
         public async Task<IActionResult> DeleteNotification([FromRoute] int notificationId)
         {
             try
@@ -76,6 +88,8 @@ namespace webapi.Controllers.Admin
 
         [HttpDelete("many")]
         [ValidateAntiForgeryToken]
+        [ProducesResponseType(204)]
+        [ProducesResponseType(typeof(object), 500)]
         public async Task<IActionResult> DeleteRangeNotifications([FromBody] IEnumerable<int> identifiers)
         {
             try

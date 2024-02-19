@@ -93,7 +93,7 @@ function Layout() {
             }
 
             if (response.statusCode === 200) {
-                navigate(`/user/${response.data.id}/${response.data.username}`);
+                navigate(`/user/${response.data.user.id}/${response.data.user.username}`);
                 setInputValue('');
             }
         }
