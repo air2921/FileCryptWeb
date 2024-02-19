@@ -21,7 +21,6 @@ namespace webapi.DB
 
         protected override void OnModelCreating(ModelBuilder modelBuilder)
         {
-
             #region Has one with one
 
             modelBuilder.Entity<UserModel>()

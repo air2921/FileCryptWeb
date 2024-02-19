@@ -12,6 +12,8 @@ namespace webapi.Controllers.Admin
     [ValidateAntiForgeryToken]
     public class AppController : ControllerBase
     {
+        #region fields and constructor
+
         private readonly IUserInfo _userInfo;
         private readonly ILogger<AppController> _logger;
         private readonly IRedisCache _redisCache;
@@ -23,7 +25,10 @@ namespace webapi.Controllers.Admin
             _redisCache = redisCache;
         }
 
+        #endregion
+
         [HttpPut("freeze")]
+        [ProducesResponseType(typeof(object), 200)]
         public async Task<IActionResult> FreezeService([FromQuery] bool flag, [FromBody] TimeSpan? time)
         {
             if (flag && time.HasValue)

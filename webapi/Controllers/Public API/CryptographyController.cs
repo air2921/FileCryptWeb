@@ -18,6 +18,8 @@ namespace webapi.Controllers.Public_API
     [Route("api/public/cryptography/{type}")]
     public class CryptographyController : ControllerBase
     {
+        #region fields and constructor
+
         private readonly IRepository<ApiModel> _apiRepository;
         private readonly ICryptographyControllerBase _cryptographyController;
         private readonly IRedisCache _redisCache;
@@ -34,6 +36,8 @@ namespace webapi.Controllers.Public_API
             _redisCache = redisCache;
             _cypher = cypher;
         }
+
+        #endregion
 
         [HttpPost("{operation}")]
         [RequestSizeLimit(75 * 1024 * 1024)]

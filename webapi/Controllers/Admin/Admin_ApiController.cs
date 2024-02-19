@@ -4,6 +4,7 @@ using webapi.Exceptions;
 using webapi.Helpers;
 using webapi.Interfaces;
 using webapi.Interfaces.Redis;
+using webapi.Localization;
 using webapi.Models;
 
 namespace webapi.Controllers.Admin
@@ -13,6 +14,8 @@ namespace webapi.Controllers.Admin
     [Authorize(Roles = "HighestAdmin,Admin")]
     public class Admin_ApiController : ControllerBase
     {
+        #region fields and constructor
+
         private readonly IRepository<ApiModel> _apiRepository;
         private readonly IRedisCache _redisCache;
 
@@ -22,7 +25,12 @@ namespace webapi.Controllers.Admin
             _redisCache = redisCache;
         }
 
+        #endregion
+
         [HttpGet]
+        [ProducesResponseType(typeof(ApiModel), 200)]
+        [ProducesResponseType(typeof(object), 404)]
+        [ProducesResponseType(typeof(object), 500)]
         public async Task<IActionResult> GetApi([FromQuery] int? apiId, [FromQuery] string? key)
         {
             try
@@ -39,7 +47,7 @@ namespace webapi.Controllers.Admin
                 }
 
                 if (api is null)
-                    return StatusCode(404);
+                    return StatusCode(404, new { message = Message.NOT_FOUND });
 
                 return StatusCode(200, new { api });
             }
@@ -50,6 +58,8 @@ namespace webapi.Controllers.Admin
         }
 
         [HttpGet("many")]
+        [ProducesResponseType(typeof(IEnumerable<ApiModel>), 200)]
+        [ProducesResponseType(typeof(object), 500)]
         public async Task<IActionResult> GetRangeApi([FromQuery] int userId)
         {
             try
@@ -65,6 +75,8 @@ namespace webapi.Controllers.Admin
 
         [HttpDelete("{apiId}")]
         [ValidateAntiForgeryToken]
+        [ProducesResponseType(204)]
+        [ProducesResponseType(typeof(object), 500)]
         public async Task<IActionResult> DeleteApi([FromRoute] int apiId)
         {
             try
@@ -83,6 +95,8 @@ namespace webapi.Controllers.Admin
 
         [HttpDelete("many")]
         [ValidateAntiForgeryToken]
+        [ProducesResponseType(204)]
+        [ProducesResponseType(typeof(object), 500)]
         public async Task<IActionResult> DeleteRangeApi([FromBody] IEnumerable<int> identifiers)
         {
             try

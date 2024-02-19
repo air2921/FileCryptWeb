@@ -85,8 +85,7 @@ namespace webapi.Controllers.Account
                 if (user.is_blocked)
                     return StatusCode(403, new { message = Message.BLOCKED });
 
-                bool IsCorrect = _passwordManager.CheckPassword(userDTO.password, user.password!);
-                if (!IsCorrect)
+                if (!_passwordManager.CheckPassword(userDTO.password, user.password))
                     return StatusCode(401, new { message = Message.INCORRECT });
 
                 if (!user.is_2fa_enabled)
@@ -293,7 +292,6 @@ namespace webapi.Controllers.Account
             }
             catch (EntityNotUpdatedException ex)
             {
-                _tokenService.DeleteTokens();
                 return StatusCode(404, new { message = ex.Message });
             }
             catch (OperationCanceledException ex)

@@ -99,12 +99,16 @@ namespace webapi.Controllers.Base
             {
                 return StatusCode(422, new { message = ex.Message });
             }
+            catch (EntityNotCreatedException ex)
+            {
+                return StatusCode(500, new { message = ex.Message });
+            }
             catch (InvalidOperationException ex)
             {
                 try
                 {
-                    await _fileService.DeleteFile(filePath);
-                    await _fileService.DeleteFile($"{filePath}.tmp");
+                    System.IO.File.Delete(filePath);
+                    System.IO.File.Delete($"{filePath}.tmp");
 
                     return StatusCode(422, new { message = ex.Message });
                 }
