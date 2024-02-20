@@ -33,13 +33,16 @@ namespace webapi.Controllers.Admin
 
         [HttpGet("{userId}")]
         [Authorize(Roles = "HighestAdmin,Admin")]
+        [ProducesResponseType(typeof(object), 200)]
+        [ProducesResponseType(typeof(object), 404)]
+        [ProducesResponseType(typeof(object), 500)]
         public async Task<IActionResult> GetUser([FromRoute] int userId)
         {
             try
             {
                 var user = await _userRepository.GetById(userId);
                 if (user is null)
-                    return StatusCode(404);
+                    return StatusCode(404, new { message = Message.NOT_FOUND });
 
                 return StatusCode(200, new { user });
             }
@@ -52,13 +55,17 @@ namespace webapi.Controllers.Admin
         [HttpDelete("{userId}")]
         [ValidateAntiForgeryToken]
         [Authorize(Roles = "HighestAdmin")]
+        [ProducesResponseType(204)]
+        [ProducesResponseType(typeof(object), 404)]
+        [ProducesResponseType(typeof(object), 403)]
+        [ProducesResponseType(typeof(object), 500)]
         public async Task<IActionResult> DeleteUser([FromRoute] int userId)
         {
             try
             {
                 var target = await _userRepository.GetById(userId);
                 if (target is null)
-                    return StatusCode(404);
+                    return StatusCode(404, new { message = Message.NOT_FOUND });
 
                 if (target.role.Equals("HighestAdmin"))
                     return StatusCode(403, new { message = Message.FORBIDDEN });
@@ -75,19 +82,55 @@ namespace webapi.Controllers.Admin
         [HttpPut("block/{userId}")]
         [ValidateAntiForgeryToken]
         [Authorize(Roles = "HighestAdmin")]
+        [ProducesResponseType(typeof(object), 200)]
+        [ProducesResponseType(typeof(object), 404)]
+        [ProducesResponseType(typeof(object), 403)]
+        [ProducesResponseType(typeof(object), 500)]
         public async Task<IActionResult> BlockUser([FromRoute] int userId, [FromQuery] bool block)
         {
             try
             {
                 var target = await _userRepository.GetById(userId);
                 if (target is null)
-                    return StatusCode(404);
+                    return StatusCode(404, new { message = Message.NOT_FOUND });
 
                 if (target.role.Equals("HighestAdmin"))
                     return StatusCode(403, new { message = Message.FORBIDDEN });
 
                 await DbTransaction(target, block);
-                return StatusCode(200);
+                return StatusCode(200, new { message = Message.UPDATED });
+            }
+            catch (EntityNotUpdatedException ex)
+            {
+                return StatusCode(500, new { message = ex.Message });
+            }
+        }
+
+        [HttpPut("role/{userId}")]
+        [ValidateAntiForgeryToken]
+        [Authorize(Roles = "HighestAdmin")]
+        [ProducesResponseType(typeof(object), 200)]
+        [ProducesResponseType(typeof(object), 404)]
+        [ProducesResponseType(typeof(object), 403)]
+        [ProducesResponseType(typeof(object), 500)]
+        public async Task<IActionResult> UpdateRole([FromRoute] int userId, [FromQuery] string role)
+        {
+            try
+            {
+                if (role.Equals("HighestAdmin"))
+                    return StatusCode(403, new { message = Message.FORBIDDEN });
+
+                var target = await _userRepository.GetById(userId);
+                if (target is null)
+                    return StatusCode(404, new { message = Message.NOT_FOUND });
+
+                if (target.role.Equals("HighestAdmin"))
+                    return StatusCode(403, new { message = Message.FORBIDDEN });
+
+                target.role = role;
+                await _userRepository.Update(target);
+
+                return StatusCode(200, new { message = Message.UPDATED });
             }
             catch (EntityNotUpdatedException ex)
             {
@@ -128,27 +171,6 @@ namespace webapi.Controllers.Admin
                 await transaction.RollbackAsync();
                 throw new EntityNotUpdatedException();
             }
-        }
-
-        [HttpPut("role/{userId}")]
-        [ValidateAntiForgeryToken]
-        [Authorize(Roles = "HighestAdmin")]
-        public async Task<IActionResult> UpdateRole([FromRoute] int userId, [FromQuery] string role)
-        {
-            if (role.Equals("HighestAdmin"))
-                return StatusCode(403);
-
-            var target = await _userRepository.GetById(userId);
-            if (target is null)
-                return StatusCode(404);
-
-            if (target.role.Equals("HighestAdmin"))
-                return StatusCode(403, new { message = Message.FORBIDDEN });
-
-            target.role = role;
-            await _userRepository.Update(target);
-
-            return StatusCode(204);
         }
     }
 }
