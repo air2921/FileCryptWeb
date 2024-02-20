@@ -38,7 +38,6 @@ const Login = () => {
 
     const Verify = () => {
         const [code, setCode] = useState<number>();
-        const [errorVerificationMessage, setVerificationErrorMessage] = useState('');
 
         const handleSubmit = async (e: FormEvent) => {
             e.preventDefault();
@@ -49,10 +48,10 @@ const Login = () => {
                 navigate('/');
             }
             else {
-                setVerificationErrorMessage(response.data);
+                setErrorMessage(response.data);
 
                 setTimeout(() => {
-                    setVerificationErrorMessage('');
+                    setErrorMessage('');
                 }, 5000)
             }
         };
@@ -91,11 +90,6 @@ const Login = () => {
                         <button className="verify-btn" type="submit">Verify</button>
                     </div>
                 </form>
-                {errorVerificationMessage &&
-                    <div className="verify-message">
-                        <Message message={errorVerificationMessage} font='error' />
-                    </div>
-                }
             </div>
         );
     }
