@@ -34,6 +34,10 @@ const Register = () => {
         }
         else {
             setErrorMessage(response.data);
+
+            setTimeout(() => {
+                setErrorMessage('');
+            }, 5000)
         }
     };
 
@@ -43,7 +47,6 @@ const Register = () => {
 
     const Verify = () => {
         const [code, setCode] = useState<number>();
-        const [errorVerificationMessage, setVerificationErrorMessage] = useState('');
 
         const handleSubmit = async (e: FormEvent) => {
             e.preventDefault();
@@ -54,7 +57,11 @@ const Register = () => {
                 navigate('/');
             }
             else {
-                setVerificationErrorMessage(response.data);
+                setErrorMessage(response.data);
+
+                setTimeout(() => {
+                    setErrorMessage('');
+                }, 5000)
             }
         };
 
@@ -92,11 +99,6 @@ const Register = () => {
                         <button className="verification-btn" type="submit">Verify</button>
                     </div>
                 </form>
-                {errorVerificationMessage &&
-                    <div className="verification-message">
-                        <Message message={errorVerificationMessage} font='error' />
-                    </div>
-                }
             </div>
         );
     }
@@ -164,15 +166,13 @@ const Register = () => {
                         <button className="registration-form-btn" type="submit">Continue</button>
                     </div>
                 </form>
-                {errorMessage &&
-                    <div className="verification-message">
-                        <Message message={errorMessage} font='error' />
-                    </div>
-                }
             </div>
             <Modal isActive={successStatusCode} setActive={setStatusCode}>
                 <Verify />
             </Modal>
+            <div className="message">
+                {errorMessage && <Message message={errorMessage} font='error' />}
+            </div>
         </div>
     );
 }
