@@ -58,10 +58,10 @@
         outline: none;
     }
 
-    .auth-container {
-        display: flex;
-        padding-bottom: 20px;
-    }
+.auth-container {
+    display: flex;
+    padding-bottom: 20px;
+}
 
 .signin-form-btn,
 .signup-form-btn {
@@ -253,5 +253,11 @@
         width: calc(50% - 5px);
         max-width: 240px;
         margin: 0 5px;
+    }
+
+    .login-header {
+        padding-bottom: 20px;
+        align-items: center;
+        font-size: 18px
     }
 }

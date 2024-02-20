@@ -1,0 +1,99 @@
+.registration {
+    display: flex;
+}
+
+.registration-container {
+    position: fixed;
+    top: 20%;
+    left: 50%;
+    transform: translateX(-50%);
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+}
+
+.registration-header {
+    padding-bottom: 20px;
+    align-items: center;
+    font-size: 24px
+}
+
+.registration-form {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    width: 300px;
+}
+
+.registration-input-container {
+    margin-top: 16px;
+}
+
+.email-text,
+.password-text
+.username-text,
+.twoFa-text {
+    font-size: 14px;
+}
+
+.email-input,
+.password-input,
+.username-input {
+    width: 240px;
+    height: 24px;
+    border: solid 0.8px #808080;
+    border-radius: 6px;
+    background-color: transparent;
+    margin-bottom: 16px;
+}
+
+    .email-input::placeholder,
+    .password-input::placeholder,
+    .username-input::placeholder {
+        color: #808080;
+        text-indent: 6px;
+    }
+
+    .email-input:focus,
+    .password-input:focus,
+    .username-input:focus {
+        outline: none;
+    }
+
+.twoFa-input {
+    margin-bottom: 16px;
+}
+
+.registration-form-btn-container {
+    display: flex;
+    padding-bottom: 20px;
+}
+
+.registration-form-btn {
+    background-color: transparent;
+    border: solid 1px #808080;
+    border-radius: 12px;
+    transition: background-color 0.5s ease, border-color 0.5s ease;
+    flex-grow: 1;
+    width: calc(50% - 5px);
+    max-width: 240px;
+    margin: 0 5px;
+}
+
+    .registration-form-btn:hover {
+        background-color: #075ce2;
+        border: 1px solid #075ce2;
+    }
+
+    .registration-form-btn:focus {
+        outline: none;
+    }
+
+@media only screen and (max-width: 768px) {
+    .registration-header {
+        padding-bottom: 20px;
+        align-items: center;
+        font-size: 18px
+    }
+}
