@@ -1,10 +1,10 @@
 import React, { ChangeEvent, FormEvent, useEffect, useState } from 'react';
-import UserData from '../../../components/User/UserData';
-import Font from '../../../utils/helpers/icon/Font';
-import Modal from '../../../components/Modal/Modal';
-import UserKeys from '../../../components/User/UserKeys';
-import Message from '../../../utils/helpers/message/Message';
-import AxiosRequest from '../../../utils/api/AxiosRequest';
+import Font from '../../utils/helpers/icon/Font';
+import Modal from '../../components/Modal/Modal';
+import UserKeys from '../../components/User/UserKeys';
+import Message from '../../utils/helpers/message/Message';
+import AxiosRequest from '../../utils/api/AxiosRequest';
+import UserData from '../../components/User/UserData';
 
 interface TwoFaProps {
     is_enabled_2fa: boolean
