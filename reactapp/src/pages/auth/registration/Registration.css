@@ -90,6 +90,64 @@
         outline: none;
     }
 
+    /* Verify Form*/
+
+.verify-header {
+    display: flex;
+    justify-content: flex-start;
+    font-size: 18px;
+    padding-bottom: 20px;
+}
+
+.code-input {
+    display: flex;
+    width: 280px;
+    height: 32px;
+    border: solid 0.8px #808080;
+    border-radius: 6px;
+    background-color: transparent;
+    margin-bottom: 16px;
+}
+
+    .code-input::placeholder {
+        color: #808080;
+        text-indent: 6px;
+    }
+
+    .code-input:focus {
+        outline: none;
+    }
+
+.code-text {
+    display: flex;
+    justify-content: flex-start;
+    padding-bottom: 20px;
+}
+
+.code-container {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+}
+
+.verify-btn-container {
+    display: flex;
+    justify-content: center;
+    padding-top: 8px;
+}
+
+.verify-btn {
+    background-color: #075ce2;
+    border: 1px solid #075ce2;
+    border-radius: 12px;
+}
+
+    .verify-btn:focus {
+        outline: none;
+    }
+
+    /* Verify Form*/
+
 .message {
     position: fixed;
     bottom: 50px;

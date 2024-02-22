@@ -7,7 +7,7 @@ import Home from './pages/no_logic/Home';
 import About from './pages/no_logic/About';
 import Policy from './pages/no_logic/Policy'
 import User from './pages/user/profile/User';
-import Settings from './pages/user/settings/Settings';
+import Settings from './pages/user/Settings'
 import Offers from './pages/list/offers/Offers';
 import Files from './pages/list/files/Files';
 import Api from './pages/list/api/Api'

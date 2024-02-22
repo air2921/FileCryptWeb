@@ -66,15 +66,15 @@ const Register = () => {
         };
 
         return (
-            <div className="verification-container">
-                <div className="verification-header">
-                    Verify Account
+            <div className="verify-container">
+                <div className="verify-header">
+                    Account Verification
                 </div>
-                <form className="verification-form" onSubmit={handleSubmit}>
-                    <div className="verification-code-text">Enter your numeric code from your email</div>
-                    <div className="verification-code-container">
-                        <label htmlFor="code" className="verification-code-label">
-                            <input className="verification-code-input"
+                <form className="verify-form" onSubmit={handleSubmit}>
+                    <div className="code-text">Enter your numeric code from your email</div>
+                    <div className="code-container">
+                        <label htmlFor="code" className="code-label">
+                            <input className="code-input"
                                 type="text"
                                 id="code"
                                 required={true}
@@ -95,8 +95,8 @@ const Register = () => {
                             />
                         </label>
                     </div>
-                    <div className="verification-btn-container">
-                        <button className="verification-btn" type="submit">Verify</button>
+                    <div className="verify-btn-container">
+                        <button className="verify-btn" type="submit">Verify</button>
                     </div>
                 </form>
             </div>
