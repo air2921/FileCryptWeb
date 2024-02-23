@@ -1,9 +1,9 @@
 ﻿import React, { ChangeEvent, useEffect, useState } from 'react';
 import Message from '../../../utils/helpers/message/Message';
 import AxiosRequest from '../../../utils/api/AxiosRequest';
-import AxiosRequestInterceptor from '../../../utils/api/AxiosRequestInterceptor';
 import Font from '../../../utils/helpers/icon/Font';
 import FileList from '../../../components/List/FileList/FileList';
+import axios from 'axios';
 
 interface FileButtonProps {
     id: string,
@@ -84,7 +84,7 @@ const Files = () => {
 
     const encryptFile = async (file: FormData, fileType: string, operationType: string, filename: string) => {
         try {
-            const response = await AxiosRequestInterceptor.post(
+            const response = await axios.post(
                 `https://localhost:7067/api/core/cryptography/${fileType}/${operationType}`,
                 file,
                 {

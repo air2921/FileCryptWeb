@@ -29,42 +29,36 @@ namespace webapi.Middlewares
                 await _next(context);
                 return;
             }
-            else
+
+            context.Request.Cookies.TryGetValue(ImmutableData.REFRESH_COOKIE_KEY, out string? refresh);
+            if (!string.IsNullOrWhiteSpace(refresh))
             {
-                if (context.Request.Cookies.TryGetValue(ImmutableData.REFRESH_COOKIE_KEY, out string? refresh))
+                if (_env.IsDevelopment())
                 {
-                    if (string.IsNullOrWhiteSpace(refresh))
-                    {
-                        await _next(context);
-                        return;
-                    }
-
-                    if (_env.IsDevelopment())
-                    {
-                        _logger.LogWarning(tokenService.HashingToken(refresh));
-                    }
-
-                    var userAndToken = await dbContext.Tokens
-                        .Where(t => t.refresh_token == tokenService.HashingToken(refresh))
-                        .Join(dbContext.Users, token => token.user_id, user => user.id, (token, user) => new { token, user })
-                        .FirstOrDefaultAsync();
-
-                    if (userAndToken is null || userAndToken.token.expiry_date < DateTime.UtcNow || userAndToken.user.is_blocked == true)
-                    {
-                        tokenService.DeleteTokens();
-                        await _next(context);
-                        return;
-                    }
-
-                    string createdJWT = tokenService.GenerateJwtToken(userAndToken.user, ImmutableData.JwtExpiry);
-                    var jwtCookieOptions = tokenService.SetCookieOptions(ImmutableData.JwtExpiry);
-
-                    context.Response.Cookies.Append(ImmutableData.JWT_COOKIE_KEY, createdJWT, jwtCookieOptions);
-
-                    context.Request.Headers.Add("Authorization", $"Bearer {createdJWT}");
-                    AddSecurityHeaders(context);
+                    _logger.LogWarning(tokenService.HashingToken(refresh));
                 }
+
+                var userAndToken = await dbContext.Tokens
+                    .Where(t => t.refresh_token == tokenService.HashingToken(refresh))
+                    .Join(dbContext.Users, token => token.user_id, user => user.id, (token, user) => new { token, user })
+                    .FirstOrDefaultAsync();
+
+                if (userAndToken is null || userAndToken.token.expiry_date < DateTime.UtcNow || userAndToken.user.is_blocked == true)
+                {
+                    tokenService.DeleteTokens();
+                    await _next(context);
+                    return;
+                }
+
+                string createdJWT = tokenService.GenerateJwtToken(userAndToken.user, ImmutableData.JwtExpiry);
+                var jwtCookieOptions = tokenService.SetCookieOptions(ImmutableData.JwtExpiry);
+
+                context.Response.Cookies.Append(ImmutableData.JWT_COOKIE_KEY, createdJWT, jwtCookieOptions);
+
+                context.Request.Headers.Add("Authorization", $"Bearer {createdJWT}");
+                AddSecurityHeaders(context);
             }
+
             await _next(context);
             return;
         }
