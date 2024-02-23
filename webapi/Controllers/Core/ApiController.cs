@@ -42,6 +42,7 @@ namespace webapi.Controllers.Core
         #endregion
 
         [HttpPost("{type}")]
+        [XSRFProtection]
         [ProducesResponseType(201)]
         [ProducesResponseType(typeof(object), 404)]
         [ProducesResponseType(typeof(object), 500)]
@@ -144,6 +145,7 @@ namespace webapi.Controllers.Core
         }
 
         [HttpDelete("revoke/{apiId}")]
+        [XSRFProtection]
         [ProducesResponseType(204)]
         [ProducesResponseType(typeof(object), 404)]
         public async Task<IActionResult> RevokeAPI([FromRoute] int apiId)

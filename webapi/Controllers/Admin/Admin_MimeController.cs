@@ -40,7 +40,7 @@ namespace webapi.Controllers.Admin
         #endregion
 
         [HttpPost]
-        [ValidateAntiForgeryToken]
+        [XSRFProtection]
         [Authorize(Roles = "HighestAdmin")]
         [ProducesResponseType(typeof(object), 201)]
         [ProducesResponseType(typeof(object), 500)]
@@ -61,7 +61,7 @@ namespace webapi.Controllers.Admin
         }
 
         [HttpPost("many")]
-        [ValidateAntiForgeryToken]
+        [XSRFProtection]
         [Authorize(Roles = "HighestAdmin")]
         [ProducesResponseType(typeof(object), 201)]
         [ProducesResponseType(typeof(object), 500)]
@@ -94,7 +94,7 @@ namespace webapi.Controllers.Admin
             }
         }
 
-        [HttpGet("mimeId")]
+        [HttpGet("{mimeId}")]
         [Authorize(Roles = "HighestAdmin,Admin")]
         [ProducesResponseType(typeof(FileMimeModel), 200)]
         [ProducesResponseType(typeof(object), 404)]

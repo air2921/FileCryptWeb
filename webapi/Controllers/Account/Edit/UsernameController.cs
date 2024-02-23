@@ -15,7 +15,6 @@ namespace webapi.Controllers.Account.Edit
     [Route("api/account/edit/username")]
     [ApiController]
     [Authorize]
-    [ValidateAntiForgeryToken]
     public class UsernameController : ControllerBase
     {
         #region fields and constructor
@@ -43,6 +42,7 @@ namespace webapi.Controllers.Account.Edit
         #endregion
 
         [HttpPut]
+        [XSRFProtection]
         [ProducesResponseType(typeof(object), 200)]
         [ProducesResponseType(typeof(object), 400)]
         [ProducesResponseType(typeof(object), 404)]

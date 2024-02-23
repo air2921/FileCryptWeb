@@ -82,7 +82,7 @@ namespace webapi.Controllers.Core
         }
 
         [HttpPut("private")]
-        [ValidateAntiForgeryToken]
+        [XSRFProtection]
         [ProducesResponseType(typeof(object), 200)]
         [ProducesResponseType(typeof(object), 404)]
         public async Task<IActionResult> UpdatePrivateKey([FromQuery] string? key, [FromQuery] bool auto)
@@ -103,7 +103,7 @@ namespace webapi.Controllers.Core
         }
 
         [HttpPut("internal")]
-        [ValidateAntiForgeryToken]
+        [XSRFProtection]
         [ProducesResponseType(typeof(object), 200)]
         [ProducesResponseType(typeof(object), 404)]
         public async Task<IActionResult> UpdatePersonalInternalKey([FromQuery] string? key, [FromQuery] bool auto)
@@ -124,7 +124,7 @@ namespace webapi.Controllers.Core
         }
 
         [HttpPut("received/clean")]
-        [ValidateAntiForgeryToken]
+        [XSRFProtection]
         [ProducesResponseType(typeof(object), 200)]
         [ProducesResponseType(typeof(object), 409)]
         [ProducesResponseType(typeof(object), 404)]

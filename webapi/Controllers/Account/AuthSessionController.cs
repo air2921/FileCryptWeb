@@ -68,7 +68,7 @@ namespace webapi.Controllers.Account
         #region Factical login endpoints and helped method
 
         [HttpPost("login")]
-        [ValidateAntiForgeryToken]
+        [XSRFProtection]
         [ProducesResponseType(typeof(object), 200)]
         [ProducesResponseType(typeof(object), 404)]
         [ProducesResponseType(typeof(object), 403)]
@@ -108,7 +108,7 @@ namespace webapi.Controllers.Account
         }
 
         [HttpPost("verify/2fa")]
-        [ValidateAntiForgeryToken]
+        [XSRFProtection]
         [ProducesResponseType(200)]
         [ProducesResponseType(typeof(object), 422)]
         [ProducesResponseType(typeof(object), 404)]
@@ -277,7 +277,7 @@ namespace webapi.Controllers.Account
 
         [HttpPut("logout")]
         [Authorize]
-        [ValidateAntiForgeryToken]
+        [XSRFProtection]
         [ProducesResponseType(200)]
         [ProducesResponseType(404)]
         [ProducesResponseType(500)]

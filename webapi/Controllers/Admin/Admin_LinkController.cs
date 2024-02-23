@@ -1,5 +1,6 @@
 ﻿using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
+using webapi.Attributes;
 using webapi.DB;
 using webapi.Exceptions;
 using webapi.Interfaces;
@@ -77,7 +78,7 @@ namespace webapi.Controllers.Admin
         }
 
         [HttpDelete]
-        [ValidateAntiForgeryToken]
+        [XSRFProtection]
         [ProducesResponseType(204)]
         [ProducesResponseType(typeof(object), 404)]
         [ProducesResponseType(typeof(object), 500)]
@@ -105,7 +106,7 @@ namespace webapi.Controllers.Admin
         }
 
         [HttpDelete("many")]
-        [ValidateAntiForgeryToken]
+        [XSRFProtection]
         [ProducesResponseType(204)]
         [ProducesResponseType(typeof(object), 500)]
         public async Task<IActionResult> DeleteRangeLinks([FromBody] IEnumerable<int> identifiers)

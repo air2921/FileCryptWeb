@@ -1,5 +1,6 @@
 ﻿using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
+using webapi.Attributes;
 using webapi.DB;
 using webapi.Exceptions;
 using webapi.Helpers;
@@ -70,7 +71,7 @@ namespace webapi.Controllers.Admin
         }
 
         [HttpDelete("{fileId}")]
-        [ValidateAntiForgeryToken]
+        [XSRFProtection]
         [ProducesResponseType(204)]
         [ProducesResponseType(typeof(object), 500)]
         public async Task<IActionResult> DeleteFile([FromRoute] int fileId)
@@ -90,7 +91,7 @@ namespace webapi.Controllers.Admin
         }
 
         [HttpDelete("many")]
-        [ValidateAntiForgeryToken]
+        [XSRFProtection]
         [ProducesResponseType(204)]
         [ProducesResponseType(typeof(object), 200)]
         public async Task<IActionResult> DeleteRangeFiles([FromBody] IEnumerable<int> identifiers)

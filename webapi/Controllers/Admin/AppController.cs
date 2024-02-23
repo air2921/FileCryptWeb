@@ -1,5 +1,6 @@
 ﻿using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
+using webapi.Attributes;
 using webapi.Helpers;
 using webapi.Interfaces.Redis;
 using webapi.Interfaces.Services;
@@ -9,7 +10,6 @@ namespace webapi.Controllers.Admin
     [Route("api/admin/service")]
     [ApiController]
     [Authorize(Roles = "HighestAdmin")]
-    [ValidateAntiForgeryToken]
     public class AppController : ControllerBase
     {
         #region fields and constructor
@@ -28,6 +28,7 @@ namespace webapi.Controllers.Admin
         #endregion
 
         [HttpPut("freeze")]
+        [XSRFProtection]
         [ProducesResponseType(typeof(object), 200)]
         public async Task<IActionResult> FreezeService([FromQuery] bool flag, [FromBody] TimeSpan? time)
         {

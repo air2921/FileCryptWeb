@@ -11,7 +11,6 @@ namespace webapi.Controllers.Admin
     [Route("api/admin/tokens")]
     [ApiController]
     [Authorize(Roles = "HighestAdmin,Admin")]
-    [ValidateAntiForgeryToken]
     public class Admin_TokenController : ControllerBase
     {
         #region fields and constructor
@@ -28,6 +27,7 @@ namespace webapi.Controllers.Admin
         #endregion
 
         [HttpPut("revoke/{userId}")]
+        [XSRFProtection]
         [ProducesResponseType(typeof(object), 200)]
         [ProducesResponseType(typeof(object), 404)]
         [ProducesResponseType(typeof(object), 403)]

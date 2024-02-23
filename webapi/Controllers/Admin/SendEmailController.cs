@@ -13,7 +13,6 @@ namespace webapi.Controllers.Admin
     [Route("api/admin/email/and/notification")]
     [ApiController]
     [Authorize(Roles = "HighestAdmin,Admin")]
-    [ValidateAntiForgeryToken]
     public class SendEmailController : ControllerBase
     {
         #region fields and constructor
@@ -35,6 +34,7 @@ namespace webapi.Controllers.Admin
         #endregion
 
         [HttpPost("send")]
+        [XSRFProtection]
         [ProducesResponseType(typeof(object), 201)]
         [ProducesResponseType(typeof(object), 500)]
         public async Task<IActionResult> SendEmail([FromBody] NotifyDTO notifyDTO, [FromQuery] string username, [FromQuery] string email)

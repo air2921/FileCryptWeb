@@ -1,5 +1,6 @@
 ﻿using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
+using webapi.Attributes;
 using webapi.Exceptions;
 using webapi.Helpers;
 using webapi.Interfaces.Controllers;
@@ -39,6 +40,7 @@ namespace webapi.Controllers.Core
         #endregion
 
         [HttpPost("{operation}")]
+        [XSRFProtection]
         [RequestSizeLimit(75 * 1024 * 1024)]
         [ProducesResponseType(typeof(FileStreamResult), 200)]
         [ProducesResponseType(typeof(object), 400)]

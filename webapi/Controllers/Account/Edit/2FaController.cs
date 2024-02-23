@@ -16,7 +16,6 @@ namespace webapi.Controllers.Account.Edit
     [Route("api/account/edit/2fa")]
     [ApiController]
     [Authorize]
-    [ValidateAntiForgeryToken]
     public class _2FaController : ControllerBase
     {
         private const string CODE = "2FaCode";
@@ -64,6 +63,7 @@ namespace webapi.Controllers.Account.Edit
         #endregion
 
         [HttpPost("start")]
+        [XSRFProtection]
         [ProducesResponseType(200)]
         [ProducesResponseType(typeof(object), 401)]
         [ProducesResponseType(typeof(object), 404)]
@@ -98,6 +98,7 @@ namespace webapi.Controllers.Account.Edit
         }
 
         [HttpPut("confirm/{enable}")]
+        [XSRFProtection]
         [ProducesResponseType(200)]
         [ProducesResponseType(typeof(object), 400)]
         [ProducesResponseType(typeof(object), 404)]

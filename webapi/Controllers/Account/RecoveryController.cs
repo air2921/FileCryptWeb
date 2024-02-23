@@ -15,7 +15,6 @@ namespace webapi.Controllers.Account
 {
     [Route("api/auth/recovery")]
     [ApiController]
-    [ValidateAntiForgeryToken]
     public class RecoveryController : ControllerBase
     {
         #region fields and constructor
@@ -61,6 +60,7 @@ namespace webapi.Controllers.Account
         #endregion
 
         [HttpPost("unique/token")]
+        [XSRFProtection]
         [ProducesResponseType(typeof(object), 201)]
         [ProducesResponseType(typeof(object), 404)]
         [ProducesResponseType(typeof(object), 500)]
@@ -95,6 +95,7 @@ namespace webapi.Controllers.Account
         }
 
         [HttpPost("account")]
+        [XSRFProtection]
         [ProducesResponseType(200)]
         [ProducesResponseType(typeof(object), 400)]
         [ProducesResponseType(typeof(object), 404)]

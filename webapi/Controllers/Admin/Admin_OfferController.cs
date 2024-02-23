@@ -1,5 +1,6 @@
 ﻿using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
+using webapi.Attributes;
 using webapi.DB;
 using webapi.Exceptions;
 using webapi.Helpers;
@@ -69,7 +70,7 @@ namespace webapi.Controllers.Admin
         }
 
         [HttpDelete("{offerId}")]
-        [ValidateAntiForgeryToken]
+        [XSRFProtection]
         [ProducesResponseType(204)]
         [ProducesResponseType(typeof(object), 500)]
         public async Task<IActionResult> DeleteOffer([FromRoute] int offerId)
@@ -92,7 +93,7 @@ namespace webapi.Controllers.Admin
         }
 
         [HttpDelete("many")]
-        [ValidateAntiForgeryToken]
+        [XSRFProtection]
         [ProducesResponseType(204)]
         [ProducesResponseType(typeof(object), 500)]
         public async Task<IActionResult> DeleteRangeOffers([FromBody] IEnumerable<int> identifiers)

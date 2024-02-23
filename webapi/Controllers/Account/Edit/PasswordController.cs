@@ -17,7 +17,6 @@ namespace webapi.Controllers.Account.Edit
     [Route("api/account/edit/password")]
     [ApiController]
     [Authorize]
-    [ValidateAntiForgeryToken]
     public class PasswordController : ControllerBase
     {
         #region fields and contructor
@@ -51,6 +50,7 @@ namespace webapi.Controllers.Account.Edit
         #endregion
 
         [HttpPut]
+        [XSRFProtection]
         [ProducesResponseType(typeof(object), 200)]
         [ProducesResponseType(typeof(object), 422)]
         [ProducesResponseType(typeof(object), 404)]

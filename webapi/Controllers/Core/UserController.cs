@@ -101,6 +101,7 @@ namespace webapi.Controllers.Core
         }
 
         [HttpDelete]
+        [XSRFProtection]
         public async Task<IActionResult> DeleteUser()
         {
             try

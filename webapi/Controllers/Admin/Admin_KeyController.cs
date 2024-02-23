@@ -71,7 +71,7 @@ namespace webapi.Controllers.Admin
         }
 
         [HttpPut("revoke/received/{userId}")]
-        [ValidateAntiForgeryToken]
+        [XSRFProtection]
         [ProducesResponseType(typeof(object), 200)]
         [ProducesResponseType(typeof(object), 404)]
         public async Task<IActionResult> RevokeReceivedKey([FromRoute] int userId)

@@ -16,7 +16,6 @@ namespace webapi.Controllers.Account
 {
     [Route("api/auth")]
     [ApiController]
-    [ValidateAntiForgeryToken]
     public class AuthRegistrationController : ControllerBase
     {
         private const string EMAIL = "Email";
@@ -69,6 +68,7 @@ namespace webapi.Controllers.Account
         #endregion
 
         [HttpPost("register")]
+        [XSRFProtection]
         [ProducesResponseType(typeof(object), 200)]
         [ProducesResponseType(typeof(object), 400)]
         [ProducesResponseType(typeof(object), 409)]
@@ -111,6 +111,7 @@ namespace webapi.Controllers.Account
         }
 
         [HttpPost("verify")]
+        [XSRFProtection]
         [ProducesResponseType(201)]
         [ProducesResponseType(typeof(object), 422)]
         [ProducesResponseType(typeof(object), 500)]

@@ -1,6 +1,7 @@
 ﻿using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 using Newtonsoft.Json;
+using webapi.Attributes;
 using webapi.DB;
 using webapi.Exceptions;
 using webapi.Helpers;
@@ -39,7 +40,7 @@ namespace webapi.Controllers.Core
         #endregion
 
         [HttpDelete("{fileId}")]
-        [ValidateAntiForgeryToken]
+        [XSRFProtection]
         [ProducesResponseType(204)]
         [ProducesResponseType(typeof(object), 500)]
         public async Task<IActionResult> DeleteFileFromHistory([FromRoute] int fileId)

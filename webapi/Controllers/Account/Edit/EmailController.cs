@@ -16,7 +16,6 @@ namespace webapi.Controllers.Account.Edit
     [Route("api/account/edit/email")]
     [ApiController]
     [Authorize]
-    [ValidateAntiForgeryToken]
     public class EmailController : ControllerBase
     {
         private const string EMAIL = "Email";
@@ -64,6 +63,7 @@ namespace webapi.Controllers.Account.Edit
         #endregion
 
         [HttpPost("start")]
+        [XSRFProtection]
         [ProducesResponseType(typeof(object), 200)]
         [ProducesResponseType(typeof(object), 404)]
         [ProducesResponseType(typeof(object), 401)]
@@ -98,6 +98,7 @@ namespace webapi.Controllers.Account.Edit
         }
 
         [HttpPost("confirm/old")]
+        [XSRFProtection]
         [ProducesResponseType(typeof(object), 200)]
         [ProducesResponseType(typeof(object), 400)]
         [ProducesResponseType(typeof(object), 409)]
@@ -135,6 +136,7 @@ namespace webapi.Controllers.Account.Edit
         }
 
         [HttpPut("confirm/new")]
+        [XSRFProtection]
         [ProducesResponseType(201)]
         [ProducesResponseType(typeof(object), 400)]
         [ProducesResponseType(typeof(object), 404)]
