@@ -1,8 +1,10 @@
 ﻿using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 using Newtonsoft.Json;
+using System.Reflection;
 using System.Text.RegularExpressions;
 using webapi.Attributes;
+using webapi.Cryptography;
 using webapi.Exceptions;
 using webapi.Helpers;
 using webapi.Interfaces;
@@ -28,8 +30,8 @@ namespace webapi.Controllers.Core
         private readonly IRedisKeys _redisKeys;
         private readonly IUserInfo _userInfo;
         private readonly IValidation _validation;
-        private readonly IDecryptKey _decryptKey;
-        private readonly IEncryptKey _encryptKey;
+        private readonly ICypherKey _decryptKey;
+        private readonly ICypherKey _encryptKey;
         private readonly byte[] secretKey;
 
         public KeysController(
@@ -40,8 +42,7 @@ namespace webapi.Controllers.Core
             IRedisKeys redisKeys,
             IUserInfo userInfo,
             IValidation validation,
-            IDecryptKey decryptKey,
-            IEncryptKey encryptKey)
+            IEnumerable<ICypherKey> cypherKeys)
         {
             _keyRepository = keyRepository;
             _configuration = configuration;
@@ -50,9 +51,9 @@ namespace webapi.Controllers.Core
             _redisKeys = redisKeys;
             _userInfo = userInfo;
             _validation = validation;
-            _decryptKey = decryptKey;
-            _encryptKey = encryptKey;
-            secretKey = Convert.FromBase64String(_configuration["FileCryptKey"]!);
+            _decryptKey = cypherKeys.FirstOrDefault(k => k.GetType().GetCustomAttribute<ImplementationKeyAttribute>()?.Key == "Decrypt");
+            _encryptKey = cypherKeys.FirstOrDefault(k => k.GetType().GetCustomAttribute<ImplementationKeyAttribute>()?.Key == "Encrypt");
+            secretKey = Convert.FromBase64String(_configuration[App.ENCRYPTION_KEY]!);
         }
 
         #endregion
@@ -169,8 +170,8 @@ namespace webapi.Controllers.Core
         [Helper]
         private async Task<KeyObject> SetKeys(KeyModel keyModel)
         {
-            string? privateKey = keyModel.private_key is not null ? await _decryptKey.DecryptionKeyAsync(keyModel.private_key, secretKey) : null;
-            string? internalKey = keyModel.internal_key is not null ? await _decryptKey.DecryptionKeyAsync(keyModel.internal_key, secretKey) : null;
+            string? privateKey = keyModel.private_key is not null ? await _decryptKey.CypherKeyAsync(keyModel.private_key, secretKey) : null;
+            string? internalKey = keyModel.internal_key is not null ? await _decryptKey.CypherKeyAsync(keyModel.internal_key, secretKey) : null;
             string? receivedKey = keyModel.received_key is not null ? "hidden" : null;
 
             return new KeyObject
@@ -202,7 +203,7 @@ namespace webapi.Controllers.Core
 
                 string fieldValue = fieldSelector(keys);
 
-                fieldValue = await _encryptKey.EncryptionKeyAsync(key!, secretKey);
+                fieldValue = await _encryptKey.CypherKeyAsync(key!, secretKey);
 
                 await _keyRepository.Update(keys);
             }

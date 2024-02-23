@@ -17,6 +17,12 @@ namespace webapi.Controllers.Core
     [Authorize]
     public class ApiController : ControllerBase
     {
+        private const int CLASSIC_REQUEST_LIMIT = 300;
+        private const int DEVELOPMENT_REQUEST_LIMIT = 150;
+        private const int PRODUCTION_REQUEST_LIMIT = 1000;
+        private const int CLASSIC_EXPIRY = 90;
+        private const int PRODUCTION_EXPIRY = 30;
+
         #region fields and constructor
 
         private readonly IUserInfo _userInfo;
@@ -159,13 +165,13 @@ namespace webapi.Controllers.Core
         private ApiSettings SetExpireAPI(string type)
         {
             if (type.Equals(ApiType.Classic.ToString()))
-                return new ApiSettings(DateTime.UtcNow.AddDays(90), 300);
+                return new ApiSettings(DateTime.UtcNow.AddDays(CLASSIC_EXPIRY), CLASSIC_REQUEST_LIMIT);
 
             if (type.Equals(ApiType.Development.ToString()))
-                return new ApiSettings(null, 150);
+                return new ApiSettings(null, DEVELOPMENT_REQUEST_LIMIT);
 
             if (type.Equals(ApiType.Production.ToString()))
-                return new ApiSettings(DateTime.UtcNow.AddDays(30), 1000);
+                return new ApiSettings(DateTime.UtcNow.AddDays(PRODUCTION_EXPIRY), PRODUCTION_REQUEST_LIMIT);
 
             throw new InvalidRouteException();
         }

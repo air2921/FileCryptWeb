@@ -1,5 +1,8 @@
 ﻿using Newtonsoft.Json;
 using StackExchange.Redis;
+using System.Reflection;
+using webapi.Attributes;
+using webapi.Cryptography;
 using webapi.Helpers;
 using webapi.Interfaces;
 using webapi.Interfaces.Cryptography;
@@ -15,7 +18,7 @@ namespace webapi.DB.RedisDb
         private readonly IRedisDbContext _context;
         private readonly IRedisKeys _redisKeys;
         private readonly IConfiguration _configuration;
-        private readonly IDecryptKey _decrypt;
+        private readonly ICypherKey _decryptKey;
         private readonly byte[] secretKey;
         private readonly IDatabase _db;
 
@@ -24,13 +27,13 @@ namespace webapi.DB.RedisDb
             IRedisDbContext context,
             IRedisKeys redisKeys,
             IConfiguration configuration,
-            IDecryptKey decrypt)
+            IEnumerable<ICypherKey> cypherKeys)
         {
             _keyRepository = keyRepository;
             _context = context;
             _redisKeys = redisKeys;
             _configuration = configuration;
-            _decrypt = decrypt;
+            _decryptKey = cypherKeys.FirstOrDefault(k => k.GetType().GetCustomAttribute<ImplementationKeyAttribute>()?.Key == "Decrypt");
             secretKey = Convert.FromBase64String(_configuration[App.ENCRYPTION_KEY]!);
             _db = context.GetDatabase();
         }
@@ -76,7 +79,7 @@ namespace webapi.DB.RedisDb
                     throw new ArgumentException();
                 }
 
-                var decryptedKey = await _decrypt.DecryptionKeyAsync(encryptionKey!, secretKey);
+                var decryptedKey = await _decryptKey.CypherKeyAsync(encryptionKey!, secretKey);
                 await _db.StringSetAsync(key, decryptedKey, TimeSpan.FromMinutes(10));
 
                 return decryptedKey;

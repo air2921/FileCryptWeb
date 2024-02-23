@@ -1,6 +1,8 @@
 ﻿using Microsoft.AspNetCore.Mvc;
+using System.Reflection;
 using System.Text.RegularExpressions;
 using webapi.Attributes;
+using webapi.Cryptography;
 using webapi.DB;
 using webapi.DTO;
 using webapi.Exceptions;
@@ -33,7 +35,7 @@ namespace webapi.Controllers.Account
         private readonly FileCryptDbContext _dbContext;
         private readonly IConfiguration _configuration;
         private readonly IGenerate _generate;
-        private readonly IEncryptKey _encrypt;
+        private readonly ICypherKey _encrypt;
         private readonly ILogger<AuthRegistrationController> _logger;
         private readonly IEmailSender _email;
         private readonly IPasswordManager _passwordManager;
@@ -49,7 +51,7 @@ namespace webapi.Controllers.Account
             FileCryptDbContext dbContext,
             IConfiguration configuration,
             IGenerate generate,
-            IEncryptKey encrypt)
+            IEnumerable<ICypherKey> cypherKeys)
         {
             _logger = logger;
             _email = email;
@@ -60,7 +62,7 @@ namespace webapi.Controllers.Account
             _dbContext = dbContext;
             _configuration = configuration;
             _generate = generate;
-            _encrypt = encrypt;
+            _encrypt = cypherKeys.FirstOrDefault(k => k.GetType().GetCustomAttribute<ImplementationKeyAttribute>()?.Key == "Encrypt");
             secretKey = Convert.FromBase64String(_configuration[App.ENCRYPTION_KEY]!);
         }
 
@@ -162,7 +164,7 @@ namespace webapi.Controllers.Account
                 await _keyRepository.Add(new KeyModel
                 {
                     user_id = id,
-                    private_key = await _encrypt.EncryptionKeyAsync(_generate.GenerateKey(), secretKey)
+                    private_key = await _encrypt.CypherKeyAsync(_generate.GenerateKey(), secretKey)
                 });
 
                 await transaction.CommitAsync();

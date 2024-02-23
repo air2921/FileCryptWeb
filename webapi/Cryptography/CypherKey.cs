@@ -1,9 +1,11 @@
 ﻿using System.Security.Cryptography;
+using webapi.Attributes;
 using webapi.Interfaces.Cryptography;
 
 namespace webapi.Cryptography
 {
-    public class EncryptKey : IEncryptKey, IDecryptKey
+    [ImplementationKey("Encrypt")]
+    public class EncryptKey : ICypherKey
     {
         private readonly IAes _aes;
 
@@ -12,7 +14,7 @@ namespace webapi.Cryptography
             _aes = aes;
         }
 
-        public async Task<string> EncryptionKeyAsync(string text, byte[] key)
+        public async Task<string> CypherKeyAsync(string text, byte[] key)
         {
             using var aes = _aes.GetAesInstance();
             byte[] iv = aes.IV;
@@ -36,8 +38,19 @@ namespace webapi.Cryptography
 
             return Convert.ToBase64String(result);
         }
+    }
 
-        public async Task<string> DecryptionKeyAsync(string text, byte[] key)
+    [ImplementationKey("Decrypt")]
+    public class DecryptKey : ICypherKey
+    {
+        private readonly IAes _aes;
+
+        public DecryptKey(IAes aes)
+        {
+            _aes = aes;
+        }
+
+        public async Task<string> CypherKeyAsync(string text, byte[] key)
         {
             try
             {

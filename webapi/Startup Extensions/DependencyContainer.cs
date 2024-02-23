@@ -49,8 +49,8 @@ namespace webapi
         {
             services.AddTransient<ICypher, Cypher>();
             services.AddTransient<ITokenService, TokenService>();
-            services.AddTransient<IEncryptKey, EncryptKey>();
-            services.AddTransient<IDecryptKey, EncryptKey>();
+            services.AddTransient<ICypherKey, EncryptKey>();
+            services.AddTransient<ICypherKey, DecryptKey>();
             services.AddTransient<IEmailSender, EmailSender>();
             services.AddTransient<ISmtpClient, SmtpClientWrapper>();
         }

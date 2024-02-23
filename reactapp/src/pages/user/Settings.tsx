@@ -93,6 +93,7 @@ const Settings = () => {
 
             if (response.isSuccess) {
                 setKeys(response.data);
+                console.log(response.data);
             }
             else {
                 setErrorMessage(response.data);

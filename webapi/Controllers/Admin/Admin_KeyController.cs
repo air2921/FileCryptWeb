@@ -1,7 +1,9 @@
 ﻿using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
+using System.Reflection;
 using System.Security.Cryptography;
 using webapi.Attributes;
+using webapi.Cryptography;
 using webapi.Exceptions;
 using webapi.Helpers;
 using webapi.Interfaces;
@@ -23,7 +25,7 @@ namespace webapi.Controllers.Admin
         private readonly IRepository<KeyModel> _keyRepository;
         private readonly IRedisCache _redisCache;
         private readonly IUserInfo _userInfo;
-        private readonly IDecryptKey _decryptKey;
+        private readonly ICypherKey _decryptKey;
         private readonly IConfiguration _configuration;
         private readonly ILogger<Admin_KeyController> _logger;
         private readonly byte[] secretKey;
@@ -32,14 +34,14 @@ namespace webapi.Controllers.Admin
             IRepository<KeyModel> keyRepository,
             IRedisCache redisCache,
             IUserInfo userInfo,
-            IDecryptKey decryptKey,
+            IEnumerable<ICypherKey> cypherKeys,
             IConfiguration configuration,
             ILogger<Admin_KeyController> logger)
         {
             _keyRepository = keyRepository;
             _redisCache = redisCache;
             _userInfo = userInfo;
-            _decryptKey = decryptKey;
+            _decryptKey = cypherKeys.FirstOrDefault(k => k.GetType().GetCustomAttribute<ImplementationKeyAttribute>()?.Key == "Decrypt");
             _configuration = configuration;
             _logger = logger;
             secretKey = Convert.FromBase64String(_configuration[App.ENCRYPTION_KEY]!);
@@ -109,7 +111,7 @@ namespace webapi.Controllers.Admin
                     if (encryptedKey is null)
                         continue;
 
-                    decryptedKeys.Add(await _decryptKey.DecryptionKeyAsync(encryptedKey, secretKey));
+                    decryptedKeys.Add(await _decryptKey.CypherKeyAsync(encryptedKey, secretKey));
                 }
                 catch (CryptographicException ex)
                 {
