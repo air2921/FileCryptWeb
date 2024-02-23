@@ -42,7 +42,8 @@ namespace webapi.Controllers.Core
             IRedisKeys redisKeys,
             IUserInfo userInfo,
             IValidation validation,
-            IEnumerable<ICypherKey> cypherKeys)
+            IEnumerable<ICypherKey> cypherKeys,
+            IImplementationFinder implementationFinder)
         {
             _keyRepository = keyRepository;
             _configuration = configuration;
@@ -51,8 +52,8 @@ namespace webapi.Controllers.Core
             _redisKeys = redisKeys;
             _userInfo = userInfo;
             _validation = validation;
-            _decryptKey = cypherKeys.FirstOrDefault(k => k.GetType().GetCustomAttribute<ImplementationKeyAttribute>()?.Key == "Decrypt");
-            _encryptKey = cypherKeys.FirstOrDefault(k => k.GetType().GetCustomAttribute<ImplementationKeyAttribute>()?.Key == "Encrypt");
+            _decryptKey = implementationFinder.GetImplementationByKey(cypherKeys, ImplementationKey.DECRYPT_KEY);
+            _encryptKey = implementationFinder.GetImplementationByKey(cypherKeys, ImplementationKey.ENCRYPT_KEY);
             secretKey = Convert.FromBase64String(_configuration[App.ENCRYPTION_KEY]!);
         }
 

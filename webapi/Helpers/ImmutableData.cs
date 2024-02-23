@@ -57,6 +57,12 @@
         #endregion
     }
 
+    public static class ImplementationKey
+    {
+        public const string ENCRYPT_KEY = "EncryptKey";
+        public const string DECRYPT_KEY = "DecryptKey";
+    }
+
     public static class App
     {
         public const string MAIN_DB = "PostgresConnection";

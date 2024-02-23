@@ -2,7 +2,6 @@
 using System.Reflection;
 using System.Text.RegularExpressions;
 using webapi.Attributes;
-using webapi.Cryptography;
 using webapi.DB;
 using webapi.DTO;
 using webapi.Exceptions;
@@ -51,6 +50,7 @@ namespace webapi.Controllers.Account
             FileCryptDbContext dbContext,
             IConfiguration configuration,
             IGenerate generate,
+            IImplementationFinder implementationFinder,
             IEnumerable<ICypherKey> cypherKeys)
         {
             _logger = logger;
@@ -62,7 +62,7 @@ namespace webapi.Controllers.Account
             _dbContext = dbContext;
             _configuration = configuration;
             _generate = generate;
-            _encrypt = cypherKeys.FirstOrDefault(k => k.GetType().GetCustomAttribute<ImplementationKeyAttribute>()?.Key == "Encrypt");
+            _encrypt = implementationFinder.GetImplementationByKey(cypherKeys, ImplementationKey.ENCRYPT_KEY);
             secretKey = Convert.FromBase64String(_configuration[App.ENCRYPTION_KEY]!);
         }
 

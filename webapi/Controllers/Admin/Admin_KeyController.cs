@@ -35,13 +35,14 @@ namespace webapi.Controllers.Admin
             IRedisCache redisCache,
             IUserInfo userInfo,
             IEnumerable<ICypherKey> cypherKeys,
+            IImplementationFinder implementationFinder,
             IConfiguration configuration,
             ILogger<Admin_KeyController> logger)
         {
             _keyRepository = keyRepository;
             _redisCache = redisCache;
             _userInfo = userInfo;
-            _decryptKey = cypherKeys.FirstOrDefault(k => k.GetType().GetCustomAttribute<ImplementationKeyAttribute>()?.Key == "Decrypt");
+            _decryptKey = implementationFinder.GetImplementationByKey(cypherKeys, ImplementationKey.DECRYPT_KEY);
             _configuration = configuration;
             _logger = logger;
             secretKey = Convert.FromBase64String(_configuration[App.ENCRYPTION_KEY]!);

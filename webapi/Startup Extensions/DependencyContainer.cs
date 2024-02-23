@@ -47,6 +47,7 @@ namespace webapi
 
         public static void Transient(IServiceCollection services)
         {
+            services.AddTransient<IImplementationFinder, ImplementationFinder>();
             services.AddTransient<ICypher, Cypher>();
             services.AddTransient<ITokenService, TokenService>();
             services.AddTransient<ICypherKey, EncryptKey>();

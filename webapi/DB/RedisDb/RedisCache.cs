@@ -1,12 +1,10 @@
 ﻿using Newtonsoft.Json;
 using StackExchange.Redis;
-using System.Reflection;
-using webapi.Attributes;
-using webapi.Cryptography;
 using webapi.Helpers;
 using webapi.Interfaces;
 using webapi.Interfaces.Cryptography;
 using webapi.Interfaces.Redis;
+using webapi.Interfaces.Services;
 using webapi.Localization;
 using webapi.Models;
 
@@ -27,13 +25,14 @@ namespace webapi.DB.RedisDb
             IRedisDbContext context,
             IRedisKeys redisKeys,
             IConfiguration configuration,
-            IEnumerable<ICypherKey> cypherKeys)
+            IEnumerable<ICypherKey> cypherKeys,
+            IImplementationFinder implementationFinder)
         {
             _keyRepository = keyRepository;
             _context = context;
             _redisKeys = redisKeys;
             _configuration = configuration;
-            _decryptKey = cypherKeys.FirstOrDefault(k => k.GetType().GetCustomAttribute<ImplementationKeyAttribute>()?.Key == "Decrypt");
+            _decryptKey = implementationFinder.GetImplementationByKey(cypherKeys, ImplementationKey.DECRYPT_KEY);
             secretKey = Convert.FromBase64String(_configuration[App.ENCRYPTION_KEY]!);
             _db = context.GetDatabase();
         }
