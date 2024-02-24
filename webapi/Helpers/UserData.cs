@@ -10,47 +10,37 @@ namespace webapi.Helpers
         public UserData(IHttpContextAccessor httpContextAccessor)
         {
             _httpContext = httpContextAccessor.HttpContext ?? throw new ArgumentNullException(nameof(httpContextAccessor));
+
+            if (_httpContext.User is null)
+                throw new InvalidOperationException("User is not authenticated");
         }
 
-        private int? _userId;
-        private string? _username;
-        private string? _role;
-        private string? _email;
+        public int UserId => GetIntClaimValue(ClaimTypes.NameIdentifier);
 
-        public int UserId
+        public string Username => GetStringClaimValue(ClaimTypes.Name);
+
+        public string Role => GetStringClaimValue(ClaimTypes.Role);
+
+        public string Email => GetStringClaimValue(ClaimTypes.Email);
+
+        private string GetStringClaimValue(string claimType)
         {
-            get
-            {
-                ClaimsPrincipal user = _httpContext.User;
-                return _userId ??= Convert.ToInt32(user.FindFirstValue(ClaimTypes.NameIdentifier));
-            }
+            ClaimsPrincipal user = _httpContext.User;
+            string? value = user.FindFirstValue(claimType);
+            if (value is not null)
+                return value;
+            else
+                throw new InvalidOperationException($"Cannot retrieve claim value for {claimType} as string");
         }
 
-        public string Username
+        private int GetIntClaimValue(string claimType)
         {
-            get
-            {
-                ClaimsPrincipal user = _httpContext.User;
-                return _username ??= user.FindFirstValue(ClaimTypes.Name);
-            }
-        }
-
-        public string Role
-        {
-            get
-            {
-                ClaimsPrincipal user = _httpContext.User;
-                return _role ??= user.FindFirstValue(ClaimTypes.Role);
-            }
-        }
-
-        public string Email
-        {
-            get
-            {
-                ClaimsPrincipal user = _httpContext.User;
-                return _email ??= user.FindFirstValue(ClaimTypes.Email);
-            }
+            ClaimsPrincipal user = _httpContext.User;
+            string? value = user.FindFirstValue(claimType);
+            if (value is not null && int.TryParse(value, out int result))
+                return result;
+            else
+                throw new InvalidOperationException($"Cannot retrieve claim value for {claimType} as integer");
         }
     }
 }

@@ -1,5 +1,4 @@
 ﻿using Microsoft.AspNetCore.Mvc;
-using System.Reflection;
 using System.Text.RegularExpressions;
 using webapi.Attributes;
 using webapi.DB;
@@ -24,7 +23,6 @@ namespace webapi.Controllers.Account
         private const string ROLE = "Role";
         private const string IS_2FA = "2FA";
         private const string CODE = "Code";
-        private const string ACCESS_CODE = "Storage_Access_Code";
 
         #region fields and constructor
 
@@ -102,8 +100,7 @@ namespace webapi.Controllers.Account
                     Username = userDTO.username,
                     Role = Role.User.ToString(),
                     Flag2Fa = userDTO.is_2fa_enabled,
-                    Code = code.ToString(),
-                    AccessCode = _passwordManager.HashingPassword(userDTO.storage_code.ToString())
+                    Code = code.ToString()
                 });
 
                 return StatusCode(200, new { message = Message.EMAIL_SENT });
@@ -152,9 +149,8 @@ namespace webapi.Controllers.Account
         {
             bool isValidUsername = Regex.IsMatch(userDTO.username, Validation.Username);
             bool isValidPassword = Regex.IsMatch(userDTO.password, Validation.Password);
-            bool isValidStorageCode = _validation.IsSixDigit(userDTO.storage_code);
 
-            return isValidUsername && isValidPassword && isValidStorageCode;
+            return isValidUsername && isValidPassword;
         }
 
         [Helper]
@@ -184,13 +180,6 @@ namespace webapi.Controllers.Account
                 {
                     user_id = id,
                     private_key = await _encrypt.CypherKeyAsync(_generate.GenerateKey(), secretKey)
-                });
-
-                await _storageRepository.Add(new KeyStorageModel
-                {
-                    user_id = id,
-                    access_code = session.AccessCode,
-                    last_time_modified = DateTime.UtcNow
                 });
 
                 await transaction.CommitAsync();
@@ -230,7 +219,6 @@ namespace webapi.Controllers.Account
             context.Session.SetString(ROLE, session.Role);
             context.Session.SetString(IS_2FA, session.Flag2Fa.ToString());
             context.Session.SetString(CODE, _passwordManager.HashingPassword(session.Code));
-            context.Session.SetString(ACCESS_CODE, session.AccessCode);
         }
 
         [Helper]
@@ -242,9 +230,8 @@ namespace webapi.Controllers.Account
             string? role = context.Session.GetString(ROLE);
             string? correctCode = context.Session.GetString(CODE);
             string? flag_2fa = context.Session.GetString(IS_2FA);
-            string? access_code = context.Session.GetString(ACCESS_CODE);
 
-            if (email is null || password is null || username is null || role is null || correctCode is null || flag_2fa is null || access_code is null)
+            if (email is null || password is null || username is null || role is null || correctCode is null || flag_2fa is null)
                 throw new ArgumentNullException(Message.ERROR);
 
             return new SessionObject 
@@ -255,7 +242,6 @@ namespace webapi.Controllers.Account
                 Role = role,
                 Flag2Fa = bool.Parse(flag_2fa),
                 Code = correctCode,
-                AccessCode = access_code
             };
         }
 
@@ -268,7 +254,6 @@ namespace webapi.Controllers.Account
             public string Role { get; set; }
             public bool Flag2Fa { get; set; }
             public string Code { get; set; }
-            public string AccessCode { get; set; }
         }
     }
 }

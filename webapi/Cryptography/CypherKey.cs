@@ -17,27 +17,34 @@ namespace webapi.Cryptography
 
         public async Task<string> CypherKeyAsync(string text, byte[] key)
         {
-            using var aes = _aes.GetAesInstance();
-            byte[] iv = aes.IV;
-
-            using var encryptor = aes.CreateEncryptor(key, iv);
-
-            byte[] textByte = Convert.FromBase64String(text);
-            var msLenght = iv.Length + textByte.Length;
-
-            using var memoryStream = new MemoryStream(msLenght);
-            using (var cryptoStream = new CryptoStream(memoryStream, encryptor, CryptoStreamMode.Write))
+            try
             {
-                using var writer = new StreamWriter(cryptoStream);
-                await writer.WriteAsync(text);
+                using var aes = _aes.GetAesInstance();
+                byte[] iv = aes.IV;
+
+                using var encryptor = aes.CreateEncryptor(key, iv);
+
+                byte[] textByte = Convert.FromBase64String(text);
+                var msLenght = iv.Length + textByte.Length;
+
+                using var memoryStream = new MemoryStream(msLenght);
+                using (var cryptoStream = new CryptoStream(memoryStream, encryptor, CryptoStreamMode.Write))
+                {
+                    using var writer = new StreamWriter(cryptoStream);
+                    await writer.WriteAsync(text);
+                }
+
+                var encryptedBytes = memoryStream.ToArray();
+                var result = new byte[iv.Length + encryptedBytes.Length];
+                Buffer.BlockCopy(iv, 0, result, 0, iv.Length);
+                Buffer.BlockCopy(encryptedBytes, 0, result, iv.Length, encryptedBytes.Length);
+
+                return Convert.ToBase64String(result);
             }
-
-            var encryptedBytes = memoryStream.ToArray();
-            var result = new byte[iv.Length + encryptedBytes.Length];
-            Buffer.BlockCopy(iv, 0, result, 0, iv.Length);
-            Buffer.BlockCopy(encryptedBytes, 0, result, iv.Length, encryptedBytes.Length);
-
-            return Convert.ToBase64String(result);
+            catch (CryptographicException)
+            {
+                throw;
+            }
         }
     }
 

@@ -6,6 +6,5 @@
         public string email { get; set; }
         public string password { get; set; }
         public bool is_2fa_enabled { get; set; }
-        public int storage_code { get; set; }
     }
 }

@@ -10,9 +10,13 @@ namespace webapi.Models
         [Key]
         public int storage_id { get; set; }
 
+        public string storage_name { get; set; }
+
         public DateTime last_time_modified { get; set; }
 
         public string access_code { get; set; }
+
+        public bool encrypt { get; set; }
 
         [ForeignKey("user_id")]
         public int user_id { get; set; }

@@ -37,12 +37,6 @@ namespace webapi.DB
                 .HasForeignKey<TokenModel>(t => t.user_id)
                 .OnDelete(DeleteBehavior.Cascade);
 
-            modelBuilder.Entity<UserModel>()
-                .HasOne(u => u.KeyStorage)
-                .WithOne(t => t.User)
-                .HasForeignKey<KeyStorageModel>(t => t.user_id)
-                .OnDelete(DeleteBehavior.Cascade);
-
             #endregion
 
             #region Has one with many
@@ -81,6 +75,12 @@ namespace webapi.DB
                 .HasOne(l => l.User)
                 .WithMany(l => l.Links)
                 .HasForeignKey(l => l.user_id)
+                .OnDelete(DeleteBehavior.Cascade);
+
+            modelBuilder.Entity<KeyStorageModel>()
+                .HasOne(k => k.User)
+                .WithMany(k => k.KeyStorages)
+                .HasForeignKey(s => s.user_id)
                 .OnDelete(DeleteBehavior.Cascade);
 
             modelBuilder.Entity<KeyStorageItemModel>()

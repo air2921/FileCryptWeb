@@ -1,10 +1,8 @@
 ﻿using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 using Newtonsoft.Json;
-using System.Reflection;
 using System.Text.RegularExpressions;
 using webapi.Attributes;
-using webapi.Cryptography;
 using webapi.Exceptions;
 using webapi.Helpers;
 using webapi.Interfaces;
