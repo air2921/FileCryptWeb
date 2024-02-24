@@ -14,6 +14,8 @@ namespace webapi.DB
         public DbSet<TokenModel> Tokens { get; set; }
         public DbSet<ApiModel> API { get; set; }
         public DbSet<LinkModel> Links { get; set; }
+        public DbSet<KeyStorageModel> KeyStorages { get; set; }
+        public DbSet<KeyStorageItemModel> KeyStorageItems { get; set; }
 
         public FileCryptDbContext(DbContextOptions<FileCryptDbContext> options) : base(options)
         {
@@ -33,6 +35,12 @@ namespace webapi.DB
                 .HasOne(u => u.Tokens)
                 .WithOne(t => t.User)
                 .HasForeignKey<TokenModel>(t => t.user_id)
+                .OnDelete(DeleteBehavior.Cascade);
+
+            modelBuilder.Entity<UserModel>()
+                .HasOne(u => u.KeyStorage)
+                .WithOne(t => t.User)
+                .HasForeignKey<KeyStorageModel>(t => t.user_id)
                 .OnDelete(DeleteBehavior.Cascade);
 
             #endregion
@@ -73,6 +81,12 @@ namespace webapi.DB
                 .HasOne(l => l.User)
                 .WithMany(l => l.Links)
                 .HasForeignKey(l => l.user_id)
+                .OnDelete(DeleteBehavior.Cascade);
+
+            modelBuilder.Entity<KeyStorageItemModel>()
+                .HasOne(k => k.KeyStorage)
+                .WithMany(k => k.StorageItems)
+                .HasForeignKey(s => s.storage_id)
                 .OnDelete(DeleteBehavior.Cascade);
 
             #endregion
