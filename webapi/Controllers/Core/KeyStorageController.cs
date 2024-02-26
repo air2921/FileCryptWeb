@@ -272,25 +272,22 @@ namespace webapi.Controllers.Core
         [Helper]
         private async Task<IEnumerable<KeyStorageItemModel>> CypherKeys(IEnumerable<KeyStorageItemModel> keys, bool encrypt)
         {
-            try
+            foreach (var key in keys)
             {
-                foreach (var key in keys)
+                try
                 {
-                    try
-                    {
-                        if (encrypt)
-                            key.key_value = await _encryptKey.CypherKeyAsync(key.key_value, secretKey);
-                        else
-                            key.key_value = await _decryptKey.CypherKeyAsync(key.key_value, secretKey);
-                    }
-                    catch (CryptographicException)
-                    {
-                        continue;
-                    }
+                    if (encrypt)
+                        key.key_value = await _encryptKey.CypherKeyAsync(key.key_value, secretKey);
+                    else
+                        key.key_value = await _decryptKey.CypherKeyAsync(key.key_value, secretKey);
                 }
-
-                return keys;
+                catch (CryptographicException)
+                {
+                    continue;
+                }
             }
+
+            return keys;
         }
 
         [Helper]
