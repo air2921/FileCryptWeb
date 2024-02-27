@@ -68,9 +68,9 @@ namespace webapi.Controllers.Core
             {
                 var cacheKey = $"{ImmutableData.FILES_PREFIX}{_userInfo.UserId}_{fileId}";
 
-                var cacheFile = JsonConvert.DeserializeObject<FileModel>(await _redisCache.GetCachedData(cacheKey));
-                if (cacheFile is not null)
-                    return StatusCode(200, new { file = cacheFile });
+                var cache = await _redisCache.GetCachedData(cacheKey);
+                if (cache is not null)
+                    return StatusCode(200, new { file = JsonConvert.DeserializeObject<FileModel>(cache) });
 
                 var file = await _fileRepository.GetByFilter(query => query.Where(f => f.file_id.Equals(fileId) && f.user_id.Equals(_userInfo.UserId)));
                 if (file is null)

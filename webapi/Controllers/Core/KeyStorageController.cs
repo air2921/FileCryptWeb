@@ -1,5 +1,6 @@
 ﻿using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
+using Newtonsoft.Json;
 using System.Security.Cryptography;
 using webapi.Attributes;
 using webapi.DTO;
@@ -72,6 +73,7 @@ namespace webapi.Controllers.Core
                     encrypt = storageDTO.encrypt
                 });
 
+                await _redisCache.DeteteCacheByKeyPattern(ImmutableData.STORAGES_PREFIX);
                 return StatusCode(201);
             }
             catch (EntityNotCreatedException ex)
@@ -90,6 +92,7 @@ namespace webapi.Controllers.Core
                 var storage = await GetAndValidateStorage(storageId, _userInfo.UserId, code);
                 await DbUpdate(storageDTO, storage);
 
+                await _redisCache.DeteteCacheByKeyPattern(ImmutableData.STORAGES_PREFIX);
                 return StatusCode(200, new { message = Message.UPDATED });
             }
             catch (EntityNotUpdatedException ex)
@@ -119,6 +122,7 @@ namespace webapi.Controllers.Core
                 var storage = await GetAndValidateStorage(storageId, _userInfo.UserId, code);
                 await _storageRepository.Delete(storageId);
 
+                await _redisCache.DeteteCacheByKeyPattern(ImmutableData.STORAGES_PREFIX);
                 return StatusCode(204);
             }
             catch (EntityNotDeletedException ex)
@@ -147,9 +151,19 @@ namespace webapi.Controllers.Core
                 var storage = await GetAndValidateStorage(storageId, _userInfo.UserId, code);
                 storage.access_code = string.Empty;
 
-                var keys = await _storageItemRepository.GetAll(query => query.Where(s => s.storage_id.Equals(storage.storage_id)));
+                var cacheKey = $"{ImmutableData.STORAGES_PREFIX}{_userInfo.UserId}_{storageId}_{storage.encrypt}";
+
+                var cache = await _redisCache.GetCachedData(cacheKey);
+                if (cache is not null)
+                    return StatusCode(200, new { storage, keys = JsonConvert.DeserializeObject<IEnumerable<KeyStorageItemModel>>(cache) });
+
+                var keys = await _storageItemRepository.GetAll(query => query
+                    .Where(s => s.storage_id.Equals(storage.storage_id)));
+
                 if (storage.encrypt)
                     keys = await CypherKeys(keys, false);
+
+                await _redisCache.CacheData(cacheKey, keys, TimeSpan.FromMinutes(10));
 
                 return StatusCode(200, new { storage, keys });
             }
@@ -190,6 +204,7 @@ namespace webapi.Controllers.Core
                     created_at = DateTime.UtcNow
                 });
 
+                await _redisCache.DeteteCacheByKeyPattern(ImmutableData.STORAGES_PREFIX);
                 return StatusCode(201);
             }
             catch (EntityNotCreatedException ex)
@@ -211,12 +226,13 @@ namespace webapi.Controllers.Core
         }
 
         [HttpGet("key/{storageId}/{keyId}")]
-        public async Task<IActionResult> GetKey([FromRoute] int storageId, [FromRoute] int keyId, [FromQuery] int code)
+        public async Task<IActionResult> GetKey([FromRoute] int storageId, [FromRoute] ulong keyId, [FromQuery] int code)
         {
             try
             {
                 var storage = await GetAndValidateStorage(storageId, _userInfo.UserId, code);
-                var key = await _storageItemRepository.GetById(keyId);
+                var key = await _storageItemRepository.GetByFilter(query => query
+                    .Where(s => s.key_id.Equals(keyId) && s.storage_id.Equals(storageId)));
 
                 if (key is null)
                     return StatusCode(404, new { message = Message.NOT_FOUND });
@@ -238,6 +254,25 @@ namespace webapi.Controllers.Core
             catch (CryptographicException)
             {
                 return StatusCode(500, new { message = Message.ERROR });
+            }
+        }
+
+        [HttpDelete("key/{storageId}/{keyId}")]
+        public async Task<IActionResult> DeleteKey([FromRoute] int storageId, [FromRoute] ulong keyId, [FromQuery] int code)
+        {
+            try
+            {
+                var storage = await GetAndValidateStorage(storageId, _userInfo.UserId, code);
+
+                await _storageItemRepository.DeleteByFilter(query => query
+                        .Where(s => s.key_id.Equals(keyId) && s.storage_id.Equals(storage.storage_id)));
+
+                await _redisCache.DeteteCacheByKeyPattern(ImmutableData.STORAGES_PREFIX);
+                return StatusCode(204);
+            }
+            catch (EntityNotDeletedException ex)
+            {
+                return StatusCode(500, new { message = ex.Message });
             }
         }
 
