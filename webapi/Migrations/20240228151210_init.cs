@@ -1,5 +1,4 @@
 ﻿using System;
-using System.Net;
 using Microsoft.EntityFrameworkCore.Migrations;
 using Npgsql.EntityFrameworkCore.PostgreSQL.Metadata;
 
@@ -8,9 +7,7 @@ using Npgsql.EntityFrameworkCore.PostgreSQL.Metadata;
 namespace webapi.Migrations
 {
     /// <inheritdoc />
-#pragma warning disable CS8981 // The type name only contains lower-cased ascii characters. Such names may become reserved for the language.
     public partial class init : Migration
-#pragma warning restore CS8981 // The type name only contains lower-cased ascii characters. Such names may become reserved for the language.
     {
         /// <inheritdoc />
         protected override void Up(MigrationBuilder migrationBuilder)
@@ -37,7 +34,9 @@ namespace webapi.Migrations
                     username = table.Column<string>(type: "text", nullable: false),
                     role = table.Column<string>(type: "text", nullable: false),
                     email = table.Column<string>(type: "text", nullable: false),
-                    password_hash = table.Column<string>(type: "text", nullable: false)
+                    password = table.Column<string>(type: "text", nullable: false),
+                    is_2fa_enabled = table.Column<bool>(type: "boolean", nullable: false),
+                    is_blocked = table.Column<bool>(type: "boolean", nullable: false)
                 },
                 constraints: table =>
                 {
@@ -51,10 +50,11 @@ namespace webapi.Migrations
                     api_id = table.Column<int>(type: "integer", nullable: false)
                         .Annotation("Npgsql:ValueGenerationStrategy", NpgsqlValueGenerationStrategy.IdentityByDefaultColumn),
                     api_key = table.Column<string>(type: "text", nullable: false),
-                    remote_ip = table.Column<IPAddress>(type: "inet", nullable: true),
-                    is_tracking_ip = table.Column<bool>(type: "boolean", nullable: false),
-                    is_allowed_requesting = table.Column<bool>(type: "boolean", nullable: false),
-                    is_allowed_unknown_ip = table.Column<bool>(type: "boolean", nullable: false),
+                    type = table.Column<string>(type: "text", nullable: false),
+                    expiry_date = table.Column<DateTime>(type: "timestamp with time zone", nullable: true),
+                    is_blocked = table.Column<bool>(type: "boolean", nullable: false),
+                    last_time_activity = table.Column<DateTime>(type: "timestamp with time zone", nullable: false),
+                    max_request_of_day = table.Column<int>(type: "integer", nullable: false),
                     user_id = table.Column<int>(type: "integer", nullable: false)
                 },
                 constraints: table =>
@@ -76,7 +76,8 @@ namespace webapi.Migrations
                         .Annotation("Npgsql:ValueGenerationStrategy", NpgsqlValueGenerationStrategy.IdentityByDefaultColumn),
                     file_name = table.Column<string>(type: "text", nullable: false),
                     file_mime = table.Column<string>(type: "text", nullable: false),
-                    type = table.Column<string>(type: "text", nullable: true),
+                    file_mime_category = table.Column<string>(type: "text", nullable: false),
+                    type = table.Column<string>(type: "text", nullable: false),
                     operation_date = table.Column<DateTime>(type: "timestamp with time zone", nullable: false),
                     user_id = table.Column<int>(type: "integer", nullable: false)
                 },
@@ -98,8 +99,8 @@ namespace webapi.Migrations
                     key_id = table.Column<int>(type: "integer", nullable: false)
                         .Annotation("Npgsql:ValueGenerationStrategy", NpgsqlValueGenerationStrategy.IdentityByDefaultColumn),
                     private_key = table.Column<string>(type: "text", nullable: false),
-                    person_internal_key = table.Column<string>(type: "text", nullable: true),
-                    received_internal_key = table.Column<string>(type: "text", nullable: true),
+                    internal_key = table.Column<string>(type: "text", nullable: true),
+                    received_key = table.Column<string>(type: "text", nullable: true),
                     user_id = table.Column<int>(type: "integer", nullable: false)
                 },
                 constraints: table =>
@@ -107,6 +108,28 @@ namespace webapi.Migrations
                     table.PrimaryKey("PK_keys", x => x.key_id);
                     table.ForeignKey(
                         name: "FK_keys_users_user_id",
+                        column: x => x.user_id,
+                        principalTable: "users",
+                        principalColumn: "id",
+                        onDelete: ReferentialAction.Cascade);
+                });
+
+            migrationBuilder.CreateTable(
+                name: "links",
+                columns: table => new
+                {
+                    link_id = table.Column<int>(type: "integer", nullable: false)
+                        .Annotation("Npgsql:ValueGenerationStrategy", NpgsqlValueGenerationStrategy.IdentityByDefaultColumn),
+                    u_token = table.Column<string>(type: "text", nullable: false),
+                    expiry_date = table.Column<DateTime>(type: "timestamp with time zone", nullable: false),
+                    created_at = table.Column<DateTime>(type: "timestamp with time zone", nullable: false),
+                    user_id = table.Column<int>(type: "integer", nullable: false)
+                },
+                constraints: table =>
+                {
+                    table.PrimaryKey("PK_links", x => x.link_id);
+                    table.ForeignKey(
+                        name: "FK_links_users_user_id",
                         column: x => x.user_id,
                         principalTable: "users",
                         principalColumn: "id",
@@ -124,21 +147,14 @@ namespace webapi.Migrations
                     priority = table.Column<string>(type: "text", nullable: false),
                     send_time = table.Column<DateTime>(type: "timestamp with time zone", nullable: false),
                     is_checked = table.Column<bool>(type: "boolean", nullable: false),
-                    sender_id = table.Column<int>(type: "integer", nullable: false),
-                    receiver_id = table.Column<int>(type: "integer", nullable: false)
+                    user_id = table.Column<int>(type: "integer", nullable: false)
                 },
                 constraints: table =>
                 {
                     table.PrimaryKey("PK_notifications", x => x.notification_id);
                     table.ForeignKey(
-                        name: "FK_notifications_users_receiver_id",
-                        column: x => x.receiver_id,
-                        principalTable: "users",
-                        principalColumn: "id",
-                        onDelete: ReferentialAction.Cascade);
-                    table.ForeignKey(
-                        name: "FK_notifications_users_sender_id",
-                        column: x => x.sender_id,
+                        name: "FK_notifications_users_user_id",
+                        column: x => x.user_id,
                         principalTable: "users",
                         principalColumn: "id",
                         onDelete: ReferentialAction.Cascade);
@@ -154,6 +170,7 @@ namespace webapi.Migrations
                     offer_body = table.Column<string>(type: "text", nullable: false),
                     offer_type = table.Column<string>(type: "text", nullable: false),
                     is_accepted = table.Column<bool>(type: "boolean", nullable: false),
+                    created_at = table.Column<DateTime>(type: "timestamp with time zone", nullable: false),
                     sender_id = table.Column<int>(type: "integer", nullable: false),
                     receiver_id = table.Column<int>(type: "integer", nullable: false)
                 },
@@ -175,13 +192,36 @@ namespace webapi.Migrations
                 });
 
             migrationBuilder.CreateTable(
+                name: "storages",
+                columns: table => new
+                {
+                    storage_id = table.Column<int>(type: "integer", nullable: false)
+                        .Annotation("Npgsql:ValueGenerationStrategy", NpgsqlValueGenerationStrategy.IdentityByDefaultColumn),
+                    storage_name = table.Column<string>(type: "text", nullable: false),
+                    last_time_modified = table.Column<DateTime>(type: "timestamp with time zone", nullable: false),
+                    access_code = table.Column<string>(type: "text", nullable: false),
+                    encrypt = table.Column<bool>(type: "boolean", nullable: false),
+                    user_id = table.Column<int>(type: "integer", nullable: false)
+                },
+                constraints: table =>
+                {
+                    table.PrimaryKey("PK_storages", x => x.storage_id);
+                    table.ForeignKey(
+                        name: "FK_storages_users_user_id",
+                        column: x => x.user_id,
+                        principalTable: "users",
+                        principalColumn: "id",
+                        onDelete: ReferentialAction.Cascade);
+                });
+
+            migrationBuilder.CreateTable(
                 name: "tokens",
                 columns: table => new
                 {
                     token_id = table.Column<int>(type: "integer", nullable: false)
                         .Annotation("Npgsql:ValueGenerationStrategy", NpgsqlValueGenerationStrategy.IdentityByDefaultColumn),
-                    refresh_token = table.Column<string>(type: "text", nullable: true),
-                    expiry_date = table.Column<DateTime>(type: "timestamp with time zone", nullable: true),
+                    refresh_token = table.Column<string>(type: "text", nullable: false),
+                    expiry_date = table.Column<DateTime>(type: "timestamp with time zone", nullable: false),
                     user_id = table.Column<int>(type: "integer", nullable: false)
                 },
                 constraints: table =>
@@ -195,11 +235,38 @@ namespace webapi.Migrations
                         onDelete: ReferentialAction.Cascade);
                 });
 
+            migrationBuilder.CreateTable(
+                name: "storage_items",
+                columns: table => new
+                {
+                    key_id = table.Column<int>(type: "integer", nullable: false)
+                        .Annotation("Npgsql:ValueGenerationStrategy", NpgsqlValueGenerationStrategy.IdentityByDefaultColumn),
+                    key_name = table.Column<string>(type: "text", nullable: false),
+                    key_value = table.Column<string>(type: "text", nullable: false),
+                    created_at = table.Column<DateTime>(type: "timestamp with time zone", nullable: false),
+                    storage_id = table.Column<int>(type: "integer", nullable: false)
+                },
+                constraints: table =>
+                {
+                    table.PrimaryKey("PK_storage_items", x => x.key_id);
+                    table.ForeignKey(
+                        name: "FK_storage_items_storages_storage_id",
+                        column: x => x.storage_id,
+                        principalTable: "storages",
+                        principalColumn: "storage_id",
+                        onDelete: ReferentialAction.Cascade);
+                });
+
+            migrationBuilder.CreateIndex(
+                name: "IX_api_api_key",
+                table: "api",
+                column: "api_key",
+                unique: true);
+
             migrationBuilder.CreateIndex(
                 name: "IX_api_user_id",
                 table: "api",
-                column: "user_id",
-                unique: true);
+                column: "user_id");
 
             migrationBuilder.CreateIndex(
                 name: "IX_files_user_id",
@@ -213,14 +280,20 @@ namespace webapi.Migrations
                 unique: true);
 
             migrationBuilder.CreateIndex(
-                name: "IX_notifications_receiver_id",
-                table: "notifications",
-                column: "receiver_id");
+                name: "IX_links_u_token",
+                table: "links",
+                column: "u_token",
+                unique: true);
 
             migrationBuilder.CreateIndex(
-                name: "IX_notifications_sender_id",
+                name: "IX_links_user_id",
+                table: "links",
+                column: "user_id");
+
+            migrationBuilder.CreateIndex(
+                name: "IX_notifications_user_id",
                 table: "notifications",
-                column: "sender_id");
+                column: "user_id");
 
             migrationBuilder.CreateIndex(
                 name: "IX_offers_receiver_id",
@@ -233,9 +306,31 @@ namespace webapi.Migrations
                 column: "sender_id");
 
             migrationBuilder.CreateIndex(
+                name: "IX_storage_items_storage_id",
+                table: "storage_items",
+                column: "storage_id");
+
+            migrationBuilder.CreateIndex(
+                name: "IX_storages_user_id",
+                table: "storages",
+                column: "user_id");
+
+            migrationBuilder.CreateIndex(
+                name: "IX_tokens_refresh_token",
+                table: "tokens",
+                column: "refresh_token",
+                unique: true);
+
+            migrationBuilder.CreateIndex(
                 name: "IX_tokens_user_id",
                 table: "tokens",
                 column: "user_id",
+                unique: true);
+
+            migrationBuilder.CreateIndex(
+                name: "IX_users_email",
+                table: "users",
+                column: "email",
                 unique: true);
         }
 
@@ -255,13 +350,22 @@ namespace webapi.Migrations
                 name: "keys");
 
             migrationBuilder.DropTable(
+                name: "links");
+
+            migrationBuilder.DropTable(
                 name: "notifications");
 
             migrationBuilder.DropTable(
                 name: "offers");
 
             migrationBuilder.DropTable(
+                name: "storage_items");
+
+            migrationBuilder.DropTable(
                 name: "tokens");
+
+            migrationBuilder.DropTable(
+                name: "storages");
 
             migrationBuilder.DropTable(
                 name: "users");

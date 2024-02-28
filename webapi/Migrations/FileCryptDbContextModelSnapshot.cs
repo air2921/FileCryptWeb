@@ -152,6 +152,8 @@ namespace webapi.Migrations
                         .ValueGeneratedOnAdd()
                         .HasColumnType("integer");
 
+                    NpgsqlPropertyBuilderExtensions.UseIdentityByDefaultColumn(b.Property<int>("key_id"));
+
                     b.Property<DateTime>("created_at")
                         .HasColumnType("timestamp with time zone");
 

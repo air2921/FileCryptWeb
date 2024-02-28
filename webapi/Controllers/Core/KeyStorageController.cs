@@ -2,6 +2,7 @@
 using Microsoft.AspNetCore.Mvc;
 using Newtonsoft.Json;
 using System.Security.Cryptography;
+using System.Text.RegularExpressions;
 using webapi.Attributes;
 using webapi.DTO;
 using webapi.Exceptions;
@@ -223,12 +224,17 @@ namespace webapi.Controllers.Core
         {
             try
             {
+                if (!IsValidKey(keyDTO.key_value))
+                    return StatusCode(422, new { message = Message.INVALID_FORMAT });
+
                 var storage = await GetAndValidateStorage(storageId, _userInfo.UserId, code);
+
+                var key = await Cypher(storage.encrypt, keyDTO.key_value);
 
                 await _storageItemRepository.Add(new KeyStorageItemModel
                 {
                     key_name = keyDTO.key_name,
-                    key_value = keyDTO.key_value,
+                    key_value = key,
                     storage_id = storageId,
                     created_at = DateTime.UtcNow
                 });
@@ -310,6 +316,21 @@ namespace webapi.Controllers.Core
             {
                 return StatusCode(500, new { message = ex.Message });
             }
+        }
+
+        [Helper]
+        private async Task<string> Cypher(bool encrypt, string key)
+        {
+            if (encrypt)
+                return await _encryptKey.CypherKeyAsync(key, secretKey);
+            else
+                return key;
+        }
+
+        [Helper]
+        private bool IsValidKey(string key)
+        {
+            return string.IsNullOrWhiteSpace(key) || !_validation.IsBase64String(key) || !Regex.IsMatch(key, Validation.EncryptionKey);
         }
 
         [Helper]

@@ -12,8 +12,8 @@ using webapi.DB;
 namespace webapi.Migrations
 {
     [DbContext(typeof(FileCryptDbContext))]
-    [Migration("20231218181510_AddIndex-Tokens-Links")]
-    partial class AddIndexTokensLinks
+    [Migration("20240228151210_init")]
+    partial class init
     {
         /// <inheritdoc />
         protected override void BuildTargetModel(ModelBuilder modelBuilder)
@@ -34,10 +34,24 @@ namespace webapi.Migrations
                     NpgsqlPropertyBuilderExtensions.UseIdentityByDefaultColumn(b.Property<int>("api_id"));
 
                     b.Property<string>("api_key")
+                        .IsRequired()
                         .HasColumnType("text");
 
-                    b.Property<bool?>("is_allowed_requesting")
+                    b.Property<DateTime?>("expiry_date")
+                        .HasColumnType("timestamp with time zone");
+
+                    b.Property<bool>("is_blocked")
                         .HasColumnType("boolean");
+
+                    b.Property<DateTime>("last_time_activity")
+                        .HasColumnType("timestamp with time zone");
+
+                    b.Property<int>("max_request_of_day")
+                        .HasColumnType("integer");
+
+                    b.Property<string>("type")
+                        .IsRequired()
+                        .HasColumnType("text");
 
                     b.Property<int>("user_id")
                         .HasColumnType("integer");
@@ -47,8 +61,7 @@ namespace webapi.Migrations
                     b.HasIndex("api_key")
                         .IsUnique();
 
-                    b.HasIndex("user_id")
-                        .IsUnique();
+                    b.HasIndex("user_id");
 
                     b.ToTable("api");
                 });
@@ -62,6 +75,7 @@ namespace webapi.Migrations
                     NpgsqlPropertyBuilderExtensions.UseIdentityByDefaultColumn(b.Property<int>("mime_id"));
 
                     b.Property<string>("mime_name")
+                        .IsRequired()
                         .HasColumnType("text");
 
                     b.HasKey("mime_id");
@@ -78,15 +92,22 @@ namespace webapi.Migrations
                     NpgsqlPropertyBuilderExtensions.UseIdentityByDefaultColumn(b.Property<int>("file_id"));
 
                     b.Property<string>("file_mime")
+                        .IsRequired()
+                        .HasColumnType("text");
+
+                    b.Property<string>("file_mime_category")
+                        .IsRequired()
                         .HasColumnType("text");
 
                     b.Property<string>("file_name")
+                        .IsRequired()
                         .HasColumnType("text");
 
-                    b.Property<DateTime?>("operation_date")
+                    b.Property<DateTime>("operation_date")
                         .HasColumnType("timestamp with time zone");
 
                     b.Property<string>("type")
+                        .IsRequired()
                         .HasColumnType("text");
 
                     b.Property<int>("user_id")
@@ -107,13 +128,14 @@ namespace webapi.Migrations
 
                     NpgsqlPropertyBuilderExtensions.UseIdentityByDefaultColumn(b.Property<int>("key_id"));
 
-                    b.Property<string>("person_internal_key")
+                    b.Property<string>("internal_key")
                         .HasColumnType("text");
 
                     b.Property<string>("private_key")
+                        .IsRequired()
                         .HasColumnType("text");
 
-                    b.Property<string>("received_internal_key")
+                    b.Property<string>("received_key")
                         .HasColumnType("text");
 
                     b.Property<int>("user_id")
@@ -127,6 +149,67 @@ namespace webapi.Migrations
                     b.ToTable("keys");
                 });
 
+            modelBuilder.Entity("webapi.Models.KeyStorageItemModel", b =>
+                {
+                    b.Property<int>("key_id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("integer");
+
+                    NpgsqlPropertyBuilderExtensions.UseIdentityByDefaultColumn(b.Property<int>("key_id"));
+
+                    b.Property<DateTime>("created_at")
+                        .HasColumnType("timestamp with time zone");
+
+                    b.Property<string>("key_name")
+                        .IsRequired()
+                        .HasColumnType("text");
+
+                    b.Property<string>("key_value")
+                        .IsRequired()
+                        .HasColumnType("text");
+
+                    b.Property<int>("storage_id")
+                        .HasColumnType("integer");
+
+                    b.HasKey("key_id");
+
+                    b.HasIndex("storage_id");
+
+                    b.ToTable("storage_items");
+                });
+
+            modelBuilder.Entity("webapi.Models.KeyStorageModel", b =>
+                {
+                    b.Property<int>("storage_id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("integer");
+
+                    NpgsqlPropertyBuilderExtensions.UseIdentityByDefaultColumn(b.Property<int>("storage_id"));
+
+                    b.Property<string>("access_code")
+                        .IsRequired()
+                        .HasColumnType("text");
+
+                    b.Property<bool>("encrypt")
+                        .HasColumnType("boolean");
+
+                    b.Property<DateTime>("last_time_modified")
+                        .HasColumnType("timestamp with time zone");
+
+                    b.Property<string>("storage_name")
+                        .IsRequired()
+                        .HasColumnType("text");
+
+                    b.Property<int>("user_id")
+                        .HasColumnType("integer");
+
+                    b.HasKey("storage_id");
+
+                    b.HasIndex("user_id");
+
+                    b.ToTable("storages");
+                });
+
             modelBuilder.Entity("webapi.Models.LinkModel", b =>
                 {
                     b.Property<int>("link_id")
@@ -135,14 +218,11 @@ namespace webapi.Migrations
 
                     NpgsqlPropertyBuilderExtensions.UseIdentityByDefaultColumn(b.Property<int>("link_id"));
 
-                    b.Property<DateTime?>("created_at")
+                    b.Property<DateTime>("created_at")
                         .HasColumnType("timestamp with time zone");
 
-                    b.Property<DateTime?>("expiry_date")
+                    b.Property<DateTime>("expiry_date")
                         .HasColumnType("timestamp with time zone");
-
-                    b.Property<bool?>("is_used")
-                        .HasColumnType("boolean");
 
                     b.Property<string>("u_token")
                         .IsRequired()
@@ -169,32 +249,30 @@ namespace webapi.Migrations
 
                     NpgsqlPropertyBuilderExtensions.UseIdentityByDefaultColumn(b.Property<int>("notification_id"));
 
-                    b.Property<bool?>("is_checked")
+                    b.Property<bool>("is_checked")
                         .HasColumnType("boolean");
 
                     b.Property<string>("message")
+                        .IsRequired()
                         .HasColumnType("text");
 
                     b.Property<string>("message_header")
+                        .IsRequired()
                         .HasColumnType("text");
 
                     b.Property<string>("priority")
+                        .IsRequired()
                         .HasColumnType("text");
 
-                    b.Property<int>("receiver_id")
-                        .HasColumnType("integer");
-
-                    b.Property<DateTime?>("send_time")
+                    b.Property<DateTime>("send_time")
                         .HasColumnType("timestamp with time zone");
 
-                    b.Property<int>("sender_id")
+                    b.Property<int>("user_id")
                         .HasColumnType("integer");
 
                     b.HasKey("notification_id");
 
-                    b.HasIndex("receiver_id");
-
-                    b.HasIndex("sender_id");
+                    b.HasIndex("user_id");
 
                     b.ToTable("notifications");
                 });
@@ -207,19 +285,22 @@ namespace webapi.Migrations
 
                     NpgsqlPropertyBuilderExtensions.UseIdentityByDefaultColumn(b.Property<int>("offer_id"));
 
-                    b.Property<DateTime?>("created_at")
+                    b.Property<DateTime>("created_at")
                         .HasColumnType("timestamp with time zone");
 
-                    b.Property<bool?>("is_accepted")
+                    b.Property<bool>("is_accepted")
                         .HasColumnType("boolean");
 
                     b.Property<string>("offer_body")
+                        .IsRequired()
                         .HasColumnType("text");
 
                     b.Property<string>("offer_header")
+                        .IsRequired()
                         .HasColumnType("text");
 
                     b.Property<string>("offer_type")
+                        .IsRequired()
                         .HasColumnType("text");
 
                     b.Property<int>("receiver_id")
@@ -245,10 +326,11 @@ namespace webapi.Migrations
 
                     NpgsqlPropertyBuilderExtensions.UseIdentityByDefaultColumn(b.Property<int>("token_id"));
 
-                    b.Property<DateTime?>("expiry_date")
+                    b.Property<DateTime>("expiry_date")
                         .HasColumnType("timestamp with time zone");
 
                     b.Property<string>("refresh_token")
+                        .IsRequired()
                         .HasColumnType("text");
 
                     b.Property<int>("user_id")
@@ -274,18 +356,31 @@ namespace webapi.Migrations
                     NpgsqlPropertyBuilderExtensions.UseIdentityByDefaultColumn(b.Property<int>("id"));
 
                     b.Property<string>("email")
+                        .IsRequired()
                         .HasColumnType("text");
 
-                    b.Property<string>("password_hash")
+                    b.Property<bool>("is_2fa_enabled")
+                        .HasColumnType("boolean");
+
+                    b.Property<bool>("is_blocked")
+                        .HasColumnType("boolean");
+
+                    b.Property<string>("password")
+                        .IsRequired()
                         .HasColumnType("text");
 
                     b.Property<string>("role")
+                        .IsRequired()
                         .HasColumnType("text");
 
                     b.Property<string>("username")
+                        .IsRequired()
                         .HasColumnType("text");
 
                     b.HasKey("id");
+
+                    b.HasIndex("email")
+                        .IsUnique();
 
                     b.ToTable("users");
                 });
@@ -293,8 +388,8 @@ namespace webapi.Migrations
             modelBuilder.Entity("webapi.Models.ApiModel", b =>
                 {
                     b.HasOne("webapi.Models.UserModel", "User")
-                        .WithOne("API")
-                        .HasForeignKey("webapi.Models.ApiModel", "user_id")
+                        .WithMany("API")
+                        .HasForeignKey("user_id")
                         .OnDelete(DeleteBehavior.Cascade)
                         .IsRequired();
 
@@ -323,6 +418,28 @@ namespace webapi.Migrations
                     b.Navigation("User");
                 });
 
+            modelBuilder.Entity("webapi.Models.KeyStorageItemModel", b =>
+                {
+                    b.HasOne("webapi.Models.KeyStorageModel", "KeyStorage")
+                        .WithMany("StorageItems")
+                        .HasForeignKey("storage_id")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired();
+
+                    b.Navigation("KeyStorage");
+                });
+
+            modelBuilder.Entity("webapi.Models.KeyStorageModel", b =>
+                {
+                    b.HasOne("webapi.Models.UserModel", "User")
+                        .WithMany("KeyStorages")
+                        .HasForeignKey("user_id")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired();
+
+                    b.Navigation("User");
+                });
+
             modelBuilder.Entity("webapi.Models.LinkModel", b =>
                 {
                     b.HasOne("webapi.Models.UserModel", "User")
@@ -338,19 +455,11 @@ namespace webapi.Migrations
                 {
                     b.HasOne("webapi.Models.UserModel", "Receiver")
                         .WithMany()
-                        .HasForeignKey("receiver_id")
-                        .OnDelete(DeleteBehavior.Cascade)
-                        .IsRequired();
-
-                    b.HasOne("webapi.Models.UserModel", "Sender")
-                        .WithMany()
-                        .HasForeignKey("sender_id")
+                        .HasForeignKey("user_id")
                         .OnDelete(DeleteBehavior.Cascade)
                         .IsRequired();
 
                     b.Navigation("Receiver");
-
-                    b.Navigation("Sender");
                 });
 
             modelBuilder.Entity("webapi.Models.OfferModel", b =>
@@ -383,11 +492,18 @@ namespace webapi.Migrations
                     b.Navigation("User");
                 });
 
+            modelBuilder.Entity("webapi.Models.KeyStorageModel", b =>
+                {
+                    b.Navigation("StorageItems");
+                });
+
             modelBuilder.Entity("webapi.Models.UserModel", b =>
                 {
                     b.Navigation("API");
 
                     b.Navigation("Files");
+
+                    b.Navigation("KeyStorages");
 
                     b.Navigation("Keys");
 
