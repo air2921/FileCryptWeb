@@ -60,6 +60,8 @@ namespace webapi.Controllers.Core
 
         [HttpPost("storage")]
         [XSRFProtection]
+        [ProducesResponseType(201)]
+        [ProducesResponseType(typeof(object), 500)]
         public async Task<IActionResult> AddStorage([FromBody] StorageDTO storageDTO)
         {
             try
@@ -73,7 +75,7 @@ namespace webapi.Controllers.Core
                     encrypt = storageDTO.encrypt
                 });
 
-                await _redisCache.DeteteCacheByKeyPattern(ImmutableData.STORAGES_PREFIX);
+                await _redisCache.DeteteCacheByKeyPattern($"{ImmutableData.STORAGES_PREFIX}{_userInfo.UserId}");
                 return StatusCode(201);
             }
             catch (EntityNotCreatedException ex)
@@ -84,6 +86,10 @@ namespace webapi.Controllers.Core
 
         [HttpPut("storage/{storageId}")]
         [XSRFProtection]
+        [ProducesResponseType(typeof(object), 200)]
+        [ProducesResponseType(typeof(object), 403)]
+        [ProducesResponseType(typeof(object), 404)]
+        [ProducesResponseType(typeof(object), 500)]
         public async Task<IActionResult> UpdateStorage([FromRoute] int storageId, [FromQuery] int code,
             [FromBody] UpdateStorageDTO storageDTO)
         {
@@ -92,7 +98,7 @@ namespace webapi.Controllers.Core
                 var storage = await GetAndValidateStorage(storageId, _userInfo.UserId, code);
                 await DbUpdate(storageDTO, storage);
 
-                await _redisCache.DeteteCacheByKeyPattern(ImmutableData.STORAGES_PREFIX);
+                await _redisCache.DeteteCacheByKeyPattern($"{ImmutableData.STORAGES_PREFIX}{_userInfo.UserId}");
                 return StatusCode(200, new { message = Message.UPDATED });
             }
             catch (EntityNotUpdatedException ex)
@@ -115,6 +121,10 @@ namespace webapi.Controllers.Core
 
         [HttpDelete("storage/{storageId}")]
         [XSRFProtection]
+        [ProducesResponseType(204)]
+        [ProducesResponseType(typeof(object), 403)]
+        [ProducesResponseType(typeof(object), 404)]
+        [ProducesResponseType(typeof(object), 500)]
         public async Task<IActionResult> DeleteStorage([FromRoute] int storageId, [FromQuery] int code)
         {
             try
@@ -122,7 +132,7 @@ namespace webapi.Controllers.Core
                 var storage = await GetAndValidateStorage(storageId, _userInfo.UserId, code);
                 await _storageRepository.Delete(storageId);
 
-                await _redisCache.DeteteCacheByKeyPattern(ImmutableData.STORAGES_PREFIX);
+                await _redisCache.DeteteCacheByKeyPattern($"{ImmutableData.STORAGES_PREFIX}{_userInfo.UserId}");
                 return StatusCode(204);
             }
             catch (EntityNotDeletedException ex)
@@ -144,6 +154,10 @@ namespace webapi.Controllers.Core
         }
 
         [HttpGet("storage/{storageId}")]
+        [ProducesResponseType(typeof(object), 200)]
+        [ProducesResponseType(typeof(object), 403)]
+        [ProducesResponseType(typeof(object), 404)]
+        [ProducesResponseType(typeof(object), 500)]
         public async Task<IActionResult> GetStorageAndItems([FromRoute] int storageId, [FromQuery] int code)
         {
             try
@@ -182,6 +196,7 @@ namespace webapi.Controllers.Core
         }
 
         [HttpGet("storage/all")]
+        [ProducesResponseType(typeof(IEnumerable<KeyStorageModel>), 200)]
         public async Task<IActionResult> GetStorages()
         {
             return StatusCode(200, new { storages = await _storageRepository
@@ -190,6 +205,10 @@ namespace webapi.Controllers.Core
 
         [HttpPost("key/{storageId}")]
         [XSRFProtection]
+        [ProducesResponseType(201)]
+        [ProducesResponseType(typeof(object), 403)]
+        [ProducesResponseType(typeof(object), 404)]
+        [ProducesResponseType(typeof(object), 500)]
         public async Task<IActionResult> AddKey([FromRoute] int storageId, [FromQuery] int code, [FromBody] KeyDTO keyDTO)
         {
             try
@@ -204,7 +223,7 @@ namespace webapi.Controllers.Core
                     created_at = DateTime.UtcNow
                 });
 
-                await _redisCache.DeteteCacheByKeyPattern(ImmutableData.STORAGES_PREFIX);
+                await _redisCache.DeteteCacheByKeyPattern($"{ImmutableData.STORAGES_PREFIX}{_userInfo.UserId}");
                 return StatusCode(201);
             }
             catch (EntityNotCreatedException ex)
@@ -226,6 +245,10 @@ namespace webapi.Controllers.Core
         }
 
         [HttpGet("key/{storageId}/{keyId}")]
+        [ProducesResponseType(typeof(object), 200)]
+        [ProducesResponseType(typeof(object), 403)]
+        [ProducesResponseType(typeof(object), 404)]
+        [ProducesResponseType(typeof(object), 500)]
         public async Task<IActionResult> GetKey([FromRoute] int storageId, [FromRoute] ulong keyId, [FromQuery] int code)
         {
             try
@@ -258,6 +281,8 @@ namespace webapi.Controllers.Core
         }
 
         [HttpDelete("key/{storageId}/{keyId}")]
+        [ProducesResponseType(204)]
+        [ProducesResponseType(typeof(object), 500)]
         public async Task<IActionResult> DeleteKey([FromRoute] int storageId, [FromRoute] ulong keyId, [FromQuery] int code)
         {
             try
@@ -267,7 +292,7 @@ namespace webapi.Controllers.Core
                 await _storageItemRepository.DeleteByFilter(query => query
                         .Where(s => s.key_id.Equals(keyId) && s.storage_id.Equals(storage.storage_id)));
 
-                await _redisCache.DeteteCacheByKeyPattern(ImmutableData.STORAGES_PREFIX);
+                await _redisCache.DeteteCacheByKeyPattern($"{ImmutableData.STORAGES_PREFIX}{_userInfo.UserId}");
                 return StatusCode(204);
             }
             catch (EntityNotDeletedException ex)

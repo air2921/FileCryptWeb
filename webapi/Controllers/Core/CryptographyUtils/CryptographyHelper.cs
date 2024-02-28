@@ -180,32 +180,23 @@ namespace webapi.Controllers.Base
             string lowerFileType = fileType.ToLowerInvariant();
             bool isValidRoute = false;
 
-            switch (operation)
-            {
-                case "encrypt":
-                    isValidRoute = true;
-                    break;
-                case "decrypt":
-                    isValidRoute = true;
-                    break;
-                default: throw new InvalidRouteException();
-            }
+            if (operation == "encrypt")
+                isValidRoute = true;
+            else if (operation == "decrypt")
+                isValidRoute = true;
+            else
+                throw new InvalidRouteException();
 
             try
             {
                 if (lowerFileType == privateType)
-                {
                     return new CryptographyParams(await CacheKey(_redisKeys.PrivateKey, _userInfo.UserId), isValidRoute);
-                }
                 else if (lowerFileType == internalType)
-                {
                     return new CryptographyParams(await CacheKey(_redisKeys.InternalKey, _userInfo.UserId), isValidRoute);
-                }
                 else if (lowerFileType == receivedType)
-                {
                     return new CryptographyParams(await CacheKey(_redisKeys.ReceivedKey, _userInfo.UserId), isValidRoute);
-                }
-                throw new InvalidRouteException();
+                else
+                    throw new InvalidRouteException();
             }
             catch (ArgumentNullException)
             {
