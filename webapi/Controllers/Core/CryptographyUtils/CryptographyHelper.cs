@@ -1,10 +1,13 @@
 ﻿using Microsoft.AspNetCore.Mvc;
+using Newtonsoft.Json;
 using System.Text.RegularExpressions;
 using webapi.Attributes;
 using webapi.Cryptography;
 using webapi.Exceptions;
 using webapi.Helpers;
+using webapi.Interfaces;
 using webapi.Interfaces.Controllers;
+using webapi.Interfaces.Cryptography;
 using webapi.Interfaces.Redis;
 using webapi.Interfaces.Services;
 using webapi.Localization;
@@ -24,26 +27,38 @@ namespace webapi.Controllers.Base
         #region fields and constructor
 
         private readonly IFileService _fileService;
+        private readonly IRepository<KeyModel> _keyRepository;
+        private readonly ICypherKey _decryptKey;
         private readonly ILogger<CryptographyHelper> _logger;
+        private readonly IConfiguration _configuration;
         private readonly IValidation _validation;
         private readonly IRedisCache _redisCache;
         private readonly IRedisKeys _redisKeys;
         private readonly IUserInfo _userInfo;
+        private readonly byte[] secretKey;
 
         public CryptographyHelper(
             IFileService fileService,
+            IRepository<KeyModel> keyRepository,
+            IEnumerable<ICypherKey> cypherKeys,
+            IImplementationFinder implementationFinder,
             ILogger<CryptographyHelper> logger,
+            IConfiguration configuration,
             IValidation validation,
             IRedisCache redisCache,
             IRedisKeys redisKeys,
             IUserInfo userInfo)
         {
             _fileService = fileService;
+            _keyRepository = keyRepository;
+            _decryptKey = implementationFinder.GetImplementationByKey(cypherKeys, ImplementationKey.DECRYPT_KEY);
             _logger = logger;
+            _configuration = configuration;
             _validation = validation;
             _redisCache = redisCache;
             _redisKeys = redisKeys;
             _userInfo = userInfo;
+            secretKey = Convert.FromBase64String(_configuration[App.ENCRYPTION_KEY]!);
         }
 
         #endregion
@@ -165,33 +180,23 @@ namespace webapi.Controllers.Base
             string lowerFileType = fileType.ToLowerInvariant();
             bool isValidRoute = false;
 
-            switch (operation)
-            {
-                case "encrypt":
-                    isValidRoute = true;
-                    break;
-                case "decrypt":
-                    isValidRoute = true;
-                    break;
-                default:
-                    throw new InvalidRouteException();
-            }
+            if (operation == "encrypt")
+                isValidRoute = true;
+            else if (operation == "decrypt")
+                isValidRoute = true;
+            else
+                throw new InvalidRouteException();
 
             try
             {
                 if (lowerFileType == privateType)
-                {
-                    return new CryptographyParams(await _redisCache.CacheKey(_redisKeys.PrivateKey, _userInfo.UserId), isValidRoute);
-                }
+                    return new CryptographyParams(await CacheKey(_redisKeys.PrivateKey, _userInfo.UserId), isValidRoute);
                 else if (lowerFileType == internalType)
-                {
-                    return new CryptographyParams(await _redisCache.CacheKey(_redisKeys.InternalKey, _userInfo.UserId), isValidRoute);
-                }
+                    return new CryptographyParams(await CacheKey(_redisKeys.InternalKey, _userInfo.UserId), isValidRoute);
                 else if (lowerFileType == receivedType)
-                {
-                    return new CryptographyParams(await _redisCache.CacheKey(_redisKeys.ReceivedKey, _userInfo.UserId), isValidRoute);
-                }
-                throw new InvalidRouteException();
+                    return new CryptographyParams(await CacheKey(_redisKeys.ReceivedKey, _userInfo.UserId), isValidRoute);
+                else
+                    throw new InvalidRouteException();
             }
             catch (ArgumentNullException)
             {
@@ -200,6 +205,44 @@ namespace webapi.Controllers.Base
             catch (ArgumentException)
             {
                 throw new InvalidRouteException();
+            }
+        }
+
+        private async Task<string> CacheKey(string key, int userId)
+        {
+            try
+            {
+                var value = await _redisCache.GetCachedData(key);
+
+                if (value is not null)
+                    return JsonConvert.DeserializeObject<string>(value);
+
+                var keys = await _keyRepository.GetByFilter(query => query.Where(k => k.user_id.Equals(userId)));
+                if (keys is null)
+                    throw new ArgumentNullException(Message.NOT_FOUND);
+
+                string? encryptionKey = null;
+
+                if (key == _redisKeys.PrivateKey)
+                    encryptionKey = keys.private_key;
+                else if (key == _redisKeys.InternalKey)
+                    encryptionKey = keys.internal_key;
+                else if (key == _redisKeys.ReceivedKey)
+                    encryptionKey = keys.received_key;
+                else
+                    throw new ArgumentException();
+
+                if (string.IsNullOrEmpty(encryptionKey))
+                    throw new ArgumentNullException(Message.NOT_FOUND);
+
+                var decryptedKey = await _decryptKey.CypherKeyAsync(encryptionKey, secretKey);
+                await _redisCache.CacheData(key, decryptedKey, TimeSpan.FromMinutes(10));
+
+                return decryptedKey;
+            }
+            catch (OperationCanceledException ex)
+            {
+                throw new ArgumentNullException(ex.Message);
             }
         }
     }

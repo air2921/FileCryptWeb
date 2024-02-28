@@ -53,6 +53,7 @@
         public const string NOTIFICATIONS_PREFIX = "Notifications_";
         public const string OFFERS_PREFIX = "Offers_";
         public const string USER_DATA_PREFIX = "User_Data_";
+        public const string STORAGES_PREFIX = "Storages_";
 
         #endregion
     }

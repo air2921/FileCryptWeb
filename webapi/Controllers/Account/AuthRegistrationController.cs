@@ -1,5 +1,4 @@
 ﻿using Microsoft.AspNetCore.Mvc;
-using System.Reflection;
 using System.Text.RegularExpressions;
 using webapi.Attributes;
 using webapi.DB;
@@ -28,8 +27,10 @@ namespace webapi.Controllers.Account
         #region fields and constructor
 
         private readonly IRepository<UserModel> _userRepository;
+        private readonly IValidation _validation;
         private readonly IRepository<KeyModel> _keyRepository;
         private readonly IRepository<TokenModel> _tokenRepository;
+        private readonly IRepository<KeyStorageModel> _storageRepository;
         private readonly FileCryptDbContext _dbContext;
         private readonly IConfiguration _configuration;
         private readonly IGenerate _generate;
@@ -41,11 +42,13 @@ namespace webapi.Controllers.Account
 
         public AuthRegistrationController(
             ILogger<AuthRegistrationController> logger,
+            IValidation validation,
             IEmailSender email,
             IPasswordManager passwordManager,
             IRepository<UserModel> userRepository,
             IRepository<KeyModel> keyRepository,
             IRepository<TokenModel> tokenRepository,
+            IRepository<KeyStorageModel> storageRepository,
             FileCryptDbContext dbContext,
             IConfiguration configuration,
             IGenerate generate,
@@ -53,11 +56,13 @@ namespace webapi.Controllers.Account
             IEnumerable<ICypherKey> cypherKeys)
         {
             _logger = logger;
+            _validation = validation;
             _email = email;
             _passwordManager = passwordManager;
             _userRepository = userRepository;
             _keyRepository = keyRepository;
             _tokenRepository = tokenRepository;
+            _storageRepository = storageRepository;
             _dbContext = dbContext;
             _configuration = configuration;
             _generate = generate;
@@ -84,7 +89,7 @@ namespace webapi.Controllers.Account
                 if (user is not null)
                     return StatusCode(409, new { message = Message.USER_EXISTS });
 
-                if (!Regex.IsMatch(userDTO.password, Validation.Password) || !Regex.IsMatch(userDTO.username, Validation.Username))
+                if (!IsValidData(userDTO))
                     return StatusCode(400, new { message = Message.INVALID_FORMAT });
 
                 await SendMessage(userDTO.username, userDTO.email, code);
@@ -125,7 +130,7 @@ namespace webapi.Controllers.Account
                 if (!IsCorrect)
                     return StatusCode(422, new { message = Message.INCORRECT });
 
-                await DbTransaction(session.Email, session.Password, session.Username, session.Role, session.Flag2Fa);
+                await DbTransaction(session);
 
                 return StatusCode(201);
             }
@@ -140,18 +145,27 @@ namespace webapi.Controllers.Account
         }
 
         [Helper]
-        private async Task DbTransaction(string email, string password, string username, string role, bool flag2fa)
+        private bool IsValidData(RegisterDTO userDTO)
+        {
+            bool isValidUsername = Regex.IsMatch(userDTO.username, Validation.Username);
+            bool isValidPassword = Regex.IsMatch(userDTO.password, Validation.Password);
+
+            return isValidUsername && isValidPassword;
+        }
+
+        [Helper]
+        private async Task DbTransaction(SessionObject session)
         {
             using var transaction = await _dbContext.Database.BeginTransactionAsync();
             try
             {
                 var id = await _userRepository.Add(new UserModel
                 {
-                    email = email,
-                    password = password,
-                    username = username,
-                    role = role,
-                    is_2fa_enabled = flag2fa,
+                    email = session.Email,
+                    password = session.Password,
+                    username = session.Username,
+                    role = session.Role,
+                    is_2fa_enabled = session.Flag2Fa,
                     is_blocked = false
                 }, e => e.id);
 
@@ -227,7 +241,7 @@ namespace webapi.Controllers.Account
                 Username = username,
                 Role = role,
                 Flag2Fa = bool.Parse(flag_2fa),
-                Code = correctCode
+                Code = correctCode,
             };
         }
 
@@ -240,7 +254,6 @@ namespace webapi.Controllers.Account
             public string Role { get; set; }
             public bool Flag2Fa { get; set; }
             public string Code { get; set; }
-
         }
     }
 }

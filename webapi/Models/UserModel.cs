@@ -27,6 +27,9 @@ namespace webapi.Models
         public KeyModel? Keys { get; set; }
 
         [JsonIgnore]
+        public ICollection<KeyStorageModel>? KeyStorages { get; set; }
+
+        [JsonIgnore]
         public ICollection<FileModel>? Files { get; set; }
 
         [JsonIgnore]

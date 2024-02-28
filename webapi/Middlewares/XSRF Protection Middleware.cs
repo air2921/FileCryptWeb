@@ -21,16 +21,11 @@ namespace webapi.Middlewares
             bool antiforgeryCookieExists = context.Request.Cookies.Any(cookie => cookie.Key.StartsWith(".AspNetCore.Antiforgery."));
             context.Request.Cookies.TryGetValue(ImmutableData.XSRF_COOKIE_KEY, out string? xsrf);
 
-            if (string.IsNullOrEmpty(xsrf) || !antiforgeryCookieExists)
-            {
-                var requestToken = _antiforgery.GetAndStoreTokens(context).RequestToken;
-                context.Response.Cookies.Append(ImmutableData.XSRF_COOKIE_KEY, requestToken,
-                    tokenService.SetCookieOptions(TimeSpan.FromMinutes(90)));
-            }
-            else
-            {
-                context.Request.Headers.Append(ImmutableData.XSRF_HEADER_NAME, xsrf);
-            }
+            var requestToken = _antiforgery.GetAndStoreTokens(context).RequestToken;
+            context.Response.Cookies.Append(ImmutableData.XSRF_COOKIE_KEY, requestToken,
+                tokenService.SetCookieOptions(TimeSpan.FromMinutes(90)));
+
+            context.Request.Headers.Append(ImmutableData.XSRF_HEADER_NAME, requestToken);
 
             await _next(context);
         }

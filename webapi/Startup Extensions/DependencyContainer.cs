@@ -20,7 +20,6 @@ namespace webapi
         public static void Singleton(IServiceCollection services)
         {
             services.AddSingleton<IHttpContextAccessor, HttpContextAccessor>();
-            services.AddSingleton<IRedisDbContext, RedisDbContext>();
         }
 
         public static void Scoped(IServiceCollection services)
@@ -48,6 +47,7 @@ namespace webapi
         public static void Transient(IServiceCollection services)
         {
             services.AddTransient<IImplementationFinder, ImplementationFinder>();
+            services.AddTransient<IRedisDbContext, RedisDbContext>();
             services.AddTransient<ICypher, Cypher>();
             services.AddTransient<ITokenService, TokenService>();
             services.AddTransient<ICypherKey, EncryptKey>();

@@ -146,6 +146,67 @@ namespace webapi.Migrations
                     b.ToTable("keys");
                 });
 
+            modelBuilder.Entity("webapi.Models.KeyStorageItemModel", b =>
+                {
+                    b.Property<int>("key_id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("integer");
+
+                    NpgsqlPropertyBuilderExtensions.UseIdentityByDefaultColumn(b.Property<int>("key_id"));
+
+                    b.Property<DateTime>("created_at")
+                        .HasColumnType("timestamp with time zone");
+
+                    b.Property<string>("key_name")
+                        .IsRequired()
+                        .HasColumnType("text");
+
+                    b.Property<string>("key_value")
+                        .IsRequired()
+                        .HasColumnType("text");
+
+                    b.Property<int>("storage_id")
+                        .HasColumnType("integer");
+
+                    b.HasKey("key_id");
+
+                    b.HasIndex("storage_id");
+
+                    b.ToTable("storage_items");
+                });
+
+            modelBuilder.Entity("webapi.Models.KeyStorageModel", b =>
+                {
+                    b.Property<int>("storage_id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("integer");
+
+                    NpgsqlPropertyBuilderExtensions.UseIdentityByDefaultColumn(b.Property<int>("storage_id"));
+
+                    b.Property<string>("access_code")
+                        .IsRequired()
+                        .HasColumnType("text");
+
+                    b.Property<bool>("encrypt")
+                        .HasColumnType("boolean");
+
+                    b.Property<DateTime>("last_time_modified")
+                        .HasColumnType("timestamp with time zone");
+
+                    b.Property<string>("storage_name")
+                        .IsRequired()
+                        .HasColumnType("text");
+
+                    b.Property<int>("user_id")
+                        .HasColumnType("integer");
+
+                    b.HasKey("storage_id");
+
+                    b.HasIndex("user_id");
+
+                    b.ToTable("storages");
+                });
+
             modelBuilder.Entity("webapi.Models.LinkModel", b =>
                 {
                     b.Property<int>("link_id")
@@ -354,6 +415,28 @@ namespace webapi.Migrations
                     b.Navigation("User");
                 });
 
+            modelBuilder.Entity("webapi.Models.KeyStorageItemModel", b =>
+                {
+                    b.HasOne("webapi.Models.KeyStorageModel", "KeyStorage")
+                        .WithMany("StorageItems")
+                        .HasForeignKey("storage_id")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired();
+
+                    b.Navigation("KeyStorage");
+                });
+
+            modelBuilder.Entity("webapi.Models.KeyStorageModel", b =>
+                {
+                    b.HasOne("webapi.Models.UserModel", "User")
+                        .WithMany("KeyStorages")
+                        .HasForeignKey("user_id")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired();
+
+                    b.Navigation("User");
+                });
+
             modelBuilder.Entity("webapi.Models.LinkModel", b =>
                 {
                     b.HasOne("webapi.Models.UserModel", "User")
@@ -406,11 +489,18 @@ namespace webapi.Migrations
                     b.Navigation("User");
                 });
 
+            modelBuilder.Entity("webapi.Models.KeyStorageModel", b =>
+                {
+                    b.Navigation("StorageItems");
+                });
+
             modelBuilder.Entity("webapi.Models.UserModel", b =>
                 {
                     b.Navigation("API");
 
                     b.Navigation("Files");
+
+                    b.Navigation("KeyStorages");
 
                     b.Navigation("Keys");
 

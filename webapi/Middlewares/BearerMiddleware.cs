@@ -68,6 +68,7 @@ namespace webapi.Middlewares
             context.Response.Headers.Add("X-Content-Type-Options", "nosniff");
             context.Response.Headers.Add("X-Xss-Protection", "1");
             context.Response.Headers.Add("X-Frame-Options", "DENY");
+            context.Response.Headers.Add("Content-Security-Policy", "default-src 'self'; script-src 'self' https://cdnjs.cloudflare.com; style-src 'self' https://fonts.googleapis.com; font-src 'self' https://fonts.gstatic.com; img-src 'self' data:;");
         }
     }
 
