@@ -197,10 +197,20 @@ namespace webapi.Controllers.Core
 
         [HttpGet("storage/all")]
         [ProducesResponseType(typeof(IEnumerable<KeyStorageModel>), 200)]
+        [ProducesResponseType(typeof(object), 500)]
         public async Task<IActionResult> GetStorages()
         {
-            return StatusCode(200, new { storages = await _storageRepository
-                .GetAll(query => query.Where(s => s.user_id.Equals(_userInfo.UserId))) });
+            try
+            {
+                return StatusCode(200, new {
+                    storages = await _storageRepository
+                        .GetAll(query => query.Where(s => s.user_id.Equals(_userInfo.UserId)))
+                });
+            }
+            catch (OperationCanceledException ex)
+            {
+                return StatusCode(500, new { message = ex.Message });
+            }
         }
 
         [HttpPost("key/{storageId}")]
@@ -249,7 +259,7 @@ namespace webapi.Controllers.Core
         [ProducesResponseType(typeof(object), 403)]
         [ProducesResponseType(typeof(object), 404)]
         [ProducesResponseType(typeof(object), 500)]
-        public async Task<IActionResult> GetKey([FromRoute] int storageId, [FromRoute] ulong keyId, [FromQuery] int code)
+        public async Task<IActionResult> GetKey([FromRoute] int storageId, [FromRoute] int keyId, [FromQuery] int code)
         {
             try
             {
@@ -281,9 +291,10 @@ namespace webapi.Controllers.Core
         }
 
         [HttpDelete("key/{storageId}/{keyId}")]
+        [XSRFProtection]
         [ProducesResponseType(204)]
         [ProducesResponseType(typeof(object), 500)]
-        public async Task<IActionResult> DeleteKey([FromRoute] int storageId, [FromRoute] ulong keyId, [FromQuery] int code)
+        public async Task<IActionResult> DeleteKey([FromRoute] int storageId, [FromRoute] int keyId, [FromQuery] int code)
         {
             try
             {

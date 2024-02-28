@@ -146,7 +146,7 @@ namespace webapi.Controllers.Account
                 await DbTransaction(tokenModel, user, refreshToken);
                 CookieAppend(user, HttpContext, refreshToken);
 
-                await _redisCache.DeteteCacheByKeyPattern($"{ImmutableData.NOTIFICATIONS_PREFIX}{_userInfo.UserId}");
+                await _redisCache.DeteteCacheByKeyPattern($"{ImmutableData.NOTIFICATIONS_PREFIX}{user.id}");
 
                 return StatusCode(200);
             }

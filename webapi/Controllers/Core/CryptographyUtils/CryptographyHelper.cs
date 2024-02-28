@@ -219,26 +219,18 @@ namespace webapi.Controllers.Base
 
                 var keys = await _keyRepository.GetByFilter(query => query.Where(k => k.user_id.Equals(userId)));
                 if (keys is null)
-                    throw new ArgumentNullException();
+                    throw new ArgumentNullException(Message.NOT_FOUND);
 
                 string? encryptionKey = null;
 
                 if (key == _redisKeys.PrivateKey)
-                {
                     encryptionKey = keys.private_key;
-                }
                 else if (key == _redisKeys.InternalKey)
-                {
                     encryptionKey = keys.internal_key;
-                }
                 else if (key == _redisKeys.ReceivedKey)
-                {
                     encryptionKey = keys.received_key;
-                }
                 else
-                {
                     throw new ArgumentException();
-                }
 
                 if (string.IsNullOrEmpty(encryptionKey))
                     throw new ArgumentNullException(Message.NOT_FOUND);

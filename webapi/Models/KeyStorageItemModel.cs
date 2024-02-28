@@ -8,7 +8,7 @@ namespace webapi.Models
     public class KeyStorageItemModel
     {
         [Key]
-        public ulong key_id { get; set; }
+        public int key_id { get; set; }
 
         public string key_name { get; set; }
 

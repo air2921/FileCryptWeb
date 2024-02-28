@@ -2,6 +2,7 @@
 using System;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Infrastructure;
+using Microsoft.EntityFrameworkCore.Migrations;
 using Microsoft.EntityFrameworkCore.Storage.ValueConversion;
 using Npgsql.EntityFrameworkCore.PostgreSQL.Metadata;
 using webapi.DB;
@@ -11,9 +12,11 @@ using webapi.DB;
 namespace webapi.Migrations
 {
     [DbContext(typeof(FileCryptDbContext))]
-    partial class FileCryptDbContextModelSnapshot : ModelSnapshot
+    [Migration("20240228144847_typo-fix")]
+    partial class typofix
     {
-        protected override void BuildModel(ModelBuilder modelBuilder)
+        /// <inheritdoc />
+        protected override void BuildTargetModel(ModelBuilder modelBuilder)
         {
 #pragma warning disable 612, 618
             modelBuilder
@@ -148,9 +151,9 @@ namespace webapi.Migrations
 
             modelBuilder.Entity("webapi.Models.KeyStorageItemModel", b =>
                 {
-                    b.Property<int>("key_id")
+                    b.Property<decimal>("key_id")
                         .ValueGeneratedOnAdd()
-                        .HasColumnType("integer");
+                        .HasColumnType("numeric(20,0)");
 
                     b.Property<DateTime>("created_at")
                         .HasColumnType("timestamp with time zone");
