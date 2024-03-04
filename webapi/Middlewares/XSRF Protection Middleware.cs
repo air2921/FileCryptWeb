@@ -16,14 +16,11 @@ namespace webapi.Middlewares
             _antiforgery = antiforgery;
         }
 
-        public async Task Invoke(HttpContext context, ITokenService tokenService)
+        public async Task Invoke(HttpContext context)
         {
-            bool antiforgeryCookieExists = context.Request.Cookies.Any(cookie => cookie.Key.StartsWith(".AspNetCore.Antiforgery."));
-            context.Request.Cookies.TryGetValue(ImmutableData.XSRF_COOKIE_KEY, out string? xsrf);
-
             var requestToken = _antiforgery.GetAndStoreTokens(context).RequestToken;
             context.Response.Cookies.Append(ImmutableData.XSRF_COOKIE_KEY, requestToken,
-                tokenService.SetCookieOptions(TimeSpan.FromMinutes(90)));
+                new CookieOptions { HttpOnly = true, MaxAge = TimeSpan.FromMinutes(90), Secure = true, SameSite = SameSiteMode.None });
 
             context.Request.Headers.Append(ImmutableData.XSRF_HEADER_NAME, requestToken);
 
