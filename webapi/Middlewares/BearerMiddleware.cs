@@ -26,8 +26,7 @@ namespace webapi.Middlewares
                 context.Request.Headers.Add("Authorization", $"Bearer {jwt}");
                 AddSecurityHeaders(context);
 
-                await _next(context);
-                return;
+                await _next(context); return;
             }
 
             context.Request.Cookies.TryGetValue(ImmutableData.REFRESH_COOKIE_KEY, out string? refresh);
@@ -59,8 +58,7 @@ namespace webapi.Middlewares
                 AddSecurityHeaders(context);
             }
 
-            await _next(context);
-            return;
+            await _next(context); return;
         }
 
         private void AddSecurityHeaders(HttpContext context)

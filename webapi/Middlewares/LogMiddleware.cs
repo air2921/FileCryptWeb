@@ -1,5 +1,4 @@
-﻿using Org.BouncyCastle.Asn1.Ocsp;
-using System.Security.Claims;
+﻿using System.Security.Claims;
 
 namespace webapi.Middlewares
 {
@@ -29,17 +28,11 @@ namespace webapi.Middlewares
             if (userContext.Identity.IsAuthenticated)
             {
                 if (userContext.HasClaim(u => u.Type == ClaimTypes.Name))
-                {
                     claimsUsername = userContext.FindFirstValue(ClaimTypes.Name);
-                }
                 if (userContext.HasClaim(u => u.Type == ClaimTypes.NameIdentifier))
-                {
                     claimId = userContext.FindFirstValue(ClaimTypes.NameIdentifier);
-                }
                 if (userContext.HasClaim(u => u.Type == ClaimTypes.Role))
-                {
                     claimRole = userContext.FindFirstValue(ClaimTypes.Role);
-                }
             }
 
             var user = new
@@ -55,9 +48,7 @@ namespace webapi.Middlewares
                 method,
             };
 
-            var requestData = $"{user} {request}";
-
-            _logger.LogInformation(requestData);
+            _logger.LogInformation($"{user} {request}");
 
             await _next(context);
 

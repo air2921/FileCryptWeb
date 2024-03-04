@@ -270,6 +270,7 @@ namespace webapi.Controllers.Core
             try
             {
                 var storage = await GetAndValidateStorage(storageId, _userInfo.UserId, code);
+
                 var key = await _storageItemRepository.GetByFilter(query => query
                     .Where(s => s.key_id.Equals(keyId) && s.storage_id.Equals(storageId)));
 

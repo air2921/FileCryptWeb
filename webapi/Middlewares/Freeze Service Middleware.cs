@@ -28,21 +28,17 @@ namespace webapi.Middlewares
                         await context.Response.WriteAsJsonAsync(new { message = "The service was frozen for technical work. We'll finish as quickly as we can" });
                         return;
                     }
-                    await _next(context);
-                    return;
+                    await _next(context); return;
                 }
-                await _next(context);
-                return;
+                await _next(context); return;
             }
             catch (InvalidOperationException)
             {
-                await _next(context);
-                return;
+                await _next(context); return;
             }
             catch (FormatException)
             {
-                await _next(context);
-                return;
+                await _next(context); return;
             }
         }
 
