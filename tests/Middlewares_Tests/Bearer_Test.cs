@@ -30,6 +30,7 @@ namespace tests.Middlewares_Tests
             var builder = new WebHostBuilder()
                 .UseEnvironment("Development")
                 .UseUrls("http://localhost:2921")
+                .UseStartup<Startup>()
                 .ConfigureServices(services =>
                 {
                     services.AddDbContext<FileCryptDbContext>(options =>
@@ -67,6 +68,7 @@ namespace tests.Middlewares_Tests
             var builder = new WebHostBuilder()
                 .UseEnvironment("Development")
                 .UseUrls("http://localhost:2921")
+                .UseStartup<Startup>()
                 .ConfigureServices(services =>
                 {
                     services.AddDbContext<FileCryptDbContext>(options =>
