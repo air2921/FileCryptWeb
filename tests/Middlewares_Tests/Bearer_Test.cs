@@ -29,7 +29,7 @@ namespace tests.Middlewares_Tests
         {
             var builder = new WebHostBuilder()
                 .UseEnvironment("Development")
-                .UseUrls("http://localhost:2922")
+                .UseUrls("http://localhost:2921")
                 .ConfigureServices(services =>
                 {
                     services.AddDbContext<FileCryptDbContext>(options =>
@@ -53,12 +53,12 @@ namespace tests.Middlewares_Tests
             using var server = new TestServer(builder);
             using var handler = new HttpClientHandler();
             handler.CookieContainer.Add(new Uri(server.BaseAddress.ToString()), new Cookie(ImmutableData.JWT_COOKIE_KEY, "hdfjkyhgdfuigy9d8gjkhdfhjgkdhfgkjldhlkgfjkd"));
-
             using var client = new HttpClient(handler) { BaseAddress = server.BaseAddress };
 
             var response = await client.GetAsync("/");
 
             response.EnsureSuccessStatusCode();
+            response.Dispose();
         }
 
         [Fact]
@@ -66,7 +66,7 @@ namespace tests.Middlewares_Tests
         {
             var builder = new WebHostBuilder()
                 .UseEnvironment("Development")
-                .UseUrls("http://localhost:2923")
+                .UseUrls("http://localhost:2921")
                 .ConfigureServices(services =>
                 {
                     services.AddDbContext<FileCryptDbContext>(options =>
@@ -90,14 +90,15 @@ namespace tests.Middlewares_Tests
                 });
 
             using var server = new TestServer(builder);
+
             using var handler = new HttpClientHandler();
             handler.CookieContainer.Add(new Uri(server.BaseAddress.ToString()), new Cookie(ImmutableData.REFRESH_COOKIE_KEY, "hdfjkyhgdfuigy9d8gjkhdfhjgkdhfgkjldhlkgfjkd"));
-
             using var client = new HttpClient(handler) { BaseAddress = server.BaseAddress };
 
             var response = await client.GetAsync("/");
 
             response.EnsureSuccessStatusCode();
+            response.Dispose();
         }
 
         [Fact]
@@ -105,7 +106,7 @@ namespace tests.Middlewares_Tests
         {
             var builder = new WebHostBuilder()
                 .UseEnvironment("Development")
-                .UseUrls("http://localhost:2924")
+                .UseUrls("http://localhost:2921")
                 .ConfigureServices(services =>
                 {
                     services.AddDbContext<FileCryptDbContext>(options =>
@@ -134,9 +135,13 @@ namespace tests.Middlewares_Tests
                 });
 
             using var server = new TestServer(builder);
-            using var client = new HttpClient() { BaseAddress = server.BaseAddress };
+            using var client = server.CreateClient();
 
             var response = await client.GetAsync("/");
+
+            Assert.True(response.IsSuccessStatusCode);
+
+            response.Dispose();
         }
 
         private class FakeTokenService : ITokenService
