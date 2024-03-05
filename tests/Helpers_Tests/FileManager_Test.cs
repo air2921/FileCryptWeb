@@ -97,12 +97,13 @@ namespace tests.Helpers_Tests
         public void TestGetFileSizeInMb_WithStringFilePath_ThrowsException()
         {
             var env = new Mock<IWebHostEnvironment>();
-            var loggerMock = new Mock<ILogger<FileManager>>();
+            var logger = new FakeLogger<FileManager>();
             var filePath = "example.txt";
 
-            var fileManager = new FileManager(loggerMock.Object, env.Object);
+            var fileManager = new FileManager(logger, env.Object);
 
             Assert.Throws<ArgumentException>(() => fileManager.GetFileSizeInMb(filePath));
+            Assert.Single(logger.LoggedMessages);
         }
 
         [Fact]

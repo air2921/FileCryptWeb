@@ -1,6 +1,7 @@
 ﻿using Microsoft.EntityFrameworkCore;
 using webapi.Exceptions;
 using webapi.Interfaces;
+using webapi.Localization;
 
 namespace webapi.DB
 {
@@ -46,6 +47,11 @@ namespace webapi.DB
             {
                 throw new OperationCanceledException(REQUEST_TIMED_OUT);
             }
+            catch (Exception ex)
+            {
+                _logger.LogCritical(ex.ToString(), nameof(_context), nameof(_dbSet));
+                throw new OperationCanceledException(Message.ERROR);
+            }
         }
 
         public async Task<T> GetByFilter(Func<IQueryable<T>, IQueryable<T>>? queryModifier, CancellationToken cancellationToken = default)
@@ -66,6 +72,11 @@ namespace webapi.DB
             {
                 throw new OperationCanceledException(REQUEST_TIMED_OUT);
             }
+            catch (Exception ex)
+            {
+                _logger.LogCritical(ex.ToString(), nameof(_context), nameof(_dbSet));
+                throw new OperationCanceledException(Message.ERROR);
+            }
         }
 
         public async Task<T> GetById(int id, CancellationToken cancellationToken = default)
@@ -80,6 +91,11 @@ namespace webapi.DB
             catch (OperationCanceledException)
             {
                 throw new OperationCanceledException(REQUEST_TIMED_OUT);
+            }
+            catch (Exception ex)
+            {
+                _logger.LogCritical(ex.ToString(), nameof(_context), nameof(_dbSet));
+                throw new OperationCanceledException(Message.ERROR);
             }
         }
 
