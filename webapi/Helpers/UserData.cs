@@ -9,10 +9,7 @@ namespace webapi.Helpers
 
         public UserData(IHttpContextAccessor httpContextAccessor)
         {
-            _httpContext = httpContextAccessor.HttpContext ?? throw new ArgumentNullException(nameof(httpContextAccessor));
-
-            if (_httpContext.User is null)
-                throw new InvalidOperationException("User is not authenticated");
+            _httpContext = httpContextAccessor.HttpContext ?? throw new InvalidOperationException("User is not authenticated");
         }
 
         public int UserId => GetIntClaimValue(ClaimTypes.NameIdentifier);

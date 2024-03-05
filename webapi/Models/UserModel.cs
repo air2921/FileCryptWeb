@@ -27,19 +27,19 @@ namespace webapi.Models
         public KeyModel? Keys { get; set; }
 
         [JsonIgnore]
-        public ICollection<KeyStorageModel>? KeyStorages { get; set; }
+        public virtual ICollection<KeyStorageModel>? KeyStorages { get; set; }
 
         [JsonIgnore]
-        public ICollection<FileModel>? Files { get; set; }
+        public virtual ICollection<FileModel>? Files { get; set; }
 
         [JsonIgnore]
-        public TokenModel? Tokens { get; set; }
+        public virtual TokenModel? Tokens { get; set; }
 
         [JsonIgnore]
-        public ICollection<ApiModel>? API { get; set; }
+        public virtual ICollection<ApiModel>? API { get; set; }
 
         [JsonIgnore]
-        public ICollection<LinkModel>? Links { get; set; }
+        public virtual ICollection<LinkModel>? Links { get; set; }
     }
 
     public enum Role

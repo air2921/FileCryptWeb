@@ -5,17 +5,17 @@ namespace webapi.DB
 {
     public class FileCryptDbContext : DbContext
     {
-        public DbSet<UserModel> Users { get; set; }
-        public DbSet<KeyModel> Keys { get; set; }
-        public DbSet<FileModel> Files { get; set; }
-        public DbSet<NotificationModel> Notifications { get; set; }
-        public DbSet<OfferModel> Offers { get; set; }
-        public DbSet<FileMimeModel> Mimes { get; set; }
-        public DbSet<TokenModel> Tokens { get; set; }
-        public DbSet<ApiModel> API { get; set; }
-        public DbSet<LinkModel> Links { get; set; }
-        public DbSet<KeyStorageModel> KeyStorages { get; set; }
-        public DbSet<KeyStorageItemModel> KeyStorageItems { get; set; }
+        public virtual DbSet<UserModel> Users { get; set; }
+        public virtual DbSet<KeyModel> Keys { get; set; }
+        public virtual DbSet<FileModel> Files { get; set; }
+        public virtual DbSet<NotificationModel> Notifications { get; set; }
+        public virtual DbSet<OfferModel> Offers { get; set; }
+        public virtual DbSet<FileMimeModel> Mimes { get; set; }
+        public virtual DbSet<TokenModel> Tokens { get; set; }
+        public virtual DbSet<ApiModel> API { get; set; }
+        public virtual DbSet<LinkModel> Links { get; set; }
+        public virtual DbSet<KeyStorageModel> KeyStorages { get; set; }
+        public virtual DbSet<KeyStorageItemModel> KeyStorageItems { get; set; }
 
         public FileCryptDbContext(DbContextOptions<FileCryptDbContext> options) : base(options)
         {

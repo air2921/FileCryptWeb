@@ -25,6 +25,6 @@ namespace webapi.Models
         public virtual UserModel? User { get; set; }
 
         [JsonIgnore]
-        public ICollection<KeyStorageItemModel>? StorageItems { get; set; }
+        public virtual ICollection<KeyStorageItemModel>? StorageItems { get; set; }
     }
 }

@@ -21,7 +21,17 @@ namespace webapi.Middlewares
 
         public async Task Invoke(HttpContext context, FileCryptDbContext dbContext, ITokenService tokenService)
         {
-            if (context.Request.Cookies.TryGetValue(ImmutableData.JWT_COOKIE_KEY, out string? jwt))
+            string jwt = null;
+
+            context.Request.Cookies.TryGetValue(ImmutableData.JWT_COOKIE_KEY, out string? jwtCookie);
+            var jwtHeaders = context.Request.Headers[ImmutableData.JWT_TOKEN_HEADER_NAME];
+
+            if (!string.IsNullOrWhiteSpace(jwtCookie))
+                jwt = jwtCookie;
+            else
+                jwt = jwtHeaders.ToString();
+
+            if (!string.IsNullOrWhiteSpace(jwt))
             {
                 context.Request.Headers.Add("Authorization", $"Bearer {jwt}");
                 AddSecurityHeaders(context);
@@ -29,7 +39,15 @@ namespace webapi.Middlewares
                 await _next(context); return;
             }
 
-            context.Request.Cookies.TryGetValue(ImmutableData.REFRESH_COOKIE_KEY, out string? refresh);
+            string refresh = null;
+            var refreshHeaders = context.Request.Headers[ImmutableData.REFRESH_TOKEN_HEADER_NAME];
+            context.Request.Cookies.TryGetValue(ImmutableData.REFRESH_COOKIE_KEY, out string? refreshCookie);
+
+            if (refreshCookie is not null)
+                refresh = refreshCookie;
+            else
+                refresh = refreshHeaders.ToString();
+
             if (!string.IsNullOrWhiteSpace(refresh))
             {
                 if (_env.IsDevelopment())

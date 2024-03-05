@@ -20,6 +20,6 @@ namespace webapi.Models
         public int storage_id { get; set; }
 
         [JsonIgnore]
-        public KeyStorageModel? KeyStorage { get; set; }
+        public virtual KeyStorageModel? KeyStorage { get; set; }
     }
 }

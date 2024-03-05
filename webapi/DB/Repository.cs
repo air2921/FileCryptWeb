@@ -1,11 +1,14 @@
 ﻿using Microsoft.EntityFrameworkCore;
 using webapi.Exceptions;
 using webapi.Interfaces;
+using webapi.Localization;
 
 namespace webapi.DB
 {
     public class Repository<T> : IRepository<T> where T : class
     {
+        #region Const
+
         private const string REQUEST_TIMED_OUT = "Request timed out";
         private const int GET_ALL_AWAITING = 20;
         private const int GET_BY_FILTER_AWAITING = 20;
@@ -17,6 +20,10 @@ namespace webapi.DB
         private const int DELETE_BY_FILTER = 20;
         private const int UPDATE_AWAITING = 20;
 
+        #endregion
+
+        #region fields and constructor
+
         private readonly ILogger<Repository<T>> _logger;
         private readonly FileCryptDbContext _context;
         private readonly DbSet<T> _dbSet;
@@ -27,6 +34,8 @@ namespace webapi.DB
             _context = context ?? throw new ArgumentNullException(nameof(context));
             _dbSet = _context.Set<T>();
         }
+
+        #endregion
 
         public async Task<IEnumerable<T>> GetAll(Func<IQueryable<T>, IQueryable<T>> queryModifier = null, CancellationToken cancellationToken = default)
         {
@@ -45,6 +54,11 @@ namespace webapi.DB
             catch (OperationCanceledException)
             {
                 throw new OperationCanceledException(REQUEST_TIMED_OUT);
+            }
+            catch (Exception ex)
+            {
+                _logger.LogCritical(ex.ToString(), nameof(_context), nameof(_dbSet));
+                throw new OperationCanceledException(Message.ERROR);
             }
         }
 
@@ -66,6 +80,11 @@ namespace webapi.DB
             {
                 throw new OperationCanceledException(REQUEST_TIMED_OUT);
             }
+            catch (Exception ex)
+            {
+                _logger.LogCritical(ex.ToString(), nameof(_context), nameof(_dbSet));
+                throw new OperationCanceledException(Message.ERROR);
+            }
         }
 
         public async Task<T> GetById(int id, CancellationToken cancellationToken = default)
@@ -80,6 +99,11 @@ namespace webapi.DB
             catch (OperationCanceledException)
             {
                 throw new OperationCanceledException(REQUEST_TIMED_OUT);
+            }
+            catch (Exception ex)
+            {
+                _logger.LogCritical(ex.ToString(), nameof(_context), nameof(_dbSet));
+                throw new OperationCanceledException(Message.ERROR);
             }
         }
 
