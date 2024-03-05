@@ -38,8 +38,11 @@ namespace tests.Third_Party_Services_Tests
             await emailSenderMock.Object.SendMessage(emailDto);
         }
 
-        [Fact]
-        public async Task SendEmail_AuthenticationException()
+        [Theory]
+        [InlineData(typeof(AuthenticationException))]
+        [InlineData(typeof(SocketException))]
+        [InlineData(typeof(Exception))]
+        public async Task SendEmail_Exception(Type exceptionType)
         {
             var configurationMock = new Mock<IConfiguration>();
             configurationMock.Setup(c => c["Email"]).Returns("email@example.com");
@@ -47,7 +50,6 @@ namespace tests.Third_Party_Services_Tests
 
             var loggerMock = new Mock<ILogger<EmailSender>>();
             var smtpClientMock = new Mock<ISmtpClient>();
-
             var emailManager = new EmailSender(smtpClientMock.Object, configurationMock.Object, loggerMock.Object);
 
             var emailDto = new EmailDto
@@ -59,59 +61,7 @@ namespace tests.Third_Party_Services_Tests
             };
 
             smtpClientMock.Setup(client => client.EmailSendAsync(It.IsAny<MimeMessage>()))
-                          .ThrowsAsync(new AuthenticationException());
-
-            await Assert.ThrowsAsync<SmtpClientException>(() => emailManager.SendMessage(emailDto));
-        }
-
-        [Fact]
-        public async Task SendEmail_SocketException()
-        {
-            var configurationMock = new Mock<IConfiguration>();
-            configurationMock.Setup(c => c["Email"]).Returns("email@example.com");
-            configurationMock.Setup(c => c["EmailPassword"]).Returns("password");
-
-            var loggerMock = new Mock<ILogger<EmailSender>>();
-            var smtpClientMock = new Mock<ISmtpClient>();
-
-            var emailManager = new EmailSender(smtpClientMock.Object, configurationMock.Object, loggerMock.Object);
-
-            var emailDto = new EmailDto
-            {
-                username = "testuser",
-                email = "testuser@example.com",
-                subject = "testSubject",
-                message = "testMessage"
-            };
-
-            smtpClientMock.Setup(client => client.EmailSendAsync(It.IsAny<MimeMessage>()))
-                          .ThrowsAsync(new SocketException());
-
-            await Assert.ThrowsAsync<SmtpClientException>(() => emailManager.SendMessage(emailDto));
-        }
-
-        [Fact]
-        public async Task SendEmail_UnexpectedException()
-        {
-            var configurationMock = new Mock<IConfiguration>();
-            configurationMock.Setup(c => c["Email"]).Returns("email@example.com");
-            configurationMock.Setup(c => c["EmailPassword"]).Returns("password");
-
-            var loggerMock = new Mock<ILogger<EmailSender>>();
-            var smtpClientMock = new Mock<ISmtpClient>();
-
-            var emailManager = new EmailSender(smtpClientMock.Object, configurationMock.Object, loggerMock.Object);
-
-            var emailDto = new EmailDto
-            {
-                username = "testuser",
-                email = "testuser@example.com",
-                subject = "testSubject",
-                message = "testMessage"
-            };
-
-            smtpClientMock.Setup(client => client.EmailSendAsync(It.IsAny<MimeMessage>()))
-                          .ThrowsAsync(new Exception());
+                          .ThrowsAsync((Exception)Activator.CreateInstance(exceptionType));
 
             await Assert.ThrowsAsync<SmtpClientException>(() => emailManager.SendMessage(emailDto));
         }

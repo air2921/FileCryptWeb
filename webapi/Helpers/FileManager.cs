@@ -8,10 +8,12 @@ namespace webapi.Helpers
     public class FileManager : IFileManager, IGetSize
     {
         private readonly ILogger<FileManager> _logger;
+        private readonly IWebHostEnvironment _webHostEnvironment;
 
-        public FileManager(ILogger<FileManager> logger)
+        public FileManager(ILogger<FileManager> logger, IWebHostEnvironment webHostEnvironment)
         {
             _logger = logger;
+            _webHostEnvironment = webHostEnvironment;
         }
 
         public HashSet<string> GetMimesFromCsvFile(string filePath)
@@ -47,6 +49,18 @@ namespace webapi.Helpers
             return mimes;
         }
 
+        public string[] GetCsvFiles()
+        {
+            var basePath = Path.Combine(_webHostEnvironment.ContentRootPath, "..", "data");
+            return Directory.GetFiles(basePath);
+        }
+
+        /// <summary>
+        /// Use only in a test environment, if necessary replace with the specific uri of your frontend application
+        /// </summary>
+        /// <param name="path"></param>
+        /// <param name="isChrome"></param>
+        /// <returns></returns>
         public string GetReactAppUrl(string path, bool isChrome)
         {
             string jsonContent = File.ReadAllText(path);
@@ -63,34 +77,25 @@ namespace webapi.Helpers
             return edgeUrl;
         }
 
-        private long GetFolderSize(string FolderPath)
-        {
-            long totalSize = 0;
-
-            foreach (var file in Directory.GetFiles(FolderPath))
-            {
-                totalSize += new FileInfo(file).Length;
-            }
-
-            foreach (var subDirectory in Directory.GetDirectories(FolderPath))
-            {
-                totalSize += GetFolderSize(subDirectory);
-            }
-
-            return totalSize;
-        }
-
         public double GetFileSizeInMb<T>(T file)
         {
-            switch (file)
+            try
             {
-                case IFormFile formFile:
-                    return (double)formFile.Length / (1024 * 1024);
-                case string filePath:
-                    FileInfo fileInfo = new FileInfo(filePath);
-                    return (double)fileInfo.Length / (1024 * 1024);
-                default:
-                    throw new ArgumentException("Unsupported file type");
+                switch (file)
+                {
+                    case IFormFile formFile:
+                        return (double)formFile.Length / (1024 * 1024);
+                    case string filePath:
+                        FileInfo fileInfo = new FileInfo(filePath);
+                        return (double)fileInfo.Length / (1024 * 1024);
+                    default:
+                        throw new ArgumentException("Unsupported file type");
+                }
+            }
+            catch (IOException ex)
+            {
+                _logger.LogCritical(ex.ToString());
+                throw new ArgumentException("Invalid file");
             }
         }
     }

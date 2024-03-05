@@ -1,8 +1,7 @@
 ﻿using Microsoft.AspNetCore.Http;
-using Microsoft.Extensions.Logging;
 using webapi.Middlewares;
 
-namespace tests.Middlewares
+namespace tests.Middlewares_Tests
 {
     public class ExceptionHandler_Test
     {
@@ -28,23 +27,5 @@ namespace tests.Middlewares
             Assert.Single(logger.LoggedMessages);
             Assert.Contains("Test exception", logger.LoggedMessages[0]);
         }
-    }
-
-    internal class FakeLogger<T> : ILogger<T>
-    {
-        public FakeLogger()
-        {
-            LoggedMessages = new();
-        }
-
-        public void Log<TState>(LogLevel logLevel, EventId eventId, TState state, Exception exception, Func<TState, Exception, string> formatter)
-        {
-            LoggedMessages.Add(formatter(state, exception));
-        }
-
-        public bool IsEnabled(LogLevel logLevel) => true;
-        public IDisposable BeginScope<TState>(TState state) => null;
-
-        public List<string> LoggedMessages { get; }
     }
 }

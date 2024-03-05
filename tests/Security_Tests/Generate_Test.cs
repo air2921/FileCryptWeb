@@ -1,6 +1,6 @@
 ﻿using webapi.Security;
 
-namespace tests.Security
+namespace tests.Security_Tests
 {
     public class Generate_Test
     {

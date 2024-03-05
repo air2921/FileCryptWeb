@@ -201,8 +201,7 @@ namespace webapi.Controllers.Admin
         [Helper]
         private void AddFullCollection(ref HashSet<FileMimeModel> mimeModels, HashSet<string> existingMimes)
         {
-            var basePath = Path.Combine(_webHostEnvironment.ContentRootPath, "..", "data");
-            string[] dataFiles = Directory.GetFiles(basePath);
+            var dataFiles = _fileManager.GetCsvFiles();
 
             var allMimes = new HashSet<string>();
 

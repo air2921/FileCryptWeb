@@ -2,7 +2,7 @@
 using webapi.Interfaces.Redis;
 using webapi.Middlewares;
 
-namespace tests.Middlewares
+namespace tests.Middlewares_Tests
 {
     public class Freeze_Service_Test
     {

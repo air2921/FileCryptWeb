@@ -2,7 +2,7 @@
 using System.Security.Claims;
 using webapi.Middlewares;
 
-namespace tests.Middlewares
+namespace tests.Middlewares_Tests
 {
     public class LogMiddleware_Test
     {

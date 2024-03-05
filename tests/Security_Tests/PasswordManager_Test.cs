@@ -1,7 +1,7 @@
 ﻿using Microsoft.Extensions.Logging;
 using webapi.Security;
 
-namespace tests.Security
+namespace tests.Security_Tests
 {
     public class PasswordManager_Test
     {

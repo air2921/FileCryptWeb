@@ -20,6 +20,6 @@ namespace webapi.Models
         public int user_id { get; set; }
 
         [JsonIgnore]
-        public UserModel? User { get; set; }
+        public virtual UserModel? User { get; set; }
     }
 }

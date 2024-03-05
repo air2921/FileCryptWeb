@@ -6,7 +6,7 @@ using webapi.Interfaces.Services;
 using webapi.Models;
 using webapi.Security;
 
-namespace tests.Security
+namespace tests.Security_Tests
 {
     public class TokenService_Test
     {

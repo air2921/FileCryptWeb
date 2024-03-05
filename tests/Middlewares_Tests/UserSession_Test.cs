@@ -4,7 +4,7 @@ using System.Security.Claims;
 using webapi.Helpers;
 using webapi.Middlewares;
 
-namespace tests.Middlewares
+namespace tests.Middlewares_Tests
 {
     public class UserSession_Test
     {
