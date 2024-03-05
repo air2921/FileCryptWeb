@@ -28,6 +28,8 @@ namespace tests.Middlewares_Tests
         public async Task CookieHasJwt_Header_SuccessAdded()
         {
             var builder = new WebHostBuilder()
+                .UseEnvironment("Development")
+                .UseUrls("http://localhost:2922")
                 .ConfigureServices(services =>
                 {
                     services.AddDbContext<FileCryptDbContext>(options =>
@@ -63,6 +65,8 @@ namespace tests.Middlewares_Tests
         public async Task CookieHasNotJwt_CookieHasRefresh_Header_SuccessAdded_JwtUpdated()
         {
             var builder = new WebHostBuilder()
+                .UseEnvironment("Development")
+                .UseUrls("http://localhost:2923")
                 .ConfigureServices(services =>
                 {
                     services.AddDbContext<FileCryptDbContext>(options =>
@@ -100,6 +104,8 @@ namespace tests.Middlewares_Tests
         public async Task CookieHasNotJwt_CookieHasNotRefresh_NoneHeader_401StatusCode()
         {
             var builder = new WebHostBuilder()
+                .UseEnvironment("Development")
+                .UseUrls("http://localhost:2924")
                 .ConfigureServices(services =>
                 {
                     services.AddDbContext<FileCryptDbContext>(options =>
