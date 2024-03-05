@@ -42,6 +42,8 @@
         public const string XSRF_HEADER_NAME = "X-XSRF-TOKEN";
         public const string API_HEADER_NAME = "X-API-KEY";
         public const string ENCRYPTION_KEY_HEADER_NAME = "X-ENCRYPTION-KEY";
+        public const string REFRESH_TOKEN_HEADER_NAME = "X-LONG_TIME_PREFERENCE";
+        public const string JWT_TOKEN_HEADER_NAME = "X-SESSION_PREFERENCE";
 
         #endregion
 
