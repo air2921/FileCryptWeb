@@ -1,4 +1,4 @@
-name: Run tests on push
+name: Run tests with Redis
 
 on:
   push:
@@ -15,6 +15,11 @@ jobs:
     runs-on: ubuntu-latest
 
     steps:
+    - name: Install Redis
+      uses: redis-actions/setup-redis@v2
+      with:
+        redis-version: '6.x'
+
     - name: Checkout code
       uses: actions/checkout@v2
 
