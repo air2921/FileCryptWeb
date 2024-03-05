@@ -1,9 +1,4 @@
 ﻿using Microsoft.Extensions.Logging;
-using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
 
 namespace tests
 {
@@ -21,7 +16,6 @@ namespace tests
 
         public bool IsEnabled(LogLevel logLevel) => true;
         public IDisposable BeginScope<TState>(TState state) => null;
-
         public List<string> LoggedMessages { get; }
     }
 }
