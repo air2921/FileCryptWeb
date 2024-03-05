@@ -67,7 +67,7 @@ namespace tests.Middlewares_Tests
         {
             var builder = new WebHostBuilder()
                 .UseEnvironment("Development")
-                .UseUrls("http://localhost:2921")
+                .UseUrls("http://localhost:2922")
                 .ConfigureServices(services =>
                 {
                     services.AddDbContext<FileCryptDbContext>(options =>
@@ -93,8 +93,8 @@ namespace tests.Middlewares_Tests
             using var server = new TestServer(builder);
 
             using var handler = new HttpClientHandler();
-            handler.CookieContainer.Add(new Uri("http://localhost:2921"), new Cookie(ImmutableData.REFRESH_COOKIE_KEY, "hdfjkyhgdfuigy9d8gjkhdfhjgkdhfgkjldhlkgfjkd"));
-            using var client = new HttpClient(handler) { BaseAddress = new Uri("http://localhost:2921") };
+            handler.CookieContainer.Add(new Uri("http://localhost:2922"), new Cookie(ImmutableData.REFRESH_COOKIE_KEY, "hdfjkyhgdfuigy9d8gjkhdfhjgkdhfgkjldhlkgfjkd"));
+            using var client = new HttpClient(handler) { BaseAddress = new Uri("http://localhost:2922") };
 
             var response = await client.GetAsync("/");
 
@@ -107,7 +107,7 @@ namespace tests.Middlewares_Tests
         {
             var builder = new WebHostBuilder()
                 .UseEnvironment("Development")
-                .UseUrls("http://localhost:2921")
+                .UseUrls("http://localhost:2923")
                 .ConfigureServices(services =>
                 {
                     services.AddDbContext<FileCryptDbContext>(options =>
