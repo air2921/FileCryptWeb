@@ -16,9 +16,10 @@ jobs:
 
     steps:
     - name: Install Redis
-      uses: redis-actions/setup-redis@v2
-      with:
-        redis-version: '6.x'
+      run: sudo apt update && sudo apt install redis-server -y
+
+    - name: Start Redis server
+      run: sudo systemctl start redis-server
 
     - name: Checkout code
       uses: actions/checkout@v2
