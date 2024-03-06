@@ -12,6 +12,7 @@ using webapi.Security;
 using webapi.Helpers;
 using webapi.Third_Party_Services;
 using static webapi.Third_Party_Services.EmailSender;
+using webapi.Controllers.Account.Edit;
 
 namespace webapi
 {
@@ -42,6 +43,13 @@ namespace webapi
             services.AddScoped<IClamSetting, ClamSetting>();
             services.AddScoped<IUserInfo, UserData>();
             services.AddScoped<IAes, AesCreator>();
+
+            ControllerServices(services);
+        }
+
+        private static void ControllerServices(IServiceCollection services)
+        {
+            services.AddScoped<IApi2FaService, _2FaService>();
         }
 
         public static void Transient(IServiceCollection services)

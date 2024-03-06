@@ -169,7 +169,7 @@ namespace webapi.Controllers.Admin
             catch (OperationCanceledException)
             {
                 await transaction.RollbackAsync();
-                throw new EntityNotUpdatedException();
+                throw new EntityNotUpdatedException("Error when updating data");
             }
         }
     }

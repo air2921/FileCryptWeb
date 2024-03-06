@@ -23,40 +23,25 @@ namespace webapi.Controllers.Account.Edit
         #region fields and constructor
 
         private readonly IRepository<UserModel> _userRepository;
-        private readonly IRepository<NotificationModel> _notificationRepository;
-        private readonly FileCryptDbContext _dbContext;
-        private readonly IRedisCache _redisCache;
+        private readonly IApi2FaService _api2FaService;
         private readonly IPasswordManager _passwordManager;
         private readonly IUserInfo _userInfo;
-        private readonly ITokenService _tokenService;
-        private readonly ILogger<_2FaController> _logger;
         private readonly IGenerate _generate;
-        private readonly IEmailSender _emailSender;
         private readonly IValidation _validation;
 
         public _2FaController(
             IRepository<UserModel> userRepository,
-            IRepository<NotificationModel> notificationRepository,
-            FileCryptDbContext dbContext,
-            IRedisCache redisCache,
+            IApi2FaService api2FaService,
             IPasswordManager passwordManager,
             IUserInfo userInfo,
-            ITokenService tokenService,
-            ILogger<_2FaController> logger,
             IGenerate generate,
-            IEmailSender emailSender,
             IValidation validation)
         {
             _userRepository = userRepository;
-            _notificationRepository = notificationRepository;
-            _dbContext = dbContext;
-            _redisCache = redisCache;
+            _api2FaService = api2FaService;
             _passwordManager = passwordManager;
             _userInfo = userInfo;
-            _tokenService = tokenService;
-            _logger = logger;
             _generate = generate;
-            _emailSender = emailSender;
             _validation = validation;
         }
 
@@ -81,9 +66,9 @@ namespace webapi.Controllers.Account.Edit
                     return StatusCode(401, new { message = Message.INCORRECT });
 
                 int code = _generate.GenerateSixDigitCode();
-                await SendMessage(_userInfo.Username, _userInfo.Email, code);
+                await _api2FaService.SendMessage(user.username, user.email, code);
 
-                HttpContext.Session.SetString(CODE, code.ToString());
+                _api2FaService.SetSessionCode(HttpContext, code);
 
                 return StatusCode(200);
             }
@@ -107,7 +92,7 @@ namespace webapi.Controllers.Account.Edit
         {
             try
             {
-                int correctCode = int.TryParse(HttpContext.Session.GetString(CODE), out var parsedValue) ? parsedValue : 0;
+                int correctCode = _api2FaService.GetSessionCode(HttpContext);
                 if (!_validation.IsSixDigit(correctCode) || !code.Equals(correctCode))
                     return StatusCode(400, new { message = Message.INCORRECT });
 
@@ -115,8 +100,8 @@ namespace webapi.Controllers.Account.Edit
                 if (user is null)
                     return StatusCode(404, new { message = Message.NOT_FOUND });
 
-                await DbTransaction(user, enable);
-                await ClearData(HttpContext);
+                await _api2FaService.DbTransaction(user, enable);
+                await _api2FaService.ClearData(HttpContext, _userInfo.UserId);
 
                 return StatusCode(200);
             }
@@ -133,15 +118,50 @@ namespace webapi.Controllers.Account.Edit
                 return StatusCode(500, new { message = ex.Message });
             }
         }
+    }
+
+    public interface IApi2FaService
+    {
+        public Task DbTransaction(UserModel user, bool enable);
+        public Task SendMessage(string username, string email, int code);
+        public Task ClearData(HttpContext context, int userId);
+        public void SetSessionCode(HttpContext context, int code);
+        public int GetSessionCode(HttpContext context);
+    }
+
+    public class _2FaService : IApi2FaService
+    {
+        private const string CODE = "2FaCode";
+
+        private readonly IRepository<UserModel> _userRepository;
+        private readonly IRepository<NotificationModel> _notificationRepository;
+        private readonly FileCryptDbContext _dbContext;
+        private readonly IRedisCache _redisCache;
+        private readonly IEmailSender _emailSender;
+
+        public _2FaService(
+            IRepository<UserModel> userRepository,
+            IRepository<NotificationModel> notificationRepository,
+            FileCryptDbContext dbContext,
+            IRedisCache redisCache,
+            IEmailSender emailSender)
+        {
+            _userRepository = userRepository;
+            _notificationRepository = notificationRepository;
+            _dbContext = dbContext;
+            _redisCache = redisCache;
+            _emailSender = emailSender;
+        }
 
         [Helper]
-        private async Task DbTransaction(UserModel user, bool enable)
+        public async Task DbTransaction(UserModel user, bool enable)
         {
             using var transaction = await _dbContext.Database.BeginTransactionAsync();
             try
             {
-                if (user.is_2fa_enabled)
+                if (user.is_2fa_enabled == enable)
                     throw new EntityNotUpdatedException(Message.CONFLICT);
+
                 user.is_2fa_enabled = enable;
                 await _userRepository.Update(user);
 
@@ -156,7 +176,7 @@ namespace webapi.Controllers.Account.Edit
                     priority = Priority.Security.ToString(),
                     send_time = DateTime.UtcNow,
                     is_checked = false,
-                    user_id = _userInfo.UserId
+                    user_id = user.id
                 });
 
                 await transaction.CommitAsync();
@@ -171,15 +191,10 @@ namespace webapi.Controllers.Account.Edit
                 await transaction.RollbackAsync();
                 throw;
             }
-            catch (OperationCanceledException)
-            {
-                await transaction.RollbackAsync();
-                throw;
-            }
         }
 
         [Helper]
-        private async Task SendMessage(string username, string email, int code)
+        public async Task SendMessage(string username, string email, int code)
         {
             try
             {
@@ -198,11 +213,24 @@ namespace webapi.Controllers.Account.Edit
         }
 
         [Helper]
-        private async Task ClearData(HttpContext context)
+        public async Task ClearData(HttpContext context, int userId)
         {
             context.Session.Remove(CODE);
-            await _redisCache.DeteteCacheByKeyPattern($"{ImmutableData.USER_DATA_PREFIX}{_userInfo.UserId}");
-            await _redisCache.DeteteCacheByKeyPattern($"{ImmutableData.NOTIFICATIONS_PREFIX}{_userInfo.UserId}");
+            await _redisCache.DeteteCacheByKeyPattern($"{ImmutableData.USER_DATA_PREFIX}{userId}");
+            await _redisCache.DeteteCacheByKeyPattern($"{ImmutableData.NOTIFICATIONS_PREFIX}{userId}");
+        }
+
+        [Helper]
+        public void SetSessionCode(HttpContext context, int code)
+        {
+            context.Session.SetString(CODE, code.ToString());
+        }
+
+        [Helper]
+        public int GetSessionCode(HttpContext context)
+        {
+            int correctCode = int.TryParse(context.Session.GetString(CODE), out var parsedValue) ? parsedValue : 0;
+            return correctCode;
         }
     }
 }

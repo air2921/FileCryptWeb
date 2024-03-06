@@ -46,7 +46,7 @@ namespace webapi.Third_Party_Services
             catch (Exception ex)
             {
                 _logger.LogError(ex.ToString());
-                throw new SmtpClientException();
+                throw new SmtpClientException("Error sending message");
             }
         }
 
@@ -82,12 +82,12 @@ namespace webapi.Third_Party_Services
                 catch (AuthenticationException ex)
                 {
                     _logger.LogError(ex.ToString(), nameof(EmailSendAsync));
-                    throw new SmtpClientException();
+                    throw new SmtpClientException("Error sending message");
                 }
                 catch (SocketException ex)
                 {
                     _logger.LogError(ex.ToString(), nameof(EmailSendAsync));
-                    throw new SmtpClientException();
+                    throw new SmtpClientException("Error sending message");
                 }
                 finally
                 {
