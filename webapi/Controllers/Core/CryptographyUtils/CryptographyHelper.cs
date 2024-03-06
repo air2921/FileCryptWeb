@@ -66,7 +66,7 @@ namespace webapi.Controllers.Base
         [NonAction]
         [Helper]
         public async Task<IActionResult> EncryptFile(
-            Func<string, byte[], CancellationToken, string, Task<CryptographyResult>> CryptographyFunction,
+            Func<string, byte[], string, CancellationToken, Task<CryptographyResult>> CryptographyFunction,
             string key, IFormFile file,
             int userID, string type, string operation)
         {
@@ -148,12 +148,12 @@ namespace webapi.Controllers.Base
             return Convert.FromBase64String(key);
         }
 
-        private async Task EncryptFile(string filePath, string operation, Func<string, byte[], CancellationToken, string, Task<CryptographyResult>> CryptographyFunction, byte[] key)
+        private async Task EncryptFile(string filePath, string operation, Func<string, byte[], string, CancellationToken, Task<CryptographyResult>> CryptographyFunction, byte[] key)
         {
             using var cts = new CancellationTokenSource();
             var cancellationToken = cts.Token;
 
-            var cryptographyTask = CryptographyFunction(filePath, key, cancellationToken, operation);
+            var cryptographyTask = CryptographyFunction(filePath, key, operation, cancellationToken);
             var timeoutTask = Task.Delay(TASK_AWAITING);
 
             var completedTask = await Task.WhenAny(cryptographyTask, timeoutTask);
