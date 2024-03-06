@@ -11,7 +11,6 @@ using Microsoft.AspNetCore.Builder;
 using Microsoft.AspNetCore.Http;
 using webapi.Models;
 using webapi.Helpers;
-using System.Net;
 
 namespace tests.Middlewares_Tests
 {
@@ -24,86 +23,107 @@ namespace tests.Middlewares_Tests
             _factory = factory;
         }
 
-        /// <summary>
-        /// These tests are fails, I don't understand why
-        /// </summary>
+        [Fact]
+        public async Task CookieHasJwt_Header_SuccessAdded()
+        {
+            var builder = new WebHostBuilder()
+                .UseEnvironment("Development")
+                .UseUrls("http://localhost:2921")
+                .UseStartup<Startup>()
+                .ConfigureServices(services =>
+                {
+                    services.AddDbContext<FileCryptDbContext>(options =>
+                    {
+                        options.UseInMemoryDatabase("TestDatabase");
+                    });
 
-        //[Fact]
-        //public async Task CookieHasJwt_Header_SuccessAdded()
-        //{
-        //    var builder = new WebHostBuilder()
-        //        .UseEnvironment("Development")
-        //        .UseUrls("http://localhost:2921")
-        //        .UseStartup<Startup>()
-        //        .ConfigureServices(services =>
-        //        {
-        //            services.AddDbContext<FileCryptDbContext>(options =>
-        //            {
-        //                options.UseInMemoryDatabase("TestDatabase");
-        //            });
+                    services.AddScoped<ITokenService, FakeTokenService>();
+                })
+                .Configure(app =>
+                {
+                    app.UseMiddleware<BearerMiddleware>();
+                    app.Run(async context =>
+                    {
+                        Assert.True(context.Request.Headers.ContainsKey(ImmutableData.JWT_TOKEN_HEADER_NAME));
+                        Assert.True(context.Request.Headers.ContainsKey("Authorization"));
+                        await Task.CompletedTask;
+                    });
+                });
 
-        //            services.AddScoped<ITokenService, FakeTokenService>();
-        //        })
-        //        .Configure(app =>
-        //        {
-        //            app.UseMiddleware<BearerMiddleware>();
-        //            app.Run(async context =>
-        //            {
-        //                context.Request.Headers.Add(ImmutableData.JWT_TOKEN_HEADER_NAME, "hdfjkyhgdfuigy9d8gjkhdfhjgkdhfgkjldhlkgfjkd");
+            using var server = new TestServer(builder);
+            var client = server.CreateClient();
+            var request = new HttpRequestMessage(HttpMethod.Get, "/");
+            request.Headers.Add(ImmutableData.JWT_TOKEN_HEADER_NAME, "hdfjkyhgdfuigy9d8gjkhdfhjgkdhfgkjldhlkgfjkd");
+            var response = await client.SendAsync(request);
 
-        //                Assert.True(context.Request.Headers.ContainsKey(ImmutableData.JWT_TOKEN_HEADER_NAME));
-        //                Assert.True(context.Request.Headers.ContainsKey("Authorization"));
-        //                await Task.CompletedTask;
-        //            });
-        //        });
+            response.EnsureSuccessStatusCode();
+        }
 
-        //    using var server = new TestServer(builder);
-        //    var client = server.CreateClient();
+        [Fact]
+        public async Task CookieHasNotJwt_CookieHasRefresh_Header_SuccessAdded_JwtUpdated()
+        {
+            var builder = new WebHostBuilder()
+                .UseEnvironment("Development")
+                .UseUrls("http://localhost:2922")
+                .ConfigureServices(services =>
+                {
+                    services.AddDbContext<FileCryptDbContext>(options =>
+                    {
+                        options.UseInMemoryDatabase("TestDatabase");
+                    });
 
-        //    var response = await client.GetAsync("/");
+                    services.AddScoped<ITokenService, FakeTokenService>();
+                })
+                .Configure(async app =>
+                {
+                    using (var scope = app.ApplicationServices.CreateScope())
+                    {
+                        var services = scope.ServiceProvider;
+                        var dbContext = services.GetRequiredService<FileCryptDbContext>();
 
-        //    response.EnsureSuccessStatusCode();
-        //    response.Dispose();
-        //}
+                        var user = new UserModel
+                        {
+                            id = 1,
+                            username = "air",
+                            role = "Admin",
+                            email = "air147@gmail.com",
+                            is_2fa_enabled = true,
+                            is_blocked = false,
+                            password = "kjdfghjdfhgjkdfhgjkdfshglkjhgkjdfhklghjlkdshfklghkjd"
+                        };
 
-        //[Fact]
-        //public async Task CookieHasNotJwt_CookieHasRefresh_Header_SuccessAdded_JwtUpdated()
-        //{
-        //    var builder = new WebHostBuilder()
-        //        .UseEnvironment("Development")
-        //        .UseUrls("http://localhost:2922")
-        //        .ConfigureServices(services =>
-        //        {
-        //            services.AddDbContext<FileCryptDbContext>(options =>
-        //            {
-        //                options.UseInMemoryDatabase("TestDatabase");
-        //            });
+                        var token = new TokenModel
+                        {
+                            token_id = 1,
+                            user_id = 1,
+                            refresh_token = "hdfjkyhgdfuigy9d8gjkhdfhjgkdhfgkjldhlkgfjkd",
+                            expiry_date = DateTime.UtcNow.AddDays(10)
+                        };
 
-        //            services.AddScoped<ITokenService, FakeTokenService>();
-        //        })
-        //        .Configure(app =>
-        //        {
-        //            app.UseMiddleware<BearerMiddleware>();
-        //            app.Run(async context =>
-        //            {
-        //                context.Request.Headers.Add(ImmutableData.REFRESH_TOKEN_HEADER_NAME , "hdfjkyhgdfuigy9d8gjkhdfhjgkdhfgkjldhlkgfjkd");
-        //                Assert.True(context.Request.Headers.ContainsKey(ImmutableData.REFRESH_TOKEN_HEADER_NAME));
+                        dbContext.Users.Add(user);
+                        dbContext.Tokens.Add(token);
+                        await dbContext.SaveChangesAsync();
+                    }
 
-        //                Assert.True(context.Request.Headers.ContainsKey("Authorization"));
-        //                Assert.True(context.Response.Headers["Set-Cookie"].ToString().Contains(ImmutableData.JWT_COOKIE_KEY));
-        //                Assert.True(context.Response.Headers["Set-Cookie"].ToString().Contains("FAKE_JSON.WEB.TOKEN"));
-        //                await Task.CompletedTask;
-        //            });
-        //        });
+                    app.UseMiddleware<BearerMiddleware>();
+                    app.Run(async context =>
+                    {
+                        Assert.True(context.Request.Headers.ContainsKey(ImmutableData.REFRESH_TOKEN_HEADER_NAME));
+                        Assert.True(context.Request.Headers.ContainsKey("Authorization"));
+                        Assert.True(context.Response.Headers["Set-Cookie"].ToString().Contains(ImmutableData.JWT_COOKIE_KEY));
+                        Assert.True(context.Response.Headers["Set-Cookie"].ToString().Contains("FAKE_JSON.WEB.TOKEN"));
+                        await Task.CompletedTask;
+                    });
+                });
 
-        //    using var server = new TestServer(builder);
-        //    var client = server.CreateClient();
+            using var server = new TestServer(builder);
+            var client = server.CreateClient();
+            var request = new HttpRequestMessage(HttpMethod.Get, "/");
+            request.Headers.Add(ImmutableData.REFRESH_TOKEN_HEADER_NAME, "hdfjkyhgdfuigy9d8gjkhdfhjgkdhfgkjldhlkgfjkd");
+            var response = await client.SendAsync(request);
 
-        //    var response = await client.GetAsync("/");
-
-        //    response.EnsureSuccessStatusCode();
-        //    response.Dispose();
-        //}
+            response.EnsureSuccessStatusCode();
+        }
 
         [Fact]
         public async Task CookieHasNotJwt_CookieHasNotRefresh_NoneHeader_401StatusCode()
@@ -160,11 +180,6 @@ namespace tests.Middlewares_Tests
 
             }
 
-            public string GenerateJwtToken(object user, TimeSpan expiry)
-            {
-                return "FAKE_JSON.WEB.TOKEN";
-            }
-
             public CookieOptions SetCookieOptions(TimeSpan expiry)
             {
                 return new CookieOptions
@@ -183,7 +198,7 @@ namespace tests.Middlewares_Tests
 
             public string GenerateJwtToken(UserModel userModel, TimeSpan expiry)
             {
-                throw new NotImplementedException();
+                return "FAKE_JSON.WEB.TOKEN";
             }
 
             public Task UpdateJwtToken()

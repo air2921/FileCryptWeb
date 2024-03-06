@@ -43,7 +43,7 @@ namespace webapi.Middlewares
             var refreshHeaders = context.Request.Headers[ImmutableData.REFRESH_TOKEN_HEADER_NAME];
             context.Request.Cookies.TryGetValue(ImmutableData.REFRESH_COOKIE_KEY, out string? refreshCookie);
 
-            if (refreshCookie is not null)
+            if (!string.IsNullOrWhiteSpace(refreshCookie))
                 refresh = refreshCookie;
             else
                 refresh = refreshHeaders.ToString();
@@ -51,9 +51,7 @@ namespace webapi.Middlewares
             if (!string.IsNullOrWhiteSpace(refresh))
             {
                 if (_env.IsDevelopment())
-                {
                     _logger.LogWarning(tokenService.HashingToken(refresh));
-                }
 
                 var userAndToken = await dbContext.Tokens
                     .Where(t => t.refresh_token == tokenService.HashingToken(refresh))
@@ -63,8 +61,7 @@ namespace webapi.Middlewares
                 if (userAndToken is null || userAndToken.token.expiry_date < DateTime.UtcNow || userAndToken.user.is_blocked == true)
                 {
                     tokenService.DeleteTokens();
-                    await _next(context);
-                    return;
+                    await _next(context); return;
                 }
 
                 string createdJWT = tokenService.GenerateJwtToken(userAndToken.user, ImmutableData.JwtExpiry);
