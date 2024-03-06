@@ -331,7 +331,7 @@ namespace webapi.Controllers.Core
         [Helper]
         private bool IsValidKey(string key)
         {
-            return !string.IsNullOrWhiteSpace(key) || _validation.IsBase64String(key) || Regex.IsMatch(key, Validation.EncryptionKey);
+            return !string.IsNullOrWhiteSpace(key) && _validation.IsBase64String(key) && Regex.IsMatch(key, Validation.EncryptionKey);
         }
 
         [Helper]

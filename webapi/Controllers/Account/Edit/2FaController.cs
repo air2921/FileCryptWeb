@@ -140,7 +140,7 @@ namespace webapi.Controllers.Account.Edit
             using var transaction = await _dbContext.Database.BeginTransactionAsync();
             try
             {
-                if (user.is_2fa_enabled == enable)
+                if (user.is_2fa_enabled)
                     throw new EntityNotUpdatedException(Message.CONFLICT);
                 user.is_2fa_enabled = enable;
                 await _userRepository.Update(user);
