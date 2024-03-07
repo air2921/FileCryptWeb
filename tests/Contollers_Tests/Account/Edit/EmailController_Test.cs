@@ -29,7 +29,7 @@ namespace tests.Contollers_Tests.Account.Edit
             generateMock.Setup(x => x.GenerateSixDigitCode()).Returns(123456);
             emailServiceMock.Setup(x => x.SendMessage(It.IsAny<string>(), It.IsAny<string>(), It.IsAny<string>(), It.IsAny<string>()))
                 .Returns(Task.CompletedTask);
-            emailServiceMock.Setup(x => x.SetSessionCode(It.IsAny<HttpContext>(), It.IsAny<string>(), It.IsAny<int>()));
+            emailServiceMock.Setup(x => x.SetData(It.IsAny<string>(), It.IsAny<int>()));
 
             var emailController = new EmailController(emailServiceMock.Object, userRepositoryMock.Object,
                 null, passwordManagerMock.Object, generateMock.Object, null, userInfoMock.Object, null);
@@ -144,9 +144,9 @@ namespace tests.Contollers_Tests.Account.Edit
 
             emailServiceMock.Setup(x => x.SendMessage(It.IsAny<string>(), It.IsAny<string>(), It.IsAny<string>(), It.IsAny<string>()))
                 .Returns(Task.CompletedTask);
-            emailServiceMock.Setup(x => x.GetSessionCode(It.IsAny<HttpContext>(), It.IsAny<string>())).Returns(123456);
-            emailServiceMock.Setup(x => x.SetSessionCode(It.IsAny<HttpContext>(), It.IsAny<string>(), It.IsAny<int>()));
-            emailServiceMock.Setup(x => x.SetSessionString(It.IsAny<HttpContext>(), It.IsAny<string>(), It.IsAny<string>()));
+            emailServiceMock.Setup(x => x.GetCode(It.IsAny<string>())).ReturnsAsync(123456);
+            emailServiceMock.Setup(x => x.SetData(It.IsAny<string>(), It.IsAny<int>()));
+            emailServiceMock.Setup(x => x.SetData(It.IsAny<string>(), It.IsAny<string>()));
             validationMock.Setup(x => x.IsSixDigit(It.IsAny<int>())).Returns(true);
             generateMock.Setup(x => x.GenerateSixDigitCode()).Returns(It.IsAny<int>());
             userInfoMock.Setup(x => x.Username).Returns("username");
@@ -168,12 +168,14 @@ namespace tests.Contollers_Tests.Account.Edit
         {
             var emailServiceMock = new Mock<IApiEmailService>();
             var validationMock = new Mock<IValidation>();
+            var userInfoMock = new Mock<IUserInfo>();
 
-            emailServiceMock.Setup(x => x.GetSessionCode(It.IsAny<HttpContext>(), It.IsAny<string>())).Returns(123456);
+            emailServiceMock.Setup(x => x.GetCode(It.IsAny<string>())).ReturnsAsync(123456);
             validationMock.Setup(x => x.IsSixDigit(It.IsAny<int>())).Returns(false);
+            userInfoMock.Setup(x => x.UserId).Returns(1);
 
             var emailController = new EmailController(emailServiceMock.Object, null,
-                null, null, null, null, null, validationMock.Object);
+                null, null, null, null, userInfoMock.Object, validationMock.Object);
 
             var result = await emailController.ConfirmOldEmail("TestEmail134@mail.com", 123);
 
@@ -188,14 +190,16 @@ namespace tests.Contollers_Tests.Account.Edit
             var emailServiceMock = new Mock<IApiEmailService>();
             var validationMock = new Mock<IValidation>();
             var userRepositoryMock = new Mock<IRepository<UserModel>>();
+            var userInfoMock = new Mock<IUserInfo>();
 
-            emailServiceMock.Setup(x => x.GetSessionCode(It.IsAny<HttpContext>(), It.IsAny<string>())).Returns(123456);
+            emailServiceMock.Setup(x => x.GetCode(It.IsAny<string>())).ReturnsAsync(123456);
             validationMock.Setup(x => x.IsSixDigit(It.IsAny<int>())).Returns(true);
             userRepositoryMock.Setup(x => x.GetByFilter(It.IsAny<Func<IQueryable<UserModel>, IQueryable<UserModel>>>(), CancellationToken.None))
                 .ReturnsAsync(new UserModel());
+            userInfoMock.Setup(x => x.UserId).Returns(1);
 
             var emailController = new EmailController(emailServiceMock.Object, userRepositoryMock.Object,
-                null, null, null, null, null, validationMock.Object);
+                null, null, null, null, userInfoMock.Object, validationMock.Object);
 
             var result = await emailController.ConfirmOldEmail("TestEmail134@mail.com", 123456);
 
@@ -210,14 +214,16 @@ namespace tests.Contollers_Tests.Account.Edit
             var emailServiceMock = new Mock<IApiEmailService>();
             var validationMock = new Mock<IValidation>();
             var userRepositoryMock = new Mock<IRepository<UserModel>>();
+            var userInfoMock = new Mock<IUserInfo>();
 
-            emailServiceMock.Setup(x => x.GetSessionCode(It.IsAny<HttpContext>(), It.IsAny<string>())).Returns(123456);
+            emailServiceMock.Setup(x => x.GetCode(It.IsAny<string>())).ReturnsAsync(123456);
             validationMock.Setup(x => x.IsSixDigit(It.IsAny<int>())).Returns(true);
             userRepositoryMock.Setup(x => x.GetByFilter(It.IsAny<Func<IQueryable<UserModel>, IQueryable<UserModel>>>(), CancellationToken.None))
                 .ThrowsAsync((Exception)Activator.CreateInstance(typeof(OperationCanceledException)));
+            userInfoMock.Setup(x => x.UserId).Returns(1);
 
             var emailController = new EmailController(emailServiceMock.Object, userRepositoryMock.Object,
-                null, null, null, null, null, validationMock.Object);
+                null, null, null, null, userInfoMock.Object, validationMock.Object);
 
             var result = await emailController.ConfirmOldEmail("TestEmail134@mail.com", 123456);
 
@@ -235,7 +241,7 @@ namespace tests.Contollers_Tests.Account.Edit
             var userInfoMock = new Mock<IUserInfo>();
             var userRepositoryMock = new Mock<IRepository<UserModel>>();
 
-            emailServiceMock.Setup(x => x.GetSessionCode(It.IsAny<HttpContext>(), It.IsAny<string>())).Returns(123456);
+            emailServiceMock.Setup(x => x.GetCode(It.IsAny<string>())).ReturnsAsync(123456);
             emailServiceMock.Setup(x => x.SendMessage(It.IsAny<string>(), It.IsAny<string>(), It.IsAny<string>(), It.IsAny<string>()))
                 .ThrowsAsync((Exception)Activator.CreateInstance(typeof(SmtpClientException)));
             validationMock.Setup(x => x.IsSixDigit(It.IsAny<int>())).Returns(true);
@@ -263,8 +269,8 @@ namespace tests.Contollers_Tests.Account.Edit
             var userInfoMock = new Mock<IUserInfo>();
             var userRepositoryMock = new Mock<IRepository<UserModel>>();
 
-            emailServiceMock.Setup(x => x.GetSessionCode(It.IsAny<HttpContext>(), It.IsAny<string>())).Returns(123456);
-            emailServiceMock.Setup(x => x.GetSessionString(It.IsAny<HttpContext>(), It.IsAny<string>())).Returns("TestEmail134@mail.com");
+            emailServiceMock.Setup(x => x.GetCode(It.IsAny<string>())).ReturnsAsync(123456);
+            emailServiceMock.Setup(x => x.GetString(It.IsAny<string>())).ReturnsAsync("TestEmail134@mail.com");
             validationMock.Setup(x => x.IsSixDigit(It.IsAny<int>())).Returns(true);
             tokenServiceMock.Setup(x => x.UpdateJwtToken()).Returns(Task.CompletedTask);
             userInfoMock.Setup(x => x.UserId).Returns(1);
@@ -283,11 +289,14 @@ namespace tests.Contollers_Tests.Account.Edit
         {
             var emailServiceMock = new Mock<IApiEmailService>();
             var validationMock = new Mock<IValidation>();
+            var userInfoMock = new Mock<IUserInfo>();
 
-            emailServiceMock.Setup(x => x.GetSessionCode(It.IsAny<HttpContext>(), It.IsAny<string>())).Returns(123);
+            emailServiceMock.Setup(x => x.GetCode(It.IsAny<string>())).ReturnsAsync(123);
             validationMock.Setup(x => x.IsSixDigit(It.IsAny<int>())).Returns(false);
+            userInfoMock.Setup(x => x.UserId).Returns(1);
 
-            var emailController = new EmailController(emailServiceMock.Object, null, null, null, null, null, null, validationMock.Object);
+            var emailController = new EmailController(emailServiceMock.Object, null, null,
+                null, null, null, userInfoMock.Object, validationMock.Object);
 
             var result = await emailController.ConfirmAndUpdateNewEmail(123);
 
@@ -301,12 +310,15 @@ namespace tests.Contollers_Tests.Account.Edit
         {
             var emailServiceMock = new Mock<IApiEmailService>();
             var validationMock = new Mock<IValidation>();
+            var userInfoMock = new Mock<IUserInfo>();
 
-            emailServiceMock.Setup(x => x.GetSessionCode(It.IsAny<HttpContext>(), It.IsAny<string>())).Returns(123);
-            emailServiceMock.Setup(x => x.GetSessionString(It.IsAny<HttpContext>(), It.IsAny<string>())).Returns((string)null);
+            emailServiceMock.Setup(x => x.GetCode(It.IsAny<string>())).ReturnsAsync(123);
+            emailServiceMock.Setup(x => x.GetString(It.IsAny<string>())).ReturnsAsync((string)null);
             validationMock.Setup(x => x.IsSixDigit(It.IsAny<int>())).Returns(true);
+            userInfoMock.Setup(x => x.UserId).Returns(1);
 
-            var emailController = new EmailController(emailServiceMock.Object, null, null, null, null, null, null, validationMock.Object);
+            var emailController = new EmailController(emailServiceMock.Object, null, null, null,
+                null, null, userInfoMock.Object, validationMock.Object);
 
             var result = await emailController.ConfirmAndUpdateNewEmail(123);
 
@@ -323,8 +335,8 @@ namespace tests.Contollers_Tests.Account.Edit
             var userInfoMock = new Mock<IUserInfo>();
             var userRepositoryMock = new Mock<IRepository<UserModel>>();
 
-            emailServiceMock.Setup(x => x.GetSessionCode(It.IsAny<HttpContext>(), It.IsAny<string>())).Returns(123);
-            emailServiceMock.Setup(x => x.GetSessionString(It.IsAny<HttpContext>(), It.IsAny<string>())).Returns("TestEmail134@mail.com");
+            emailServiceMock.Setup(x => x.GetCode(It.IsAny<string>())).ReturnsAsync(123);
+            emailServiceMock.Setup(x => x.GetString(It.IsAny<string>())).ReturnsAsync("TestEmail134@mail.com");
             validationMock.Setup(x => x.IsSixDigit(It.IsAny<int>())).Returns(true);
             userInfoMock.Setup(x => x.UserId).Returns(1);
             userRepositoryMock.Setup(x => x.GetById(It.IsAny<int>(), CancellationToken.None)).ReturnsAsync((UserModel)null);
@@ -347,8 +359,8 @@ namespace tests.Contollers_Tests.Account.Edit
             var userInfoMock = new Mock<IUserInfo>();
             var userRepositoryMock = new Mock<IRepository<UserModel>>();
 
-            emailServiceMock.Setup(x => x.GetSessionCode(It.IsAny<HttpContext>(), It.IsAny<string>())).Returns(123);
-            emailServiceMock.Setup(x => x.GetSessionString(It.IsAny<HttpContext>(), It.IsAny<string>())).Returns("TestEmail134@mail.com");
+            emailServiceMock.Setup(x => x.GetCode(It.IsAny<string>())).ReturnsAsync(123);
+            emailServiceMock.Setup(x => x.GetString(It.IsAny<string>())).ReturnsAsync("TestEmail134@mail.com");
             validationMock.Setup(x => x.IsSixDigit(It.IsAny<int>())).Returns(true);
             userInfoMock.Setup(x => x.UserId).Returns(1);
             userRepositoryMock.Setup(x => x.GetById(It.IsAny<int>(), CancellationToken.None))
@@ -374,8 +386,8 @@ namespace tests.Contollers_Tests.Account.Edit
             var userInfoMock = new Mock<IUserInfo>();
             var userRepositoryMock = new Mock<IRepository<UserModel>>();
 
-            emailServiceMock.Setup(x => x.GetSessionCode(It.IsAny<HttpContext>(), It.IsAny<string>())).Returns(123);
-            emailServiceMock.Setup(x => x.GetSessionString(It.IsAny<HttpContext>(), It.IsAny<string>())).Returns("TestEmail134@mail.com");
+            emailServiceMock.Setup(x => x.GetCode(It.IsAny<string>())).ReturnsAsync(123);
+            emailServiceMock.Setup(x => x.GetString(It.IsAny<string>())).ReturnsAsync("TestEmail134@mail.com");
             emailServiceMock.Setup(x => x.DbTransaction(It.IsAny<UserModel>(), It.IsAny<string>()))
                 .ThrowsAsync((Exception)Activator.CreateInstance(ex));
             validationMock.Setup(x => x.IsSixDigit(It.IsAny<int>())).Returns(true);
@@ -401,8 +413,8 @@ namespace tests.Contollers_Tests.Account.Edit
             var tokenServiceMock = new Mock<ITokenService>();
             var userRepositoryMock = new Mock<IRepository<UserModel>>();
 
-            emailServiceMock.Setup(x => x.GetSessionCode(It.IsAny<HttpContext>(), It.IsAny<string>())).Returns(123);
-            emailServiceMock.Setup(x => x.GetSessionString(It.IsAny<HttpContext>(), It.IsAny<string>())).Returns("TestEmail134@mail.com");
+            emailServiceMock.Setup(x => x.GetCode(It.IsAny<string>())).ReturnsAsync(123);
+            emailServiceMock.Setup(x => x.GetString(It.IsAny<string>())).ReturnsAsync("TestEmail134@mail.com");
             emailServiceMock.Setup(x => x.DbTransaction(It.IsAny<UserModel>(), It.IsAny<string>())).Returns(Task.CompletedTask);
             validationMock.Setup(x => x.IsSixDigit(It.IsAny<int>())).Returns(true);
             userInfoMock.Setup(x => x.UserId).Returns(1);
