@@ -1,4 +1,5 @@
-﻿using Microsoft.AspNetCore.Authorization;
+﻿using AutoMapper;
+using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 using webapi.Attributes;
 using webapi.DTO;
@@ -18,15 +19,18 @@ namespace webapi.Controllers.Admin
         #region fields and constructor
 
         private readonly IRepository<NotificationModel> _notificationRepository;
+        private readonly IMapper _mapper;
         private readonly ILogger<SendEmailController> _logger;
         private readonly IEmailSender _emailSender;
 
         public SendEmailController(
             IRepository<NotificationModel> notificationRepository,
+            IMapper mapper,
             ILogger<SendEmailController> logger,
             IEmailSender emailSender)
         {
             _notificationRepository = notificationRepository;
+            _mapper = mapper;
             _logger = logger;
             _emailSender = emailSender;
         }
@@ -41,22 +45,18 @@ namespace webapi.Controllers.Admin
         {
             try
             {
+                var notificationModel = _mapper.Map<NotifyDTO, NotificationModel>(notifyDTO);
+                notificationModel.is_checked = false;
+                notificationModel.send_time = DateTime.UtcNow;
+
+                await _notificationRepository.Add(notificationModel);
+
                 await _emailSender.SendMessage(new EmailDto
                 {
                     username = username,
                     email = email,
                     subject = notifyDTO.message_header,
                     message = notifyDTO.message
-                });
-
-                await _notificationRepository.Add(new NotificationModel
-                {
-                    user_id = notifyDTO.receiver_id,
-                    message_header = "You have a notification from administrator",
-                    message = notifyDTO.message,
-                    send_time = DateTime.UtcNow,
-                    priority = notifyDTO.priority,
-                    is_checked = false
                 });
 
                 return StatusCode(201, new { message = Message.EMAIL_SENT });
