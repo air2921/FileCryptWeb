@@ -1,5 +1,6 @@
 ﻿using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
+using Newtonsoft.Json;
 using webapi.Attributes;
 using webapi.DB;
 using webapi.DTO;
@@ -18,7 +19,7 @@ namespace webapi.Controllers.Account.Edit
     [Authorize]
     public class _2FaController : ControllerBase
     {
-        private const string CODE = "2FaCode";
+        private readonly string CODE;
 
         #region fields and constructor
 
@@ -43,6 +44,7 @@ namespace webapi.Controllers.Account.Edit
             _userInfo = userInfo;
             _generate = generate;
             _validation = validation;
+            CODE = $"_2FaController_VerificationCode#{_userInfo.UserId}";
         }
 
         #endregion
@@ -68,7 +70,7 @@ namespace webapi.Controllers.Account.Edit
                 int code = _generate.GenerateSixDigitCode();
                 await _api2FaService.SendMessage(user.username, user.email, code);
 
-                _api2FaService.SetSessionCode(HttpContext, code);
+                await _api2FaService.SetData(CODE, code);
 
                 return StatusCode(200);
             }
@@ -92,7 +94,7 @@ namespace webapi.Controllers.Account.Edit
         {
             try
             {
-                int correctCode = _api2FaService.GetSessionCode(HttpContext);
+                int correctCode = await _api2FaService.GetCode(CODE);
                 if (!_validation.IsSixDigit(correctCode) || !code.Equals(correctCode))
                     return StatusCode(400, new { message = Message.INCORRECT });
 
@@ -101,7 +103,7 @@ namespace webapi.Controllers.Account.Edit
                     return StatusCode(404, new { message = Message.NOT_FOUND });
 
                 await _api2FaService.DbTransaction(user, enable);
-                await _api2FaService.ClearData(HttpContext, _userInfo.UserId);
+                await _api2FaService.ClearData(_userInfo.UserId);
 
                 return StatusCode(200);
             }
@@ -124,9 +126,9 @@ namespace webapi.Controllers.Account.Edit
     {
         public Task DbTransaction(UserModel user, bool enable);
         public Task SendMessage(string username, string email, int code);
-        public Task ClearData(HttpContext context, int userId);
-        public void SetSessionCode(HttpContext context, int code);
-        public int GetSessionCode(HttpContext context);
+        public Task ClearData(int userId);
+        public Task SetData(string key, object data);
+        public Task<int> GetCode(string key);
     }
 
     public class _2FaService : IApi2FaService
@@ -213,24 +215,27 @@ namespace webapi.Controllers.Account.Edit
         }
 
         [Helper]
-        public async Task ClearData(HttpContext context, int userId)
+        public async Task ClearData(int userId)
         {
-            context.Session.Remove(CODE);
+            await _redisCache.DeleteCache($"_2FaController_VerificationCode#{userId}");
             await _redisCache.DeteteCacheByKeyPattern($"{ImmutableData.USER_DATA_PREFIX}{userId}");
             await _redisCache.DeteteCacheByKeyPattern($"{ImmutableData.NOTIFICATIONS_PREFIX}{userId}");
         }
 
         [Helper]
-        public void SetSessionCode(HttpContext context, int code)
+        public async Task SetData(string key, object data)
         {
-            context.Session.SetString(CODE, code.ToString());
+            await _redisCache.CacheData(key, data, TimeSpan.FromMinutes(10));
         }
 
         [Helper]
-        public int GetSessionCode(HttpContext context)
+        public async Task<int> GetCode(string key)
         {
-            int correctCode = int.TryParse(context.Session.GetString(CODE), out var parsedValue) ? parsedValue : 0;
-            return correctCode;
+            var code = await _redisCache.GetCachedData(key);
+            if (code is not null)
+                return JsonConvert.DeserializeObject<int>(code);
+            else
+                return 0;
         }
     }
 }

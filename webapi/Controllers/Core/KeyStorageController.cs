@@ -1,4 +1,5 @@
-﻿using Microsoft.AspNetCore.Authorization;
+﻿using AutoMapper;
+using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 using Newtonsoft.Json;
 using System.Security.Cryptography;
@@ -25,6 +26,7 @@ namespace webapi.Controllers.Core
 
         private readonly IRepository<KeyStorageModel> _storageRepository;
         private readonly IRepository<KeyStorageItemModel> _storageItemRepository;
+        private readonly IMapper _mapper;
         private readonly IRedisCache _redisCache;
         private readonly ICypherKey _decryptKey;
         private readonly ICypherKey _encryptKey;
@@ -37,6 +39,7 @@ namespace webapi.Controllers.Core
         public KeyStorageController(
             IRepository<KeyStorageModel> storageRepository,
             IRepository<KeyStorageItemModel> storageItemRepository,
+            IMapper mapper,
             IRedisCache redisCache,
             IEnumerable<ICypherKey> cypherKeys,
             IImplementationFinder implementationFinder,
@@ -47,6 +50,7 @@ namespace webapi.Controllers.Core
         {
             _storageRepository = storageRepository;
             _storageItemRepository = storageItemRepository;
+            _mapper = mapper;
             _redisCache = redisCache;
             _decryptKey = implementationFinder.GetImplementationByKey(cypherKeys, ImplementationKey.DECRYPT_KEY);
             _encryptKey = implementationFinder.GetImplementationByKey(cypherKeys, ImplementationKey.ENCRYPT_KEY);
@@ -67,14 +71,12 @@ namespace webapi.Controllers.Core
         {
             try
             {
-                await _storageRepository.Add(new KeyStorageModel
-                {
-                    user_id = _userInfo.UserId,
-                    storage_name = storageDTO.storage_name,
-                    last_time_modified = DateTime.UtcNow,
-                    access_code = _passwordManager.HashingPassword(storageDTO.storage_code.ToString()),
-                    encrypt = storageDTO.encrypt
-                });
+                var keyStorageModel = _mapper.Map<StorageDTO, KeyStorageModel>(storageDTO);
+                keyStorageModel.user_id = _userInfo.UserId;
+                keyStorageModel.last_time_modified = DateTime.UtcNow;
+                keyStorageModel.access_code = _passwordManager.HashingPassword(storageDTO.access_code.ToString());
+
+                await _storageRepository.Add(keyStorageModel);
 
                 await _redisCache.DeteteCacheByKeyPattern($"{ImmutableData.STORAGES_PREFIX}{_userInfo.UserId}");
                 return StatusCode(201);
@@ -229,15 +231,12 @@ namespace webapi.Controllers.Core
 
                 var storage = await GetAndValidateStorage(storageId, _userInfo.UserId, code);
 
-                var key = await Cypher(storage.encrypt, keyDTO.key_value);
+                var keyItemModel = _mapper.Map<KeyDTO, KeyStorageItemModel>(keyDTO);
+                keyItemModel.key_value = await Cypher(storage.encrypt, keyDTO.key_value);
+                keyItemModel.storage_id = storageId;
+                keyItemModel.created_at = DateTime.UtcNow;
 
-                await _storageItemRepository.Add(new KeyStorageItemModel
-                {
-                    key_name = keyDTO.key_name,
-                    key_value = key,
-                    storage_id = storageId,
-                    created_at = DateTime.UtcNow
-                });
+                await _storageItemRepository.Add(keyItemModel);
 
                 await _redisCache.DeteteCacheByKeyPattern($"{ImmutableData.STORAGES_PREFIX}{_userInfo.UserId}");
                 return StatusCode(201);
