@@ -4,11 +4,11 @@ on:
   push:
     branches:
       - main
-      - reactjs/dev
+      - dev
   pull_request:
     branches:
       - main
-      - reactjs/dev
+      - dev
 
 jobs:
   test:
