@@ -50,6 +50,7 @@ namespace webapi
         private static void ControllerServices(IServiceCollection services)
         {
             services.AddScoped<IApi2FaService, _2FaService>();
+            services.AddScoped<IApiEmailService, EmailService>();
         }
 
         public static void Transient(IServiceCollection services)
