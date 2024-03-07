@@ -11,16 +11,16 @@ namespace webapi.Models
         public int offer_id { get; set; }
 
         [JsonIgnore(Condition = JsonIgnoreCondition.WhenWritingNull)]
-        public string? offer_header { get; set; }
+        public string offer_header { get; set; }
 
         [JsonIgnore(Condition = JsonIgnoreCondition.WhenWritingNull)]
-        public string? offer_body { get; set; }
+        public string offer_body { get; set; }
 
-        public string? offer_type { get; set; }
+        public string offer_type { get; set; }
 
-        public bool? is_accepted { get; set; }
+        public bool is_accepted { get; set; }
 
-        public DateTime? created_at { get; set; }
+        public DateTime created_at { get; set; }
 
         [ForeignKey("sender_id")]
         public int sender_id { get; set; }
@@ -33,5 +33,10 @@ namespace webapi.Models
 
         [JsonIgnore]
         public virtual UserModel? Receiver { get; set; }
+    }
+
+    public enum TradeType
+    {
+        Key
     }
 }

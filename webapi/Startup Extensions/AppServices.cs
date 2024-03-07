@@ -4,7 +4,7 @@ using Microsoft.EntityFrameworkCore;
 using Microsoft.IdentityModel.Tokens;
 using System.Text;
 using webapi.DB;
-using webapi.Services;
+using webapi.Helpers;
 
 namespace webapi
 {
@@ -16,7 +16,12 @@ namespace webapi
                 .AddUserSecrets<AppServices>()
                 .Build();
 
-            services.AddDbContext<FileCryptDbContext>(options => options.UseNpgsql(configuration.GetConnectionString(App.MainDb)));
+            services.AddDbContext<FileCryptDbContext>(options =>
+            {
+                options.UseNpgsql(configuration.GetConnectionString(App.MAIN_DB))
+                .EnableServiceProviderCaching(false)
+                .EnableDetailedErrors(true);
+            });
 
             services.AddControllers();
             services.AddLogging();
@@ -31,6 +36,20 @@ namespace webapi
                            .AllowAnyHeader()
                            .AllowAnyMethod()
                            .AllowCredentials();
+                });
+
+                options.AddPolicy("AllowOriginAPI", builder =>
+                {
+                    builder.AllowAnyOrigin()
+                    .WithMethods("POST")
+                    .WithHeaders(ImmutableData.ENCRYPTION_KEY_HEADER_NAME, ImmutableData.API_HEADER_NAME)
+                    .SetIsOriginAllowed(origin =>
+                    origin.EndsWith("api/public/cryptography/private/decrypt") ||
+                    origin.EndsWith("api/public/cryptography/internal/decrypt") ||
+                    origin.EndsWith("api/public/cryptography/received/decrypt") ||
+                    origin.EndsWith("api/public/cryptography/private/encrypt") ||
+                    origin.EndsWith("api/public/cryptography/internal/encrypt") ||
+                    origin.EndsWith("api/public/cryptography/received/encrypt"));
                 });
             });
 
@@ -61,12 +80,15 @@ namespace webapi
                     ValidateIssuerSigningKey = true,
                     ValidateIssuer = true,
                     ValidateAudience = true,
-                    IssuerSigningKey = new SymmetricSecurityKey(Encoding.ASCII.GetBytes(configuration[App.appSecretKey]!)),
+                    IssuerSigningKey = new SymmetricSecurityKey(Encoding.ASCII.GetBytes(configuration[App.SECRET_KEY]!)),
                     ValidIssuer = "FileCrypt",
                     ValidAudience = "User",
                     ClockSkew = TimeSpan.Zero
                 };
             });
+
+            services.AddAntiforgery(options => { options.HeaderName = ImmutableData.XSRF_HEADER_NAME; });
+            services.AddMvc();
 
             services.Configure<KestrelServerOptions>(options =>
             {

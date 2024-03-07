@@ -1,11 +1,14 @@
 ﻿using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
-using Microsoft.EntityFrameworkCore;
+using Newtonsoft.Json;
+using webapi.Attributes;
 using webapi.DB;
 using webapi.Exceptions;
+using webapi.Helpers;
+using webapi.Interfaces;
+using webapi.Interfaces.Redis;
 using webapi.Interfaces.Services;
-using webapi.Interfaces.SQL;
-using webapi.Localization.Exceptions;
+using webapi.Localization;
 using webapi.Models;
 
 namespace webapi.Controllers.Core
@@ -15,85 +18,98 @@ namespace webapi.Controllers.Core
     [Authorize]
     public class FileController : ControllerBase
     {
-        private readonly FileCryptDbContext _dbContext;
+        #region fields and constructor
+
+        private readonly IRepository<FileModel> _fileRepository;
+        private readonly ISorting _sorting;
+        private readonly IRedisCache _redisCache;
         private readonly IUserInfo _userInfo;
-        private readonly IDelete<FileModel> _deleteFileById;
-        private readonly IDeleteByName<FileModel> _deleteFileByName;
-        private readonly IRead<FileModel> _readFile;
 
         public FileController(
-            FileCryptDbContext dbContext,
-            IUserInfo userInfo,
-            IDelete<FileModel> deleteFileById,
-            IDeleteByName<FileModel> deleteFileByName,
-            IRead<FileModel> readFile)
+            IRepository<FileModel> fileRepository,
+            ISorting sorting,
+            IRedisCache redisCache,
+            IUserInfo userInfo)
         {
-            _dbContext = dbContext;
+            _fileRepository = fileRepository;
+            _sorting = sorting;
+            _redisCache = redisCache;
             _userInfo = userInfo;
-            _deleteFileById = deleteFileById;
-            _deleteFileByName = deleteFileByName;
-            _readFile = readFile;
         }
 
-        [HttpDelete("one/{byID}")]
-        public async Task<IActionResult> DeleteFileFromHistory([FromBody] FileModel fileModel, [FromRoute] bool byID)
+        #endregion
+
+        [HttpDelete("{fileId}")]
+        [XSRFProtection]
+        [ProducesResponseType(204)]
+        [ProducesResponseType(typeof(object), 500)]
+        public async Task<IActionResult> DeleteFileFromHistory([FromRoute] int fileId)
         {
             try
             {
-                if (byID)
-                {
-                    await _deleteFileById.DeleteById(fileModel.file_id);
+                await _fileRepository.DeleteByFilter(query => query.Where(f => f.file_id.Equals(fileId) && f.user_id.Equals(_userInfo.UserId)));
+                await _redisCache.DeteteCacheByKeyPattern($"{ImmutableData.FILES_PREFIX}{_userInfo.UserId}");
 
-                    return StatusCode(200);
-                }
-
-                await _deleteFileByName.DeleteByName(fileModel.file_name);
-
-                return StatusCode(200);
+                return StatusCode(204);
             }
-            catch (FileException ex)
+            catch (EntityNotDeletedException ex)
             {
-                return StatusCode(404, new { message = ex.Message });
+                return StatusCode(500, new { message = ex.Message });
             }
         }
 
         [HttpGet("{fileId}")]
+        [ProducesResponseType(typeof(FileModel), 200)]
+        [ProducesResponseType(typeof(object), 404)]
+        [ProducesResponseType(typeof(object), 500)]
         public async Task<IActionResult> GetOneFile([FromRoute] int fileId)
         {
             try
             {
-                var file = await _readFile.ReadById(fileId, null);
+                var cacheKey = $"{ImmutableData.FILES_PREFIX}{_userInfo.UserId}_{fileId}";
+
+                var cache = await _redisCache.GetCachedData(cacheKey);
+                if (cache is not null)
+                    return StatusCode(200, new { file = JsonConvert.DeserializeObject<FileModel>(cache) });
+
+                var file = await _fileRepository.GetByFilter(query => query.Where(f => f.file_id.Equals(fileId) && f.user_id.Equals(_userInfo.UserId)));
+                if (file is null)
+                    return StatusCode(404, new { message = Message.NOT_FOUND });
+
+                await _redisCache.CacheData(cacheKey, file, TimeSpan.FromMinutes(5));
 
                 return StatusCode(200, new { file });
             }
-            catch (FileException ex)
+            catch (OperationCanceledException ex)
             {
-                return StatusCode(404, new { message = ex.Message });
+                return StatusCode(500, new { message = ex.Message });
             }
         }
 
         [HttpGet("all")]
-        public async Task<IActionResult> GetAllFiles([FromQuery] bool byAscending)
+        [ProducesResponseType(typeof(IEnumerable<FileModel>), 200)]
+        [ProducesResponseType(typeof(object), 500)]
+        public async Task<IActionResult> GetAllFiles([FromQuery] int skip, [FromQuery] int count,
+            [FromQuery] bool byDesc, [FromQuery] string? type, [FromQuery] string? category, [FromQuery] string? mime)
         {
-            var query = _dbContext.Files.Where(f => f.user_id == _userInfo.UserId).AsQueryable();
-
-            switch(byAscending)
+            try
             {
-                case true:
-                    query = query.OrderByDescending(f => f.operation_date).AsQueryable();
-                    break;
+                var cacheKey = $"{ImmutableData.FILES_PREFIX}{_userInfo.UserId}_{skip}_{count}_{byDesc}_{type}_{category}_{mime}";
 
-                case false:
-                    query = query.OrderBy(f => f.operation_date).AsQueryable();
-                    break;
+                var cacheFiles = await _redisCache.GetCachedData(cacheKey);
+                if (cacheFiles is not null)
+                    return StatusCode(200, new { files = JsonConvert.DeserializeObject<IEnumerable<FileModel>>(cacheFiles) });
+
+                var files = await _fileRepository.GetAll(_sorting.SortFiles(_userInfo.UserId, skip, count, byDesc, type, mime, category));
+
+                await _redisCache.CacheData(cacheKey, files, TimeSpan.FromMinutes(3));
+
+                return StatusCode(200, new { files });
             }
-
-            var files = await query.ToListAsync();
-
-            if (files is null || files.Count == 0)
-                return StatusCode(404, new { message = ExceptionFileMessages.NoOneFileNotFound });
-
-            return StatusCode(200, new { files });
+            catch (OperationCanceledException ex)
+            {
+                return StatusCode(500, new { message = ex.Message });
+            }
         }
     }
 }

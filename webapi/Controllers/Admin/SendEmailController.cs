@@ -1,10 +1,10 @@
-﻿using MailKit.Security;
-using Microsoft.AspNetCore.Authorization;
+﻿using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
-using System.Net.Sockets;
+using webapi.Attributes;
+using webapi.DTO;
 using webapi.Exceptions;
+using webapi.Interfaces;
 using webapi.Interfaces.Services;
-using webapi.Interfaces.SQL;
 using webapi.Localization;
 using webapi.Models;
 
@@ -15,52 +15,59 @@ namespace webapi.Controllers.Admin
     [Authorize(Roles = "HighestAdmin,Admin")]
     public class SendEmailController : ControllerBase
     {
-        private readonly IEmailSender<UserModel> _emailSender;
-        private readonly ICreate<NotificationModel> _createNotification;
-        private readonly IUserInfo _userInfo;
+        #region fields and constructor
 
-        public SendEmailController(IEmailSender<UserModel> emailSender, ICreate<NotificationModel> createNotification, IUserInfo userInfo)
+        private readonly IRepository<NotificationModel> _notificationRepository;
+        private readonly ILogger<SendEmailController> _logger;
+        private readonly IEmailSender _emailSender;
+
+        public SendEmailController(
+            IRepository<NotificationModel> notificationRepository,
+            ILogger<SendEmailController> logger,
+            IEmailSender emailSender)
         {
+            _notificationRepository = notificationRepository;
+            _logger = logger;
             _emailSender = emailSender;
-            _createNotification = createNotification;
-            _userInfo = userInfo;
         }
 
+        #endregion
+
         [HttpPost("send")]
-        public async Task<IActionResult> SendEmail([FromBody] NotificationModel notificationModel, [FromQuery] string username, [FromQuery] string email)
+        [XSRFProtection]
+        [ProducesResponseType(typeof(object), 201)]
+        [ProducesResponseType(typeof(object), 500)]
+        public async Task<IActionResult> SendEmail([FromBody] NotifyDTO notifyDTO, [FromQuery] string username, [FromQuery] string email)
         {
             try
             {
-                var userModel = new UserModel { username = username, email = email };
-
-                await _emailSender.SendMessage(userModel, notificationModel.message_header, notificationModel.message);
-
-                var newNotificationModel = new NotificationModel
+                await _emailSender.SendMessage(new EmailDto
                 {
-                    sender_id = _userInfo.UserId,
-                    receiver_id = notificationModel.receiver_id,
+                    username = username,
+                    email = email,
+                    subject = notifyDTO.message_header,
+                    message = notifyDTO.message
+                });
+
+                await _notificationRepository.Add(new NotificationModel
+                {
+                    user_id = notifyDTO.receiver_id,
                     message_header = "You have a notification from administrator",
-                    message = notificationModel.message,
+                    message = notifyDTO.message,
                     send_time = DateTime.UtcNow,
-                    priority = notificationModel.priority,
+                    priority = notifyDTO.priority,
                     is_checked = false
-                };
+                });
 
-                await _createNotification.Create(newNotificationModel);
-
-                return StatusCode(201, new { message = SuccessMessage.SuccessEmailSendedAndCreatedNotification, sended_notification = newNotificationModel });
+                return StatusCode(201, new { message = Message.EMAIL_SENT });
             }
-            catch (AuthenticationException ex)
+            catch (EntityNotCreatedException ex)
             {
-                return StatusCode(500, new { message = AccountErrorMessage.Error, log = ex.ToString() });
+                return StatusCode(500, new { message = ex.Message });
             }
-            catch (SocketException ex)
+            catch (SmtpClientException ex)
             {
-                return StatusCode(500, new { message = AccountErrorMessage.Error, log = ex.ToString() });
-            }
-            catch (UserException ex)
-            {
-                return StatusCode(404, new { message = ex.Message });
+                return StatusCode(500, new { message = ex.Message });
             }
         }
     }

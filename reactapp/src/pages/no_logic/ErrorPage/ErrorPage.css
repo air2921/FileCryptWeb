@@ -1,0 +1,47 @@
+.error-container {
+    background-color: #1d1e28;
+    color: white;
+    display: flex;
+    flex-direction: column;
+    justify-content: flex-start;
+    align-items: center;
+    min-height: 100vh;
+    padding-top: 100px;
+}
+
+.error-code h1 {
+    font-size: 5em;
+}
+
+.main-button {
+    display: inline-block;
+    padding: 15px 30px;
+    font-size: 1.2em;
+    background-color: #007bff;
+    color: white;
+    border: none;
+    cursor: pointer;
+    text-decoration: none;
+    margin: 0 auto;
+    border-radius: 24px;
+    transition: background-color 0.3s ease, color 0.3s ease;
+}
+
+    .main-button:hover {
+        color: #c6c6c6;
+        background-color: #075ce2;
+    }
+
+    .error-description h2 {
+        font-size: 2em;
+        color: #ffffff;
+        flex: 1;
+    }
+
+.divider {
+    width: 80px;
+    height: 2px;
+    background-color: gray;
+    margin-top: 20px;
+    margin-bottom: 20px;
+}

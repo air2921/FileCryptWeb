@@ -1,0 +1,48 @@
+name: Run tests
+
+on:
+  push:
+    branches:
+      - main
+      - reactjs/dev
+  pull_request:
+    branches:
+      - main
+      - reactjs/dev
+
+jobs:
+  test:
+    runs-on: ubuntu-latest
+
+    steps:
+    - name: Install Redis
+      run: sudo apt update && sudo apt install redis-server -y
+
+    - name: Start Redis server
+      run: sudo systemctl start redis-server
+
+    - name: Checkout code
+      uses: actions/checkout@v2
+
+    - name: Setup .NET
+      uses: actions/setup-dotnet@v1
+      with:
+        dotnet-version: 7.*
+
+    - name: Restore dependencies
+      run: dotnet restore
+
+    - name: Run tests
+      run: dotnet test --logger trx --results-directory TestResults
+
+    - name: Commit changes if tests pass
+      run: |
+        if [ -z "$(git status --porcelain)" ]; then
+          echo "No changes to commit"
+        else
+          git config --global user.name 'CI'
+          git config --global user.email 'ci@example.com'
+          git add .
+          git commit -m "Tests passed [skip ci]"
+          git push
+        fi

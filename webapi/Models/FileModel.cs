@@ -10,23 +10,27 @@ namespace webapi.Models
         [Key]
         public int file_id { get; set; }
 
-        [JsonIgnore(Condition = JsonIgnoreCondition.WhenWritingNull)]
-        public string? file_name { get; set; }
+        public string file_name { get; set; }
 
-        [JsonIgnore(Condition = JsonIgnoreCondition.WhenWritingNull)]
-        public string? file_mime { get; set; }
+        public string file_mime { get; set; }
 
-        [JsonIgnore(Condition = JsonIgnoreCondition.WhenWritingNull)]
-        public string? type { get; set; }
+        public string file_mime_category { get; set; }
 
-        [JsonIgnore(Condition = JsonIgnoreCondition.WhenWritingNull)]
-        public DateTime? operation_date { get; set; }
+        public string type { get; set; }
+
+        public DateTime operation_date { get; set; }
 
         [ForeignKey("user_id")]
-        [JsonIgnore]
         public int user_id { get; set; }
 
         [JsonIgnore]
-        public UserModel? User { get; set; }
+        public virtual UserModel? User { get; set; }
+    }
+
+    public enum FileType
+    {
+        Private,
+        Internal,
+        Received
     }
 }

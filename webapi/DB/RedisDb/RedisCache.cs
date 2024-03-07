@@ -1,136 +1,74 @@
-﻿using webapi.Exceptions;
-using webapi.Interfaces.Cryptography;
+﻿using Newtonsoft.Json;
+using StackExchange.Redis;
 using webapi.Interfaces.Redis;
-using webapi.Models;
-using webapi.Services;
 
 namespace webapi.DB.RedisDb
 {
     public class RedisCache : IRedisCache
     {
-        private readonly IRedisDbContext _context;
-        private readonly IRedisKeys _redisKeys;
-        private readonly IConfiguration _configuration;
-        private readonly ILogger<RedisCache> _logger;
-        private readonly IDecryptKey _decrypt;
-        private readonly byte[] secretKey;
+        private readonly IDatabase _db;
 
-        public RedisCache(
-            IRedisDbContext context,
-            IRedisKeys redisKeys,
-            IConfiguration configuration,
-            ILogger<RedisCache> logger,
-            IDecryptKey decrypt)
+        public RedisCache(IRedisDbContext context)
         {
-            _context = context;
-            _redisKeys = redisKeys;
-            _configuration = configuration;
-            _logger = logger;
-            _decrypt = decrypt;
-            secretKey = Convert.FromBase64String(_configuration[App.appKey]!);
+            _db = context.GetDatabase();
         }
 
-        public async Task<string> CacheKey(string key, Func<Task<KeyModel>> readKeyFunction)
+        public async Task CacheData(string key, object value, TimeSpan expire)
         {
-            try
-            {
-                var db = _context.GetDatabase();
-                var value = await db.StringGetAsync(key);
-                if (value.HasValue)
-                {
-                    var encryptionKey = await _decrypt.DecryptionKeyAsync(value, secretKey);
-
-                    return encryptionKey;
-                }
-                else
-                {
-                    var keys = await readKeyFunction();
-                    string encryptionKey = null;
-
-                    if (key == _redisKeys.PrivateKey)
-                    {
-                        encryptionKey = keys.private_key;
-                    }
-                    else if (key == _redisKeys.PersonalInternalKey)
-                    {
-                        encryptionKey = keys.person_internal_key;
-                    }
-                    else if (key == _redisKeys.ReceivedInternalKey)
-                    {
-                        encryptionKey = keys.received_internal_key;
-                    }
-                    else
-                    {
-                        throw new ArgumentException();
-                    }
-
-                    await db.StringSetAsync(key, encryptionKey, TimeSpan.FromMinutes(30));
-
-                    var decryptedKey = await _decrypt.DecryptionKeyAsync(encryptionKey, secretKey);
-                    return decryptedKey;
-                }
-            }
-            catch (UserException)
-            {
-                throw;
-            }
-            catch (KeyException)
-            {
-                throw;
-            }
-        }
-
-        public async Task CacheData(string key, string value, TimeSpan expire)
-        {
-            var db = _context.GetDatabase();
-            var redisValue = await db.StringGetAsync(key);
+            var redisValue = await _db.StringGetAsync(key);
             if (redisValue.HasValue)
-            {
-                await db.KeyDeleteAsync(key);
-            }
+                await _db.KeyDeleteAsync(key);
 
-            await db.StringSetAsync(key, value, expire);
+            var settings = new JsonSerializerSettings
+            {
+                ReferenceLoopHandling = ReferenceLoopHandling.Ignore
+            };
+
+            await _db.StringSetAsync(key, JsonConvert.SerializeObject(value, settings), expire);
         }
 
         public async Task<string> GetCachedData(string key)
         {
-            var db = _context.GetDatabase();
-            var redisValue = await db.StringGetAsync(key)!;
+            var redisValue = await _db.StringGetAsync(key);
             if (redisValue.HasValue)
                 return redisValue!;
 
-            throw new KeyNotFoundException("Data was not found");
-        }
-
-        public async Task<string> CacheDbData(string key, Func<Task<string>> read, TimeSpan expire)
-        {
-            try
-            {
-                var db = _context.GetDatabase();
-                var redisValue = await db.StringGetAsync(key);
-                if (redisValue.HasValue)
-                {
-                    return redisValue;
-                }
-
-                var data = await read();
-                await db.StringSetAsync(key, data, expire);
-
-                return data;
-            }
-            catch (Exception ex)
-            {
-                _logger.LogCritical(ex.ToString(), nameof(CacheDbData));
-                throw;
-            }
+            return null;
         }
 
         public async Task DeleteCache(string key)
         {
-            var db = _context.GetDatabase();
-            var value = await db.StringGetAsync(key);
+            var value = await _db.StringGetAsync(key);
             if (value.HasValue)
-                await db.KeyDeleteAsync(key);
+                await _db.KeyDeleteAsync(key);
+        }
+
+        public async Task DeteteCacheByKeyPattern(string key)
+        {
+            var redisKeys = _db.Execute("KEYS", "*");
+            var result = (string[])redisKeys;
+
+            var keysContainsPattern = result.Where(str => str.Contains(key));
+
+            foreach(var redisKey in keysContainsPattern)
+            {
+                await _db.KeyDeleteAsync(redisKey);
+            }
+        }
+
+        public async Task DeleteRedisCache<T>(IEnumerable<T> data, string prefix, Func<T, int> getUserId) where T : class
+        {
+            var users = new HashSet<int>();
+
+            foreach (var item in data)
+            {
+                users.Add(getUserId(item));
+            }
+
+            foreach (var user in users)
+            {
+                await DeteteCacheByKeyPattern($"{prefix}{user}");
+            }
         }
     }
 }

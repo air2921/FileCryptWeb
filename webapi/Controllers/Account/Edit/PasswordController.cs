@@ -1,14 +1,16 @@
 ﻿using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
-using Microsoft.EntityFrameworkCore;
 using System.Text.RegularExpressions;
+using webapi.Attributes;
 using webapi.DB;
+using webapi.DTO;
 using webapi.Exceptions;
+using webapi.Helpers;
+using webapi.Interfaces;
+using webapi.Interfaces.Redis;
 using webapi.Interfaces.Services;
-using webapi.Interfaces.SQL;
 using webapi.Localization;
 using webapi.Models;
-using webapi.Services;
 
 namespace webapi.Controllers.Account.Edit
 {
@@ -17,68 +19,115 @@ namespace webapi.Controllers.Account.Edit
     [Authorize]
     public class PasswordController : ControllerBase
     {
-        private readonly IUpdate<UserModel> _update;
-        private readonly IPasswordManager _passwordManager;
-        private readonly ITokenService _tokenService;
-        private readonly IUserInfo _userInfo;
+        #region fields and contructor
+
+        private readonly IRepository<UserModel> _userRepository;
+        private readonly IRepository<NotificationModel> _notificationRepository;
         private readonly FileCryptDbContext _dbContext;
+        private readonly IRedisCache _redisCache;
+        private readonly ILogger<PasswordController> _logger;
+        private readonly IPasswordManager _passwordManager;
+        private readonly IUserInfo _userInfo;
 
         public PasswordController(
-            IUpdate<UserModel> update,
+            IRepository<UserModel> userRepository,
+            IRepository<NotificationModel> notificationRepository,
+            FileCryptDbContext dbContext,
+            IRedisCache redisCache,
+            ILogger<PasswordController> logger,
             IPasswordManager passwordManager,
-            ITokenService tokenService,
-            IUserInfo userInfo,
-            FileCryptDbContext dbContext)
+            IUserInfo userInfo)
         {
-            _update = update;
-            _passwordManager = passwordManager;
-            _tokenService = tokenService;
-            _userInfo = userInfo;
+            _userRepository = userRepository;
+            _notificationRepository = notificationRepository;
             _dbContext = dbContext;
+            _redisCache = redisCache;
+            _logger = logger;
+            _passwordManager = passwordManager;
+            _userInfo = userInfo;
         }
 
-        [HttpPost("validate")]
-        public async Task<IActionResult> CheckPassword(UserModel userModel)
-        {
-            var user = await _dbContext.Users.FirstOrDefaultAsync(u => u.email == _userInfo.Email);
-            if (user is null)
-            {
-                _tokenService.DeleteTokens();
-                return StatusCode(404, new { message = AccountErrorMessage.UserNotFound });
-            }
+        #endregion
 
-            bool IsCorrect = _passwordManager.CheckPassword(userModel.password_hash, user.password_hash);
-            if (!IsCorrect)
-                return StatusCode(401, new { message = AccountErrorMessage.PasswordIncorrect });
-
-            HttpContext.Session.SetString($"code:{_userInfo.UserId}", Guid.NewGuid().ToString()); 
-
-            return StatusCode(307);
-        }
-
-        [HttpPut("new")]
-        public async Task<IActionResult> UpdatePassword(UserModel userModel)
+        [HttpPut]
+        [XSRFProtection]
+        [ProducesResponseType(typeof(object), 200)]
+        [ProducesResponseType(typeof(object), 422)]
+        [ProducesResponseType(typeof(object), 404)]
+        [ProducesResponseType(typeof(object), 401)]
+        [ProducesResponseType(typeof(object), 500)]
+        public async Task<IActionResult> UpdatePassword([FromBody] PasswordDTO passwordDto)
         {
             try
             {
-                string? validateCode = HttpContext.Session.GetString($"code:{_userInfo.UserId}");
+                if (!Regex.IsMatch(passwordDto.NewPassword, Validation.Password))
+                    return StatusCode(422, new { message = Message.INVALID_FORMAT });
 
-                if (string.IsNullOrWhiteSpace(validateCode))
-                    return StatusCode(403, new { message = AccountErrorMessage.Forbidden });
+                var user = await _userRepository.GetByFilter(query => query.Where(u => u.email.Equals(_userInfo.Email)));
+                if (user is null)
+                    return StatusCode(404, new { message = Message.NOT_FOUND });
 
-                if (!Regex.IsMatch(userModel.password_hash, Validation.Password))
-                    return StatusCode(422, new { message = AccountErrorMessage.InvalidFormatPassword });
+                bool IsCorrect = _passwordManager.CheckPassword(passwordDto.OldPassword, user.password);
+                if (!IsCorrect)
+                    return StatusCode(401, new { message = Message.INCORRECT });
 
-                var newUserModel = new UserModel { id = _userInfo.UserId, password_hash = _passwordManager.HashingPassword(userModel.password_hash) };
-                await _update.Update(userModel, null);
+                await DbTransaction(user, passwordDto.NewPassword);
+                await ClearData();
 
-                return StatusCode(200, new { message = AccountSuccessMessage.PasswordUpdated });
+                return StatusCode(200, new { message = Message.UPDATED });
             }
-            catch (UserException ex)
+            catch (EntityNotCreatedException ex)
             {
-                _tokenService.DeleteTokens();
-                return StatusCode(404, new { message = ex.Message });
+                return StatusCode(500, new { message = ex.Message });
             }
+            catch (EntityNotUpdatedException ex)
+            {
+                return StatusCode(500, new { message = ex.Message });
+            }
+            catch (OperationCanceledException ex)
+            {
+                return StatusCode(500, new { message = ex.Message });
+            }
+        }
+
+        [Helper]
+        private async Task DbTransaction(UserModel user, string password)
+        {
+            using var transaction = await _dbContext.Database.BeginTransactionAsync();
+            try
+            {
+                user.password = _passwordManager.HashingPassword(password);
+                await _userRepository.Update(user);
+
+                await _notificationRepository.Add(new NotificationModel
+                {
+                    message_header = "Someone changed your password",
+                    message = $"Someone changed your password at {DateTime.UtcNow}.",
+                    priority = Priority.Security.ToString(),
+                    send_time = DateTime.UtcNow,
+                    is_checked = false,
+                    user_id = _userInfo.UserId
+                });
+
+                await transaction.CommitAsync();
+            }
+            catch (EntityNotUpdatedException)
+            {
+                await transaction.RollbackAsync();
+                throw;
+            }
+            catch (EntityNotCreatedException)
+            {
+                await transaction.RollbackAsync();
+                throw;
+            }
+        }
+
+        [Helper]
+        private async Task ClearData()
+        {
+            await _redisCache.DeteteCacheByKeyPattern($"{ImmutableData.NOTIFICATIONS_PREFIX}{_userInfo.UserId}");
+            await _redisCache.DeteteCacheByKeyPattern($"{ImmutableData.USER_DATA_PREFIX}{_userInfo.UserId}");
         }
     }
 }

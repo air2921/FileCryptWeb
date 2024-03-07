@@ -8,9 +8,9 @@ namespace webapi
         {
             AppConfigurationCheck.ConfigurationCheck();
 
-            DiContainer.Singleton(services);
-            DiContainer.Scoped(services);
-            DiContainer.Transient(services);
+            DependencyContainer.Singleton(services);
+            DependencyContainer.Scoped(services);
+            DependencyContainer.Transient(services);
 
             AppServices.Register(services);
         }
@@ -24,17 +24,25 @@ namespace webapi
                 app.UseSwaggerUI();
             }
 
-            app.UseLog();
-            app.UseFreeze();
-            app.UseAPI();
+            if(env.IsProduction())
+                app.UseHsts();
+
             app.UseHttpsRedirection();
             app.UseStaticFiles();
             app.UseRouting();
             app.UseSession();
             app.UseCors("AllowSpecificOrigin");
+            app.UseFreeze();
             app.UseBearer();
             app.UseAuthentication();
+            app.UseUserSession();
+
+            if (env.IsDevelopment())
+                app.UseLog();
+
             app.UseAuthorization();
+            app.UseXSRF();
+            app.UseExceptionHandle();
 
             app.UseEndpoints(endpoint =>
             {

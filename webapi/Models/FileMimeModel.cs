@@ -9,6 +9,6 @@ namespace webapi.Models
         [Key]
         public int mime_id { get; set; }
 
-        public string? mime_name { get; set; }
+        public string mime_name { get; set; }
     }
 }

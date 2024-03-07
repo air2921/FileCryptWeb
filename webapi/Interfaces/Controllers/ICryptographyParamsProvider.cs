@@ -1,9 +1,9 @@
-﻿using webapi.Controllers.Base.CryptographyUtils;
+﻿using webapi.Controllers.Base;
 
 namespace webapi.Interfaces.Controllers
 {
     public interface ICryptographyParamsProvider
     {
-        public Task<CryptographyParams> GetCryptographyParams(string fileType);
+        public Task<CryptographyParams> GetCryptographyParams(string fileType, string operation);
     }
 }

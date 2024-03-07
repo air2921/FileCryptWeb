@@ -16,7 +16,7 @@ namespace webapi.Middlewares
 
         public async Task Invoke(HttpContext context)
         {
-            var user = context.User;
+            var userContext = context.User;
 
             string? claimsUsername = null;
             string? claimId = null;
@@ -24,49 +24,37 @@ namespace webapi.Middlewares
 
             var path = context.Request.Path.ToString();
             var method = context.Request.Method.ToString();
-            var headers = context.Request.Headers.ToString();
-            var remoteIP = context.Connection.RemoteIpAddress.ToString();
 
-            if (user.Identity.IsAuthenticated)
+            if (userContext.Identity.IsAuthenticated)
             {
-                if (user.HasClaim(u => u.Type == ClaimTypes.Name))
-                {
-                    claimsUsername = user.FindFirstValue(ClaimTypes.Name);
-                }
-                if (user.HasClaim(u => u.Type == ClaimTypes.NameIdentifier))
-                {
-                    claimId = user.FindFirstValue(ClaimTypes.NameIdentifier);
-                }
-                if (user.HasClaim(u => u.Type == ClaimTypes.Role))
-                {
-                    claimRole = user.FindFirstValue(ClaimTypes.Role);
-                }
+                if (userContext.HasClaim(u => u.Type == ClaimTypes.Name))
+                    claimsUsername = userContext.FindFirstValue(ClaimTypes.Name);
+                if (userContext.HasClaim(u => u.Type == ClaimTypes.NameIdentifier))
+                    claimId = userContext.FindFirstValue(ClaimTypes.NameIdentifier);
+                if (userContext.HasClaim(u => u.Type == ClaimTypes.Role))
+                    claimRole = userContext.FindFirstValue(ClaimTypes.Role);
             }
 
-            var requestData = new
+            var user = new
             {
-                user = new
-                {
-                    username = claimsUsername,
-                    id = claimId,
-                    role = claimRole,
-                },
-                request = new
-                {
-                    path,
-                    ip = remoteIP,
-                    method,
-                    headers
-                }
+                username = claimsUsername,
+                id = claimId,
+                role = claimRole,
             };
 
-            _logger.LogWarning(requestData.ToString());
+            var request = new
+            {
+                path,
+                method,
+            };
+
+            _logger.LogInformation($"{user} {request}");
 
             await _next(context);
 
             var statusCode = context.Response.StatusCode;
 
-            _logger.LogWarning($"Status Code: {statusCode}");
+            _logger.LogInformation($"Status Code: {statusCode}");
         }
     }
 

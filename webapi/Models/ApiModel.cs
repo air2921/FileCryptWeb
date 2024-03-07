@@ -1,7 +1,6 @@
 ﻿using System.ComponentModel.DataAnnotations.Schema;
 using System.ComponentModel.DataAnnotations;
 using System.Text.Json.Serialization;
-using System.Net;
 
 namespace webapi.Models
 {
@@ -11,21 +10,29 @@ namespace webapi.Models
         [Key]
         public int api_id { get; set; }
 
-        public string? api_key { get; set; }
+        public string api_key { get; set; }
 
-        [JsonIgnore(Condition = JsonIgnoreCondition.WhenWritingNull)]
-        public IPAddress? remote_ip { get; set; }
+        public string type { get; set; }
 
-        public bool? is_tracking_ip { get; set; }
+        public DateTime? expiry_date { get; set; }
 
-        public bool? is_allowed_requesting { get; set; }
+        public bool is_blocked { get; set; }
 
-        public bool? is_allowed_unknown_ip { get; set; }
+        public DateTime last_time_activity { get; set; }
+
+        public int max_request_of_day { get; set; }
 
         [ForeignKey("user_id")]
         public int user_id { get; set; }
 
         [JsonIgnore]
-        public UserModel? User { get; set; }
+        public virtual UserModel? User { get; set; }
+    }
+
+    public enum ApiType
+    {
+        Classic,
+        Development,
+        Production
     }
 }

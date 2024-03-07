@@ -1,0 +1,3 @@
+interface DateProps {
+    date: string
+}
