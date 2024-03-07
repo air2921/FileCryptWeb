@@ -1,8 +1,6 @@
 ﻿using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Mvc;
-using Microsoft.EntityFrameworkCore;
 using webapi.Controllers.Account.Edit;
-using webapi.DB;
 using webapi.Exceptions;
 using webapi.Interfaces;
 using webapi.Interfaces.Services;
