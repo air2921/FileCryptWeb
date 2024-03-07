@@ -30,7 +30,7 @@ namespace tests.Contollers_Tests.Account.Edit
             passwordManagerMock.Setup(x => x.CheckPassword(It.IsAny<string>(), It.IsAny<string>())).Returns(true);
             generateMock.Setup(x => x.GenerateSixDigitCode()).Returns(111111);
             _2faServiceMock.Setup(x => x.SendMessage("air", "air147@mail.com", 111111)).Returns(Task.CompletedTask);
-            _2faServiceMock.Setup(x => x.SetSessionCode(null, 111111));
+            _2faServiceMock.Setup(x => x.SetData(null, 111111));
             userInfoMock.Setup(x => x.UserId).Returns(1);
 
             var _2faController = new _2FaController(userRepositoryMock.Object, _2faServiceMock.Object,
@@ -125,7 +125,7 @@ namespace tests.Contollers_Tests.Account.Edit
             _2faServiceMock.Setup(x => x.SendMessage("air", "air147@mail.com", 111111))
                 .ThrowsAsync((Exception)Activator.CreateInstance(typeof(SmtpClientException)));
 
-            _2faServiceMock.Setup(x => x.SetSessionCode(It.IsAny<HttpContext>(), It.IsAny<int>()));
+            _2faServiceMock.Setup(x => x.SetData(It.IsAny<string>(), It.IsAny<int>()));
             userInfoMock.Setup(x => x.UserId).Returns(1);
 
             var _2faController = new _2FaController(userRepositoryMock.Object, _2faServiceMock.Object,
@@ -151,8 +151,8 @@ namespace tests.Contollers_Tests.Account.Edit
             {
                 id = 1,
             });
-            _2faServiceMock.Setup(x => x.GetSessionCode(It.IsAny<HttpContext>())).Returns(It.IsAny<int>());
-            _2faServiceMock.Setup(x => x.ClearData(null, 1)).Returns(Task.CompletedTask);
+            _2faServiceMock.Setup(x => x.GetCode(It.IsAny<string>())).ReturnsAsync(It.IsAny<int>());
+            _2faServiceMock.Setup(x => x.ClearData(1)).Returns(Task.CompletedTask);
             _2faServiceMock.Setup(x => x.DbTransaction(null, true)).Returns(Task.CompletedTask);
             validationMock.Setup(x => x.IsSixDigit(It.IsAny<int>())).Returns(true);
 
@@ -169,12 +169,14 @@ namespace tests.Contollers_Tests.Account.Edit
         {
             var _2faServiceMock = new Mock<IApi2FaService>();
             var validationMock = new Mock<IValidation>();
+            var userInfoMock = new Mock<IUserInfo>();
 
-            _2faServiceMock.Setup(x => x.GetSessionCode(It.IsAny<HttpContext>())).Returns(It.IsAny<int>());
+            _2faServiceMock.Setup(x => x.GetCode(It.IsAny<string>())).ReturnsAsync(It.IsAny<int>());
             validationMock.Setup(x => x.IsSixDigit(It.IsAny<int>())).Returns(false);
+            userInfoMock.Setup(x => x.UserId).Returns(1);
 
             var _2faController = new _2FaController(null, _2faServiceMock.Object,
-                null, null, null, validationMock.Object);
+                null, userInfoMock.Object, null, validationMock.Object);
 
             var result = await _2faController.Update2FaState(It.IsAny<int>(), true);
 
@@ -193,7 +195,7 @@ namespace tests.Contollers_Tests.Account.Edit
 
             userRepositoryMock.Setup(x => x.GetById(It.IsAny<int>(), CancellationToken.None)).ReturnsAsync((UserModel)null);
             userInfoMock.Setup(x => x.UserId).Returns(1);
-            _2faServiceMock.Setup(x => x.GetSessionCode(It.IsAny<HttpContext>())).Returns(It.IsAny<int>());
+            _2faServiceMock.Setup(x => x.GetCode(It.IsAny<string>())).ReturnsAsync(It.IsAny<int>());
             validationMock.Setup(x => x.IsSixDigit(It.IsAny<int>())).Returns(true);
 
             var _2faController = new _2FaController(userRepositoryMock.Object, _2faServiceMock.Object,
@@ -218,7 +220,7 @@ namespace tests.Contollers_Tests.Account.Edit
                 .ThrowsAsync((Exception)Activator.CreateInstance(typeof(OperationCanceledException)));
 
             userInfoMock.Setup(x => x.UserId).Returns(1);
-            _2faServiceMock.Setup(x => x.GetSessionCode(It.IsAny<HttpContext>())).Returns(It.IsAny<int>());
+            _2faServiceMock.Setup(x => x.GetCode(It.IsAny<string>())).ReturnsAsync(It.IsAny<int>());
             validationMock.Setup(x => x.IsSixDigit(It.IsAny<int>())).Returns(true);
 
             var _2faController = new _2FaController(userRepositoryMock.Object, _2faServiceMock.Object,
@@ -251,7 +253,7 @@ namespace tests.Contollers_Tests.Account.Edit
             });
 
             validationMock.Setup(x => x.IsSixDigit(It.IsAny<int>())).Returns(true);
-            _2faServiceMock.Setup(x => x.GetSessionCode(It.IsAny<HttpContext>())).Returns(It.IsAny<int>());
+            _2faServiceMock.Setup(x => x.GetCode(It.IsAny<string>())).ReturnsAsync(It.IsAny<int>());
             _2faServiceMock.Setup(x => x.DbTransaction(It.IsAny<UserModel>(), true))
                 .ThrowsAsync((Exception)Activator.CreateInstance(exType));
 

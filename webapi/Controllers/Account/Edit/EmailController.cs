@@ -1,5 +1,6 @@
 ﻿using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
+using Newtonsoft.Json;
 using webapi.Attributes;
 using webapi.DB;
 using webapi.DTO;
@@ -18,10 +19,6 @@ namespace webapi.Controllers.Account.Edit
     [Authorize]
     public class EmailController : ControllerBase
     {
-        private const string EMAIL = "Email";
-        private const string OLD_EMAIL_CODE = "ConfirmationCode_OldEmail";
-        private const string NEW_EMAIL_CODE = "ConfirmationCode_NewEmail";
-
         #region fields and constuctor
 
         private readonly IApiEmailService _emailService;
@@ -32,6 +29,10 @@ namespace webapi.Controllers.Account.Edit
         private readonly ITokenService _tokenService;
         private readonly IUserInfo _userInfo;
         private readonly IValidation _validation;
+
+        private readonly string EMAIL;
+        private readonly string OLD_EMAIL_CODE;
+        private readonly string NEW_EMAIL_CODE;
 
         public EmailController(
             IApiEmailService emailService,
@@ -51,6 +52,10 @@ namespace webapi.Controllers.Account.Edit
             _tokenService = tokenService;
             _userInfo = userInfo;
             _validation = validation;
+
+            EMAIL = $"EmailController_Email#{_userInfo.UserId}";
+            OLD_EMAIL_CODE = $"EmailController_ConfirmationCode_OldEmail#{_userInfo.UserId}";
+            NEW_EMAIL_CODE = $"EmailController_ConfirmationCode_NewEmail#{_userInfo.UserId}";
         }
 
         #endregion
@@ -76,7 +81,7 @@ namespace webapi.Controllers.Account.Edit
                 int code = _generate.GenerateSixDigitCode();
                 await _emailService.SendMessage(_userInfo.Username, _userInfo.Email, EmailMessage.ConfirmOldEmailHeader, EmailMessage.ConfirmOldEmailBody + code);
 
-                _emailService.SetSessionCode(HttpContext, OLD_EMAIL_CODE, code);
+                await _emailService.SetData(OLD_EMAIL_CODE, code);
 
                 return StatusCode(200, new { message = Message.EMAIL_SENT });
             }
@@ -100,7 +105,7 @@ namespace webapi.Controllers.Account.Edit
         {
             try
             {
-                int correctCode = _emailService.GetSessionCode(HttpContext, OLD_EMAIL_CODE);
+                int correctCode = await _emailService.GetCode(OLD_EMAIL_CODE);
                 email = email.ToLowerInvariant();
 
                 if (!_validation.IsSixDigit(correctCode) || !code.Equals(correctCode))
@@ -113,8 +118,8 @@ namespace webapi.Controllers.Account.Edit
                 int confirmationCode = _generate.GenerateSixDigitCode();
                 await _emailService.SendMessage(_userInfo.Username, email, EmailMessage.ConfirmNewEmailHeader, EmailMessage.ConfirmNewEmailBody + confirmationCode);
 
-                _emailService.SetSessionCode(HttpContext, NEW_EMAIL_CODE, confirmationCode);
-                _emailService.SetSessionString(HttpContext, EMAIL, email);
+                await _emailService.SetData(NEW_EMAIL_CODE, confirmationCode);
+                await _emailService.SetData(EMAIL, email);
 
                 return StatusCode(200, new { message = Message.EMAIL_SENT });
             }
@@ -139,8 +144,8 @@ namespace webapi.Controllers.Account.Edit
         {
             try
             {
-                int correctCode = _emailService.GetSessionCode(HttpContext, NEW_EMAIL_CODE);
-                string? email = _emailService.GetSessionString(HttpContext, EMAIL);
+                int correctCode = await _emailService.GetCode(NEW_EMAIL_CODE);
+                string? email = await _emailService.GetString(EMAIL);
 
                 if (email is null || !_validation.IsSixDigit(correctCode) || !code.Equals(correctCode))
                     return StatusCode(400, new { message = Message.INCORRECT });
@@ -151,7 +156,7 @@ namespace webapi.Controllers.Account.Edit
 
                 await _emailService.DbTransaction(user, email);
                 await _tokenService.UpdateJwtToken();
-                await _emailService.ClearData(HttpContext);
+                await _emailService.ClearData(_userInfo.UserId);
 
                 return StatusCode(201);
             }
@@ -179,11 +184,10 @@ namespace webapi.Controllers.Account.Edit
     {
         public Task DbTransaction(UserModel user, string email);
         public Task SendMessage(string username, string email, string header, string body);
-        public Task ClearData(HttpContext context);
-        public void SetSessionCode(HttpContext context, string key, int code);
-        public int GetSessionCode(HttpContext context, string key);
-        public string GetSessionString(HttpContext context, string key);
-        public void SetSessionString(HttpContext context, string key, string data);
+        public Task ClearData(int userId);
+        public Task SetData(string key, object data);
+        public Task<int> GetCode(string key);
+        public Task<string> GetString(string key);
     }
 
     public class EmailService : IApiEmailService
@@ -274,36 +278,40 @@ namespace webapi.Controllers.Account.Edit
         }
 
         [Helper]
-        public async Task ClearData(HttpContext context)
+        public async Task ClearData(int userId)
         {
-            context.Session.Clear();
-            await _redisCache.DeteteCacheByKeyPattern($"{ImmutableData.USER_DATA_PREFIX}{_userInfo.UserId}");
-            await _redisCache.DeteteCacheByKeyPattern($"{ImmutableData.NOTIFICATIONS_PREFIX}{_userInfo.UserId}");
+            await _redisCache.DeleteCache($"EmailController_Email#{userId}");
+            await _redisCache.DeleteCache($"EmailController_ConfirmationCode_OldEmail#{userId}");
+            await _redisCache.DeleteCache($"EmailController_ConfirmationCode_NewEmail#{userId}");
+
+            await _redisCache.DeteteCacheByKeyPattern($"{ImmutableData.USER_DATA_PREFIX}{userId}");
+            await _redisCache.DeteteCacheByKeyPattern($"{ImmutableData.NOTIFICATIONS_PREFIX}{userId}");
         }
 
         [Helper]
-        public void SetSessionString(HttpContext context, string key, string data)
+        public async Task<string> GetString(string key)
         {
-            context.Session.SetString(key, data);
+            var data = await _redisCache.GetCachedData(key);
+            if (data is not null)
+                return JsonConvert.DeserializeObject<string>(data);
+            else
+                return null;
         }
 
         [Helper]
-        public string GetSessionString(HttpContext context, string key)
+        public async Task SetData(string key, object data)
         {
-            return context.Session.GetString(key);
+            await _redisCache.CacheData(key, data, TimeSpan.FromMinutes(10));
         }
 
         [Helper]
-        public void SetSessionCode(HttpContext context, string key, int code)
+        public async Task<int> GetCode(string key)
         {
-            context.Session.SetInt32(key, code);
-        }
-
-        [Helper]
-        public int GetSessionCode(HttpContext context, string key)
-        {
-            int correctCode = int.TryParse(context.Session.GetString(key), out var parsedValue) ? parsedValue : 0;
-            return correctCode;
+            var code = await _redisCache.GetCachedData(key);
+            if (code is not null)
+                return JsonConvert.DeserializeObject<int>(code);
+            else
+                return 0;
         }
     }
 }
