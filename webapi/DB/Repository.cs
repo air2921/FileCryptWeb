@@ -129,7 +129,7 @@ namespace webapi.DB
             catch (Exception ex)
             {
                 _logger.LogCritical(ex.ToString(), nameof(_context), nameof(_dbSet));
-                throw new EntityNotCreatedException();
+                throw new EntityNotCreatedException("Error when creating entity");
             }
         }
 
@@ -150,7 +150,7 @@ namespace webapi.DB
             catch (Exception ex)
             {
                 _logger.LogCritical(ex.ToString(), nameof(_context), nameof(_dbSet));
-                throw new EntityNotCreatedException();
+                throw new EntityNotCreatedException("Error when creating entity");
             }
         }
 
@@ -177,7 +177,7 @@ namespace webapi.DB
             catch (Exception ex)
             {
                 _logger.LogCritical(ex.ToString(), nameof(_context), nameof(_dbSet));
-                throw new EntityNotDeletedException();
+                throw new EntityNotDeletedException("Error when deleting data");
             }
         }
 
@@ -209,7 +209,7 @@ namespace webapi.DB
             catch (Exception ex)
             {
                 _logger.LogCritical(ex.ToString(), nameof(_context), nameof(_dbSet));
-                throw new EntityNotDeletedException();
+                throw new EntityNotDeletedException("Error when deleting data");
             }
         }
 
@@ -239,7 +239,7 @@ namespace webapi.DB
             catch (Exception ex)
             {
                 _logger.LogCritical(ex.ToString(), nameof(_context), nameof(_dbSet));
-                throw new EntityNotDeletedException();
+                throw new EntityNotDeletedException("Error when deleting data");
             }
         }
 
@@ -263,7 +263,7 @@ namespace webapi.DB
             catch (Exception ex)
             {
                 _logger.LogCritical(ex.ToString(), nameof(_context), nameof(_dbSet));
-                throw new EntityNotUpdatedException();
+                throw new EntityNotUpdatedException("Error when updating data");
             }
         }
     }

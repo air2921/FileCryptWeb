@@ -59,7 +59,7 @@ namespace webapi.Cryptography
             }
         }
 
-        public async Task<CryptographyResult> CypherFileAsync(string filePath, byte[] key, CancellationToken cancellationToken, string operation)
+        public async Task<CryptographyResult> CypherFileAsync(string filePath, byte[] key, string operation, CancellationToken cancellationToken)
         {
             try
             {

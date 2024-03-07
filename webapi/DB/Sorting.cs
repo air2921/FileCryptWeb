@@ -80,18 +80,12 @@ namespace webapi.DB
                     if (sended.HasValue)
                     {
                         if (sended.Equals(true))
-                        {
                             sortedQuery = sortedQuery.Where(o => o.sender_id.Equals(userId.Value));
-                        }
                         else
-                        {
                             sortedQuery = sortedQuery.Where(o => o.receiver_id.Equals(userId.Value));
-                        }
                     }
                     else
-                    {
                         sortedQuery = sortedQuery.Where(o => o.sender_id.Equals(userId.Value) || o.receiver_id.Equals(userId.Value));
-                    }
                 }
 
                 if (isAccepted.HasValue)

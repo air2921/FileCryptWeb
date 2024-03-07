@@ -19,14 +19,13 @@ namespace webapi.Controllers.Account.Edit
     public class EmailController : ControllerBase
     {
         private const string EMAIL = "Email";
+        private const string OLD_EMAIL_CODE = "ConfirmationCode_OldEmail";
+        private const string NEW_EMAIL_CODE = "ConfirmationCode_NewEmail";
 
         #region fields and constuctor
 
+        private readonly IApiEmailService _emailService;
         private readonly IRepository<UserModel> _userRepository;
-        private readonly IRepository<NotificationModel> _notificationRepository;
-        private readonly FileCryptDbContext _dbContext;
-        private readonly IRedisCache _redisCache;
-        private readonly IEmailSender _email;
         private readonly ILogger<EmailController> _logger;
         private readonly IPasswordManager _passwordManager;
         private readonly IGenerate _generate;
@@ -35,11 +34,8 @@ namespace webapi.Controllers.Account.Edit
         private readonly IValidation _validation;
 
         public EmailController(
+            IApiEmailService emailService,
             IRepository<UserModel> userRepository,
-            IRepository<NotificationModel> notificationRepository,
-            FileCryptDbContext dbContext,
-            IRedisCache redisCache,
-            IEmailSender email,
             ILogger<EmailController> logger,
             IPasswordManager passwordManager,
             IGenerate generate,
@@ -47,11 +43,8 @@ namespace webapi.Controllers.Account.Edit
             IUserInfo userInfo,
             IValidation validation)
         {
+            _emailService = emailService;
             _userRepository = userRepository;
-            _notificationRepository = notificationRepository;
-            _dbContext = dbContext;
-            _redisCache = redisCache;
-            _email = email;
             _logger = logger;
             _passwordManager = passwordManager;
             _generate = generate;
@@ -81,9 +74,9 @@ namespace webapi.Controllers.Account.Edit
                     return StatusCode(401, new { message = Message.INCORRECT });
 
                 int code = _generate.GenerateSixDigitCode();
-                await SendMessage(_userInfo.Username, _userInfo.Email, EmailMessage.ConfirmOldEmailHeader, EmailMessage.ConfirmOldEmailBody + code);
+                await _emailService.SendMessage(_userInfo.Username, _userInfo.Email, EmailMessage.ConfirmOldEmailHeader, EmailMessage.ConfirmOldEmailBody + code);
 
-                HttpContext.Session.SetInt32(_userInfo.Email, code);
+                _emailService.SetSessionCode(HttpContext, OLD_EMAIL_CODE, code);
 
                 return StatusCode(200, new { message = Message.EMAIL_SENT });
             }
@@ -107,7 +100,7 @@ namespace webapi.Controllers.Account.Edit
         {
             try
             {
-                int correctCode = int.TryParse(HttpContext.Session.GetString(_userInfo.Email), out var parsedValue) ? parsedValue : 0;
+                int correctCode = _emailService.GetSessionCode(HttpContext, OLD_EMAIL_CODE);
                 email = email.ToLowerInvariant();
 
                 if (!_validation.IsSixDigit(correctCode) || !code.Equals(correctCode))
@@ -118,10 +111,10 @@ namespace webapi.Controllers.Account.Edit
                     return StatusCode(409, new { message = Message.CONFLICT });
 
                 int confirmationCode = _generate.GenerateSixDigitCode();
-                await SendMessage(_userInfo.Username, email, EmailMessage.ConfirmNewEmailHeader, EmailMessage.ConfirmNewEmailBody + confirmationCode);
+                await _emailService.SendMessage(_userInfo.Username, email, EmailMessage.ConfirmNewEmailHeader, EmailMessage.ConfirmNewEmailBody + confirmationCode);
 
-                HttpContext.Session.SetInt32(_userInfo.UserId.ToString(), confirmationCode);
-                HttpContext.Session.SetString(EMAIL, email);
+                _emailService.SetSessionCode(HttpContext, NEW_EMAIL_CODE, confirmationCode);
+                _emailService.SetSessionString(HttpContext, EMAIL, email);
 
                 return StatusCode(200, new { message = Message.EMAIL_SENT });
             }
@@ -146,8 +139,8 @@ namespace webapi.Controllers.Account.Edit
         {
             try
             {
-                int correctCode = int.TryParse(HttpContext.Session.GetString(_userInfo.UserId.ToString()), out var parsedValue) ? parsedValue : 0;
-                string? email = HttpContext.Session.GetString(EMAIL);
+                int correctCode = _emailService.GetSessionCode(HttpContext, NEW_EMAIL_CODE);
+                string? email = _emailService.GetSessionString(HttpContext, EMAIL);
 
                 if (email is null || !_validation.IsSixDigit(correctCode) || !code.Equals(correctCode))
                     return StatusCode(400, new { message = Message.INCORRECT });
@@ -156,9 +149,9 @@ namespace webapi.Controllers.Account.Edit
                 if (user is null)
                     return StatusCode(404, new { message = Message.NOT_FOUND });
 
-                await DbTransaction(user, email);
+                await _emailService.DbTransaction(user, email);
                 await _tokenService.UpdateJwtToken();
-                await ClearData(HttpContext);
+                await _emailService.ClearData(HttpContext);
 
                 return StatusCode(201);
             }
@@ -180,9 +173,50 @@ namespace webapi.Controllers.Account.Edit
                 return StatusCode(206, new { message = ex.Message });
             }
         }
+    }
+
+    public interface IApiEmailService
+    {
+        public Task DbTransaction(UserModel user, string email);
+        public Task SendMessage(string username, string email, string header, string body);
+        public Task ClearData(HttpContext context);
+        public void SetSessionCode(HttpContext context, string key, int code);
+        public int GetSessionCode(HttpContext context, string key);
+        public string GetSessionString(HttpContext context, string key);
+        public void SetSessionString(HttpContext context, string key, string data);
+    }
+
+    public class EmailService : IApiEmailService
+    {
+        #region fields and constructor
+
+        private readonly FileCryptDbContext _dbContext;
+        private readonly IRepository<UserModel> _userRepository;
+        private readonly IRepository<NotificationModel> _notificationRepository;
+        private readonly IUserInfo _userInfo;
+        private readonly IEmailSender _emailSender;
+        private readonly IRedisCache _redisCache;
+
+        public EmailService(
+            FileCryptDbContext dbContext,
+            IRepository<UserModel> userRepository,
+            IRepository<NotificationModel> notificationRepository,
+            IUserInfo userInfo,
+            IEmailSender emailSender,
+            IRedisCache redisCache)
+        {
+            _dbContext = dbContext;
+            _userRepository = userRepository;
+            _notificationRepository = notificationRepository;
+            _userInfo = userInfo;
+            _emailSender = emailSender;
+            _redisCache = redisCache;
+        }
+
+        #endregion
 
         [Helper]
-        private async Task DbTransaction(UserModel user, string email)
+        public async Task DbTransaction(UserModel user, string email)
         {
             using var transaction = await _dbContext.Database.BeginTransactionAsync();
             try
@@ -221,11 +255,11 @@ namespace webapi.Controllers.Account.Edit
         }
 
         [Helper]
-        private async Task SendMessage(string username, string email, string header, string body)
+        public async Task SendMessage(string username, string email, string header, string body)
         {
             try
             {
-                await _email.SendMessage(new EmailDto
+                await _emailSender.SendMessage(new EmailDto
                 {
                     username = username,
                     email = email,
@@ -240,11 +274,36 @@ namespace webapi.Controllers.Account.Edit
         }
 
         [Helper]
-        private async Task ClearData(HttpContext context)
+        public async Task ClearData(HttpContext context)
         {
             context.Session.Clear();
             await _redisCache.DeteteCacheByKeyPattern($"{ImmutableData.USER_DATA_PREFIX}{_userInfo.UserId}");
             await _redisCache.DeteteCacheByKeyPattern($"{ImmutableData.NOTIFICATIONS_PREFIX}{_userInfo.UserId}");
+        }
+
+        [Helper]
+        public void SetSessionString(HttpContext context, string key, string data)
+        {
+            context.Session.SetString(key, data);
+        }
+
+        [Helper]
+        public string GetSessionString(HttpContext context, string key)
+        {
+            return context.Session.GetString(key);
+        }
+
+        [Helper]
+        public void SetSessionCode(HttpContext context, string key, int code)
+        {
+            context.Session.SetInt32(key, code);
+        }
+
+        [Helper]
+        public int GetSessionCode(HttpContext context, string key)
+        {
+            int correctCode = int.TryParse(context.Session.GetString(key), out var parsedValue) ? parsedValue : 0;
+            return correctCode;
         }
     }
 }
