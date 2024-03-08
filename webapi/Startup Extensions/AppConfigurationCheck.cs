@@ -36,8 +36,6 @@ namespace webapi
 
 #if DEBUG
 
-            // Uncomment this if you want throwing exception if cannot ping clamAV server, but remember about may deadlock
-
             Task.Run(async () =>
             {
                 var clam = new ClamClient("localhost", 3310);
@@ -59,19 +57,6 @@ namespace webapi
             }).GetAwaiter().GetResult();
 
 #endif
-
-            //if (InvalidConfiguration)
-            //{
-            //    Console.WriteLine("Invalid Configuration:\n\n" +
-            //        $"Secret Key is valid ?: {!string.IsNullOrWhiteSpace(secretKey)}\nSecretKey Value: {secretKey}\n\n" +
-            //        $"Email Password is valid ?: {!string.IsNullOrWhiteSpace(emailPassword)}\nEmail Password Value: {emailPassword}\n\n" +
-            //        $"Email Address is valid ?: {!string.IsNullOrWhiteSpace(emailAdress) && Regex.IsMatch(emailAdress, emailPattern)}\nEmail Address Value: {emailAdress}\n\n" +
-            //        $"FileCrypt Key is valid ?: {!string.IsNullOrWhiteSpace(FileCryptKey) && Regex.IsMatch(FileCryptKey, keyPattern)}\nFileCrypt Key Value: {FileCryptKey}\n\n" +
-            //        $"Redis Server is valid ?: {!string.IsNullOrWhiteSpace(redisServer)}\nRedis Server Value: {redisServer}\n\n" +
-            //        $"PostgreSQL Connection String is valid ?: {!string.IsNullOrWhiteSpace(postgres)}\nPostgreSQL Connection String Value: {postgres}\n");
-
-            //    throw new InvalidConfigurationException();
-            //}
 
             Console.WriteLine("Configuration is valid\n");
         }
