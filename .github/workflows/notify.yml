@@ -25,7 +25,6 @@ jobs:
           message: |
             New event:
             - Event: ${{ github.event_name }}
-            - Event Timestamp: ${{ github.event.created_at }}
             - Repository: ${{ github.repository }}
             - Branch: ${{ github.ref }}
             - Commit SHA: ${{ github.sha }}
