@@ -8,10 +8,6 @@ namespace tests.Contollers_Tests.Account
 {
     public class AuthRegistrationController_Test
     {
-        [Fact]
-        public void fake()
-        {
-            Assert.Equal(23, 2);
-        }
+
     }
 }
