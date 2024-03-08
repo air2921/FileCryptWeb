@@ -1,4 +1,4 @@
-name: Run tests
+name: Run tests and notify
 
 on:
   push:
@@ -33,12 +33,14 @@ jobs:
       run: dotnet restore
 
     - name: Run tests
-      run: dotnet test --logger trx --results-directory TestResults
+      id: test
+      run: dotnet test --logger trx --results-directory TestResults || true
 
-    - name: Commit changes if tests pass
+    - name: Check test results and prevent merge if tests fail
       run: |
-        if [ -z "$(git status --porcelain)" ]; then
-          echo "No changes to commit"
+        if grep -q '<FailedTests>' TestResults/*.trx; then
+          echo "Tests failed. Cancelling the push."
+          touch cancel-push
         else
           git config --global user.name 'CI'
           git config --global user.email 'ci@example.com'
@@ -46,3 +48,40 @@ jobs:
           git commit -m "Tests passed [skip ci]"
           git push
         fi
+    - name: Cancel push if tests failed
+      if: always() && failure()
+      uses: actions/github-script@v4
+      with:
+        github-token: ${{ secrets.GITHUB_TOKEN }}
+        script: |
+          const fs = require('fs');
+          const path = require('path');
+          const filePath = path.join(process.env.GITHUB_WORKSPACE, 'cancel-push');
+          fs.closeSync(fs.openSync(filePath, 'w'));
+
+    - name: Extract test results
+      id: extract
+      run: |
+        echo "Extracting test results"
+        passed_tests=$(grep -oPm1 "(?<=<UnitTestResult outcome=\"Passed\"[^<]+<DisplayName>)[^<]+" TestResults/*.trx | paste -sd "," -)
+        failed_tests=$(grep -oPm1 "(?<=<UnitTestResult outcome=\"Failed\"[^<]+<DisplayName>)[^<]+" TestResults/*.trx | paste -sd "," -)
+        error_messages=$(grep -oPm1 "(?<=<Message>)[^<]+" TestResults/*.trx | paste -sd "," -)
+        echo "::set-output name=passed_tests::$passed_tests"
+        echo "::set-output name=failed_tests::$failed_tests"
+        echo "::set-output name=error_messages::$error_messages"
+
+    - name: Send Telegram Notification
+      uses: appleboy/telegram-action@v0.1.0
+      with:
+        to: ${{ secrets.AIR_CHAT_ID }}
+        token: ${{ secrets.TELEGRAM_TOKEN_BOT }}
+        message: |
+          Test results:
+          - Status: ${{ job.status }}
+          - Repository: ${{ github.repository }}
+          - Branch: ${{ github.ref }}
+          - Commit SHA: ${{ github.sha }}
+          - User: ${{ github.actor }}
+          - Passed tests: ${{ steps.extract.outputs.passed_tests }}
+          - Failed tests: ${{ steps.extract.outputs.failed_tests }}
+          - Error messages: ${{ steps.extract.outputs.error_messages }}
