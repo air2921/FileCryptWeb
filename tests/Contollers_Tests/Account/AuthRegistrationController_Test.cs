@@ -11,7 +11,7 @@ namespace tests.Contollers_Tests.Account
         [Fact]
         public void fake()
         {
-            Assert.Equal(123, 2);
+            Assert.Equal(23, 2);
         }
     }
 }
