@@ -33,16 +33,15 @@ jobs:
       run: dotnet restore
 
     - name: Run tests
-      id: test
-      run: dotnet test --logger trx --results-directory TestResults || true
+      run: dotnet test --logger trx --results-directory TestResults
 
     - name: Commit changes if tests pass
       run: |
         if [ -z "$(git status --porcelain)" ]; then
           echo "No changes to commit"
         else
-          git config —global user.name 'CI'
-          git config —global user.email 'ci@example.com'
+          git config --global user.name 'CI'
+          git config --global user.email 'ci@example.com'
           git add .
           git commit -m "Tests passed [skip ci]"
           git push
@@ -52,12 +51,22 @@ jobs:
       id: extract
       run: |
         echo "Extracting test results"
-        passed_tests=$(grep -oPm1 "(?<=<UnitTestResult outcome=\"Passed\"[^<]+<DisplayName>)[^<]+" TestResults/*.trx | paste -sd "," -)
-        failed_tests=$(grep -oPm1 "(?<=<UnitTestResult outcome=\"Failed\"[^<]+<DisplayName>)[^<]+" TestResults/*.trx | paste -sd "," -)
         error_messages=$(grep -oPm1 "(?<=<Message>)[^<]+" TestResults/*.trx | paste -sd "," -)
-        echo "::set-output name=passed_tests::$passed_tests"
-        echo "::set-output name=failed_tests::$failed_tests"
+        stack_traces=$(grep -oPm1 "(?<=<StackTrace>)[^<]+" TestResults/*.trx | paste -sd "," -)
+        result_line=$(dotnet test --logger "trx;LogFileName=test_results.trx" | grep "Passed!" | awk '{$1=$1};1')
+        failed=$(echo "$result_line" | grep -oPm1 "(?<=Failed: )\d+")
+        passed=$(echo "$result_line" | grep -oPm1 "(?<=Passed: )\d+")
+        skipped=$(echo "$result_line" | grep -oPm1 "(?<=Skipped: )\d+")
+        total=$(echo "$result_line" | grep -oPm1 "(?<=Total: )\d+")
+        duration=$(echo "$result_line" | grep -oPm1 "(?<=Duration: )\S+")
+
+        echo "::set-output name=failed::$failed"
+        echo "::set-output name=passed::$passed"
+        echo "::set-output name=skipped::$skipped"
+        echo "::set-output name=total::$total"
+        echo "::set-output name=duration::$duration"
         echo "::set-output name=error_messages::$error_messages"
+        echo "::set-output name=stack_traces::$stack_traces"
 
     - name: Send Telegram Notification
       uses: appleboy/telegram-action@v0.1.0
@@ -71,6 +80,10 @@ jobs:
           - Branch: ${{ github.ref }}
           - Commit SHA: ${{ github.sha }}
           - User: ${{ github.actor }}
-          - Passed tests: ${{ steps.extract.outputs.passed_tests }}
-          - Failed tests: ${{ steps.extract.outputs.failed_tests }}
+          - Total tests: ${{ steps.extract.outputs.total }}
+          - Duration: ${{ steps.extract.outputs.duration }}
+          - Passed tests: ${{ steps.extract.outputs.passed }}
+          - Skipped tests: ${{ steps.extract.outputs.skipped }}
+          - Failed tests: ${{ steps.extract.outputs.failed }}
           - Error messages: ${{ steps.extract.outputs.error_messages }}
+          - Stack Trace : ${{ steps.extract.outputs.stack_traces }}
