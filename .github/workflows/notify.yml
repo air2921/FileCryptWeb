@@ -22,4 +22,12 @@ jobs:
         with:
           to: ${{ secrets.AIR_CHAT_ID }}
           token: ${{ secrets.TELEGRAM_TOKEN_BOT }}
-          message: "New push or pull request to master/dev branch"
+          message: |
+            New event:
+            - Event: ${{ github.event_name }}
+            - Event Timestamp: ${{ github.event.created_at }}
+            - Repository: ${{ github.repository }}
+            - Branch: ${{ github.ref }}
+            - Commit SHA: ${{ github.sha }}
+            - Commit Message: ${{ github.event.head_commit.message }}
+            - User: ${{ github.actor }}
