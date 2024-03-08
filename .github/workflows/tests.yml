@@ -37,7 +37,6 @@ jobs:
         set -e
         dotnet test --logger trx --results-directory TestResults
         echo "Tests executed successfully"
-      continue-on-error: true
 
     - name: Commit changes if tests pass
       run: |
