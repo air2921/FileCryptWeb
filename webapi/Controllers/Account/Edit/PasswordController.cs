@@ -21,27 +21,21 @@ namespace webapi.Controllers.Account.Edit
     {
         #region fields and contructor
 
+        private readonly IApiPasswordService _passwordService;
         private readonly IRepository<UserModel> _userRepository;
-        private readonly IRepository<NotificationModel> _notificationRepository;
-        private readonly FileCryptDbContext _dbContext;
-        private readonly IRedisCache _redisCache;
         private readonly ILogger<PasswordController> _logger;
         private readonly IPasswordManager _passwordManager;
         private readonly IUserInfo _userInfo;
 
         public PasswordController(
+            IApiPasswordService passwordService,
             IRepository<UserModel> userRepository,
-            IRepository<NotificationModel> notificationRepository,
-            FileCryptDbContext dbContext,
-            IRedisCache redisCache,
             ILogger<PasswordController> logger,
             IPasswordManager passwordManager,
             IUserInfo userInfo)
         {
+            _passwordService = passwordService;
             _userRepository = userRepository;
-            _notificationRepository = notificationRepository;
-            _dbContext = dbContext;
-            _redisCache = redisCache;
             _logger = logger;
             _passwordManager = passwordManager;
             _userInfo = userInfo;
@@ -60,10 +54,10 @@ namespace webapi.Controllers.Account.Edit
         {
             try
             {
-                if (!Regex.IsMatch(passwordDto.NewPassword, Validation.Password))
+                if (!_passwordService.ValidatePassword(passwordDto.NewPassword))
                     return StatusCode(422, new { message = Message.INVALID_FORMAT });
 
-                var user = await _userRepository.GetByFilter(query => query.Where(u => u.email.Equals(_userInfo.Email)));
+                var user = await _userRepository.GetById(_userInfo.UserId);
                 if (user is null)
                     return StatusCode(404, new { message = Message.NOT_FOUND });
 
@@ -71,8 +65,8 @@ namespace webapi.Controllers.Account.Edit
                 if (!IsCorrect)
                     return StatusCode(401, new { message = Message.INCORRECT });
 
-                await DbTransaction(user, passwordDto.NewPassword);
-                await ClearData();
+                await _passwordService.DbTransaction(user, passwordDto.NewPassword);
+                await _passwordService.ClearData(_userInfo.UserId);
 
                 return StatusCode(200, new { message = Message.UPDATED });
             }
@@ -89,9 +83,42 @@ namespace webapi.Controllers.Account.Edit
                 return StatusCode(500, new { message = ex.Message });
             }
         }
+    }
+
+    public interface IApiPasswordService
+    {
+        public Task DbTransaction(UserModel user, string password);
+        public Task ClearData(int userId);
+        public bool ValidatePassword(string password);
+    }
+
+    public class PasswordService : IApiPasswordService
+    {
+        private readonly FileCryptDbContext _dbContext;
+        private readonly IPasswordManager _passwordManager;
+        private readonly IRepository<UserModel> _userRepository;
+        private readonly IRepository<NotificationModel> _notificationRepository;
+        private readonly IRedisCache _redisCache;
+        private readonly IUserInfo _userInfo;
+
+        public PasswordService(
+            FileCryptDbContext dbContext,
+            IPasswordManager passwordManager,
+            IRepository<UserModel> userRepository,
+            IRepository<NotificationModel> notificationRepository,
+            IRedisCache redisCache,
+            IUserInfo userInfo)
+        {
+            _dbContext = dbContext;
+            _passwordManager = passwordManager;
+            _userRepository = userRepository;
+            _notificationRepository = notificationRepository;
+            _redisCache = redisCache;
+            _userInfo = userInfo;
+        }
 
         [Helper]
-        private async Task DbTransaction(UserModel user, string password)
+        public async Task DbTransaction(UserModel user, string password)
         {
             using var transaction = await _dbContext.Database.BeginTransactionAsync();
             try
@@ -124,10 +151,15 @@ namespace webapi.Controllers.Account.Edit
         }
 
         [Helper]
-        private async Task ClearData()
+        public async Task ClearData(int userId)
         {
-            await _redisCache.DeteteCacheByKeyPattern($"{ImmutableData.NOTIFICATIONS_PREFIX}{_userInfo.UserId}");
-            await _redisCache.DeteteCacheByKeyPattern($"{ImmutableData.USER_DATA_PREFIX}{_userInfo.UserId}");
+            await _redisCache.DeteteCacheByKeyPattern($"{ImmutableData.NOTIFICATIONS_PREFIX}{userId}");
+            await _redisCache.DeteteCacheByKeyPattern($"{ImmutableData.USER_DATA_PREFIX}{userId}");
+        }
+
+        public bool ValidatePassword(string password)
+        {
+            return Regex.IsMatch(password, Validation.Password);
         }
     }
 }

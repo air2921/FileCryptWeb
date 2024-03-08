@@ -51,6 +51,8 @@ namespace webapi
         {
             services.AddScoped<IApi2FaService, _2FaService>();
             services.AddScoped<IApiEmailService, EmailService>();
+            services.AddScoped<IApiPasswordService, PasswordService>();
+            services.AddScoped<IApiUsernameService, UsernameService>();
         }
 
         public static void Transient(IServiceCollection services)
