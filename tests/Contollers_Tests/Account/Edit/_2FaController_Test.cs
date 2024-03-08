@@ -29,8 +29,8 @@ namespace tests.Contollers_Tests.Account.Edit
 
             passwordManagerMock.Setup(x => x.CheckPassword(It.IsAny<string>(), It.IsAny<string>())).Returns(true);
             generateMock.Setup(x => x.GenerateSixDigitCode()).Returns(111111);
-            _2faServiceMock.Setup(x => x.SendMessage("air", "air147@mail.com", 111111)).Returns(Task.CompletedTask);
-            _2faServiceMock.Setup(x => x.SetData(null, 111111));
+            _2faServiceMock.Setup(x => x.SendMessage(It.IsAny<string>(), It.IsAny<string>(), It.IsAny<int>())).Returns(Task.CompletedTask);
+            _2faServiceMock.Setup(x => x.SetData(It.IsAny<string>(), It.IsAny<int>()));
             userInfoMock.Setup(x => x.UserId).Returns(1);
 
             var _2faController = new _2FaController(userRepositoryMock.Object, _2faServiceMock.Object,
@@ -47,7 +47,7 @@ namespace tests.Contollers_Tests.Account.Edit
             var userRepositoryMock = new Mock<IRepository<UserModel>>();
             var userInfoMock = new Mock<IUserInfo>();
 
-            userRepositoryMock.Setup(x => x.GetById(1, CancellationToken.None)).ReturnsAsync((UserModel)null);
+            userRepositoryMock.Setup(x => x.GetById(It.IsAny<int>(), CancellationToken.None)).ReturnsAsync((UserModel)null);
             userInfoMock.Setup(x => x.UserId).Returns(1);
 
             var _2faController = new _2FaController(userRepositoryMock.Object, null, null, userInfoMock.Object, null, null);
@@ -65,7 +65,7 @@ namespace tests.Contollers_Tests.Account.Edit
             var userRepositoryMock = new Mock<IRepository<UserModel>>();
             var userInfoMock = new Mock<IUserInfo>();
 
-            userRepositoryMock.Setup(x => x.GetById(1, CancellationToken.None))
+            userRepositoryMock.Setup(x => x.GetById(It.IsAny<int>(), CancellationToken.None))
                 .ThrowsAsync((Exception)Activator.CreateInstance(typeof(OperationCanceledException)));
             userInfoMock.Setup(x => x.UserId).Returns(1);
 
@@ -122,7 +122,7 @@ namespace tests.Contollers_Tests.Account.Edit
 
             passwordManagerMock.Setup(x => x.CheckPassword(It.IsAny<string>(), It.IsAny<string>())).Returns(true);
             generateMock.Setup(x => x.GenerateSixDigitCode()).Returns(111111);
-            _2faServiceMock.Setup(x => x.SendMessage("air", "air147@mail.com", 111111))
+            _2faServiceMock.Setup(x => x.SendMessage(It.IsAny<string>(), It.IsAny<string>(), It.IsAny<int>()))
                 .ThrowsAsync((Exception)Activator.CreateInstance(typeof(SmtpClientException)));
 
             _2faServiceMock.Setup(x => x.SetData(It.IsAny<string>(), It.IsAny<int>()));
@@ -147,13 +147,13 @@ namespace tests.Contollers_Tests.Account.Edit
             var validationMock = new Mock<IValidation>();
 
             userInfoMock.Setup(x => x.UserId).Returns(1);
-            userRepositoryMock.Setup(x => x.GetById(1, CancellationToken.None)).ReturnsAsync(new UserModel
+            userRepositoryMock.Setup(x => x.GetById(It.IsAny<int>(), CancellationToken.None)).ReturnsAsync(new UserModel
             {
                 id = 1,
             });
             _2faServiceMock.Setup(x => x.GetCode(It.IsAny<string>())).ReturnsAsync(It.IsAny<int>());
             _2faServiceMock.Setup(x => x.ClearData(1)).Returns(Task.CompletedTask);
-            _2faServiceMock.Setup(x => x.DbTransaction(null, true)).Returns(Task.CompletedTask);
+            _2faServiceMock.Setup(x => x.DbTransaction(It.IsAny<UserModel>(), true)).Returns(Task.CompletedTask);
             validationMock.Setup(x => x.IsSixDigit(It.IsAny<int>())).Returns(true);
 
             var _2faController = new _2FaController(userRepositoryMock.Object, _2faServiceMock.Object,
