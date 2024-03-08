@@ -64,12 +64,12 @@ namespace webapi.Controllers.Account
                 userDTO.email = userDTO.email.ToLowerInvariant();
                 int code = _generate.GenerateSixDigitCode();
 
+                if (!_registrationService.IsValidData(userDTO))
+                    return StatusCode(400, new { message = Message.INVALID_FORMAT });
+
                 var user = await _userRepository.GetByFilter(query => query.Where(u => u.email.Equals(userDTO.email)));
                 if (user is not null)
                     return StatusCode(409, new { message = Message.USER_EXISTS });
-
-                if (!_registrationService.IsValidData(userDTO))
-                    return StatusCode(400, new { message = Message.INVALID_FORMAT });
 
                 await _registrationService.SendMessage(userDTO.username, userDTO.email, code);
                 await _registrationService.SetUser($"{USER_OBJECT}{userDTO.email}", new UserObject

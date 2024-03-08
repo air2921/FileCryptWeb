@@ -133,7 +133,7 @@ namespace webapi.Controllers.Account
         {
             try
             {
-                await RevokeToken();
+                await _sessionService.RevokeToken(_userInfo.UserId);
                 _tokenService.DeleteTokens();
 
                 return StatusCode(200);
@@ -145,23 +145,6 @@ namespace webapi.Controllers.Account
             catch (OperationCanceledException ex)
             {
                 return StatusCode(500, new { message = ex.Message });
-            }
-        }
-
-        [Helper]
-        private async Task RevokeToken()
-        {
-            try
-            {
-                var tokenModel = await _tokenRepository.GetByFilter(query => query.Where(t => t.user_id.Equals(_userInfo.UserId)));
-                tokenModel.refresh_token = Guid.NewGuid().ToString();
-                tokenModel.expiry_date = DateTime.UtcNow.AddYears(-100);
-
-                await _tokenRepository.Update(tokenModel);
-            }
-            catch (EntityNotUpdatedException)
-            {
-                throw;
             }
         }
 
@@ -178,6 +161,7 @@ namespace webapi.Controllers.Account
     public interface IApiSessionService
     {
         public Task<IActionResult> CreateTokens(UserModel user, HttpContext context);
+        public Task RevokeToken(int userId);
         public Task SendMessage(string username, string email, int code);
         public Task SetData(string key, UserContextObject user);
         public Task<UserContextObject> GetData(string key);
@@ -296,6 +280,23 @@ namespace webapi.Controllers.Account
             catch (OperationCanceledException ex)
             {
                 return StatusCode(500, new { message = ex.Message });
+            }
+        }
+
+        [Helper]
+        public async Task RevokeToken(int userId)
+        {
+            try
+            {
+                var tokenModel = await _tokenRepository.GetByFilter(query => query.Where(t => t.user_id.Equals(userId)));
+                tokenModel.refresh_token = Guid.NewGuid().ToString();
+                tokenModel.expiry_date = DateTime.UtcNow.AddYears(-100);
+
+                await _tokenRepository.Update(tokenModel);
+            }
+            catch (EntityNotUpdatedException)
+            {
+                throw;
             }
         }
 
