@@ -1,5 +1,6 @@
 ﻿using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
+using Newtonsoft.Json;
 using webapi.Attributes;
 using webapi.DB;
 using webapi.DTO;
@@ -17,55 +18,40 @@ namespace webapi.Controllers.Account
     [ApiController]
     public class AuthSessionController : ControllerBase
     {
-        private const string CODE = "Code";
-        private const string ID = "Id";
+        private readonly string USER_OBJECT = "AuthSessionController_UserObject_Email:";
 
         #region fields and costructor
 
+        private readonly IApiSessionService _sessionService;
         private readonly IRepository<UserModel> _userRepository;
-        private readonly IRepository<NotificationModel> _notificationRepository;
         private readonly IRepository<TokenModel> _tokenRepository;
-        private readonly FileCryptDbContext _dbContext;
         private readonly ILogger<AuthSessionController> _logger;
         private readonly IUserInfo _userInfo;
-        private readonly IEmailSender _emailSender;
-        private readonly IRedisCache _redisCache;
-        private readonly IRedisKeys _redisKeys;
         private readonly IPasswordManager _passwordManager;
         private readonly ITokenService _tokenService;
         private readonly IGenerate _generate;
 
         public AuthSessionController(
+            IApiSessionService sessionService,
             IRepository<UserModel> userRepository,
-            IRepository<NotificationModel> notificationRepository,
             IRepository<TokenModel> tokenRepository,
-            FileCryptDbContext dbContext,
             ILogger<AuthSessionController> logger,
             IUserInfo userInfo,
-            IEmailSender emailSender,
-            IRedisCache redisCache,
-            IRedisKeys redisKeys,
             IPasswordManager passwordManager,
             ITokenService tokenService,
             IGenerate generate)
         {
+            _sessionService = sessionService;
             _userRepository = userRepository;
-            _notificationRepository = notificationRepository;
             _tokenRepository = tokenRepository;
-            _dbContext = dbContext;
             _logger = logger;
             _userInfo = userInfo;
-            _emailSender = emailSender;
-            _redisCache = redisCache;
-            _redisKeys = redisKeys;
             _passwordManager = passwordManager;
             _tokenService = tokenService;
             _generate = generate;
         }
 
         #endregion
-
-        #region Factical login endpoints and helped method
 
         [HttpPost("login")]
         [XSRFProtection]
@@ -89,11 +75,11 @@ namespace webapi.Controllers.Account
                     return StatusCode(401, new { message = Message.INCORRECT });
 
                 if (!user.is_2fa_enabled)
-                    return await CreateTokens(user);
+                    return await _sessionService.CreateTokens(user, HttpContext);
 
                 int code = _generate.GenerateSixDigitCode();
-                await SendMessage(user.username, user.email, code);
-                SetSession(HttpContext, user.id, code);
+                await _sessionService.SendMessage(user.username, user.email, code);
+                await _sessionService.SetData($"{USER_OBJECT}{user.email}", new UserContextObject { UserId = user.id, Code = code.ToString() });
 
                 return StatusCode(200, new { message = Message.EMAIL_SENT, confirm = true });
             }
@@ -113,21 +99,48 @@ namespace webapi.Controllers.Account
         [ProducesResponseType(typeof(object), 422)]
         [ProducesResponseType(typeof(object), 404)]
         [ProducesResponseType(typeof(object), 500)]
-        public async Task<IActionResult> VerifyTwoFA([FromQuery] int code)
+        public async Task<IActionResult> VerifyTwoFA([FromQuery] int code, [FromQuery] string email)
         {
             try
             {
-                var session = GetSession(HttpContext);
+                var userContext = await _sessionService.GetData($"{USER_OBJECT}{email.ToLowerInvariant()}");
+                if (userContext is null)
+                    return StatusCode(404, new { message = Message.TASK_TIMED_OUT });
 
-                bool IsCorrect = _passwordManager.CheckPassword(code.ToString(), session.Code);
+                bool IsCorrect = _passwordManager.CheckPassword(code.ToString(), userContext.Code);
                 if (!IsCorrect)
                     return StatusCode(422, new { message = Message.INCORRECT });
 
-                var user = await _userRepository.GetById(session.UserId);
+                var user = await _userRepository.GetById(userContext.UserId);
                 if (user is null)
                     return StatusCode(404, new { message = Message.NOT_FOUND });
 
-                return await CreateTokens(user);
+                return await _sessionService.CreateTokens(user, HttpContext);
+            }
+            catch (OperationCanceledException ex)
+            {
+                return StatusCode(500, new { message = ex.Message });
+            }
+        }
+
+        [HttpPut("logout")]
+        [Authorize]
+        [XSRFProtection]
+        [ProducesResponseType(200)]
+        [ProducesResponseType(404)]
+        [ProducesResponseType(500)]
+        public async Task<IActionResult> Logout()
+        {
+            try
+            {
+                await RevokeToken();
+                _tokenService.DeleteTokens();
+
+                return StatusCode(200);
+            }
+            catch (EntityNotUpdatedException ex)
+            {
+                return StatusCode(404, new { message = ex.Message });
             }
             catch (OperationCanceledException ex)
             {
@@ -136,36 +149,89 @@ namespace webapi.Controllers.Account
         }
 
         [Helper]
-        [NonAction]
-        private async Task<IActionResult> CreateTokens(UserModel user)
+        private async Task RevokeToken()
         {
             try
             {
-                string refreshToken = _tokenService.GenerateRefreshToken();
-                var tokenModel = await _tokenRepository.GetByFilter(query => query.Where(t => t.user_id.Equals(user.id)));
-                await DbTransaction(tokenModel, user, refreshToken);
-                CookieAppend(user, HttpContext, refreshToken);
+                var tokenModel = await _tokenRepository.GetByFilter(query => query.Where(t => t.user_id.Equals(_userInfo.UserId)));
+                tokenModel.refresh_token = Guid.NewGuid().ToString();
+                tokenModel.expiry_date = DateTime.UtcNow.AddYears(-100);
 
-                await _redisCache.DeteteCacheByKeyPattern($"{ImmutableData.NOTIFICATIONS_PREFIX}{user.id}");
+                await _tokenRepository.Update(tokenModel);
+            }
+            catch (EntityNotUpdatedException)
+            {
+                throw;
+            }
+        }
 
-                return StatusCode(200);
-            }
-            catch (EntityNotCreatedException ex)
+        [HttpGet("check")]
+        [Authorize]
+        [ProducesResponseType(200)]
+        [ProducesResponseType(401)]
+        public IActionResult AuthCheck()
+        {
+            return StatusCode(200);
+        }
+    }
+
+    public interface IApiSessionService
+    {
+        public Task<IActionResult> CreateTokens(UserModel user, HttpContext context);
+        public Task SendMessage(string username, string email, int code);
+        public Task SetData(string key, UserContextObject user);
+        public Task<UserContextObject> GetData(string key);
+    }
+
+    public class SessionService : ControllerBase, IApiSessionService
+    {
+        #region fields and constructor
+
+        private readonly FileCryptDbContext _dbContext;
+        private readonly IRepository<TokenModel> _tokenRepository;
+        private readonly IRepository<NotificationModel> _notificationRepository;
+        private readonly IEmailSender _emailSender;
+        private readonly IPasswordManager _passwordManager;
+        private readonly IRedisCache _redisCache;
+        private readonly ITokenService _tokenService;
+
+        public SessionService(
+            FileCryptDbContext dbContext,
+            IRepository<TokenModel> tokenRepository,
+            IRepository<NotificationModel> notificationRepository,
+            IEmailSender emailSender,
+            IPasswordManager passwordManager,
+            IRedisCache redisCache,
+            ITokenService tokenService)
+        {
+            _dbContext = dbContext;
+            _tokenRepository = tokenRepository;
+            _notificationRepository = notificationRepository;
+            _emailSender = emailSender;
+            _passwordManager = passwordManager;
+            _redisCache = redisCache;
+            _tokenService = tokenService;
+        }
+
+        #endregion
+
+        private void CookieAppend(UserModel user, HttpContext context, string refreshToken)
+        {
+            var cookieOptions = new CookieOptions
             {
-                return StatusCode(500, new { message = ex.Message });
-            }
-            catch (EntityNotUpdatedException ex)
-            {
-                return StatusCode(500, new { message = ex.Message });
-            }
-            catch (OperationCanceledException ex)
-            {
-                return StatusCode(500, new { message = ex.Message });
-            }
-            finally
-            {
-                HttpContext.Session.Clear();
-            }
+                MaxAge = ImmutableData.JwtExpiry,
+                Secure = true,
+                HttpOnly = false,
+                SameSite = SameSiteMode.None,
+                IsEssential = false
+            };
+
+            context.Response.Cookies.Append(ImmutableData.JWT_COOKIE_KEY, _tokenService.GenerateJwtToken(user, ImmutableData.JwtExpiry), _tokenService.SetCookieOptions(ImmutableData.JwtExpiry));
+            context.Response.Cookies.Append(ImmutableData.REFRESH_COOKIE_KEY, refreshToken, _tokenService.SetCookieOptions(ImmutableData.RefreshExpiry));
+            context.Response.Cookies.Append(ImmutableData.IS_AUTHORIZED, true.ToString(), cookieOptions);
+            context.Response.Cookies.Append(ImmutableData.USER_ID_COOKIE_KEY, user.id.ToString(), cookieOptions);
+            context.Response.Cookies.Append(ImmutableData.USERNAME_COOKIE_KEY, user.username, cookieOptions);
+            context.Response.Cookies.Append(ImmutableData.ROLE_COOKIE_KEY, user.role, cookieOptions);
         }
 
         [Helper]
@@ -205,27 +271,36 @@ namespace webapi.Controllers.Account
         }
 
         [Helper]
-        private void CookieAppend(UserModel user, HttpContext context, string refreshToken)
+        [NonAction]
+        public async Task<IActionResult> CreateTokens(UserModel user, HttpContext context)
         {
-            var cookieOptions = new CookieOptions
+            try
             {
-                MaxAge = ImmutableData.JwtExpiry,
-                Secure = true,
-                HttpOnly = false,
-                SameSite = SameSiteMode.None,
-                IsEssential = false
-            };
+                string refreshToken = _tokenService.GenerateRefreshToken();
+                var tokenModel = await _tokenRepository.GetByFilter(query => query.Where(t => t.user_id.Equals(user.id)));
+                await DbTransaction(tokenModel, user, refreshToken);
+                CookieAppend(user, context, refreshToken);
 
-            context.Response.Cookies.Append(ImmutableData.JWT_COOKIE_KEY, _tokenService.GenerateJwtToken(user, ImmutableData.JwtExpiry), _tokenService.SetCookieOptions(ImmutableData.JwtExpiry));
-            context.Response.Cookies.Append(ImmutableData.REFRESH_COOKIE_KEY, refreshToken, _tokenService.SetCookieOptions(ImmutableData.RefreshExpiry));
-            context.Response.Cookies.Append(ImmutableData.IS_AUTHORIZED, true.ToString(), cookieOptions);
-            context.Response.Cookies.Append(ImmutableData.USER_ID_COOKIE_KEY, user.id.ToString(), cookieOptions);
-            context.Response.Cookies.Append(ImmutableData.USERNAME_COOKIE_KEY, user.username, cookieOptions);
-            context.Response.Cookies.Append(ImmutableData.ROLE_COOKIE_KEY, user.role, cookieOptions);
+                await _redisCache.DeteteCacheByKeyPattern($"{ImmutableData.NOTIFICATIONS_PREFIX}{user.id}");
+
+                return StatusCode(200);
+            }
+            catch (EntityNotCreatedException ex)
+            {
+                return StatusCode(500, new { message = ex.Message });
+            }
+            catch (EntityNotUpdatedException ex)
+            {
+                return StatusCode(500, new { message = ex.Message });
+            }
+            catch (OperationCanceledException ex)
+            {
+                return StatusCode(500, new { message = ex.Message });
+            }
         }
 
         [Helper]
-        private async Task SendMessage(string username, string email, int code)
+        public async Task SendMessage(string username, string email, int code)
         {
             try
             {
@@ -244,93 +319,26 @@ namespace webapi.Controllers.Account
         }
 
         [Helper]
-        private void SetSession(HttpContext context, int userId, int code)
+        public async Task SetData(string key, UserContextObject user)
         {
-            context.Session.SetString(ID, userId.ToString());
-            context.Session.SetString(CODE, _passwordManager.HashingPassword(code.ToString()));
+            await _redisCache.CacheData(key, user, TimeSpan.FromMinutes(8));
         }
 
         [Helper]
-        private SessionObject GetSession(HttpContext context)
+        public async Task<UserContextObject> GetData(string key)
         {
-            string? correctCode = HttpContext.Session.GetString(CODE);
-            string? id = HttpContext.Session.GetString(ID);
-
-            if (correctCode is null || id is null)
-                throw new ArgumentNullException(Message.ERROR);
-
-            return new SessionObject
-            {
-                UserId = int.Parse(id),
-                Code = correctCode,
-            };
+            var user = await _redisCache.GetCachedData(key);
+            if (user is not null)
+                return JsonConvert.DeserializeObject<UserContextObject>(user);
+            else
+                return null;
         }
+    }
 
-        [AuxiliaryObject]
-        private class SessionObject
-        {
-            public int UserId { get; set; }
-            public string Code { get; set; }
-        }
-
-        #endregion
-
-        [HttpPut("logout")]
-        [Authorize]
-        [XSRFProtection]
-        [ProducesResponseType(200)]
-        [ProducesResponseType(404)]
-        [ProducesResponseType(500)]
-        public async Task<IActionResult> Logout()
-        {
-            try
-            {
-                await RevokeToken();
-                _tokenService.DeleteTokens();
-
-                return StatusCode(200);
-            }
-            catch (EntityNotUpdatedException ex)
-            {
-                return StatusCode(404, new { message = ex.Message });
-            }
-            catch (OperationCanceledException ex)
-            {
-                return StatusCode(500, new { message = ex.Message });
-            }
-            finally
-            {
-                HttpContext.Session.Clear();
-                await _redisCache.DeleteCache(_redisKeys.PrivateKey);
-                await _redisCache.DeleteCache(_redisKeys.InternalKey);
-                await _redisCache.DeleteCache(_redisKeys.ReceivedKey);
-            }
-        }
-
-        [Helper]
-        private async Task RevokeToken()
-        {
-            try
-            {
-                var tokenModel = await _tokenRepository.GetByFilter(query => query.Where(t => t.user_id.Equals(_userInfo.UserId)));
-                tokenModel.refresh_token = Guid.NewGuid().ToString();
-                tokenModel.expiry_date = DateTime.UtcNow.AddYears(-100);
-
-                await _tokenRepository.Update(tokenModel);
-            }
-            catch (EntityNotUpdatedException)
-            {
-                throw;
-            }
-        }
-
-        [HttpGet("check")]
-        [Authorize]
-        [ProducesResponseType(200)]
-        [ProducesResponseType(401)]
-        public IActionResult AuthCheck()
-        {
-            return StatusCode(200);
-        }
+    [AuxiliaryObject]
+    public class UserContextObject
+    {
+        public int UserId { get; set; }
+        public string Code { get; set; }
     }
 }

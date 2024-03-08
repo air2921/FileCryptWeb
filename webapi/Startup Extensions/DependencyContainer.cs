@@ -13,6 +13,7 @@ using webapi.Helpers;
 using webapi.Third_Party_Services;
 using static webapi.Third_Party_Services.EmailSender;
 using webapi.Controllers.Account.Edit;
+using webapi.Controllers.Account;
 
 namespace webapi
 {
@@ -53,6 +54,9 @@ namespace webapi
             services.AddScoped<IApiEmailService, EmailService>();
             services.AddScoped<IApiPasswordService, PasswordService>();
             services.AddScoped<IApiUsernameService, UsernameService>();
+            services.AddScoped<IApiRegistrationService, RegistrationService>();
+            services.AddScoped<IApiSessionService, SessionService>();
+            services.AddScoped<IApiRecoveryService, RecoveryService>();
         }
 
         public static void Transient(IServiceCollection services)
