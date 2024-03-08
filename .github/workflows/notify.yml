@@ -14,8 +14,11 @@ jobs:
   send_notification:
     runs-on: ubuntu-latest
     steps:
+      - name: Checkout Repository
+        uses: actions/checkout@v2
+
       - name: Send Telegram Notification
-        uses: appleboy/telegram-action@v0.2.1
+        uses: appleboy/telegram-action@v0.1.0
         with:
           to: ${{ secrets.AIR_CHAT_ID }}
           token: ${{ secrets.TELEGRAM_TOKEN_BOT }}
