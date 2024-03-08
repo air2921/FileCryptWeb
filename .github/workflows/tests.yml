@@ -1,4 +1,4 @@
-name: Run tests and notify
+name: Run tests
 
 on:
   push:
@@ -33,10 +33,7 @@ jobs:
       run: dotnet restore
 
     - name: Run tests
-      run: |
-        set -e
-        dotnet test --logger trx --results-directory TestResults
-        echo "Tests executed successfully"
+      run: dotnet test --logger trx --results-directory TestResults
 
     - name: Commit changes if tests pass
       run: |
@@ -49,44 +46,3 @@ jobs:
           git commit -m "Tests passed [skip ci]"
           git push
         fi
-
-    - name: Extract test results
-      id: extract
-      run: |
-        echo "Extracting test results"
-        error_messages=$(grep -oPm1 "(?<=<Message>)[^<]+" TestResults/*.trx | paste -sd "," -)
-        stack_traces=$(grep -oPm1 "(?<=<StackTrace>)[^<]+" TestResults/*.trx | paste -sd "," -)
-        result_line=$(dotnet test --logger "trx;LogFileName=test_results.trx" | grep "Passed!" | awk '{$1=$1};1')
-        failed=$(echo "$result_line" | grep -oPm1 "(?<=Failed: )\d+")
-        passed=$(echo "$result_line" | grep -oPm1 "(?<=Passed: )\d+")
-        skipped=$(echo "$result_line" | grep -oPm1 "(?<=Skipped: )\d+")
-        total=$(echo "$result_line" | grep -oPm1 "(?<=Total: )\d+")
-        duration=$(echo "$result_line" | grep -oPm1 "(?<=Duration: )\S+")
-
-        echo "::set-output name=failed::$failed"
-        echo "::set-output name=passed::$passed"
-        echo "::set-output name=skipped::$skipped"
-        echo "::set-output name=total::$total"
-        echo "::set-output name=duration::$duration"
-        echo "::set-output name=error_messages::$error_messages"
-        echo "::set-output name=stack_traces::$stack_traces"
-
-    - name: Send Telegram Notification
-      uses: appleboy/telegram-action@v0.1.0
-      with:
-        to: ${{ secrets.AIR_CHAT_ID }}
-        token: ${{ secrets.TELEGRAM_TOKEN_BOT }}
-        message: |
-          Test results:
-          - Status: ${{ job.status }}
-          - Repository: ${{ github.repository }}
-          - Branch: ${{ github.ref }}
-          - Commit SHA: ${{ github.sha }}
-          - User: ${{ github.actor }}
-          - Total tests: ${{ steps.extract.outputs.total }}
-          - Duration: ${{ steps.extract.outputs.duration }}
-          - Passed tests: ${{ steps.extract.outputs.passed }}
-          - Skipped tests: ${{ steps.extract.outputs.skipped }}
-          - Failed tests: ${{ steps.extract.outputs.failed }}
-          - Error messages: ${{ steps.extract.outputs.error_messages }}
-          - Stack Trace : ${{ steps.extract.outputs.stack_traces }}
