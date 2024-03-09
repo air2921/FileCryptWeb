@@ -106,7 +106,7 @@ namespace tests.Contollers_Tests.Admin
         }
 
         [Fact]
-        public async Task DeleteApi_AndCache_Success()
+        public async Task DeleteApi_Success()
         {
             var apiRepositoryMock = new Mock<IRepository<ApiModel>>();
             var redisCacheMock = new Mock<IRedisCache>();
@@ -121,7 +121,7 @@ namespace tests.Contollers_Tests.Admin
         }
 
         [Fact]
-        public async Task DeleteApi_AndCache_EntityNotDeleted()
+        public async Task DeleteApi_EntityNotDeleted()
         {
             var apiRepositoryMock = new Mock<IRepository<ApiModel>>();
             var redisCacheMock = new Mock<IRedisCache>();

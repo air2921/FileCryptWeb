@@ -21,6 +21,10 @@ namespace webapi.Controllers.Account.Edit
     {
         #region fields and constuctor
 
+        private readonly string EMAIL;
+        private readonly string OLD_EMAIL_CODE;
+        private readonly string NEW_EMAIL_CODE;
+
         private readonly IApiEmailService _emailService;
         private readonly IRepository<UserModel> _userRepository;
         private readonly ILogger<EmailController> _logger;
@@ -29,10 +33,6 @@ namespace webapi.Controllers.Account.Edit
         private readonly ITokenService _tokenService;
         private readonly IUserInfo _userInfo;
         private readonly IValidation _validation;
-
-        private readonly string EMAIL;
-        private readonly string OLD_EMAIL_CODE;
-        private readonly string NEW_EMAIL_CODE;
 
         public EmailController(
             IApiEmailService emailService,
