@@ -120,7 +120,7 @@ namespace tests.Contollers_Tests.Account
         }
 
         [Fact]
-        public async Task Registration_EmailSendFailed()
+        public async Task Registration_SendEmailFailed()
         {
             var generateMock = new Mock<IGenerate>();
             var userRepositoryMock = new Mock<IRepository<UserModel>>();

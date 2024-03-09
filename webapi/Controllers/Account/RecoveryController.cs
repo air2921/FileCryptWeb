@@ -90,7 +90,7 @@ namespace webapi.Controllers.Account
         {
             try
             {
-                if (!Regex.IsMatch(password, Validation.Password))
+                if (!_recoveryService.IsValidPassword(password))
                     return StatusCode(400, new { message = Message.INVALID_FORMAT });
 
                 var link = await _linkRepository.GetByFilter(query => query.Where(l => l.u_token.Equals(token)));
@@ -137,6 +137,7 @@ namespace webapi.Controllers.Account
         public Task RecoveryAccountTransaction(UserModel user, string token, string password);
         public Task SendMessage(string username, string email, string token);
         public Task CreateRecoveryTransaction(UserModel user, string token);
+        public bool IsValidPassword(string password);
     }
 
     public class RecoveryService : IApiRecoveryService
@@ -168,6 +169,12 @@ namespace webapi.Controllers.Account
             _passwordManager = passwordManager;
             _emailSender = emailSender;
             _fileManager = fileManager;
+        }
+
+        [Helper]
+        public bool IsValidPassword(string password)
+        {
+            return Regex.IsMatch(password, Validation.Password);
         }
 
         [Helper]

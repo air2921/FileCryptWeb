@@ -158,7 +158,7 @@ namespace tests.Contollers_Tests.Account
         }
 
         [Fact]
-        public async Task Login_EmailSendMessage()
+        public async Task Login_SendEmailFailed()
         {
             var userRepositoryMock = new Mock<IRepository<UserModel>>();
             var passwordManagerMock = new Mock<IPasswordManager>();
