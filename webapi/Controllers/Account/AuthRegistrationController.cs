@@ -1,4 +1,5 @@
 ﻿using Microsoft.AspNetCore.Mvc;
+using Newtonsoft.Json;
 using System.Text.RegularExpressions;
 using webapi.Attributes;
 using webapi.DB;
@@ -7,6 +8,7 @@ using webapi.Exceptions;
 using webapi.Helpers;
 using webapi.Interfaces;
 using webapi.Interfaces.Cryptography;
+using webapi.Interfaces.Redis;
 using webapi.Interfaces.Services;
 using webapi.Localization;
 using webapi.Models;
@@ -17,57 +19,34 @@ namespace webapi.Controllers.Account
     [ApiController]
     public class AuthRegistrationController : ControllerBase
     {
-        private const string EMAIL = "Email";
-        private const string PASSWORD = "Password";
-        private const string USERNAME = "Username";
-        private const string ROLE = "Role";
-        private const string IS_2FA = "2FA";
-        private const string CODE = "Code";
+        private readonly string USER_OBJECT = "AuthRegistrationController_UserObject_Email:";
 
         #region fields and constructor
 
         private readonly IRepository<UserModel> _userRepository;
-        private readonly IValidation _validation;
-        private readonly IRepository<KeyModel> _keyRepository;
-        private readonly IRepository<TokenModel> _tokenRepository;
-        private readonly IRepository<KeyStorageModel> _storageRepository;
-        private readonly FileCryptDbContext _dbContext;
-        private readonly IConfiguration _configuration;
-        private readonly IGenerate _generate;
-        private readonly ICypherKey _encrypt;
+        private readonly IApiRegistrationService _registrationService;
         private readonly ILogger<AuthRegistrationController> _logger;
-        private readonly IEmailSender _email;
         private readonly IPasswordManager _passwordManager;
-        private readonly byte[] secretKey;
+        private readonly IConfiguration _configuration;
+        private readonly IValidation _validation;
+        private readonly IGenerate _generate;
 
         public AuthRegistrationController(
-            ILogger<AuthRegistrationController> logger,
-            IValidation validation,
-            IEmailSender email,
-            IPasswordManager passwordManager,
             IRepository<UserModel> userRepository,
-            IRepository<KeyModel> keyRepository,
-            IRepository<TokenModel> tokenRepository,
-            IRepository<KeyStorageModel> storageRepository,
-            FileCryptDbContext dbContext,
+            IApiRegistrationService registrationService,
+            ILogger<AuthRegistrationController> logger,
+            IPasswordManager passwordManager,
             IConfiguration configuration,
-            IGenerate generate,
-            IImplementationFinder implementationFinder,
-            IEnumerable<ICypherKey> cypherKeys)
+            IValidation validation,
+            IGenerate generate)
         {
-            _logger = logger;
-            _validation = validation;
-            _email = email;
-            _passwordManager = passwordManager;
             _userRepository = userRepository;
-            _keyRepository = keyRepository;
-            _tokenRepository = tokenRepository;
-            _storageRepository = storageRepository;
-            _dbContext = dbContext;
+            _registrationService = registrationService;
+            _logger = logger;
+            _passwordManager = passwordManager;
             _configuration = configuration;
+            _validation = validation;
             _generate = generate;
-            _encrypt = implementationFinder.GetImplementationByKey(cypherKeys, ImplementationKey.ENCRYPT_KEY);
-            secretKey = Convert.FromBase64String(_configuration[App.ENCRYPTION_KEY]!);
         }
 
         #endregion
@@ -82,20 +61,20 @@ namespace webapi.Controllers.Account
         {
             try
             {
-                var email = userDTO.email.ToLowerInvariant();
+                userDTO.email = userDTO.email.ToLowerInvariant();
                 int code = _generate.GenerateSixDigitCode();
 
-                var user = await _userRepository.GetByFilter(query => query.Where(u => u.email.Equals(email)));
+                if (!_registrationService.IsValidData(userDTO))
+                    return StatusCode(400, new { message = Message.INVALID_FORMAT });
+
+                var user = await _userRepository.GetByFilter(query => query.Where(u => u.email.Equals(userDTO.email)));
                 if (user is not null)
                     return StatusCode(409, new { message = Message.USER_EXISTS });
 
-                if (!IsValidData(userDTO))
-                    return StatusCode(400, new { message = Message.INVALID_FORMAT });
-
-                await SendMessage(userDTO.username, userDTO.email, code);
-                SetSession(HttpContext, new SessionObject
+                await _registrationService.SendMessage(userDTO.username, userDTO.email, code);
+                await _registrationService.SetUser($"{USER_OBJECT}{userDTO.email}", new UserObject
                 {
-                    Email = email,
+                    Email = userDTO.email,
                     Password = userDTO.password,
                     Username = userDTO.username,
                     Role = Role.User.ToString(),
@@ -120,17 +99,19 @@ namespace webapi.Controllers.Account
         [ProducesResponseType(201)]
         [ProducesResponseType(typeof(object), 422)]
         [ProducesResponseType(typeof(object), 500)]
-        public async Task<IActionResult> VerifyAccount([FromQuery] int code)
+        public async Task<IActionResult> VerifyAccount([FromQuery] int code, [FromQuery] string email)
         {
             try
             {
-                var session = GetSession(HttpContext);
+                var user = await _registrationService.GetUser($"{USER_OBJECT}{email.ToLowerInvariant()}");
+                if (user is null)
+                    return StatusCode(404, new { message = Message.TASK_TIMED_OUT });
 
-                bool IsCorrect = _passwordManager.CheckPassword(code.ToString(), session.Code);
+                bool IsCorrect = _passwordManager.CheckPassword(code.ToString(), user.Code);
                 if (!IsCorrect)
                     return StatusCode(422, new { message = Message.INCORRECT });
 
-                await DbTransaction(session);
+                await _registrationService.DbTransaction(user);
 
                 return StatusCode(201);
             }
@@ -138,14 +119,60 @@ namespace webapi.Controllers.Account
             {
                 return StatusCode(500, new { message = ex.Message });
             }
-            catch (ArgumentNullException ex)
-            {
-                return StatusCode(500, new { message = ex.Message });
-            }
+        }
+    }
+
+    public interface IApiRegistrationService
+    {
+        public bool IsValidData(RegisterDTO userDTO);
+        public Task DbTransaction(UserObject user);
+        public Task SendMessage(string username, string email, int code);
+        public Task SetUser(string key, UserObject user);
+        public Task<UserObject> GetUser(string key);
+    }
+
+    public class RegistrationService : IApiRegistrationService
+    {
+        private readonly FileCryptDbContext _dbContext;
+        private readonly IConfiguration _configuration;
+        private readonly IRepository<UserModel> _userRepository;
+        private readonly IRepository<TokenModel> _tokenRepository;
+        private readonly IRepository<KeyModel> _keyRepository;
+        private readonly IRedisCache _redisCache;
+        private readonly IGenerate _generate;
+        private readonly IPasswordManager _passwordManager;
+        private readonly IEmailSender _emailSender;
+        private readonly ICypherKey _encrypt;
+        private readonly byte[] secretKey;
+
+        public RegistrationService(
+            FileCryptDbContext dbContext,
+            IConfiguration configuration,
+            IRepository<UserModel> userRepository,
+            IRepository<TokenModel> tokenRepository,
+            IRepository<KeyModel> keyRepository,
+            IRedisCache redisCache,
+            IGenerate generate,
+            IPasswordManager passwordManager,
+            IEmailSender emailSender,
+            IImplementationFinder implementationFinder,
+            IEnumerable<ICypherKey> cypherKeys)
+        {
+            _dbContext = dbContext;
+            _configuration = configuration;
+            _userRepository = userRepository;
+            _keyRepository = keyRepository;
+            _tokenRepository = tokenRepository;
+            _redisCache = redisCache;
+            _generate = generate;
+            _passwordManager = passwordManager;
+            _emailSender = emailSender;
+            _encrypt = implementationFinder.GetImplementationByKey(cypherKeys, ImplementationKey.ENCRYPT_KEY);
+            secretKey = Convert.FromBase64String(_configuration[App.ENCRYPTION_KEY]!);
         }
 
         [Helper]
-        private bool IsValidData(RegisterDTO userDTO)
+        public bool IsValidData(RegisterDTO userDTO)
         {
             bool isValidUsername = Regex.IsMatch(userDTO.username, Validation.Username);
             bool isValidPassword = Regex.IsMatch(userDTO.password, Validation.Password);
@@ -154,18 +181,18 @@ namespace webapi.Controllers.Account
         }
 
         [Helper]
-        private async Task DbTransaction(SessionObject session)
+        public async Task DbTransaction(UserObject user)
         {
             using var transaction = await _dbContext.Database.BeginTransactionAsync();
             try
             {
                 var id = await _userRepository.Add(new UserModel
                 {
-                    email = session.Email,
-                    password = session.Password,
-                    username = session.Username,
-                    role = session.Role,
-                    is_2fa_enabled = session.Flag2Fa,
+                    email = user.Email,
+                    password = user.Password,
+                    username = user.Username,
+                    role = user.Role,
+                    is_2fa_enabled = user.Flag2Fa,
                     is_blocked = false
                 }, e => e.id);
 
@@ -192,11 +219,11 @@ namespace webapi.Controllers.Account
         }
 
         [Helper]
-        private async Task SendMessage(string username, string email, int code)
+        public async Task SendMessage(string username, string email, int code)
         {
             try
             {
-                await _email.SendMessage(new EmailDto
+                await _emailSender.SendMessage(new EmailDto
                 {
                     username = username,
                     email = email,
@@ -211,49 +238,33 @@ namespace webapi.Controllers.Account
         }
 
         [Helper]
-        private void SetSession(HttpContext context, SessionObject session)
+        public async Task SetUser(string key, UserObject user)
         {
-            context.Session.SetString(EMAIL, session.Email);
-            context.Session.SetString(PASSWORD, _passwordManager.HashingPassword(session.Password));
-            context.Session.SetString(USERNAME, session.Username);
-            context.Session.SetString(ROLE, session.Role);
-            context.Session.SetString(IS_2FA, session.Flag2Fa.ToString());
-            context.Session.SetString(CODE, _passwordManager.HashingPassword(session.Code));
+            user.Password = _passwordManager.HashingPassword(user.Password);
+            user.Code = _passwordManager.HashingPassword(user.Code);
+
+            await _redisCache.CacheData(key, user, TimeSpan.FromMinutes(10));
         }
 
         [Helper]
-        private SessionObject GetSession(HttpContext context)
+        public async Task<UserObject> GetUser(string key)
         {
-            string? email = context.Session.GetString(EMAIL);
-            string? password = context.Session.GetString(PASSWORD);
-            string? username = context.Session.GetString(USERNAME);
-            string? role = context.Session.GetString(ROLE);
-            string? correctCode = context.Session.GetString(CODE);
-            string? flag_2fa = context.Session.GetString(IS_2FA);
-
-            if (email is null || password is null || username is null || role is null || correctCode is null || flag_2fa is null)
-                throw new ArgumentNullException(Message.ERROR);
-
-            return new SessionObject 
-            { 
-                Email = email,
-                Password = password,
-                Username = username,
-                Role = role,
-                Flag2Fa = bool.Parse(flag_2fa),
-                Code = correctCode,
-            };
+            var userObject = await _redisCache.GetCachedData(key);
+            if (userObject is not null)
+                return JsonConvert.DeserializeObject<UserObject>(userObject);
+            else
+                return null;
         }
+    }
 
-        [AuxiliaryObject]
-        private class SessionObject
-        {
-            public string Email { get; set; }
-            public string Password { get; set; }
-            public string Username { get; set; }
-            public string Role { get; set; }
-            public bool Flag2Fa { get; set; }
-            public string Code { get; set; }
-        }
+    [AuxiliaryObject]
+    public class UserObject
+    {
+        public string Email { get; set; }
+        public string Password { get; set; }
+        public string Username { get; set; }
+        public string Role { get; set; }
+        public bool Flag2Fa { get; set; }
+        public string Code { get; set; }
     }
 }

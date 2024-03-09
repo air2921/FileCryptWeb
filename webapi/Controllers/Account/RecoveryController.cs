@@ -19,42 +19,27 @@ namespace webapi.Controllers.Account
     {
         #region fields and constructor
 
+        private readonly IApiRecoveryService _recoveryService;
         private readonly IRepository<UserModel> _userRepository;
-        private readonly IRepository<NotificationModel> _notificationRepository;
-        private readonly FileCryptDbContext _dbContext;
         private readonly IRedisCache _redisCache;
         private readonly IRepository<LinkModel> _linkRepository;
-        private readonly IRepository<TokenModel> _tokenRepository;
         private readonly ILogger<RecoveryController> _logger;
-        private readonly IEmailSender _emailSender;
-        private readonly IPasswordManager _passwordManager;
         private readonly IGenerate _generate;
-        private readonly IFileManager _fileManager;
 
         public RecoveryController(
+            IApiRecoveryService recoveryService,
             IRepository<UserModel> userRepository,
-            IRepository<NotificationModel> notificationRepository,
-            FileCryptDbContext dbContext,
             IRedisCache redisCache,
             IRepository<LinkModel> linkRepository,
-            IRepository<TokenModel> tokenRepository,
             ILogger<RecoveryController> logger,
-            IEmailSender emailSender,
-            IPasswordManager passwordManager,
-            IGenerate generate,
-            IFileManager fileManager)
+            IGenerate generate)
         {
+            _recoveryService = recoveryService;
             _userRepository = userRepository;
-            _notificationRepository = notificationRepository;
-            _dbContext = dbContext;
             _redisCache = redisCache;
             _linkRepository = linkRepository;
-            _tokenRepository = tokenRepository;
             _logger = logger;
-            _emailSender = emailSender;
-            _passwordManager = passwordManager;
             _generate = generate;
-            _fileManager = fileManager;
         }
 
         #endregion
@@ -73,8 +58,8 @@ namespace webapi.Controllers.Account
                     return StatusCode(404, new { message = Message.NOT_FOUND });
 
                 string token = Guid.NewGuid().ToString("N") + Guid.NewGuid().ToString() + _generate.GenerateKey();
-                await CreateRecoveryTransaction(user, token);
-                await SendMessage(user.username, user.email, token);
+                await _recoveryService.CreateRecoveryTransaction(user, token);
+                await _recoveryService.SendMessage(user.username, user.email, token);
 
                 await _redisCache.DeteteCacheByKeyPattern($"{ImmutableData.NOTIFICATIONS_PREFIX}{user.id}");
 
@@ -105,7 +90,7 @@ namespace webapi.Controllers.Account
         {
             try
             {
-                if (!Regex.IsMatch(password, Validation.Password))
+                if (!_recoveryService.IsValidPassword(password))
                     return StatusCode(400, new { message = Message.INVALID_FORMAT });
 
                 var link = await _linkRepository.GetByFilter(query => query.Where(l => l.u_token.Equals(token)));
@@ -121,7 +106,7 @@ namespace webapi.Controllers.Account
                 var user = await _userRepository.GetById(link.user_id);
                 if (user is null)
                     return StatusCode(404, new { message = Message.NOT_FOUND });
-                await RecoveryAccountTransaction(user, token, password);
+                await _recoveryService.RecoveryAccountTransaction(user, token, password);
 
                 await _redisCache.DeteteCacheByKeyPattern($"{ImmutableData.NOTIFICATIONS_PREFIX}{user.id}");
                 await _redisCache.DeteteCacheByKeyPattern($"{ImmutableData.USER_DATA_PREFIX}{user.id}");
@@ -145,9 +130,55 @@ namespace webapi.Controllers.Account
                 return StatusCode(500, new { message = ex.Message });
             }
         }
+    }
+
+    public interface IApiRecoveryService
+    {
+        public Task RecoveryAccountTransaction(UserModel user, string token, string password);
+        public Task SendMessage(string username, string email, string token);
+        public Task CreateRecoveryTransaction(UserModel user, string token);
+        public bool IsValidPassword(string password);
+    }
+
+    public class RecoveryService : IApiRecoveryService
+    {
+        private readonly FileCryptDbContext _dbContext;
+        private readonly IRepository<UserModel> _userRepository;
+        private readonly IRepository<NotificationModel> _notificationRepository;
+        private readonly IRepository<LinkModel> _linkRepository;
+        private readonly IRepository<TokenModel> _tokenRepository;
+        private readonly IPasswordManager _passwordManager;
+        private readonly IEmailSender _emailSender;
+        private readonly IFileManager _fileManager;
+
+        public RecoveryService(
+            FileCryptDbContext dbContext,
+            IRepository<UserModel> userRepository,
+            IRepository<NotificationModel> notificationRepository,
+            IRepository<LinkModel> linkRepository,
+            IRepository<TokenModel> tokenRepository,
+            IPasswordManager passwordManager,
+            IEmailSender emailSender,
+            IFileManager fileManager)
+        {
+            _dbContext = dbContext;
+            _userRepository = userRepository;
+            _notificationRepository = notificationRepository;
+            _linkRepository = linkRepository;
+            _tokenRepository = tokenRepository;
+            _passwordManager = passwordManager;
+            _emailSender = emailSender;
+            _fileManager = fileManager;
+        }
 
         [Helper]
-        private async Task RecoveryAccountTransaction(UserModel user, string token, string password)
+        public bool IsValidPassword(string password)
+        {
+            return Regex.IsMatch(password, Validation.Password);
+        }
+
+        [Helper]
+        public async Task RecoveryAccountTransaction(UserModel user, string token, string password)
         {
             using var transaction = await _dbContext.Database.BeginTransactionAsync();
 
@@ -194,7 +225,7 @@ namespace webapi.Controllers.Account
         }
 
         [Helper]
-        private async Task SendMessage(string username, string email, string token)
+        public async Task SendMessage(string username, string email, string token)
         {
             try
             {
@@ -213,7 +244,7 @@ namespace webapi.Controllers.Account
         }
 
         [Helper]
-        private async Task CreateRecoveryTransaction(UserModel user, string token)
+        public async Task CreateRecoveryTransaction(UserModel user, string token)
         {
             using var transaction = await _dbContext.Database.BeginTransactionAsync();
 

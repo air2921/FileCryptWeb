@@ -30,6 +30,7 @@ const Register = () => {
         });
 
         if (response.isSuccess) {
+            localStorage.setItem('registration_email', email);
             setStatusCode(true);
         }
         else {
@@ -51,9 +52,21 @@ const Register = () => {
         const handleSubmit = async (e: FormEvent) => {
             e.preventDefault();
 
-            const response = await AxiosRequest({ endpoint: `api/auth/verify?code=${code}`, method: 'POST', withCookie: true, requestBody: null });
+            const email = localStorage.getItem('registration_email');
+            if (!email || email === undefined) {
+                setErrorMessage('Try again later');
+
+                setTimeout(() => {
+                    setErrorMessage('');
+                }, 5000)
+
+                return;
+            }
+
+            const response = await AxiosRequest({ endpoint: `api/auth/verify?code=${code}&email=${email}`, method: 'POST', withCookie: true, requestBody: null });
 
             if (response.isSuccess) {
+                localStorage.removeItem('registration_email');
                 navigate('/');
             }
             else {
