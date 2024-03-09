@@ -39,13 +39,9 @@ namespace webapi.Controllers.Admin
                 ApiModel api = null;
 
                 if (apiId.HasValue)
-                {
                     api = await _apiRepository.GetById(apiId.Value);
-                }
                 else if (!string.IsNullOrWhiteSpace(key))
-                {
                     api = await _apiRepository.GetByFilter(query => query.Where(a => a.api_key.Equals(key)));
-                }
 
                 if (api is null)
                     return StatusCode(404, new { message = Message.NOT_FOUND });
