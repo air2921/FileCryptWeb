@@ -184,6 +184,7 @@ namespace webapi.Controllers.Account
         public async Task DbTransaction(UserObject user)
         {
             using var transaction = await _dbContext.Database.BeginTransactionAsync();
+
             try
             {
                 var id = await _userRepository.Add(new UserModel
@@ -195,13 +196,6 @@ namespace webapi.Controllers.Account
                     is_2fa_enabled = user.Flag2Fa,
                     is_blocked = false
                 }, e => e.id);
-
-                await _tokenRepository.Add(new TokenModel
-                {
-                    user_id = id,
-                    refresh_token = Guid.NewGuid().ToString(),
-                    expiry_date = DateTime.UtcNow
-                });
 
                 await _keyRepository.Add(new KeyModel
                 {

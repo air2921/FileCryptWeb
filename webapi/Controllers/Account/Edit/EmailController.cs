@@ -223,6 +223,7 @@ namespace webapi.Controllers.Account.Edit
         public async Task DbTransaction(UserModel user, string email)
         {
             using var transaction = await _dbContext.Database.BeginTransactionAsync();
+
             try
             {
                 user.email = email;

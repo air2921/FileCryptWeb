@@ -198,12 +198,13 @@ namespace webapi.Controllers.Account
                 });
 
                 await _linkRepository.DeleteByFilter(query => query.Where(l => l.u_token.Equals(token)));
+                var tokens = new List<int>();
 
-                var tokenModel = await _tokenRepository.GetByFilter(query => query.Where(t => t.user_id.Equals(user.id)));
-                tokenModel.refresh_token = Guid.NewGuid().ToString();
-                tokenModel.expiry_date = DateTime.UtcNow.AddYears(-100);
+                var tokenModels = await _tokenRepository.GetAll(query => query.Where(t => t.user_id.Equals(user.id)));
+                foreach (var tokenModel in tokenModels)
+                    tokens.Add(tokenModel.token_id);
 
-                await _tokenRepository.Update(tokenModel);
+                await _tokenRepository.DeleteMany(tokens);
 
                 await transaction.CommitAsync();
             }

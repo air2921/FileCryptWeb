@@ -31,15 +31,15 @@ namespace webapi.DB
                 .HasForeignKey<KeyModel>(k => k.user_id)
                 .OnDelete(DeleteBehavior.Cascade);
 
-            modelBuilder.Entity<UserModel>()
-                .HasOne(u => u.Tokens)
-                .WithOne(t => t.User)
-                .HasForeignKey<TokenModel>(t => t.user_id)
-                .OnDelete(DeleteBehavior.Cascade);
-
             #endregion
 
             #region Has one with many
+
+            modelBuilder.Entity<TokenModel>()
+                .HasOne(f => f.User)
+                .WithMany(u => u.Tokens)
+                .HasForeignKey(f => f.user_id)
+                .OnDelete(DeleteBehavior.Cascade);
 
             modelBuilder.Entity<FileModel>()
                 .HasOne(f => f.User)

@@ -104,6 +104,10 @@ namespace webapi.Controllers.Admin
             {
                 return StatusCode(500, new { message = ex.Message });
             }
+            catch (EntityNotDeletedException ex)
+            {
+                return StatusCode(500, new { message = ex.Message });
+            }
         }
 
         [HttpPut("role/{userId}")]
@@ -150,18 +154,23 @@ namespace webapi.Controllers.Admin
 
                 if (block)
                 {
-                    var targetToken = await _tokenRepository.GetByFilter(query => query.Where(t => t.user_id.Equals(target.id))) ??
-                        throw new ArgumentException();
+                    var tokens = new List<int>();
 
-                    targetToken.refresh_token = Guid.NewGuid().ToString();
-                    targetToken.expiry_date = DateTime.UtcNow.AddYears(-100);
+                    var tokenModels = await _tokenRepository.GetAll(query => query.Where(t => t.user_id.Equals(target.id)));
+                    foreach (var token in tokenModels)
+                        tokens.Add(token.token_id);
 
-                    await _tokenRepository.Update(targetToken);
+                    await _tokenRepository.DeleteMany(tokens);
                 }
 
                 await transaction.CommitAsync();
             }
             catch (EntityNotUpdatedException)
+            {
+                await transaction.RollbackAsync();
+                throw;
+            }
+            catch (EntityNotDeletedException)
             {
                 await transaction.RollbackAsync();
                 throw;
