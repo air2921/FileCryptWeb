@@ -6,7 +6,7 @@ using webapi.Interfaces;
 using webapi.Interfaces.Services;
 using webapi.Models;
 
-namespace tests.Contollers_Tests.Account
+namespace tests.Controllers_Tests.Account
 {
     public class AuthRegistrationController_Test
     {

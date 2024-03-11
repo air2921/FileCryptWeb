@@ -4,7 +4,7 @@ using webapi.Exceptions;
 using webapi.Interfaces;
 using webapi.Models;
 
-namespace tests.Contollers_Tests.Admin
+namespace tests.Controllers_Tests.Admin
 {
     public class KeyController_Test
     {

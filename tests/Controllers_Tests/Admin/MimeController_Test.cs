@@ -7,7 +7,7 @@ using webapi.Interfaces.Redis;
 using webapi.Interfaces.Services;
 using webapi.Models;
 
-namespace tests.Contollers_Tests.Admin
+namespace tests.Controllers_Tests.Admin
 {
     public class MimeController_Test
     {

@@ -6,7 +6,7 @@ using webapi.Interfaces;
 using webapi.Interfaces.Services;
 using webapi.Models;
 
-namespace tests.Contollers_Tests.Account.Edit
+namespace tests.Controllers_Tests.Account.Edit
 {
     public class _2FaController_Test
     {

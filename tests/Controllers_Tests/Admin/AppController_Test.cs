@@ -3,7 +3,7 @@ using webapi.Controllers.Admin;
 using webapi.Interfaces.Redis;
 using webapi.Interfaces.Services;
 
-namespace tests.Contollers_Tests.Admin
+namespace tests.Controllers_Tests.Admin
 {
     public class AppController_Test
     {

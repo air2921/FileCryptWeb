@@ -50,7 +50,7 @@ namespace webapi.Controllers.Admin
                 if (target is null)
                     return StatusCode(404, new { message = Message.NOT_FOUND });
 
-                if (_adminTokenService.CheckRole(target, _userInfo.Role))
+                if (!_adminTokenService.IsAllowed(target, _userInfo.Role))
                     return StatusCode(403, new { message = Message.FORBIDDEN });
 
                 await _adminTokenService.DbTransaction(await _tokenRepository.GetAll(query => query.Where(t => t.user_id.Equals(userId))),
@@ -61,31 +61,42 @@ namespace webapi.Controllers.Admin
             {
                 return StatusCode(500, new { message = ex.Message });
             }
+            catch (OperationCanceledException ex)
+            {
+                return StatusCode(500, new { message = ex.Message });
+            }
         }
 
         [HttpDelete("revoke/{tokenId}")]
         [XSRFProtection]
         public async Task<IActionResult> RevokeToken(int tokenId)
         {
-            var token = await _tokenRepository.GetById(tokenId);
-            if (token is null)
-                return StatusCode(404, new { message = Message.NOT_FOUND });
+            try
+            {
+                var token = await _tokenRepository.GetById(tokenId);
+                if (token is null)
+                    return StatusCode(404, new { message = Message.NOT_FOUND });
 
-            var target = await _userRepository.GetById(token.user_id);
-            if (target is null)
-                return StatusCode(404, new { message = Message.NOT_FOUND });
+                var target = await _userRepository.GetById(token.user_id);
+                if (target is null)
+                    return StatusCode(404, new { message = Message.NOT_FOUND });
 
-            if (_adminTokenService.CheckRole(target, _userInfo.Role))
-                return StatusCode(403, new { message = Message.FORBIDDEN });
+                if (!_adminTokenService.IsAllowed(target, _userInfo.Role))
+                    return StatusCode(403, new { message = Message.FORBIDDEN });
 
-            await _tokenRepository.Delete(tokenId);
-            return StatusCode(200, new { message = Message.REMOVED });
+                await _tokenRepository.Delete(tokenId);
+                return StatusCode(200, new { message = Message.REMOVED });
+            }
+            catch (OperationCanceledException ex)
+            {
+                return StatusCode(500, new { message = ex.Message });
+            }
         }
     }
 
     public interface IApiAdminTokenService
     {
-        public bool CheckRole(UserModel user, string role);
+        public bool IsAllowed(UserModel user, string role);
         public Task DbTransaction(IEnumerable<TokenModel> tokenModels, int userId);
     }
 
@@ -142,7 +153,7 @@ namespace webapi.Controllers.Admin
             }
         }
 
-        public bool CheckRole(UserModel user, string role)
+        public bool IsAllowed(UserModel user, string role)
         {
             return role.Equals("HighestAdmin") && !user.role.Equals("HighestAdmin");
         }
