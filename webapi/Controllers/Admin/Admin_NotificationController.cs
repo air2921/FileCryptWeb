@@ -75,7 +75,7 @@ namespace webapi.Controllers.Admin
         {
             try
             {
-                var notification = await _notificationRepository.GetById(notificationId);
+                var notification = await _notificationRepository.Delete(notificationId);
                 if (notification is not null)
                     await _redisCache.DeteteCacheByKeyPattern($"{ImmutableData.NOTIFICATIONS_PREFIX}{notification.user_id}");
 
