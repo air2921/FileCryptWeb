@@ -119,7 +119,7 @@ namespace webapi.Controllers.Admin
         [Helper]
         public async Task DbTransaction(IEnumerable<TokenModel> tokenModels, int userId)
         {
-            var transaction = await _dbContext.Database.BeginTransactionAsync();
+            using var transaction = await _dbContext.Database.BeginTransactionAsync();
 
             try
             {

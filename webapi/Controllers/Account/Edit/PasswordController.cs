@@ -121,6 +121,7 @@ namespace webapi.Controllers.Account.Edit
         public async Task DbTransaction(UserModel user, string password)
         {
             using var transaction = await _dbContext.Database.BeginTransactionAsync();
+
             try
             {
                 user.password = _passwordManager.HashingPassword(password);

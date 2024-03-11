@@ -159,6 +159,7 @@ namespace webapi.Controllers.Account.Edit
         public async Task DbTransaction(UserModel user, bool enable)
         {
             using var transaction = await _dbContext.Database.BeginTransactionAsync();
+
             try
             {
                 if (user.is_2fa_enabled == enable)
