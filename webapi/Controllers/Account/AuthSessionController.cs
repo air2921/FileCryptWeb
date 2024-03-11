@@ -55,7 +55,7 @@ namespace webapi.Controllers.Account
 
         [HttpPost("login")]
         [XSRFProtection]
-        [ProducesResponseType(typeof(object), 200)]
+        [ProducesResponseType(typeof(), 200)]
         [ProducesResponseType(typeof(object), 404)]
         [ProducesResponseType(typeof(object), 403)]
         [ProducesResponseType(typeof(object), 401)]
@@ -232,8 +232,8 @@ namespace webapi.Controllers.Account
 
                 await _notificationRepository.Add(new NotificationModel
                 {
-                    message_header = "Someone has accessed your account",
-                    message = $"Someone signed in to your account {user.username}#{user.id} at {DateTime.UtcNow}.",
+                    message_header = NotificationMessage.AUTH_NEW_LOGIN_HEADER,
+                    message = NotificationMessage.AUTH_NEW_LOGIN_BODY,
                     priority = Priority.Security.ToString(),
                     send_time = DateTime.UtcNow,
                     is_checked = false,

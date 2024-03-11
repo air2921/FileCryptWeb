@@ -230,9 +230,8 @@ namespace webapi.Controllers.Account.Edit
 
                 await _notificationRepository.Add(new NotificationModel
                 {
-                    message_header = "Someone changed your account email/login",
-                    message = $"Someone changed your email at {DateTime.UtcNow}." +
-                    $"New email: '{email}'",
+                    message_header = NotificationMessage.AUTH_EMAIL_CHANGED_HEADER,
+                    message = NotificationMessage.AUTH_EMAIL_CHANGED_BODY,
                     priority = Priority.Security.ToString(),
                     send_time = DateTime.UtcNow,
                     is_checked = false,
