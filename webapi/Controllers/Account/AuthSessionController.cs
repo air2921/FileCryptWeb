@@ -55,7 +55,7 @@ namespace webapi.Controllers.Account
 
         [HttpPost("login")]
         [XSRFProtection]
-        [ProducesResponseType(typeof(), 200)]
+        [ProducesResponseType(typeof(object), 200)]
         [ProducesResponseType(typeof(object), 404)]
         [ProducesResponseType(typeof(object), 403)]
         [ProducesResponseType(typeof(object), 401)]
