@@ -15,15 +15,18 @@ namespace webapi.Controllers.Admin
     {
         #region fields and constructor
 
+        private readonly IApiAdminUserService _userService;
         private readonly IRepository<UserModel> _userRepository;
         private readonly IRepository<TokenModel> _tokenRepository;
         private readonly FileCryptDbContext _dbContext;
 
         public Admin_UserController(
+            IApiAdminUserService userService,
             IRepository<UserModel> userRepository,
             IRepository<TokenModel> tokenRepository,
             FileCryptDbContext dbContext)
         {
+            _userService = userService;
             _userRepository = userRepository;
             _tokenRepository = tokenRepository;
             _dbContext = dbContext;
@@ -97,7 +100,7 @@ namespace webapi.Controllers.Admin
                 if (target.role.Equals("HighestAdmin"))
                     return StatusCode(403, new { message = Message.FORBIDDEN });
 
-                await DbTransaction(target, block);
+                await _userService.DbTransaction(target, block);
                 return StatusCode(200, new { message = Message.UPDATED });
             }
             catch (EntityNotUpdatedException ex)
@@ -141,9 +144,31 @@ namespace webapi.Controllers.Admin
                 return StatusCode(500, new { message = ex.Message });
             }
         }
+    }
+
+    public interface IApiAdminUserService
+    {
+        public Task DbTransaction(UserModel target, bool block);
+    }
+
+    public class AdminUserService : IApiAdminUserService
+    {
+        private readonly FileCryptDbContext _dbContext;
+        private readonly IRepository<UserModel> _userRepository;
+        private readonly IRepository<TokenModel> _tokenRepository;
+
+        public AdminUserService(
+            FileCryptDbContext dbContext,
+            IRepository<UserModel> userRepository,
+            IRepository<TokenModel> tokenRepository)
+        {
+            _dbContext = dbContext;
+            _userRepository = userRepository;
+            _tokenRepository = tokenRepository;
+        }
 
         [Helper]
-        private async Task DbTransaction(UserModel target, bool block)
+        public async Task DbTransaction(UserModel target, bool block)
         {
             using var transaction = await _dbContext.Database.BeginTransactionAsync();
 

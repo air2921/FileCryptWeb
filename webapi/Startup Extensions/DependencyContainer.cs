@@ -60,6 +60,7 @@ namespace webapi
             services.AddScoped<IApiRecoveryService, RecoveryService>();
             services.AddScoped<IApiAdminKeysService, AdminKeysService>();
             services.AddScoped<IApiAdminTokenService, AdminTokenService>();
+            services.AddScoped<IApiAdminUserService, AdminUserService>();
         }
 
         public static void Transient(IServiceCollection services)
