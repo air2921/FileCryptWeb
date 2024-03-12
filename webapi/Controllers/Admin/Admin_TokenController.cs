@@ -53,11 +53,15 @@ namespace webapi.Controllers.Admin
                 if (!_adminTokenService.IsAllowed(target, _userInfo.Role))
                     return StatusCode(403, new { message = Message.FORBIDDEN });
 
-                await _adminTokenService.DbTransaction(await _tokenRepository.GetAll(query => query.Where(t => t.user_id.Equals(userId))),
-                    target.id);
+                await _adminTokenService.DbTransaction(await _tokenRepository
+                    .GetAll(query => query.Where(t => t.user_id.Equals(userId))),target.id);
                 return StatusCode(200, new { message = Message.REMOVED });
             }
-            catch (EntityNotUpdatedException ex)
+            catch (EntityNotCreatedException ex)
+            {
+                return StatusCode(500, new { message = ex.Message });
+            }
+            catch (EntityNotDeletedException ex)
             {
                 return StatusCode(500, new { message = ex.Message });
             }
@@ -88,6 +92,10 @@ namespace webapi.Controllers.Admin
                 return StatusCode(200, new { message = Message.REMOVED });
             }
             catch (OperationCanceledException ex)
+            {
+                return StatusCode(500, new { message = ex.Message });
+            }
+            catch (EntityNotDeletedException ex)
             {
                 return StatusCode(500, new { message = ex.Message });
             }
