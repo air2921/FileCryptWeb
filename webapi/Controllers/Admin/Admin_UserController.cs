@@ -70,13 +70,17 @@ namespace webapi.Controllers.Admin
                 if (target is null)
                     return StatusCode(404, new { message = Message.NOT_FOUND });
 
-                if (target.role.Equals("HighestAdmin"))
+                if (_userService.IsHighestAdmin(target.role))
                     return StatusCode(403, new { message = Message.FORBIDDEN });
 
                 await _userRepository.Delete(userId);
                 return StatusCode(204);
             }
             catch (EntityNotDeletedException ex)
+            {
+                return StatusCode(500, new { message = ex.Message });
+            }
+            catch (OperationCanceledException ex)
             {
                 return StatusCode(500, new { message = ex.Message });
             }
@@ -97,7 +101,7 @@ namespace webapi.Controllers.Admin
                 if (target is null)
                     return StatusCode(404, new { message = Message.NOT_FOUND });
 
-                if (target.role.Equals("HighestAdmin"))
+                if (_userService.IsHighestAdmin(target.role))
                     return StatusCode(403, new { message = Message.FORBIDDEN });
 
                 await _userService.DbTransaction(target, block);
@@ -108,6 +112,10 @@ namespace webapi.Controllers.Admin
                 return StatusCode(500, new { message = ex.Message });
             }
             catch (EntityNotDeletedException ex)
+            {
+                return StatusCode(500, new { message = ex.Message });
+            }
+            catch (OperationCanceledException ex)
             {
                 return StatusCode(500, new { message = ex.Message });
             }
@@ -124,14 +132,14 @@ namespace webapi.Controllers.Admin
         {
             try
             {
-                if (role.Equals("HighestAdmin"))
+                if (_userService.IsHighestAdmin(role))
                     return StatusCode(403, new { message = Message.FORBIDDEN });
 
                 var target = await _userRepository.GetById(userId);
                 if (target is null)
                     return StatusCode(404, new { message = Message.NOT_FOUND });
 
-                if (target.role.Equals("HighestAdmin"))
+                if (_userService.IsHighestAdmin(target.role))
                     return StatusCode(403, new { message = Message.FORBIDDEN });
 
                 target.role = role;
@@ -143,11 +151,16 @@ namespace webapi.Controllers.Admin
             {
                 return StatusCode(500, new { message = ex.Message });
             }
+            catch (OperationCanceledException ex)
+            {
+                return StatusCode(500, new { message = ex.Message });
+            }
         }
     }
 
     public interface IApiAdminUserService
     {
+        public bool IsHighestAdmin(string role);
         public Task DbTransaction(UserModel target, bool block);
     }
 
@@ -165,6 +178,12 @@ namespace webapi.Controllers.Admin
             _dbContext = dbContext;
             _userRepository = userRepository;
             _tokenRepository = tokenRepository;
+        }
+
+        [Helper]
+        public bool IsHighestAdmin(string role)
+        {
+            return role.Equals(Role.HighestAdmin.ToString());
         }
 
         [Helper]
