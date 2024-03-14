@@ -21,6 +21,7 @@ const Login = () => {
 
         if (response.isSuccess) {
             if (response.data.confirm !== null && response.data.confirm !== undefined) {
+                localStorage.setItem('login_email', email);
                 setVerification(true);
             }
             else {
@@ -42,10 +43,13 @@ const Login = () => {
         const handleSubmit = async (e: FormEvent) => {
             e.preventDefault();
 
-            const response = await AxiosRequest({ endpoint: `api/auth/verify/2fa?code=${code}`, method: 'POST', withCookie: true, requestBody: null });
+            const email = localStorage.getItem('login_email');
+
+            const response = await AxiosRequest({ endpoint: `api/auth/verify/2fa?code=${code}&email=${email}`, method: 'POST', withCookie: true, requestBody: null });
 
             if (response.isSuccess) {
                 navigate('/');
+                localStorage.removeItem('login_email');
             }
             else {
                 setErrorMessage(response.data);

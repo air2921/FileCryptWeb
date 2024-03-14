@@ -159,6 +159,7 @@ namespace webapi.Controllers.Account.Edit
         public async Task DbTransaction(UserModel user, bool enable)
         {
             using var transaction = await _dbContext.Database.BeginTransactionAsync();
+
             try
             {
                 if (user.is_2fa_enabled == enable)
@@ -167,14 +168,10 @@ namespace webapi.Controllers.Account.Edit
                 user.is_2fa_enabled = enable;
                 await _userRepository.Update(user);
 
-                string message = enable
-                    ? "Your two-factor authentication status has been successfully updated! Your account is now even more secure. Thank you for prioritizing security with us."
-                    : "Your two-factor authentication has been disabled. Please ensure that you take additional precautions to secure your account. If this change was not authorized, contact our support team immediately. Thank you for staying vigilant about your account security.";
-
                 await _notificationRepository.Add(new NotificationModel
                 {
-                    message_header = $"2FA Status was updated",
-                    message = message,
+                    message_header = NotificationMessage.AUTH_2FA_HEADER,
+                    message = enable ? NotificationMessage.AUTH_2FA_ENABLE_BODY : NotificationMessage.AUTH_2FA_DISABLE_BODY,
                     priority = Priority.Security.ToString(),
                     send_time = DateTime.UtcNow,
                     is_checked = false,

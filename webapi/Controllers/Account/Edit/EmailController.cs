@@ -21,6 +21,10 @@ namespace webapi.Controllers.Account.Edit
     {
         #region fields and constuctor
 
+        private readonly string EMAIL;
+        private readonly string OLD_EMAIL_CODE;
+        private readonly string NEW_EMAIL_CODE;
+
         private readonly IApiEmailService _emailService;
         private readonly IRepository<UserModel> _userRepository;
         private readonly ILogger<EmailController> _logger;
@@ -29,10 +33,6 @@ namespace webapi.Controllers.Account.Edit
         private readonly ITokenService _tokenService;
         private readonly IUserInfo _userInfo;
         private readonly IValidation _validation;
-
-        private readonly string EMAIL;
-        private readonly string OLD_EMAIL_CODE;
-        private readonly string NEW_EMAIL_CODE;
 
         public EmailController(
             IApiEmailService emailService,
@@ -223,6 +223,7 @@ namespace webapi.Controllers.Account.Edit
         public async Task DbTransaction(UserModel user, string email)
         {
             using var transaction = await _dbContext.Database.BeginTransactionAsync();
+
             try
             {
                 user.email = email;
@@ -230,9 +231,8 @@ namespace webapi.Controllers.Account.Edit
 
                 await _notificationRepository.Add(new NotificationModel
                 {
-                    message_header = "Someone changed your account email/login",
-                    message = $"Someone changed your email at {DateTime.UtcNow}." +
-                    $"New email: '{email}'",
+                    message_header = NotificationMessage.AUTH_EMAIL_CHANGED_HEADER,
+                    message = NotificationMessage.AUTH_EMAIL_CHANGED_BODY,
                     priority = Priority.Security.ToString(),
                     send_time = DateTime.UtcNow,
                     is_checked = false,

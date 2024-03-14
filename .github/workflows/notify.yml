@@ -1,0 +1,32 @@
+name: Telegram Notification
+
+on:
+  push:
+    branches:
+      - main
+      - dev
+  pull_request:
+    branches:
+      - main
+      - dev
+
+jobs:
+  send_notification:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout Repository
+        uses: actions/checkout@v2
+
+      - name: Send Telegram Notification
+        uses: appleboy/telegram-action@v0.1.0
+        with:
+          to: ${{ secrets.AIR_CHAT_ID }}
+          token: ${{ secrets.TELEGRAM_TOKEN_BOT }}
+          message: |
+            New event:
+            - Event: ${{ github.event_name }}
+            - Repository: ${{ github.repository }}
+            - Branch: ${{ github.ref }}
+            - Commit SHA: ${{ github.sha }}
+            - Commit Message: ${{ github.event.head_commit.message }}
+            - User: ${{ github.actor }}

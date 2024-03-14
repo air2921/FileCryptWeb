@@ -44,8 +44,7 @@ namespace webapi.Controllers.Admin
 
                 if (linkId.HasValue)
                     link = await _linkRepository.GetById(linkId.Value);
-
-                if (!string.IsNullOrWhiteSpace(token))
+                else if (!string.IsNullOrWhiteSpace(token))
                     link = await _linkRepository.GetByFilter(query => query.Where(l => l.u_token.Equals(token)));
 
                 if (link is null)
@@ -82,22 +81,12 @@ namespace webapi.Controllers.Admin
         [ProducesResponseType(204)]
         [ProducesResponseType(typeof(object), 404)]
         [ProducesResponseType(typeof(object), 500)]
-        public async Task<IActionResult> DeleteLink([FromQuery] int? linkId, [FromQuery] string? token)
+        public async Task<IActionResult> DeleteLink([FromQuery] int linkId)
         {
             try
             {
-                if (linkId.HasValue)
-                {
-                    await _linkRepository.Delete(linkId.Value);
-                    return StatusCode(204);
-                }
-                if (!string.IsNullOrWhiteSpace(token))
-                {
-                    await _linkRepository.DeleteByFilter(query => query.Where(l => l.u_token.Equals(token)));
-                    return StatusCode(204);
-                }
-
-                return StatusCode(404, new { message = Message.NOT_FOUND });
+                await _linkRepository.Delete(linkId);
+                return StatusCode(204, new { message = Message.NOT_FOUND });
             }
             catch (EntityNotDeletedException ex)
             {

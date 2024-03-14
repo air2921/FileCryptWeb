@@ -33,7 +33,7 @@ namespace webapi.Models
         public virtual ICollection<FileModel>? Files { get; set; }
 
         [JsonIgnore]
-        public virtual TokenModel? Tokens { get; set; }
+        public virtual ICollection<TokenModel>? Tokens { get; set; }
 
         [JsonIgnore]
         public virtual ICollection<ApiModel>? API { get; set; }

@@ -70,6 +70,7 @@
     {
         public const string MAIN_DB = "PostgresConnection";
         public const string REDIS_DB = "RedisConnection";
+        public const string ELASTIC_SEARCH = "ElasticsearchConnection";
         public const string ENCRYPTION_KEY = "FileCryptKey";
         public const string EMAIL = "Email";
         public const string EMAIL_PASSWORD = "EmailPassword";

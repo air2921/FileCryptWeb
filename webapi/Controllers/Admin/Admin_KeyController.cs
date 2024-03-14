@@ -1,9 +1,7 @@
 ﻿using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
-using System.Reflection;
 using System.Security.Cryptography;
 using webapi.Attributes;
-using webapi.Cryptography;
 using webapi.Exceptions;
 using webapi.Helpers;
 using webapi.Interfaces;
@@ -22,30 +20,15 @@ namespace webapi.Controllers.Admin
     {
         #region fields and constructor
 
+        private readonly IApiAdminKeysService _keysService;
         private readonly IRepository<KeyModel> _keyRepository;
-        private readonly IRedisCache _redisCache;
-        private readonly IUserInfo _userInfo;
-        private readonly ICypherKey _decryptKey;
-        private readonly IConfiguration _configuration;
-        private readonly ILogger<Admin_KeyController> _logger;
-        private readonly byte[] secretKey;
 
         public Admin_KeyController(
-            IRepository<KeyModel> keyRepository,
-            IRedisCache redisCache,
-            IUserInfo userInfo,
-            IEnumerable<ICypherKey> cypherKeys,
-            IImplementationFinder implementationFinder,
-            IConfiguration configuration,
-            ILogger<Admin_KeyController> logger)
+            IApiAdminKeysService keysService,
+            IRepository<KeyModel> keyRepository)
         {
+            _keysService = keysService;
             _keyRepository = keyRepository;
-            _redisCache = redisCache;
-            _userInfo = userInfo;
-            _decryptKey = implementationFinder.GetImplementationByKey(cypherKeys, ImplementationKey.DECRYPT_KEY);
-            _configuration = configuration;
-            _logger = logger;
-            secretKey = Convert.FromBase64String(_configuration[App.ENCRYPTION_KEY]!);
         }
 
         #endregion
@@ -54,7 +37,7 @@ namespace webapi.Controllers.Admin
         [ProducesResponseType(typeof(HashSet<string>), 200)]
         [ProducesResponseType(typeof(object), 404)]
         [ProducesResponseType(typeof(object), 500)]
-        public async Task<IActionResult> AllKeys([FromRoute] int userId)
+        public async Task<IActionResult> GetAllKeys([FromRoute] int userId)
         {
             try
             {        
@@ -62,7 +45,7 @@ namespace webapi.Controllers.Admin
                 if (userKeys is null)
                     return StatusCode(404, new { message = Message.NOT_FOUND });
 
-                return StatusCode(200, new { keys = await GetKeys(userKeys) });
+                return StatusCode(200, new { keys = await _keysService.GetKeys(userKeys) });
             }
             catch (OperationCanceledException ex)
             {
@@ -74,6 +57,7 @@ namespace webapi.Controllers.Admin
         [XSRFProtection]
         [ProducesResponseType(typeof(object), 200)]
         [ProducesResponseType(typeof(object), 404)]
+        [ProducesResponseType(typeof(object), 500)]
         public async Task<IActionResult> RevokeReceivedKey([FromRoute] int userId)
         {
             try
@@ -82,19 +66,52 @@ namespace webapi.Controllers.Admin
                 if (keys is null)
                     return StatusCode(404, new { message = Message.NOT_FOUND });
 
-                await UpdateKeys(keys);
-                await UpdateCache(userId);
+                await _keysService.UpdateKey(keys);
+                await _keysService.UpdateCache(userId);
 
                 return StatusCode(200, new { message = Message.REMOVED });
             }
             catch (EntityNotUpdatedException ex)
             {
-                return StatusCode(404, new { message = ex.Message });
+                return StatusCode(500, new { message = ex.Message });
             }
+        }
+    }
+
+    public interface IApiAdminKeysService
+    {
+        public Task<HashSet<string>> GetKeys(KeyModel userKeys);
+        public Task UpdateKey(KeyModel keys);
+        public Task UpdateCache(int userId);
+    }
+
+    public class AdminKeysService : IApiAdminKeysService
+    {
+        private readonly ICypherKey _decryptKey;
+        private readonly IRepository<KeyModel> _keyRepository;
+        private readonly IRedisCache _redisCache;
+        private readonly IConfiguration _configuration;
+        private readonly ILogger<AdminKeysService> _logger;
+        private readonly byte[] secretKey;
+
+        public AdminKeysService(
+            IEnumerable<ICypherKey> cypherKeys,
+            IImplementationFinder implementationFinder,
+            IRepository<KeyModel> keyRepository,
+            IRedisCache redisCache,
+            IConfiguration configuration,
+            ILogger<AdminKeysService> logger)
+        {
+            _decryptKey = implementationFinder.GetImplementationByKey(cypherKeys, ImplementationKey.DECRYPT_KEY);
+            _keyRepository = keyRepository;
+            _redisCache = redisCache;
+            _configuration = configuration;
+            _logger = logger;
+            secretKey = Convert.FromBase64String(_configuration[App.ENCRYPTION_KEY]!);
         }
 
         [Helper]
-        private async Task<HashSet<string>> GetKeys(KeyModel userKeys)
+        public async Task<HashSet<string>> GetKeys(KeyModel userKeys)
         {
             HashSet<string> decryptedKeys = new();
 
@@ -116,7 +133,7 @@ namespace webapi.Controllers.Admin
                 }
                 catch (CryptographicException ex)
                 {
-                    _logger.LogCritical(ex.ToString(), nameof(Admin_KeyController));
+                    _logger.LogCritical(ex.ToString(), nameof(AdminKeysService));
                     continue;
                 }
             }
@@ -125,7 +142,7 @@ namespace webapi.Controllers.Admin
         }
 
         [Helper]
-        private async Task UpdateKeys(KeyModel keys)
+        public async Task UpdateKey(KeyModel keys)
         {
             try
             {
@@ -139,7 +156,7 @@ namespace webapi.Controllers.Admin
         }
 
         [Helper]
-        private async Task UpdateCache(int userId)
+        public async Task UpdateCache(int userId)
         {
             await _redisCache.DeleteCache("receivedKey#" + userId);
             await _redisCache.DeteteCacheByKeyPattern($"{ImmutableData.KEYS_PREFIX}{userId}");

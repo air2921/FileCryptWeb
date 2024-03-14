@@ -20,18 +20,15 @@ namespace webapi.Controllers.Admin
 
         private readonly IRepository<NotificationModel> _notificationRepository;
         private readonly IMapper _mapper;
-        private readonly ILogger<SendEmailController> _logger;
         private readonly IEmailSender _emailSender;
 
         public SendEmailController(
             IRepository<NotificationModel> notificationRepository,
             IMapper mapper,
-            ILogger<SendEmailController> logger,
             IEmailSender emailSender)
         {
             _notificationRepository = notificationRepository;
             _mapper = mapper;
-            _logger = logger;
             _emailSender = emailSender;
         }
 

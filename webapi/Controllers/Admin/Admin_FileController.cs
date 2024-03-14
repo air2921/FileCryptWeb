@@ -21,14 +21,12 @@ namespace webapi.Controllers.Admin
         private readonly IRepository<FileModel> _fileRepository;
         private readonly ISorting _sorting;
         private readonly IRedisCache _redisCache;
-        private readonly ILogger<Admin_FileController> _logger;
 
-        public Admin_FileController(IRepository<FileModel> fileRepository, ISorting sorting, IRedisCache redisCache, ILogger<Admin_FileController> logger)
+        public Admin_FileController(IRepository<FileModel> fileRepository, ISorting sorting, IRedisCache redisCache)
         {
             _fileRepository = fileRepository;
             _sorting = sorting;
             _redisCache = redisCache;
-            _logger = logger;
         }
 
         #endregion

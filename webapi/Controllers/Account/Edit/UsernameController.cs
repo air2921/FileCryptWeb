@@ -20,20 +20,20 @@ namespace webapi.Controllers.Account.Edit
         #region fields and constructor
 
         private readonly IRepository<UserModel> _userRepository;
-        private readonly IRedisCache _redisCache;
+        private readonly IApiUsernameService _usernameService;
         private readonly ILogger<UsernameController> _logger;
         private readonly IUserInfo _userInfo;
         private readonly ITokenService _tokenService;
 
         public UsernameController(
             IRepository<UserModel> userRepository,
-            IRedisCache redisCache,
+            IApiUsernameService usernameService,
             ILogger<UsernameController> logger,
             IUserInfo userInfo,
             ITokenService tokenService)
         {
             _userRepository = userRepository;
-            _redisCache = redisCache;
+            _usernameService = usernameService;
             _logger = logger;
             _userInfo = userInfo;
             _tokenService = tokenService;
@@ -52,16 +52,16 @@ namespace webapi.Controllers.Account.Edit
         {
             try
             {
-                if (!Regex.IsMatch(username, Validation.Username))
+                if (!_usernameService.ValidateUsername(username))
                     return StatusCode(400, new { message = Message.INVALID_FORMAT });
 
                 var user = await _userRepository.GetById(_userInfo.UserId);
                 if (user is null)
                     return StatusCode(404, new { message = Message.NOT_FOUND });
 
-                await DbUpdate(user, username);
+                await _usernameService.DbUpdate(user, username);
                 await _tokenService.UpdateJwtToken();
-                await ClearData();
+                await _usernameService.ClearData(_userInfo.UserId);
 
                 return StatusCode(200, new { message = Message.UPDATED });
             }
@@ -79,9 +79,30 @@ namespace webapi.Controllers.Account.Edit
                 return StatusCode(206, new { message = ex.Message });
             }
         }
+    }
+
+    public interface IApiUsernameService
+    {
+        public Task DbUpdate(UserModel user, string username);
+        public Task ClearData(int userId);
+        public bool ValidateUsername(string username);
+    }
+
+    public class UsernameService : IApiUsernameService
+    {
+        private readonly IRepository<UserModel> _userRepository;
+        private readonly ITokenService _tokenService;
+        private readonly IRedisCache _redisCache;
+
+        public UsernameService(IRepository<UserModel> userRepository, ITokenService tokenService, IRedisCache redisCache)
+        {
+            _userRepository = userRepository;
+            _tokenService = tokenService;
+            _redisCache = redisCache;
+        }
 
         [Helper]
-        private async Task DbUpdate(UserModel user, string username)
+        public async Task DbUpdate(UserModel user, string username)
         {
             try
             {
@@ -95,10 +116,16 @@ namespace webapi.Controllers.Account.Edit
         }
 
         [Helper]
-        private async Task ClearData()
+        public bool ValidateUsername(string username)
+        {
+            return Regex.IsMatch(username, Validation.Username);
+        }
+
+        [Helper]
+        public async Task ClearData(int userId)
         {
             _tokenService.DeleteUserDataSession();
-            await _redisCache.DeteteCacheByKeyPattern($"{ImmutableData.USER_DATA_PREFIX}{_userInfo.UserId}");
+            await _redisCache.DeteteCacheByKeyPattern($"{ImmutableData.USER_DATA_PREFIX}{userId}");
         }
     }
 }
