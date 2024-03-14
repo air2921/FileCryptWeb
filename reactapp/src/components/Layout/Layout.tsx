@@ -5,7 +5,7 @@ import cookie from 'react-cookies'
 import AxiosRequest from '../../utils/api/AxiosRequest';
 import './Layout.css'
 import useResize from '../UseResize/useResize';
-import useAuth from '../UseAuth/useAuth';
+import useAuth from '../UseAuth/UseAuth';
 
 function Layout() {
     const [username, setUsername] = useState(cookie.load('auth_username'));
