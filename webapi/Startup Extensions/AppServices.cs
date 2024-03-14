@@ -23,6 +23,7 @@ namespace webapi
                 .EnableDetailedErrors(true);
             });
 
+            services.AddAutoMapper(typeof(Startup));
             services.AddControllers();
             services.AddLogging();
             services.AddEndpointsApiExplorer();
