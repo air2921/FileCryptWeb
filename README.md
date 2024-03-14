@@ -6,14 +6,15 @@
 
 All values must be added to the secret store. The expected configuration settings are shown below:
 
-| Variable           | Expected Key                           | Expected Value Format                                                              |
-|--------------------|--------------------------------------- |------------------------------------------------------------------------------------|
-| secretKey          | "SecretKey"                            | String 128 bits long                                                               |
-| emailPassword      | "EmailPassword"                        | Any                                                                                |
-| emailAdress        | "Email"                                | "FileCryptWeb@email.com"                                                           |
-| fileCryptKey       | "FileCryptKey"                         | 256-bit byte array encoded in Base64String                                         |
-| redisServer        | "ConnectionStrings:RedisConnection"    | "localhost:6379,abortConnect=false"                                                |
-| postgres           | "ConnectionStrings:PostgresConnection" | "Host=YourHost;Port=5432;Username=Username;Password=YourPassword;Database=YourDB;" |
+| Variable         | Expected Key                                 | Expected Value Format                                                              |
+|------------------|----------------------------------------------|------------------------------------------------------------------------------------|
+| Secret Key       | "SecretKey"                                  | String 128 bits long                                                               |
+| E-Password       | "EmailPassword"                              | Any                                                                                |
+| E-Address        | "Email"                                      | "FileCryptWeb@email.com"                                                           |
+| App Key          | "FileCryptKey"                               | 256-bit byte array encoded in Base64String                                         |
+| Redis            | "ConnectionStrings:RedisConnection"          | "localhost:6379,abortConnect=false"                                                |
+| Elastic          | "ConnectionStrings:ElasticsearchConnection"  | "http://localhost:9200"                                                            |
+| PostgreSQL       | "ConnectionStrings:PostgresConnection"       | "Host=YourHost;Port=5432;Username=Username;Password=YourPassword;Database=YourDB;" |
 
 ## Additional setup
 
