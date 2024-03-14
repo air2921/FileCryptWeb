@@ -40,8 +40,7 @@ namespace webapi.Controllers.Base
         public CryptographyHelper(
             IFileService fileService,
             IRepository<KeyModel> keyRepository,
-            IEnumerable<ICypherKey> cypherKeys,
-            IImplementationFinder implementationFinder,
+            [FromKeyedServices("Decrypt")] ICypherKey decryptKey,
             ILogger<CryptographyHelper> logger,
             IConfiguration configuration,
             IValidation validation,
@@ -51,7 +50,7 @@ namespace webapi.Controllers.Base
         {
             _fileService = fileService;
             _keyRepository = keyRepository;
-            _decryptKey = implementationFinder.GetImplementationByKey(cypherKeys, ImplementationKey.DECRYPT_KEY);
+            _decryptKey = decryptKey;
             _logger = logger;
             _configuration = configuration;
             _validation = validation;

@@ -41,8 +41,8 @@ namespace webapi.Controllers.Core
             IRepository<KeyStorageItemModel> storageItemRepository,
             IMapper mapper,
             IRedisCache redisCache,
-            IEnumerable<ICypherKey> cypherKeys,
-            IImplementationFinder implementationFinder,
+            ICypherKey decryptKey,
+            ICypherKey encryptKey,
             IPasswordManager passwordManager,
             IValidation validation,
             IUserInfo userInfo,
@@ -52,8 +52,8 @@ namespace webapi.Controllers.Core
             _storageItemRepository = storageItemRepository;
             _mapper = mapper;
             _redisCache = redisCache;
-            _decryptKey = implementationFinder.GetImplementationByKey(cypherKeys, ImplementationKey.DECRYPT_KEY);
-            _encryptKey = implementationFinder.GetImplementationByKey(cypherKeys, ImplementationKey.ENCRYPT_KEY);
+            _decryptKey = decryptKey;
+            _encryptKey = encryptKey;
             _passwordManager = passwordManager;
             _validation = validation;
             _userInfo = userInfo;

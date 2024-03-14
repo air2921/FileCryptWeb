@@ -40,8 +40,8 @@ namespace webapi.Controllers.Core
             IRedisKeys redisKeys,
             IUserInfo userInfo,
             IValidation validation,
-            IEnumerable<ICypherKey> cypherKeys,
-            IImplementationFinder implementationFinder)
+            [FromKeyedServices("Encrypt")] ICypherKey encrypt,
+            [FromKeyedServices("Decrypt")] ICypherKey decrypt)
         {
             _keyRepository = keyRepository;
             _configuration = configuration;
@@ -50,8 +50,8 @@ namespace webapi.Controllers.Core
             _redisKeys = redisKeys;
             _userInfo = userInfo;
             _validation = validation;
-            _decryptKey = implementationFinder.GetImplementationByKey(cypherKeys, ImplementationKey.DECRYPT_KEY);
-            _encryptKey = implementationFinder.GetImplementationByKey(cypherKeys, ImplementationKey.ENCRYPT_KEY);
+            _decryptKey = decrypt;
+            _encryptKey = encrypt;
             secretKey = Convert.FromBase64String(_configuration[App.ENCRYPTION_KEY]!);
         }
 
@@ -88,7 +88,7 @@ namespace webapi.Controllers.Core
             try
             {
                 SetNewKey(ref key, auto);
-                await UpdateKey(key!, keys => keys.private_key);
+                await UpdateKey(key!, FileType.Private);
 
                 await ClearData(_userInfo.UserId, _redisKeys.PrivateKey);
 
@@ -109,7 +109,7 @@ namespace webapi.Controllers.Core
             try
             {
                 SetNewKey(ref key, auto);
-                await UpdateKey(key!, keys => keys.internal_key);
+                await UpdateKey(key!, FileType.Internal);
 
                 await ClearData(_userInfo.UserId, _redisKeys.InternalKey);
 
@@ -194,15 +194,18 @@ namespace webapi.Controllers.Core
         }
 
         [Helper]
-        private async Task UpdateKey(string key, Func<KeyModel, string> fieldSelector)
+        private async Task UpdateKey(string key, FileType type)
         {
             try
             {
                 var keys = await _keyRepository.GetByFilter(query => query.Where(k => k.user_id.Equals(_userInfo.UserId)));
 
-                string fieldValue = fieldSelector(keys);
-
-                fieldValue = await _encryptKey.CypherKeyAsync(key!, secretKey);
+                if (type.Equals(FileType.Private))
+                    keys.private_key = await _encryptKey.CypherKeyAsync(key!, secretKey);
+                else if (type.Equals(FileType.Internal))
+                    keys.internal_key = await _encryptKey.CypherKeyAsync(key!, secretKey);
+                else
+                    throw new EntityNotUpdatedException();
 
                 await _keyRepository.Update(keys);
             }

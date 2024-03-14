@@ -87,7 +87,7 @@ namespace webapi.Controllers.Admin
 
     public class AdminKeysService : IApiAdminKeysService
     {
-        private readonly ICypherKey _decryptKey;
+        private readonly ICypherKey _decrypt;
         private readonly IRepository<KeyModel> _keyRepository;
         private readonly IRedisCache _redisCache;
         private readonly IConfiguration _configuration;
@@ -95,14 +95,13 @@ namespace webapi.Controllers.Admin
         private readonly byte[] secretKey;
 
         public AdminKeysService(
-            IEnumerable<ICypherKey> cypherKeys,
-            IImplementationFinder implementationFinder,
+            [FromKeyedServices("Decrypt")] ICypherKey decrypt,
             IRepository<KeyModel> keyRepository,
             IRedisCache redisCache,
             IConfiguration configuration,
             ILogger<AdminKeysService> logger)
         {
-            _decryptKey = implementationFinder.GetImplementationByKey(cypherKeys, ImplementationKey.DECRYPT_KEY);
+            _decrypt = decrypt;
             _keyRepository = keyRepository;
             _redisCache = redisCache;
             _configuration = configuration;
@@ -129,7 +128,7 @@ namespace webapi.Controllers.Admin
                     if (encryptedKey is null)
                         continue;
 
-                    decryptedKeys.Add(await _decryptKey.CypherKeyAsync(encryptedKey, secretKey));
+                    decryptedKeys.Add(await _decrypt.CypherKeyAsync(encryptedKey, secretKey));
                 }
                 catch (CryptographicException ex)
                 {

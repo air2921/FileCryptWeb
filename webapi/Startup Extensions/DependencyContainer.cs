@@ -69,8 +69,8 @@ namespace webapi
             services.AddTransient<IRedisDbContext, RedisDbContext>();
             services.AddTransient<ICypher, Cypher>();
             services.AddTransient<ITokenService, TokenService>();
-            services.AddTransient<ICypherKey, EncryptKey>();
-            services.AddTransient<ICypherKey, DecryptKey>();
+            services.AddKeyedTransient<ICypherKey, EncryptKey>("Encrypt");
+            services.AddKeyedTransient<ICypherKey, DecryptKey>("Decrypt");
             services.AddTransient<IEmailSender, EmailSender>();
             services.AddTransient<ISmtpClient, SmtpClientWrapper>();
         }
