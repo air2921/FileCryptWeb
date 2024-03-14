@@ -79,7 +79,11 @@ namespace webapi.Controllers.Account
 
                 int code = _generate.GenerateSixDigitCode();
                 await _sessionService.SendMessage(user.username, user.email, code);
-                await _sessionService.SetData($"{USER_OBJECT}{user.email}", new UserContextObject { UserId = user.id, Code = code.ToString() });
+                await _sessionService.SetData($"{USER_OBJECT}{user.email}", new UserContextObject 
+                {
+                    UserId = user.id,   
+                    Code = _passwordManager.HashingPassword(code.ToString())
+                });
 
                 return StatusCode(200, new { message = Message.EMAIL_SENT, confirm = true });
             }
