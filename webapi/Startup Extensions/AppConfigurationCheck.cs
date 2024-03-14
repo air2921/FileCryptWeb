@@ -36,25 +36,25 @@ namespace webapi
 
 #if DEBUG
 
-            Task.Run(async () =>
-            {
-                var clam = new ClamClient("localhost", 3310);
-                bool isConnected = await clam.TryPingAsync();
+            //Task.Run(async () =>
+            //{
+            //    var clam = new ClamClient("localhost", 3310);
+            //    bool isConnected = await clam.TryPingAsync();
 
-                if (!isConnected || InvalidConfiguration)
-                {
-                    Console.WriteLine("Invalid Configuration:\n\n" +
-                        $"Secret Key is valid ?: {!string.IsNullOrWhiteSpace(secretKey)}\nSecretKey Value: {secretKey}\n\n" +
-                        $"Email Password is valid ?: {!string.IsNullOrWhiteSpace(emailPassword)}\nEmail Password Value: {emailPassword}\n\n" +
-                        $"Email Address is valid ?: {!string.IsNullOrWhiteSpace(emailAdress) && Regex.IsMatch(emailAdress, emailPattern)}\nEmail Address Value: {emailAdress}\n\n" +
-                        $"FileCrypt Key is valid ?: {!string.IsNullOrWhiteSpace(FileCryptKey) && Regex.IsMatch(FileCryptKey, keyPattern)}\nFileCrypt Key Value: {FileCryptKey}\n\n" +
-                        $"Redis Server is valid ?: {!string.IsNullOrWhiteSpace(redisServer)}\nRedis Server Value: {redisServer}\n\n" +
-                        $"PostgreSQL Connection String is valid ?: {!string.IsNullOrWhiteSpace(postgres)}\nPostgreSQL Connection String Value: {postgres}\n");
+            //    if (!isConnected || InvalidConfiguration)
+            //    {
+            //        Console.WriteLine("Invalid Configuration:\n\n" +
+            //            $"Secret Key is valid ?: {!string.IsNullOrWhiteSpace(secretKey)}\nSecretKey Value: {secretKey}\n\n" +
+            //            $"Email Password is valid ?: {!string.IsNullOrWhiteSpace(emailPassword)}\nEmail Password Value: {emailPassword}\n\n" +
+            //            $"Email Address is valid ?: {!string.IsNullOrWhiteSpace(emailAdress) && Regex.IsMatch(emailAdress, emailPattern)}\nEmail Address Value: {emailAdress}\n\n" +
+            //            $"FileCrypt Key is valid ?: {!string.IsNullOrWhiteSpace(FileCryptKey) && Regex.IsMatch(FileCryptKey, keyPattern)}\nFileCrypt Key Value: {FileCryptKey}\n\n" +
+            //            $"Redis Server is valid ?: {!string.IsNullOrWhiteSpace(redisServer)}\nRedis Server Value: {redisServer}\n\n" +
+            //            $"PostgreSQL Connection String is valid ?: {!string.IsNullOrWhiteSpace(postgres)}\nPostgreSQL Connection String Value: {postgres}\n");
 
-                    throw new InvalidConfigurationException();
-                }
+            //        throw new InvalidConfigurationException();
+            //    }
 
-            }).GetAwaiter().GetResult();
+            //}).GetAwaiter().GetResult();
 
 #endif
 

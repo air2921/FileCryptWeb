@@ -133,7 +133,7 @@ namespace webapi.Controllers.Account
         {
             try
             {
-                await _sessionService.RevokeToken(_userInfo.UserId);
+                await _sessionService.RevokeToken(HttpContext);
                 _tokenService.DeleteTokens();
 
                 return StatusCode(200);
@@ -161,7 +161,7 @@ namespace webapi.Controllers.Account
     public interface IApiSessionService
     {
         public Task<IActionResult> CreateTokens(UserModel user, HttpContext context);
-        public Task RevokeToken(int userId);
+        public Task RevokeToken(HttpContext content);
         public Task SendMessage(string username, string email, int code);
         public Task SetData(string key, UserContextObject user);
         public Task<UserContextObject> GetData(string key);
@@ -219,21 +219,23 @@ namespace webapi.Controllers.Account
         }
 
         [Helper]
-        private async Task DbTransaction(TokenModel tokenModel, UserModel user, string refreshToken)
+        private async Task DbTransaction(UserModel user, string refreshToken)
         {
             using var transaction = await _dbContext.Database.BeginTransactionAsync();
 
             try
             {
-                tokenModel.refresh_token = _tokenService.HashingToken(refreshToken);
-                tokenModel.expiry_date = DateTime.UtcNow + ImmutableData.RefreshExpiry;
-
-                await _tokenRepository.Update(tokenModel);
+                await _tokenRepository.Add(new TokenModel
+                {
+                    user_id = user.id,
+                    refresh_token = _tokenService.HashingToken(refreshToken),
+                    expiry_date = DateTime.UtcNow + ImmutableData.RefreshExpiry
+                });
 
                 await _notificationRepository.Add(new NotificationModel
                 {
-                    message_header = "Someone has accessed your account",
-                    message = $"Someone signed in to your account {user.username}#{user.id} at {DateTime.UtcNow}.",
+                    message_header = NotificationMessage.AUTH_NEW_LOGIN_HEADER,
+                    message = NotificationMessage.AUTH_NEW_LOGIN_BODY,
                     priority = Priority.Security.ToString(),
                     send_time = DateTime.UtcNow,
                     is_checked = false,
@@ -247,11 +249,6 @@ namespace webapi.Controllers.Account
                 await transaction.RollbackAsync();
                 throw;
             }
-            catch (EntityNotUpdatedException)
-            {
-                await transaction.RollbackAsync();
-                throw;
-            }
         }
 
         [Helper]
@@ -261,8 +258,7 @@ namespace webapi.Controllers.Account
             try
             {
                 string refreshToken = _tokenService.GenerateRefreshToken();
-                var tokenModel = await _tokenRepository.GetByFilter(query => query.Where(t => t.user_id.Equals(user.id)));
-                await DbTransaction(tokenModel, user, refreshToken);
+                await DbTransaction(user, refreshToken);
                 CookieAppend(user, context, refreshToken);
 
                 await _redisCache.DeteteCacheByKeyPattern($"{ImmutableData.NOTIFICATIONS_PREFIX}{user.id}");
@@ -273,28 +269,21 @@ namespace webapi.Controllers.Account
             {
                 return StatusCode(500, new { message = ex.Message });
             }
-            catch (EntityNotUpdatedException ex)
-            {
-                return StatusCode(500, new { message = ex.Message });
-            }
-            catch (OperationCanceledException ex)
-            {
-                return StatusCode(500, new { message = ex.Message });
-            }
         }
 
         [Helper]
-        public async Task RevokeToken(int userId)
+        public async Task RevokeToken(HttpContext context)
         {
             try
             {
-                var tokenModel = await _tokenRepository.GetByFilter(query => query.Where(t => t.user_id.Equals(userId)));
-                tokenModel.refresh_token = Guid.NewGuid().ToString();
-                tokenModel.expiry_date = DateTime.UtcNow.AddYears(-100);
+                var refresh = context.Request.Cookies[ImmutableData.REFRESH_COOKIE_KEY];
+                if (refresh is null)
+                    return;
 
-                await _tokenRepository.Update(tokenModel);
+                var token = await _tokenRepository.DeleteByFilter(query => query
+                    .Where(t => t.refresh_token.Equals(_tokenService.HashingToken(refresh))));
             }
-            catch (EntityNotUpdatedException)
+            catch (EntityNotDeletedException)
             {
                 throw;
             }

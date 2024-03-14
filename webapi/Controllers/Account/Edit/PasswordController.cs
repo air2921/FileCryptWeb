@@ -121,6 +121,7 @@ namespace webapi.Controllers.Account.Edit
         public async Task DbTransaction(UserModel user, string password)
         {
             using var transaction = await _dbContext.Database.BeginTransactionAsync();
+
             try
             {
                 user.password = _passwordManager.HashingPassword(password);
@@ -128,8 +129,8 @@ namespace webapi.Controllers.Account.Edit
 
                 await _notificationRepository.Add(new NotificationModel
                 {
-                    message_header = "Someone changed your password",
-                    message = $"Someone changed your password at {DateTime.UtcNow}.",
+                    message_header = NotificationMessage.AUTH_PASSWORD_CHANGED_HEADER,
+                    message = NotificationMessage.AUTH_PASSWORD_CHANGED_BODY,
                     priority = Priority.Security.ToString(),
                     send_time = DateTime.UtcNow,
                     is_checked = false,

@@ -2,6 +2,7 @@
 using Newtonsoft.Json.Linq;
 using System.Globalization;
 using webapi.Interfaces.Services;
+using webapi.Models;
 
 namespace webapi.Helpers
 {
@@ -97,6 +98,42 @@ namespace webapi.Helpers
                 _logger.LogCritical(ex.ToString());
                 throw new ArgumentException("Invalid file");
             }
+        }
+
+        public void AddSecureCollection(ref HashSet<FileMimeModel> mimeModels, HashSet<string> existingMimes)
+        {
+            var baseMimes = new string[]
+            {
+                "image/jpeg", "image/png", "image/gif", "image/bmp", "image/webp", "image/svg+xml", "application/pdf",
+                "application/msword", "application/vnd.openxmlformats-officedocument.wordprocessingml.document",
+                "application/vnd.ms-powerpoint", "application/vnd.openxmlformats-officedocument.presentationml.presentation",
+                "application/vnd.ms-excel", "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet", "audio/mpeg",
+                "audio/wav", "audio/mp3", "video/mp4", "video/mpeg", "video/webm", "video/mkv", "video/x-matroska", "application/zip",
+                "application/x-rar-compressed", "application/x-tar", "application/x-7z-compressed", "text/plain",
+                "text/html", "text/css", "text/xml", "application/json", "application/rtf", "text/richtext",
+                "font/woff", "font/woff2", "font/otf", "font/ttf"
+            };
+
+            foreach (string mime in baseMimes)
+                mimeModels.Add(new FileMimeModel { mime_name = mime });
+
+            foreach (string existingMime in existingMimes)
+                mimeModels.Add(new FileMimeModel { mime_name = existingMime });
+        }
+
+        public void AddFullCollection(ref HashSet<FileMimeModel> mimeModels, HashSet<string> existingMimes)
+        {
+            var dataFiles = GetCsvFiles();
+
+            var allMimes = new HashSet<string>();
+
+            foreach (var dataFile in dataFiles)
+                allMimes.UnionWith(GetMimesFromCsvFile(dataFile));
+
+            allMimes.UnionWith(existingMimes);
+
+            foreach (var newMime in allMimes)
+                mimeModels.Add(new FileMimeModel { mime_name = newMime });
         }
     }
 }
