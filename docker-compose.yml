@@ -1,0 +1,70 @@
+version: '3.4'
+
+networks:
+  webapi:
+    driver: bridge
+
+services:
+  webapi:
+    container_name: webapi-dev
+    image: ${DOCKER_REGISTRY-}webapi
+    build:
+      context: .
+      dockerfile: webapi/Dockerfile
+    ports:
+      - "8080:8080"
+    networks:
+      - "webapi"
+    environment:
+      - ASPNETCORE_ENVIRONMENT=Development
+      - SECRETS_PATH=/app/secrets.json
+    depends_on:
+      - postgres
+      - redis
+      - clamav
+      # - elasticsearch
+
+  postgres:
+    container_name: postgres
+    image: postgres:latest
+    ports:
+      - "2619:2619"
+    networks:
+      - "webapi"
+    restart: always
+    environment:
+      POSTGRES_USER: postgres
+      POSTGRES_PASSWORD: air23663
+      POSTGRES_DB: filecrypt
+
+  redis:
+    container_name: redis
+    image: redis:latest
+    ports:
+      - "6379:6379"
+    networks:
+      - "webapi"
+
+  clamav:
+    container_name: clamav
+    image: mkodockx/docker-clamav:alpine
+    environment:
+      CLAMD_CONF_MaxFileSize: 250M
+      CLAMD_CONF_MaxScanSize: 250M
+      CLAMD_CONF_StreamMaxLength: 250M
+    restart: always
+    ports:
+      - "3310:3310"
+    networks:
+      - "webapi"
+
+  # elasticsearch:
+  #   image: docker.elastic.co/elasticsearch/elasticsearch:6.4.1
+  #   restart: always
+  #   container_name: elasticsearch
+  #   environment:
+  #     - cluster.name=docker-cluster
+  #     - bootstrap.memory_lock=true
+  #     - "ES_JAVA_OPTS=-Xms512m -Xmx512m"
+  #   ports:
+  #     - 9200:9200
