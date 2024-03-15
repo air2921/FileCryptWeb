@@ -17,25 +17,26 @@ services:
       - "webapi"
     environment:
       - ASPNETCORE_ENVIRONMENT=Development
-      - SECRETS_PATH=/app/secrets.json
     depends_on:
-      - postgres
+      - postgres_db
       - redis
       - clamav
       # - elasticsearch
 
-  postgres:
+  postgres_db:
     container_name: postgres
     image: postgres:latest
     ports:
-      - "2619:2619"
+      - "5432:5432"
     networks:
       - "webapi"
     restart: always
     environment:
       POSTGRES_USER: postgres
-      POSTGRES_PASSWORD: air23663
+      POSTGRES_PASSWORD: 123
       POSTGRES_DB: filecrypt
+    volumes:
+      - postgres-data:/var/lib/postgresql/data
 
   redis:
     container_name: redis
@@ -68,3 +69,6 @@ services:
   #     - "ES_JAVA_OPTS=-Xms512m -Xmx512m"
   #   ports:
   #     - 9200:9200
+
+volumes:
+  postgres-data:
