@@ -30,7 +30,7 @@ jobs:
         dotnet-version: 8.*
 
     - name: Restore dependencies
-      run: dotnet restore
+      run: dotnet restore tests/tests.csproj
 
     - name: Run tests
       run: dotnet test --logger trx --results-directory TestResults
