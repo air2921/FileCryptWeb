@@ -22,7 +22,6 @@
 #COPY --from=publish /app/publish .
 #ENTRYPOINT ["dotnet", "webapi.dll"]
 
-
 FROM mcr.microsoft.com/dotnet/aspnet:8.0 AS base
 USER app
 WORKDIR /app
@@ -32,14 +31,15 @@ EXPOSE 8081
 FROM mcr.microsoft.com/dotnet/sdk:8.0 AS build
 ARG BUILD_CONFIGURATION=Release
 WORKDIR /src
-
+COPY ["webapi/webapi.csproj", "webapi/"]
+RUN dotnet restore "./webapi/webapi.csproj"
 COPY . .
-RUN dotnet restore
-RUN dotnet build -c $BUILD_CONFIGURATION -o /app/build
+WORKDIR "/src/webapi"
+RUN dotnet publish ../FileCryptWeb.sln -c Release -o out
 
 FROM build AS publish
 ARG BUILD_CONFIGURATION=Release
-RUN dotnet publish -c $BUILD_CONFIGURATION -o /app/publish /p:UseAppHost=false
+RUN dotnet publish "./webapi.csproj" -c $BUILD_CONFIGURATION -o /app/publish /p:UseAppHost=false
 
 FROM base AS final
 WORKDIR /app
