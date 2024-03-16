@@ -59,4 +59,4 @@ C:\Users\User\source\repos\github\FileCryptWeb>docker-compose down
 
 **Мониторий логи можно через `Kibana`**
 
-*Он доступен по пути: `http://localhost:5601/app/home`* в вашем браузере*
+*Он доступен по пути: `http://localhost:5601/app/home`* в вашем браузере
