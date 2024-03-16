@@ -12,8 +12,11 @@ namespace webapi
     {
         public static void Register(IServiceCollection services)
         {
-            IConfiguration configuration = new ConfigurationBuilder()
-                .AddUserSecrets<AppServices>()
+            var configuration = new ConfigurationBuilder()
+                .AddUserSecrets<Program>()
+                .SetBasePath(Directory.GetCurrentDirectory())
+                .AddJsonFile("appsettings.json", false, true)
+                .AddEnvironmentVariables()
                 .Build();
 
             services.AddDbContext<FileCryptDbContext>(options =>

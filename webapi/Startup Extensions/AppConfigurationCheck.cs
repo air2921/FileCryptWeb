@@ -1,5 +1,4 @@
-﻿using nClam;
-using System.Text.RegularExpressions;
+﻿using System.Text.RegularExpressions;
 using webapi.Exceptions;
 using webapi.Helpers;
 
@@ -14,8 +13,11 @@ namespace webapi
 
         public static void ConfigurationCheck()
         {
-            IConfiguration configuration = new ConfigurationBuilder()
-                .AddUserSecrets<AppConfigurationCheck>()
+            var configuration = new ConfigurationBuilder()
+                .AddUserSecrets<Program>()
+                .SetBasePath(Directory.GetCurrentDirectory())
+                .AddJsonFile("appsettings.json", false, true)
+                .AddEnvironmentVariables()
                 .Build();
 
             string keyPattern = Validation.EncryptionKey;

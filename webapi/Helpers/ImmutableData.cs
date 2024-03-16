@@ -68,13 +68,13 @@
 
     public static class App
     {
-        public const string MAIN_DB = "PostgresConnection";
-        public const string REDIS_DB = "RedisConnection";
-        public const string ELASTIC_SEARCH = "ElasticsearchConnection";
-        public const string ENCRYPTION_KEY = "FileCryptKey";
+        public const string MAIN_DB = "Postgres";
+        public const string REDIS_DB = "Redis";
+        public const string ELASTIC_SEARCH = "Elasticsearch";
+        public const string ENCRYPTION_KEY = "AppKey";
         public const string EMAIL = "Email";
         public const string EMAIL_PASSWORD = "EmailPassword";
-        public const string SECRET_KEY = "SecretKey";
+        public const string SECRET_KEY = "JwtKey";
         public const string REACT_LAUNCH_JSON_PATH = "C:\\Users\\Stewi\\source\\repos\\FileCryptWeb\\reactapp\\.vscode\\launch.json";
     }
 }
