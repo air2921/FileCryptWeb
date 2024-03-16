@@ -34,8 +34,8 @@ WORKDIR /src
 COPY ["webapi/webapi.csproj", "webapi/"]
 RUN dotnet restore "./webapi/webapi.csproj"
 COPY . .
-WORKDIR "/src/webapi"
-RUN dotnet publish ../FileCryptWeb.sln -c Release -o out
+WORKDIR "/src"
+RUN dotnet publish ./FileCryptWeb.sln -c Release -o out
 
 FROM build AS publish
 ARG BUILD_CONFIGURATION=Release
