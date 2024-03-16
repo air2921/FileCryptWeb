@@ -33,18 +33,9 @@ namespace webapi
             app.UseSession();
 
             if (env.IsProduction())
-            {
                 app.UseCors("AllowSpecificOrigin");
-            }
             else
-            {
-                app.UseCors(builder =>
-                {
-                    builder.AllowAnyOrigin()
-                           .AllowAnyMethod()
-                           .AllowAnyHeader();
-                });
-            }
+                app.UseCors("AllowAnyOrigin");
 
             app.UseFreeze();
             app.UseBearer();
