@@ -52,7 +52,7 @@ namespace webapi.Controllers.Core
         #endregion
 
         [HttpPost("new/{receiverId}")]
-        [XSRFProtection]
+        [ValidateAntiForgeryToken]
         [ProducesResponseType(typeof(object), 201)]
         [ProducesResponseType(typeof(object), 404)]
         [ProducesResponseType(typeof(object), 409)]
@@ -87,7 +87,7 @@ namespace webapi.Controllers.Core
         }
 
         [HttpPut("accept/{offerId}")]
-        [XSRFProtection]
+        [ValidateAntiForgeryToken]
         [ProducesResponseType(typeof(object), 200)]
         [ProducesResponseType(typeof(object), 404)]
         [ProducesResponseType(typeof(object), 409)]
@@ -180,7 +180,7 @@ namespace webapi.Controllers.Core
         }
 
         [HttpDelete("{offerId}")]
-        [XSRFProtection]
+        [ValidateAntiForgeryToken]
         [ProducesResponseType(204)]
         [ProducesResponseType(typeof(object), 404)]
         public async Task<IActionResult> DeleteOneOffer([FromRoute] int offerId)

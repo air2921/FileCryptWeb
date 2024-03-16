@@ -54,7 +54,7 @@ namespace webapi.Controllers.Account
         #endregion
 
         [HttpPost("login")]
-        [XSRFProtection]
+        [ValidateAntiForgeryToken]
         [ProducesResponseType(typeof(object), 200)]
         [ProducesResponseType(typeof(object), 404)]
         [ProducesResponseType(typeof(object), 403)]
@@ -98,7 +98,7 @@ namespace webapi.Controllers.Account
         }
 
         [HttpPost("verify/2fa")]
-        [XSRFProtection]
+        [ValidateAntiForgeryToken]
         [ProducesResponseType(200)]
         [ProducesResponseType(typeof(object), 422)]
         [ProducesResponseType(typeof(object), 404)]
@@ -129,7 +129,7 @@ namespace webapi.Controllers.Account
 
         [HttpPut("logout")]
         [Authorize]
-        [XSRFProtection]
+        [ValidateAntiForgeryToken]
         [ProducesResponseType(200)]
         [ProducesResponseType(404)]
         [ProducesResponseType(500)]

@@ -69,7 +69,7 @@ namespace webapi.Controllers.Admin
         }
 
         [HttpDelete("{fileId}")]
-        [XSRFProtection]
+        [ValidateAntiForgeryToken]
         [ProducesResponseType(204)]
         [ProducesResponseType(typeof(object), 500)]
         public async Task<IActionResult> DeleteFile([FromRoute] int fileId)
@@ -89,7 +89,7 @@ namespace webapi.Controllers.Admin
         }
 
         [HttpDelete("many")]
-        [XSRFProtection]
+        [ValidateAntiForgeryToken]
         [ProducesResponseType(204)]
         [ProducesResponseType(typeof(object), 200)]
         public async Task<IActionResult> DeleteRangeFiles([FromBody] IEnumerable<int> identifiers)

@@ -70,7 +70,7 @@ namespace webapi.Controllers.Admin
         }
 
         [HttpDelete("{offerId}")]
-        [XSRFProtection]
+        [ValidateAntiForgeryToken]
         [ProducesResponseType(204)]
         [ProducesResponseType(typeof(object), 500)]
         public async Task<IActionResult> DeleteOffer([FromRoute] int offerId)
@@ -93,7 +93,7 @@ namespace webapi.Controllers.Admin
         }
 
         [HttpDelete("many")]
-        [XSRFProtection]
+        [ValidateAntiForgeryToken]
         [ProducesResponseType(204)]
         [ProducesResponseType(typeof(object), 500)]
         public async Task<IActionResult> DeleteRangeOffers([FromBody] IEnumerable<int> identifiers)

@@ -64,7 +64,7 @@ namespace webapi.Controllers.Core
         #endregion
 
         [HttpPost("storage")]
-        [XSRFProtection]
+        [ValidateAntiForgeryToken]
         [ProducesResponseType(201)]
         [ProducesResponseType(typeof(object), 500)]
         public async Task<IActionResult> AddStorage([FromBody] StorageDTO storageDTO)
@@ -88,7 +88,7 @@ namespace webapi.Controllers.Core
         }
 
         [HttpPut("storage/{storageId}")]
-        [XSRFProtection]
+        [ValidateAntiForgeryToken]
         [ProducesResponseType(typeof(object), 200)]
         [ProducesResponseType(typeof(object), 403)]
         [ProducesResponseType(typeof(object), 404)]
@@ -123,7 +123,7 @@ namespace webapi.Controllers.Core
         }
 
         [HttpDelete("storage/{storageId}")]
-        [XSRFProtection]
+        [ValidateAntiForgeryToken]
         [ProducesResponseType(204)]
         [ProducesResponseType(typeof(object), 403)]
         [ProducesResponseType(typeof(object), 404)]
@@ -217,7 +217,7 @@ namespace webapi.Controllers.Core
         }
 
         [HttpPost("key/{storageId}")]
-        [XSRFProtection]
+        [ValidateAntiForgeryToken]
         [ProducesResponseType(201)]
         [ProducesResponseType(typeof(object), 403)]
         [ProducesResponseType(typeof(object), 404)]
@@ -297,7 +297,7 @@ namespace webapi.Controllers.Core
         }
 
         [HttpDelete("key/{storageId}/{keyId}")]
-        [XSRFProtection]
+        [ValidateAntiForgeryToken]
         [ProducesResponseType(204)]
         [ProducesResponseType(typeof(object), 500)]
         public async Task<IActionResult> DeleteKey([FromRoute] int storageId, [FromRoute] int keyId, [FromQuery] int code)

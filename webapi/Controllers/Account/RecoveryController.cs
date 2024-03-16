@@ -45,7 +45,7 @@ namespace webapi.Controllers.Account
         #endregion
 
         [HttpPost("unique/token")]
-        [XSRFProtection]
+        [ValidateAntiForgeryToken]
         [ProducesResponseType(typeof(object), 201)]
         [ProducesResponseType(typeof(object), 404)]
         [ProducesResponseType(typeof(object), 500)]
@@ -80,7 +80,7 @@ namespace webapi.Controllers.Account
         }
 
         [HttpPost("account")]
-        [XSRFProtection]
+        [ValidateAntiForgeryToken]
         [ProducesResponseType(200)]
         [ProducesResponseType(typeof(object), 400)]
         [ProducesResponseType(typeof(object), 404)]
