@@ -34,15 +34,3 @@ jobs:
 
     - name: Run tests
       run: dotnet test --logger trx --results-directory TestResults
-
-    - name: Commit changes if tests pass
-      run: |
-        if [ -z "$(git status --porcelain)" ]; then
-          echo "No changes to commit"
-        else
-          git config --global user.name 'CI'
-          git config --global user.email 'ci@example.com'
-          git add .
-          git commit -m "Tests passed [skip ci]"
-          git push
-        fi
