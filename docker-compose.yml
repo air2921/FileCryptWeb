@@ -1,0 +1,88 @@
+version: '3.4'
+
+networks:
+  webapi:
+    driver: bridge
+
+services:
+  webapi:
+    container_name: webapi-dev
+    image: ${DOCKER_REGISTRY-}webapi
+    build:
+      context: .
+      dockerfile: webapi/Dockerfile
+    ports:
+      - "8080:8080"
+    networks:
+      - "webapi"
+    environment:
+      - ASPNETCORE_ENVIRONMENT=Development
+    depends_on:
+      - postgres_db
+      - redis
+      - clamav
+      - elasticsearch
+
+  postgres_db:
+    container_name: postgres
+    image: postgres:latest
+    ports:
+      - "5432:5432"
+    networks:
+      - "webapi"
+    restart: always
+    environment:
+      POSTGRES_USER: postgres
+      POSTGRES_PASSWORD: 123
+      POSTGRES_DB: filecrypt
+    volumes:
+      - postgres-data:/var/lib/postgresql/data
+
+  redis:
+    container_name: redis
+    image: redis:latest
+    ports:
+      - "6379:6379"
+    networks:
+      - "webapi"
+
+  clamav:
+    container_name: clamav
+    image: mkodockx/docker-clamav:alpine
+    environment:
+      CLAMD_CONF_MaxFileSize: 250M
+      CLAMD_CONF_MaxScanSize: 250M
+      CLAMD_CONF_StreamMaxLength: 250M
+    restart: always
+    ports:
+      - "3310:3310"
+    networks:
+      - "webapi"
+
+
+  elasticsearch:
+    container_name: elasticsearch
+    image: elasticsearch:8.12.2
+    ports:
+      - 9200:9200
+    networks:
+      - "webapi"
+    environment:
+      - discovery.type=single-node
+      - xpack.security.enabled=false
+
+  kibana:
+    container_name: kibana
+    image: kibana:8.12.2
+    restart: always
+    environment:
+      - ELASTICSEARCH_HOSTS=http://elasticsearch:9200
+    ports:
+      - "5601:5601"
+    networks:
+      - "webapi"
+    depends_on:
+      - elasticsearch   
+
+volumes:
+  postgres-data:

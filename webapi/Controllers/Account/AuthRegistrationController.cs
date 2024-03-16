@@ -52,7 +52,7 @@ namespace webapi.Controllers.Account
         #endregion
 
         [HttpPost("register")]
-        [XSRFProtection]
+        [ValidateAntiForgeryToken]
         [ProducesResponseType(typeof(object), 200)]
         [ProducesResponseType(typeof(object), 400)]
         [ProducesResponseType(typeof(object), 409)]
@@ -95,7 +95,7 @@ namespace webapi.Controllers.Account
         }
 
         [HttpPost("verify")]
-        [XSRFProtection]
+        [ValidateAntiForgeryToken]
         [ProducesResponseType(201)]
         [ProducesResponseType(typeof(object), 422)]
         [ProducesResponseType(typeof(object), 500)]

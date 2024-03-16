@@ -68,7 +68,7 @@ namespace webapi.Controllers.Admin
         }
 
         [HttpDelete("{notificationId}")]
-        [XSRFProtection]
+        [ValidateAntiForgeryToken]
         [ProducesResponseType(204)]
         [ProducesResponseType(typeof(object), 500)]
         public async Task<IActionResult> DeleteNotification([FromRoute] int notificationId)
@@ -88,7 +88,7 @@ namespace webapi.Controllers.Admin
         }
 
         [HttpDelete("many")]
-        [XSRFProtection]
+        [ValidateAntiForgeryToken]
         [ProducesResponseType(204)]
         [ProducesResponseType(typeof(object), 500)]
         public async Task<IActionResult> DeleteRangeNotifications([FromBody] IEnumerable<int> identifiers)

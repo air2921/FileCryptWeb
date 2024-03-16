@@ -77,7 +77,7 @@ namespace webapi.Controllers.Admin
         }
 
         [HttpDelete]
-        [XSRFProtection]
+        [ValidateAntiForgeryToken]
         [ProducesResponseType(204)]
         [ProducesResponseType(typeof(object), 404)]
         [ProducesResponseType(typeof(object), 500)]
@@ -95,7 +95,7 @@ namespace webapi.Controllers.Admin
         }
 
         [HttpDelete("many")]
-        [XSRFProtection]
+        [ValidateAntiForgeryToken]
         [ProducesResponseType(204)]
         [ProducesResponseType(typeof(object), 500)]
         public async Task<IActionResult> DeleteRangeLinks([FromBody] IEnumerable<int> identifiers)

@@ -19,6 +19,7 @@ namespace webapi.DB
 
         public FileCryptDbContext(DbContextOptions<FileCryptDbContext> options) : base(options)
         {
+            Database.EnsureCreated();
         }
 
         protected override void OnModelCreating(ModelBuilder modelBuilder)

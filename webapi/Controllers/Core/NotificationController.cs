@@ -97,7 +97,7 @@ namespace webapi.Controllers.Core
         }
 
         [HttpDelete("{notificationId}")]
-        [XSRFProtection]
+        [ValidateAntiForgeryToken]
         [ProducesResponseType(204)]
         [ProducesResponseType(typeof(object), 500)]
         public async Task<IActionResult> DeleteNotification([FromRoute] int notificationId)

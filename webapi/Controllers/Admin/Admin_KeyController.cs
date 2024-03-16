@@ -54,7 +54,7 @@ namespace webapi.Controllers.Admin
         }
 
         [HttpPut("revoke/received/{userId}")]
-        [XSRFProtection]
+        [ValidateAntiForgeryToken]
         [ProducesResponseType(typeof(object), 200)]
         [ProducesResponseType(typeof(object), 404)]
         [ProducesResponseType(typeof(object), 500)]
