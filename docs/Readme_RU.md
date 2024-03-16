@@ -48,7 +48,7 @@ cd C:\Users\Stewi\source\repos\air2921\FileCryptWeb
 *И поднимаем наш контейнер*
 
 ```bash
-C:\Users\User\source\repos\github\FileCryptWeb>docker-compose down
+C:\Users\User\source\repos\github\FileCryptWeb>docker-compose up
 ```
 ---
 ## Эндпоинты:
