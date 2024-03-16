@@ -9,7 +9,7 @@ services:
     container_name: webapi-dev
     image: ${DOCKER_REGISTRY-}webapi
     build:
-      context: ./webapi
+      context: FileCryptWeb.sln
       dockerfile: webapi/Dockerfile
     ports:
       - "8080:8080"
