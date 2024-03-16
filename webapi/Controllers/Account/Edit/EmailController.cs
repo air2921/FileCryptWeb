@@ -61,7 +61,7 @@ namespace webapi.Controllers.Account.Edit
         #endregion
 
         [HttpPost("start")]
-        [XSRFProtection]
+        [ValidateAntiForgeryToken]
         [ProducesResponseType(typeof(object), 200)]
         [ProducesResponseType(typeof(object), 404)]
         [ProducesResponseType(typeof(object), 401)]
@@ -96,7 +96,7 @@ namespace webapi.Controllers.Account.Edit
         }
 
         [HttpPost("confirm/old")]
-        [XSRFProtection]
+        [ValidateAntiForgeryToken]
         [ProducesResponseType(typeof(object), 200)]
         [ProducesResponseType(typeof(object), 400)]
         [ProducesResponseType(typeof(object), 409)]
@@ -134,7 +134,7 @@ namespace webapi.Controllers.Account.Edit
         }
 
         [HttpPut("confirm/new")]
-        [XSRFProtection]
+        [ValidateAntiForgeryToken]
         [ProducesResponseType(201)]
         [ProducesResponseType(typeof(object), 400)]
         [ProducesResponseType(typeof(object), 404)]

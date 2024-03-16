@@ -28,7 +28,7 @@ namespace webapi.Controllers.Admin
         #endregion
 
         [HttpPut("freeze")]
-        [XSRFProtection]
+        [ValidateAntiForgeryToken]
         [ProducesResponseType(typeof(object), 200)]
         public async Task<IActionResult> FreezeService([FromQuery] bool flag, [FromBody] TimeSpan? time)
         {
