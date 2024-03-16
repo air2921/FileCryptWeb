@@ -27,22 +27,10 @@ jobs:
     - name: Setup .NET
       uses: actions/setup-dotnet@v1
       with:
-        dotnet-version: 7.*
+        dotnet-version: 8.*
 
     - name: Restore dependencies
-      run: dotnet restore
+      run: dotnet restore tests/tests.csproj
 
     - name: Run tests
-      run: dotnet test --logger trx --results-directory TestResults
-
-    - name: Commit changes if tests pass
-      run: |
-        if [ -z "$(git status --porcelain)" ]; then
-          echo "No changes to commit"
-        else
-          git config --global user.name 'CI'
-          git config --global user.email 'ci@example.com'
-          git add .
-          git commit -m "Tests passed [skip ci]"
-          git push
-        fi
+      run: dotnet test tests/tests.csproj --logger trx --results-directory TestResults

@@ -50,7 +50,7 @@ namespace webapi.Controllers.Account.Edit
         #endregion
 
         [HttpPost("start")]
-        [XSRFProtection]
+        [ValidateAntiForgeryToken]
         [ProducesResponseType(200)]
         [ProducesResponseType(typeof(object), 401)]
         [ProducesResponseType(typeof(object), 404)]
@@ -85,7 +85,7 @@ namespace webapi.Controllers.Account.Edit
         }
 
         [HttpPut("confirm/{enable}")]
-        [XSRFProtection]
+        [ValidateAntiForgeryToken]
         [ProducesResponseType(200)]
         [ProducesResponseType(typeof(object), 400)]
         [ProducesResponseType(typeof(object), 404)]

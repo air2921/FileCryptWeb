@@ -71,7 +71,7 @@ namespace webapi.Controllers.Admin
         }
 
         [HttpDelete("{apiId}")]
-        [XSRFProtection]
+        [ValidateAntiForgeryToken]
         [ProducesResponseType(204)]
         [ProducesResponseType(typeof(object), 500)]
         public async Task<IActionResult> DeleteApi([FromRoute] int apiId)
@@ -91,7 +91,7 @@ namespace webapi.Controllers.Admin
         }
 
         [HttpDelete("many")]
-        [XSRFProtection]
+        [ValidateAntiForgeryToken]
         [ProducesResponseType(204)]
         [ProducesResponseType(typeof(object), 500)]
         public async Task<IActionResult> DeleteRangeApi([FromBody] IEnumerable<int> identifiers)

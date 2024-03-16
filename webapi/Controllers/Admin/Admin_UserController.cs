@@ -56,7 +56,7 @@ namespace webapi.Controllers.Admin
         }
 
         [HttpDelete("{userId}")]
-        [XSRFProtection]
+        [ValidateAntiForgeryToken]
         [Authorize(Roles = "HighestAdmin")]
         [ProducesResponseType(204)]
         [ProducesResponseType(typeof(object), 404)]
@@ -87,7 +87,7 @@ namespace webapi.Controllers.Admin
         }
 
         [HttpPut("block/{userId}")]
-        [XSRFProtection]
+        [ValidateAntiForgeryToken]
         [Authorize(Roles = "HighestAdmin")]
         [ProducesResponseType(typeof(object), 200)]
         [ProducesResponseType(typeof(object), 404)]
@@ -122,7 +122,7 @@ namespace webapi.Controllers.Admin
         }
 
         [HttpPut("role/{userId}")]
-        [XSRFProtection]
+        [ValidateAntiForgeryToken]
         [Authorize(Roles = "HighestAdmin")]
         [ProducesResponseType(typeof(object), 200)]
         [ProducesResponseType(typeof(object), 404)]

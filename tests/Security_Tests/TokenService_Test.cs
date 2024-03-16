@@ -18,10 +18,13 @@ namespace tests.Security_Tests
 
             var dbContext = new FileCryptDbContext(options);
 
-            var configuration = new ConfigurationBuilder().AddInMemoryCollection(new Dictionary<string, string> { { "SecretKey", "secret_key_that_is_at_least_128_bits_long" } }).Build();
-            var generate = new Mock<IGenerate>();
+            var configurationMock = new Mock<IConfiguration>();
+            var generateMock = new Mock<IGenerate>();
             var contextAccessorMock = new Mock<IHttpContextAccessor>();
-            var tokenService = new TokenService(configuration, generate.Object, dbContext, contextAccessorMock.Object);
+
+            configurationMock.Setup(x => x["JwtKey"]).Returns("Random_String_At_Least_128_Bit_Along_For_ConfigurationMock_JwtKey");
+
+            var tokenService = new TokenService(configurationMock.Object, generateMock.Object, dbContext, contextAccessorMock.Object);
             var userModel = new UserModel { id = 1, username = "testuser", email = "test@example.com", role = "user" };
 
             var jwt = tokenService.GenerateJwtToken(userModel, TimeSpan.FromMinutes(20));

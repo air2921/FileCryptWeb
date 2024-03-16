@@ -37,7 +37,7 @@ namespace webapi.Controllers.Admin
         #endregion
 
         [HttpDelete("revoke/all/{userId}")]
-        [XSRFProtection]
+        [ValidateAntiForgeryToken]
         [ProducesResponseType(typeof(object), 200)]
         [ProducesResponseType(typeof(object), 404)]
         [ProducesResponseType(typeof(object), 403)]
@@ -72,7 +72,7 @@ namespace webapi.Controllers.Admin
         }
 
         [HttpDelete("revoke/{tokenId}")]
-        [XSRFProtection]
+        [ValidateAntiForgeryToken]
         public async Task<IActionResult> RevokeToken(int tokenId)
         {
             try
