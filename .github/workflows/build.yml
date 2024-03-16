@@ -22,7 +22,9 @@ jobs:
         dotnet-version: 8.*
 
     - name: Restore dependencies
-      run: dotnet restore
+      run: | 
+          dotnet restore webapi/webapi.csproj
+          dotnet restore tests/tests.csproj
 
     - name: Build
       run: dotnet build --configuration Release
