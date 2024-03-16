@@ -1,6 +1,5 @@
 ﻿using Microsoft.AspNetCore.Antiforgery;
 using webapi.Helpers;
-using webapi.Interfaces.Services;
 
 namespace webapi.Middlewares
 {
@@ -18,11 +17,19 @@ namespace webapi.Middlewares
 
         public async Task Invoke(HttpContext context)
         {
-            var requestToken = _antiforgery.GetAndStoreTokens(context).RequestToken;
-            context.Response.Cookies.Append(ImmutableData.XSRF_COOKIE_KEY, requestToken,
-                new CookieOptions { HttpOnly = true, MaxAge = TimeSpan.FromMinutes(90), Secure = true, SameSite = SameSiteMode.None });
+            context.Response.Cookies.Append(
+            ImmutableData.XSRF_COOKIE_KEY,
+            _antiforgery.GetAndStoreTokens(context).RequestToken,
+            new CookieOptions
+            {
+                HttpOnly = false,
+                Secure = true,
+                MaxAge = TimeSpan.FromMinutes(60)
+            });
 
-            context.Request.Headers.Append(ImmutableData.XSRF_HEADER_NAME, requestToken);
+            var xsrf = context.Request.Cookies[ImmutableData.XSRF_COOKIE_KEY];
+            if (!string.IsNullOrWhiteSpace(xsrf))
+                context.Request.Headers.Append(ImmutableData.XSRF_HEADER_NAME, xsrf);
 
             await _next(context);
         }

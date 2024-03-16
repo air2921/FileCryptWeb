@@ -1,6 +1,4 @@
 ﻿using Microsoft.AspNetCore.Mvc;
-using Npgsql.Internal.TypeHandlers.FullTextSearchHandlers;
-using Org.BouncyCastle.Tsp;
 using webapi.Controllers.Admin;
 using webapi.Exceptions;
 using webapi.Interfaces;

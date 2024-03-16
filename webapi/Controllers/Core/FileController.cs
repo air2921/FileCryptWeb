@@ -40,7 +40,7 @@ namespace webapi.Controllers.Core
         #endregion
 
         [HttpDelete("{fileId}")]
-        [XSRFProtection]
+        [ValidateAntiForgeryToken]
         [ProducesResponseType(204)]
         [ProducesResponseType(typeof(object), 500)]
         public async Task<IActionResult> DeleteFileFromHistory([FromRoute] int fileId)

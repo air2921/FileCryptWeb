@@ -1,4 +1,5 @@
 ﻿using nClam;
+using webapi.Helpers;
 using webapi.Interfaces.Services;
 
 namespace webapi.Third_Party_Services
@@ -6,11 +7,13 @@ namespace webapi.Third_Party_Services
     public class ClamAV : IVirusCheck
     {
         private readonly ILogger<ClamAV> _logger;
+        private readonly IConfiguration _configuration;
         private readonly IClamSetting _clamSetting;
 
-        public ClamAV(ILogger<ClamAV> logger, IClamSetting clamSetting)
+        public ClamAV(ILogger<ClamAV> logger, IConfiguration configuration, IClamSetting clamSetting)
         {
             _logger = logger;
+            _configuration = configuration;
             _clamSetting = clamSetting;
         }
 
@@ -19,7 +22,7 @@ namespace webapi.Third_Party_Services
             try
             {
                 var fileStream = file.OpenReadStream();
-                var clam = _clamSetting.SetClam();
+                var clam = _clamSetting.SetClam(_configuration[App.CLAM_SERVER]!, int.Parse(_configuration[App.CLAM_PORT]!));
 
                 var scanResult = await clam.SendAndScanFileAsync(fileStream, cancellationToken);
                 var rerult = scanResult.Result.Equals(ClamScanResults.Clean);
@@ -63,14 +66,14 @@ namespace webapi.Third_Party_Services
 
     public interface IClamSetting
     {
-        IClamClient SetClam();
+        IClamClient SetClam(string server, int port);
     }
 
     public class ClamSetting : IClamSetting
     {
-        public IClamClient SetClam()
+        public IClamClient SetClam(string server, int port)
         {
-            return new ClamClientWrapper(new ClamClient("localhost", 3310)
+            return new ClamClientWrapper(new ClamClient(server, port)
             {
                 MaxStreamSize = 75 * 1024 * 1024
             });

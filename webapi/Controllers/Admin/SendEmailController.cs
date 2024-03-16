@@ -35,7 +35,7 @@ namespace webapi.Controllers.Admin
         #endregion
 
         [HttpPost("send")]
-        [XSRFProtection]
+        [ValidateAntiForgeryToken]
         [ProducesResponseType(typeof(object), 201)]
         [ProducesResponseType(typeof(object), 500)]
         public async Task<IActionResult> SendEmail([FromBody] NotifyDTO notifyDTO, [FromQuery] string username, [FromQuery] string email)

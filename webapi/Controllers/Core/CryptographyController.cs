@@ -40,7 +40,7 @@ namespace webapi.Controllers.Core
         #endregion
 
         [HttpPost("{operation}")]
-        [XSRFProtection]
+        [ValidateAntiForgeryToken]
         [RequestSizeLimit(75 * 1024 * 1024)]
         [ProducesResponseType(typeof(FileStreamResult), 200)]
         [ProducesResponseType(typeof(object), 400)]

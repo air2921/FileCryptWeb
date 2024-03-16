@@ -42,7 +42,7 @@ namespace webapi.Controllers.Account.Edit
         #endregion
 
         [HttpPut]
-        [XSRFProtection]
+        [ValidateAntiForgeryToken]
         [ProducesResponseType(typeof(object), 200)]
         [ProducesResponseType(typeof(object), 400)]
         [ProducesResponseType(typeof(object), 404)]

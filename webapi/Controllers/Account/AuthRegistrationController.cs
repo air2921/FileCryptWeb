@@ -52,7 +52,7 @@ namespace webapi.Controllers.Account
         #endregion
 
         [HttpPost("register")]
-        [XSRFProtection]
+        [ValidateAntiForgeryToken]
         [ProducesResponseType(typeof(object), 200)]
         [ProducesResponseType(typeof(object), 400)]
         [ProducesResponseType(typeof(object), 409)]
@@ -95,7 +95,7 @@ namespace webapi.Controllers.Account
         }
 
         [HttpPost("verify")]
-        [XSRFProtection]
+        [ValidateAntiForgeryToken]
         [ProducesResponseType(201)]
         [ProducesResponseType(typeof(object), 422)]
         [ProducesResponseType(typeof(object), 500)]
@@ -136,7 +136,6 @@ namespace webapi.Controllers.Account
         private readonly FileCryptDbContext _dbContext;
         private readonly IConfiguration _configuration;
         private readonly IRepository<UserModel> _userRepository;
-        private readonly IRepository<TokenModel> _tokenRepository;
         private readonly IRepository<KeyModel> _keyRepository;
         private readonly IRedisCache _redisCache;
         private readonly IGenerate _generate;
@@ -149,25 +148,22 @@ namespace webapi.Controllers.Account
             FileCryptDbContext dbContext,
             IConfiguration configuration,
             IRepository<UserModel> userRepository,
-            IRepository<TokenModel> tokenRepository,
             IRepository<KeyModel> keyRepository,
             IRedisCache redisCache,
             IGenerate generate,
             IPasswordManager passwordManager,
             IEmailSender emailSender,
-            IImplementationFinder implementationFinder,
-            IEnumerable<ICypherKey> cypherKeys)
+            [FromKeyedServices("Encrypt")] ICypherKey encrypt)
         {
             _dbContext = dbContext;
             _configuration = configuration;
             _userRepository = userRepository;
             _keyRepository = keyRepository;
-            _tokenRepository = tokenRepository;
             _redisCache = redisCache;
             _generate = generate;
             _passwordManager = passwordManager;
             _emailSender = emailSender;
-            _encrypt = implementationFinder.GetImplementationByKey(cypherKeys, ImplementationKey.ENCRYPT_KEY);
+            _encrypt = encrypt;
             secretKey = Convert.FromBase64String(_configuration[App.ENCRYPTION_KEY]!);
         }
 

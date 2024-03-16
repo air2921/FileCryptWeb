@@ -22,7 +22,7 @@ namespace webapi
                 .Enrich.WithProperty("Environment", env)
                 .ReadFrom.Configuration(config)
                 .WriteTo.Console()
-                .WriteTo.Elasticsearch((ConfigurationElasticSink(config, env)))
+                .WriteTo.Elasticsearch(ConfigurationElasticSink(config, env))
                 .CreateLogger();
 
             CreateHostBuilder(args).Build().Run();
