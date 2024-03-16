@@ -2,7 +2,7 @@
 ---
 
 ## Configuration Settings:
-**All subsequent data should be added to the secrets store; it should not be stored in `appsetting.json`**:
+**All subsequent data should be added to the user-secrets, it should not be stored in `appsetting.json`**:
 
 |       Variable     |   Expected Key    |    Expected Key Format     |
 |--------------------|-------------------|----------------------------|
