@@ -71,6 +71,8 @@
         public const string MAIN_DB = "Postgres";
         public const string REDIS_DB = "Redis";
         public const string ELASTIC_SEARCH = "Elasticsearch";
+        public const string CLAM_SERVER = "ClamServer";
+        public const string CLAM_PORT = "ClamPort";
         public const string ENCRYPTION_KEY = "AppKey";
         public const string EMAIL = "Email";
         public const string EMAIL_PASSWORD = "EmailPassword";

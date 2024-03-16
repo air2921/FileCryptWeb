@@ -1,4 +1,5 @@
 ﻿using Microsoft.AspNetCore.Http;
+using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.Logging;
 using nClam;
 using webapi.Third_Party_Services;
@@ -16,12 +17,16 @@ namespace tests.Third_Party_Services_Tests
             var ct = cts.Token;
 
             var cleanFileClamClientMock = new Mock<webapi.Third_Party_Services.IClamClient>();
+            var configurationMock = new Mock<IConfiguration>();
+
+            configurationMock.Setup(x => x["ClamServer"]).Returns("localhost");
+            configurationMock.Setup(x => x["ClamPort"]).Returns("3310");
             cleanFileClamClientMock
                 .Setup(c => c.SendAndScanFileAsync(It.IsAny<Stream>(), ct))
                 .ReturnsAsync(new ClamScanResult("ok"));
-            clamSettingMock.Setup(c => c.SetClam()).Returns(cleanFileClamClientMock.Object);
+            clamSettingMock.Setup(c => c.SetClam(It.IsAny<string>(), It.IsAny<int>())).Returns(cleanFileClamClientMock.Object);
 
-            var clamAV = new ClamAV(loggerMock.Object, clamSettingMock.Object);
+            var clamAV = new ClamAV(loggerMock.Object, configurationMock.Object, clamSettingMock.Object);
 
             var fileMock = new Mock<IFormFile>();
             var fileStreamMock = new MemoryStream(3 * 1024 * 1024);
@@ -42,12 +47,16 @@ namespace tests.Third_Party_Services_Tests
             var ct = cts.Token;
 
             var cleanFileClamClientMock = new Mock<webapi.Third_Party_Services.IClamClient>();
+            var configurationMock = new Mock<IConfiguration>();
+
+            configurationMock.Setup(x => x["ClamServer"]).Returns("localhost");
+            configurationMock.Setup(x => x["ClamPort"]).Returns("3310");
             cleanFileClamClientMock
                 .Setup(c => c.SendAndScanFileAsync(It.IsAny<Stream>(), ct))
                 .ThrowsAsync(new Exception("Test ex"));
-            clamSettingMock.Setup(c => c.SetClam()).Returns(cleanFileClamClientMock.Object);
+            clamSettingMock.Setup(c => c.SetClam(It.IsAny<string>(), It.IsAny<int>())).Returns(cleanFileClamClientMock.Object);
 
-            var clamAV = new ClamAV(loggerMock.Object, clamSettingMock.Object);
+            var clamAV = new ClamAV(loggerMock.Object, configurationMock.Object, clamSettingMock.Object);
 
             var fileMock = new Mock<IFormFile>();
             var fileStreamMock = new MemoryStream(3 * 1024 * 1024);
@@ -70,12 +79,16 @@ namespace tests.Third_Party_Services_Tests
             var ct = cts.Token;
 
             var cleanFileClamClientMock = new Mock<webapi.Third_Party_Services.IClamClient>();
+            var configurationMock = new Mock<IConfiguration>();
+
+            configurationMock.Setup(x => x["ClamServer"]).Returns("localhost");
+            configurationMock.Setup(x => x["ClamPort"]).Returns("3310");
             cleanFileClamClientMock
                 .Setup(c => c.SendAndScanFileAsync(It.IsAny<Stream>(), ct))
                 .ReturnsAsync(new ClamScanResult(scanResult));
-            clamSettingMock.Setup(c => c.SetClam()).Returns(cleanFileClamClientMock.Object);
+            clamSettingMock.Setup(c => c.SetClam(It.IsAny<string>(), It.IsAny<int>())).Returns(cleanFileClamClientMock.Object);
 
-            var clamAV = new ClamAV(loggerMock.Object, clamSettingMock.Object);
+            var clamAV = new ClamAV(loggerMock.Object, configurationMock.Object, clamSettingMock.Object);
 
             var fileMock = new Mock<IFormFile>();
             var fileStreamMock = new MemoryStream(3 * 1024 * 1024);
