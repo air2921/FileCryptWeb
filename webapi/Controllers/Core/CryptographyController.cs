@@ -1,6 +1,6 @@
 ﻿using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
-using webapi.Attributes;
+using webapi.Controllers.Base;
 using webapi.Exceptions;
 using webapi.Helpers;
 using webapi.Interfaces.Controllers;
@@ -47,13 +47,22 @@ namespace webapi.Controllers.Core
         [ProducesResponseType(typeof(object), 415)]
         [ProducesResponseType(typeof(object), 422)]
         [ProducesResponseType(typeof(object), 500)]
-        public async Task<IActionResult> EncryptFile([FromRoute] string type, [FromRoute] string operation, IFormFile file)
+        public async Task<IActionResult> EncryptFile([FromRoute] string type, [FromRoute] string operation, [FromQuery] bool validate, IFormFile file)
         {
             try
             {
                 var param = await _cryptographyParams.GetCryptographyParams(type, operation);
+                var username = validate ? _userInfo.Username : null;
+                var encryptedFile = await _cryptographyController.EncryptFile(new CryptographyOperationOptions
+                {
+                    Key = param.EncryptionKey,
+                    Type = type,
+                    Operation = operation,
+                    File = file,
+                    UserID = _userInfo.UserId,
+                    Username = username
+                });
 
-                var encryptedFile = await _cryptographyController.EncryptFile(_cypher.CypherFileAsync, param.EncryptionKey, file, _userInfo.UserId, type, operation);
                 await _redisCache.DeteteCacheByKeyPattern($"{ImmutableData.FILES_PREFIX}{_userInfo.UserId}");
 
                 return encryptedFile;

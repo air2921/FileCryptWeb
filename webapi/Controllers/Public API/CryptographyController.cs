@@ -2,6 +2,7 @@
 using Microsoft.AspNetCore.Mvc;
 using Newtonsoft.Json;
 using webapi.Attributes;
+using webapi.Controllers.Base;
 using webapi.Exceptions;
 using webapi.Helpers;
 using webapi.Interfaces;
@@ -56,7 +57,14 @@ namespace webapi.Controllers.Public_API
                 var apiData = await IsValidAPI(apiKey);
                 await ControlRequestCount(apiKey, apiData.MaxRequest);
 
-                return await _cryptographyController.EncryptFile(_cypher.CypherFileAsync, encryptionKey, file, apiData.UserId, type, operation);
+                return await _cryptographyController.EncryptFile(new CryptographyOperationOptions
+                {
+                    Key = encryptionKey,
+                    File = file,
+                    UserID = apiData.UserId,
+                    Type = type,
+                    Operation = operation
+                });
             }
             catch (InvalidRouteException ex)
             {
