@@ -7,13 +7,13 @@ using Npgsql.EntityFrameworkCore.PostgreSQL.Metadata;
 namespace webapi.Migrations
 {
     /// <inheritdoc />
-    public partial class init : Migration
+    public partial class Init : Migration
     {
         /// <inheritdoc />
         protected override void Up(MigrationBuilder migrationBuilder)
         {
             migrationBuilder.CreateTable(
-                name: "allowedmime",
+                name: "forbidden_mimes",
                 columns: table => new
                 {
                     mime_id = table.Column<int>(type: "integer", nullable: false)
@@ -22,7 +22,7 @@ namespace webapi.Migrations
                 },
                 constraints: table =>
                 {
-                    table.PrimaryKey("PK_allowedmime", x => x.mime_id);
+                    table.PrimaryKey("PK_forbidden_mimes", x => x.mime_id);
                 });
 
             migrationBuilder.CreateTable(
@@ -324,8 +324,7 @@ namespace webapi.Migrations
             migrationBuilder.CreateIndex(
                 name: "IX_tokens_user_id",
                 table: "tokens",
-                column: "user_id",
-                unique: true);
+                column: "user_id");
 
             migrationBuilder.CreateIndex(
                 name: "IX_users_email",
@@ -338,13 +337,13 @@ namespace webapi.Migrations
         protected override void Down(MigrationBuilder migrationBuilder)
         {
             migrationBuilder.DropTable(
-                name: "allowedmime");
-
-            migrationBuilder.DropTable(
                 name: "api");
 
             migrationBuilder.DropTable(
                 name: "files");
+
+            migrationBuilder.DropTable(
+                name: "forbidden_mimes");
 
             migrationBuilder.DropTable(
                 name: "keys");

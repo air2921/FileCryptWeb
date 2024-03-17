@@ -7,7 +7,7 @@ namespace webapi.DB
     {
         private const int USER_ID = 264950;
 
-        private const string EMAIL = "stewiesolden147@gmail.com";
+        private const string EMAIL = "FileCrypt147@gmail.com";
         private const string USERNAME = "FileCrypt";
         private const string PASSWORD = "$2a$11$vOj8wlzPuP/.7Bdj4YOU.O7Dki4.eZwSztFfndoJNETtFsI51Lfny"; //FileCrypt123
         private const string ROLE = "HighestAdmin";
@@ -138,7 +138,7 @@ namespace webapi.DB
                 context.Users.Add(new UserModel
                 {
                     id = USER_ID,
-                    email = EMAIL,
+                    email = EMAIL.ToLowerInvariant(),
                     username = USERNAME,
                     password = PASSWORD,
                     role = ROLE,

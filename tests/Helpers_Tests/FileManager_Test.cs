@@ -7,57 +7,6 @@ namespace tests.Helpers_Tests
 {
     public class FileManager_Test
     {
-        private readonly string _dataDirectory;
-
-        public FileManager_Test()
-        {
-            var currentDirectory = Directory.GetCurrentDirectory();
-            _dataDirectory = Path.Combine(currentDirectory, "..", "..", "..", "..", "data");
-        }
-
-        [Fact]
-        public void GetMimesFromCsvFile_ReturnsMimes_WhenCsvFileExists()
-        {
-            var filePath = Directory.GetFiles(_dataDirectory).FirstOrDefault();
-            var loggerMock = new Mock<ILogger<FileManager>>();
-            var env = new Mock<IWebHostEnvironment>();
-            var fileManager = new FileManager(loggerMock.Object, env.Object);
-
-            var result = fileManager.GetMimesFromCsvFile(filePath);
-
-            Assert.NotNull(result);
-            Assert.IsType<HashSet<string>>(result);
-        }
-
-        [Fact]
-        public void GetMimesFromCsvFile_LogsException_WhenCsvFileDoesNotExist()
-        {
-            var filePath = "test.csv";
-            var logger = new FakeLogger<FileManager>();
-            var env = new Mock<IWebHostEnvironment>();
-            var fileManager = new FileManager(logger, env.Object);
-
-            var result = fileManager.GetMimesFromCsvFile(filePath);
-
-            Assert.Equal(new HashSet<string>() { }, result);
-            Assert.Single(logger.LoggedMessages);
-        }
-
-        [Fact]
-        public void GetCsvFiles_SuccessGet()
-        {
-            var env = new Mock<IWebHostEnvironment>();
-            var loggerMock = new Mock<ILogger<FileManager>>();
-            var path = Path.Combine(Directory.GetCurrentDirectory(), "..", "..", "..");
-            env.SetupGet(x => x.ContentRootPath).Returns(path);
-
-            var fileManager = new FileManager(loggerMock.Object, env.Object);
-
-            var result = fileManager.GetCsvFiles();
-
-            Assert.Equal(Directory.GetFiles(_dataDirectory), result);
-        }
-
         [Fact]
         public void TestGetFileSizeInMb_WithIFormFile()
         {
@@ -67,7 +16,7 @@ namespace tests.Helpers_Tests
             var formFile = new Mock<IFormFile>();
             formFile.Setup(x => x.Length).Returns(1024);
 
-            var fileManager = new FileManager(loggerMock.Object, env.Object);
+            var fileManager = new FileManager(loggerMock.Object);
 
             var result = fileManager.GetFileSizeInMb(formFile.Object);
 
@@ -85,7 +34,7 @@ namespace tests.Helpers_Tests
             fileInfo.Create().Close();
             fileInfo.Refresh();
 
-            var fileManager = new FileManager(loggerMock.Object, env.Object);
+            var fileManager = new FileManager(loggerMock.Object);
 
             var result = fileManager.GetFileSizeInMb(filePath);
 
@@ -100,7 +49,7 @@ namespace tests.Helpers_Tests
             var logger = new FakeLogger<FileManager>();
             var filePath = "example.txt";
 
-            var fileManager = new FileManager(logger, env.Object);
+            var fileManager = new FileManager(logger);
 
             Assert.Throws<ArgumentException>(() => fileManager.GetFileSizeInMb(filePath));
             Assert.Single(logger.LoggedMessages);
@@ -113,7 +62,7 @@ namespace tests.Helpers_Tests
             var loggerMock = new Mock<ILogger<FileManager>>();
 
             var unsupportedFile = new object();
-            var fileManager = new FileManager(loggerMock.Object, env.Object);
+            var fileManager = new FileManager(loggerMock.Object);
 
             Assert.Throws<ArgumentException>(() => fileManager.GetFileSizeInMb(unsupportedFile));
         }

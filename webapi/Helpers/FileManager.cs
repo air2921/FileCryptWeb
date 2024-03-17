@@ -1,7 +1,4 @@
-﻿using CsvHelper;
-using Newtonsoft.Json.Linq;
-using System.Globalization;
-using webapi.Interfaces.Services;
+﻿using webapi.Interfaces.Services;
 using webapi.Models;
 
 namespace webapi.Helpers
@@ -9,51 +6,10 @@ namespace webapi.Helpers
     public class FileManager : IFileManager, IGetSize
     {
         private readonly ILogger<FileManager> _logger;
-        private readonly IWebHostEnvironment _webHostEnvironment;
 
-        public FileManager(ILogger<FileManager> logger, IWebHostEnvironment webHostEnvironment)
+        public FileManager(ILogger<FileManager> logger)
         {
             _logger = logger;
-            _webHostEnvironment = webHostEnvironment;
-        }
-
-        public HashSet<string> GetMimesFromCsvFile(string filePath)
-        {
-            var mimes = new HashSet<string>();
-
-            try
-            {
-                using var reader = new StreamReader(filePath);
-                using var csv = new CsvReader(reader, CultureInfo.InvariantCulture);
-
-                csv.Read();
-                csv.ReadHeader();
-
-                while (csv.Read())
-                {
-                    string mimeValue = csv.GetField<string>(1);
-                    if (!string.IsNullOrWhiteSpace(mimeValue))
-                        mimes.Add(mimeValue);
-                    else
-                        continue;
-                }
-            }
-            catch (IOException ex)
-            {
-                _logger.LogCritical(ex.ToString(), nameof(GetMimesFromCsvFile));
-            }
-            catch (CsvHelperException ex)
-            {
-                _logger.LogCritical(ex.ToString(), nameof(GetMimesFromCsvFile));
-            }
-
-            return mimes;
-        }
-
-        public string[] GetCsvFiles()
-        {
-            var basePath = Path.Combine(_webHostEnvironment.ContentRootPath, "..", "data");
-            return Directory.GetFiles(basePath);
         }
 
         /// <summary>
@@ -62,20 +18,9 @@ namespace webapi.Helpers
         /// <param name="path"></param>
         /// <param name="isChrome"></param>
         /// <returns></returns>
-        public string GetReactAppUrl(string path, bool isChrome)
+        public string GetReactAppUrl()
         {
-            string jsonContent = File.ReadAllText(path);
-
-            JObject launchJson = JObject.Parse(jsonContent);
-
-            string edgeUrl = launchJson["configurations"][0]["url"].ToString();
-
-            string chromeUrl = launchJson["configurations"][1]["url"].ToString();
-
-            if (isChrome)
-                return chromeUrl;
-
-            return edgeUrl;
+            return "https://localhost5173";
         }
 
         public double GetFileSizeInMb<T>(T file)
@@ -100,40 +45,21 @@ namespace webapi.Helpers
             }
         }
 
-        public void AddSecureCollection(ref HashSet<FileMimeModel> mimeModels, HashSet<string> existingMimes)
+        public void AddMimeCollection(ref HashSet<FileMimeModel> mimeModels, HashSet<string> existingMimes)
         {
-            var baseMimes = new string[]
+            var mimeArray = new string[]
             {
-                "image/jpeg", "image/png", "image/gif", "image/bmp", "image/webp", "image/svg+xml", "application/pdf",
-                "application/msword", "application/vnd.openxmlformats-officedocument.wordprocessingml.document",
-                "application/vnd.ms-powerpoint", "application/vnd.openxmlformats-officedocument.presentationml.presentation",
-                "application/vnd.ms-excel", "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet", "audio/mpeg",
-                "audio/wav", "audio/mp3", "video/mp4", "video/mpeg", "video/webm", "video/mkv", "video/x-matroska", "application/zip",
-                "application/x-rar-compressed", "application/x-tar", "application/x-7z-compressed", "text/plain",
-                "text/html", "text/css", "text/xml", "application/json", "application/rtf", "text/richtext",
-                "font/woff", "font/woff2", "font/otf", "font/ttf"
+                "video/ogg", "audio/ogg", "application/x-msdownload", "application/bat",
+                "application/x-msdos-program", "application/javascript", "application/vnd.ms-word.document.macroEnabled.12",
+                "application/vnd.ms-excel.sheet.macroEnabled.12", "application/pdf", "application/octet-stream",
+                "application/x-httpd-php", "application/x-perl", "text/x-python", "application/x-sh", "application/x-powershell",
             };
 
-            foreach (string mime in baseMimes)
+            foreach (string mime in mimeArray)
                 mimeModels.Add(new FileMimeModel { mime_name = mime });
 
             foreach (string existingMime in existingMimes)
                 mimeModels.Add(new FileMimeModel { mime_name = existingMime });
-        }
-
-        public void AddFullCollection(ref HashSet<FileMimeModel> mimeModels, HashSet<string> existingMimes)
-        {
-            var dataFiles = GetCsvFiles();
-
-            var allMimes = new HashSet<string>();
-
-            foreach (var dataFile in dataFiles)
-                allMimes.UnionWith(GetMimesFromCsvFile(dataFile));
-
-            allMimes.UnionWith(existingMimes);
-
-            foreach (var newMime in allMimes)
-                mimeModels.Add(new FileMimeModel { mime_name = newMime });
         }
     }
 }

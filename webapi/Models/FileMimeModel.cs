@@ -3,7 +3,7 @@ using System.ComponentModel.DataAnnotations;
 
 namespace webapi.Models
 {
-    [Table("allowedmime")]
+    [Table("forbidden_mimes")]
     public class FileMimeModel
     {
         [Key]
