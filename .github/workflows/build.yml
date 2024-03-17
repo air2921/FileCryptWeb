@@ -25,4 +25,4 @@ jobs:
       run: dotnet restore webapi/webapi.csproj
 
     - name: Build
-      run: dotnet build --configuration Release
+      run: dotnet build webapi/webapi.csproj --configuration Release
