@@ -4,6 +4,6 @@ namespace webapi.Interfaces.Cryptography
 {
     public interface ICypher
     {
-        Task<CryptographyResult> CypherFileAsync(string filePath, byte[] key, string operation, CancellationToken cancellationToken);
+        Task<CryptographyResult> CypherFileAsync(CryptographyData cryptoData);
     }
 }

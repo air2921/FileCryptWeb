@@ -1,5 +1,6 @@
 ﻿using Microsoft.AspNetCore.Mvc;
 using Newtonsoft.Json;
+using System.Security.Cryptography;
 using System.Text.RegularExpressions;
 using webapi.Attributes;
 using webapi.Cryptography;
@@ -27,6 +28,7 @@ namespace webapi.Controllers.Base
         #region fields and constructor
 
         private readonly IFileService _fileService;
+        private readonly ICypher _cypherFile;
         private readonly IRepository<KeyModel> _keyRepository;
         private readonly ICypherKey _decryptKey;
         private readonly ILogger<CryptographyHelper> _logger;
@@ -39,6 +41,7 @@ namespace webapi.Controllers.Base
 
         public CryptographyHelper(
             IFileService fileService,
+            ICypher cypherFile,
             IRepository<KeyModel> keyRepository,
             [FromKeyedServices("Decrypt")] ICypherKey decryptKey,
             ILogger<CryptographyHelper> logger,
@@ -49,6 +52,7 @@ namespace webapi.Controllers.Base
             IUserInfo userInfo)
         {
             _fileService = fileService;
+            _cypherFile = cypherFile;
             _keyRepository = keyRepository;
             _decryptKey = decryptKey;
             _logger = logger;
@@ -64,46 +68,42 @@ namespace webapi.Controllers.Base
 
         [NonAction]
         [Helper]
-        public async Task<IActionResult> EncryptFile(
-            Func<string, byte[], string, CancellationToken, Task<CryptographyResult>> CryptographyFunction,
-            string key, IFormFile file,
-            int userID, string type, string operation)
+        public async Task<IActionResult> EncryptFile(CryptographyOperationOptions options)
         {
-
-            var filename = Guid.NewGuid().ToString() + "_" + file.FileName;
+            var filename = Guid.NewGuid().ToString() + "_" + options.File.FileName;
             var filePath = Path.Combine(DEFAULT_FOLDER, filename);
 
             try
             {
-                var IsValidRoute = _fileService.CheckFileType(type);
+                var IsValidRoute = _fileService.CheckFileType(options.Type);
                 if (!IsValidRoute)
                     return StatusCode(400, new { message = "Invalid route request" });
 
-                var mimeCategory = _fileService.GetFileCategory(file.ContentType);
+                var mimeCategory = _fileService.GetFileCategory(options.File.ContentType);
 
                 if (!Directory.Exists(DEFAULT_FOLDER))
                     Directory.CreateDirectory(DEFAULT_FOLDER);
 
-                var fileGood = await _fileService.CheckFile(file);
+                var fileGood = await _fileService.CheckFile(options.File);
                 if (!fileGood)
                     return StatusCode(415, new { message = Message.INFECTED_OR_INVALID });
 
-                var sizeNotExceed = _fileService.CheckSize(file);
+                var sizeNotExceed = _fileService.CheckSize(options.File);
                 if (!sizeNotExceed)
                     return StatusCode(422, new { message = Message.INVALID_FILE });
 
-                var encryptionKey = CheckAndConvertKey(key);
+                var encryptionKey = CheckAndConvertKey(options.Key);
 
-                await _fileService.UploadFile(filePath, file);
+                await _fileService.UploadFile(filePath, options.File);
 
-                await EncryptFile(filePath, operation, CryptographyFunction, encryptionKey);
+                await EncryptFile(filePath, options.Operation, encryptionKey, options.UserID, options.Username);
 
-                await _fileService.CreateFile(userID, filename, file.ContentType, mimeCategory, type);
+                await _fileService.CreateFile(options.UserID, filename, options.File.ContentType, mimeCategory, options.Type);
 
                 var fileStream = new FileStream(filePath, FileMode.Open, FileAccess.Read,
                     FileShare.None, 4096, FileOptions.DeleteOnClose);
 
-                return File(fileStream, file.ContentType, filename);
+                return File(fileStream, options.File.ContentType, filename);
             }
             catch (ArgumentException ex)
             {
@@ -147,30 +147,46 @@ namespace webapi.Controllers.Base
             return Convert.FromBase64String(key);
         }
 
-        private async Task EncryptFile(string filePath, string operation, Func<string, byte[], string, CancellationToken, Task<CryptographyResult>> CryptographyFunction, byte[] key)
+        private async Task EncryptFile(string filePath, string operation, byte[] key, int? id, string? username)
         {
-            using var cts = new CancellationTokenSource();
-            var cancellationToken = cts.Token;
-
-            var cryptographyTask = CryptographyFunction(filePath, key, operation, cancellationToken);
-            var timeoutTask = Task.Delay(TASK_AWAITING);
-
-            var completedTask = await Task.WhenAny(cryptographyTask, timeoutTask);
-
-            if (completedTask == timeoutTask)
+            try
             {
-                cts.Cancel();
+                using var cts = new CancellationTokenSource();
+                var cancellationToken = cts.Token;
 
-                if (System.IO.File.Exists(filePath))
-                    await Task.Run(() => System.IO.File.Delete(filePath));
+                var timeoutTask = Task.Delay(TASK_AWAITING);
+                var cryptographyTask = _cypherFile.CypherFileAsync(new CryptographyData
+                {
+                    FilePath = filePath,
+                    Key = key,
+                    Operation = operation,
+                    CancellationToken = cancellationToken,
+                    UserId = id,
+                    Username = username
+                });
 
-                throw new InvalidOperationException(Message.TASK_TIMED_OUT);
+                var completedTask = await Task.WhenAny(cryptographyTask, timeoutTask);
+
+                if (completedTask == timeoutTask)
+                {
+                    cts.Cancel();
+
+                    if (System.IO.File.Exists(filePath))
+                        await Task.Run(() => System.IO.File.Delete(filePath));
+
+                    throw new InvalidOperationException(Message.TASK_TIMED_OUT);
+                }
+                else
+                {
+                    var cryptographyResult = await cryptographyTask;
+                    if (!cryptographyResult.Success)
+                        throw new InvalidOperationException(Message.BAD_CRYTOGRAPHY_DATA);
+                }
             }
-            else
+            catch (CryptographicException ex)
             {
-                var cryptographyResult = await cryptographyTask;
-                if (!cryptographyResult.Success)
-                    throw new InvalidOperationException(Message.BAD_CRYTOGRAPHY_DATA);
+                _logger.LogCritical(ex.ToString(), nameof(EncryptFile));
+                throw new InvalidOperationException(Message.BAD_CRYTOGRAPHY_DATA);
             }
         }
 
@@ -247,4 +263,14 @@ namespace webapi.Controllers.Base
     }
 
     public record CryptographyParams(string EncryptionKey, bool IsValidRoute);
+
+    public class CryptographyOperationOptions
+    {
+        public string Key { get; init; }
+        public IFormFile File { get; init; }
+        public int UserID { get; init; }
+        public string? Username { get; init; }
+        public string Type { get; init; }
+        public string Operation { get; init; }
+    }
 }
