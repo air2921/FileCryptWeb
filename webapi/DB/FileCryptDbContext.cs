@@ -5,6 +5,19 @@ namespace webapi.DB
 {
     public class FileCryptDbContext : DbContext
     {
+        private const int USER_ID = 264950;
+
+        private const string EMAIL = "stewiesolden147@gmail.com";
+        private const string USERNAME = "FileCrypt";
+        private const string PASSWORD = "$2a$11$vOj8wlzPuP/.7Bdj4YOU.O7Dki4.eZwSztFfndoJNETtFsI51Lfny"; //FileCrypt123
+        private const string ROLE = "HighestAdmin";
+        private const bool TWO_FA_ENABLED = false;
+        private const bool IS_BLOCKED = false;
+
+        private const int KEYS_ID = 265000;
+        private const string PRIVATE_KEY = "Qfz+jKaBDu3ToOWlabZ5tPxZhCJDcWNhlruuVw2yUgg+bkBpaurIX1F34QYMJpFlY7tOrUSn63pmo4E56eEnSA==";
+        private const string INTERNAL_KEY = "/oalkI8PEHT8/moTD40CM2mjinp7VYc4jTfLcl1PELFUBZPS08Q3byx43IQmg7q2/e5aTEExdc0cZopkaULC+Q==";
+
         public virtual DbSet<UserModel> Users { get; set; }
         public virtual DbSet<KeyModel> Keys { get; set; }
         public virtual DbSet<FileModel> Files { get; set; }
@@ -17,8 +30,11 @@ namespace webapi.DB
         public virtual DbSet<KeyStorageModel> KeyStorages { get; set; }
         public virtual DbSet<KeyStorageItemModel> KeyStorageItems { get; set; }
 
+        private readonly DbContextOptions _options;
+
         public FileCryptDbContext(DbContextOptions<FileCryptDbContext> options) : base(options)
         {
+            _options = options;
             Database.EnsureCreated();
         }
 
@@ -111,6 +127,35 @@ namespace webapi.DB
                 .IsUnique();
 
             #endregion
+        }
+
+        public void Initial()
+        {
+            using var context = new FileCryptDbContext((DbContextOptions<FileCryptDbContext>)_options);
+
+            if (!context.Users.Any())
+            {
+                context.Users.Add(new UserModel
+                {
+                    id = USER_ID,
+                    email = EMAIL,
+                    username = USERNAME,
+                    password = PASSWORD,
+                    role = ROLE,
+                    is_2fa_enabled = TWO_FA_ENABLED,
+                    is_blocked = IS_BLOCKED
+                });
+
+                context.Keys.Add(new KeyModel
+                {
+                    user_id = USER_ID,
+                    key_id = KEYS_ID,
+                    private_key = PRIVATE_KEY,
+                    internal_key = INTERNAL_KEY
+                });
+
+                context.SaveChanges();
+            }
         }
     }
 }

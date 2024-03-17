@@ -67,22 +67,26 @@ namespace webapi.Controllers.Base.CryptographyUtils
                 if (!await CheckMIME(file.ContentType))
                     return false;
 
-                using var cts = new CancellationTokenSource();
-                var cancellationToken = cts.Token;
+                // !!!!!
+                // If you are a country where ClamAV is blocked, leave this block of code commented out
+                // !!!!!
 
-                var virusCheckTask = _virusCheck.GetResultScan(file, cancellationToken);
-                var timeoutTask = Task.Delay(TASK_AWAITING);
-                var completedTask = await Task.WhenAny(virusCheckTask, timeoutTask);
+                //using var cts = new CancellationTokenSource();
+                //var cancellationToken = cts.Token;
 
-                if (completedTask == timeoutTask)
-                {
-                    cts.Cancel();
-                    _logger.LogCritical("Virus check task was cancelled", nameof(CheckFile));
-                    return false;
-                }
+                //var virusCheckTask = _virusCheck.GetResultScan(file, cancellationToken);
+                //var timeoutTask = Task.Delay(TASK_AWAITING);
+                //var completedTask = await Task.WhenAny(virusCheckTask, timeoutTask);
 
-                if (!await virusCheckTask)
-                    return false;
+                //if (completedTask == timeoutTask)
+                //{
+                //    cts.Cancel();
+                //    _logger.LogCritical("Virus check task was cancelled", nameof(CheckFile));
+                //    return false;
+                //}
+
+                //if (!await virusCheckTask)
+                //    return false;
 
                 return true;
             }

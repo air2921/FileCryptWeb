@@ -1,12 +1,33 @@
+<div align="center">
+
 # FileCryptWeb
 
-## SPA web application
+## Description
+**This project is designed for secure file encryption.**
+**Project also makes it possible to safely store and transfer encryption keys.**
 
-## Configuration Settings:
+## Key Features
+All
 
-All values must be added to the secret store. The expected configuration settings are shown below:
+## Project Technologies
 
-| Variable           | Expected Key     | Expected Value Format     |
-|--------------------|------------------|---------------------------|
-| emailPassword      | "EmailPassword"  | Any                       |
-| emailAdress        | "Email"          | "FileCryptWeb@email.com"  |
+---
+### Backend
+**C#**
+**ASP.NET Core**
+**Entity Framework Core**
+**PostgreSQL**
+**Redis**
+**Elasticsearch**
+**Kibana**
+
+---
+### Frontend
+**TypeScript**
+**JavaScript**
+**Reactjs**
+**CSS**
+
+---
+
+</div>

@@ -57,6 +57,6 @@ C:\Users\User\source\repos\github\FileCryptWeb>docker-compose up
 
 *Он доступен по пути: `https://localhost:8081/swagger/index.html`* в вашем браузере
 
-**Мониторий логи можно через `Kibana`**
+**Мониторить логи можно через `Kibana`**
 
 *Он доступен по пути: `http://localhost:5601/app/home`* в вашем браузере

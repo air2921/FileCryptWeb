@@ -26,6 +26,10 @@ namespace webapi
                 .EnableDetailedErrors(true);
             });
 
+            using var serviceScope = services.BuildServiceProvider().CreateScope();
+            var dbContext = serviceScope.ServiceProvider.GetService<FileCryptDbContext>();
+            dbContext.Initial();
+
             services.AddAutoMapper(typeof(Startup));
             services.AddControllers();
             services.AddLogging();
