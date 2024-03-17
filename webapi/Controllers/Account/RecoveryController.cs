@@ -235,7 +235,7 @@ namespace webapi.Controllers.Account
                     username = username,
                     email = email,
                     subject = EmailMessage.RecoveryAccountHeader,
-                    message = EmailMessage.RecoveryAccountBody + $"{_fileManager.GetReactAppUrl(App.REACT_LAUNCH_JSON_PATH, true)}/auth/recovery?token={token}"
+                    message = EmailMessage.RecoveryAccountBody + $"{_fileManager.GetReactAppUrl()}/auth/recovery?token={token}"
                 });
             }
             catch (SmtpClientException)

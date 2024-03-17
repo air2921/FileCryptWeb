@@ -17,7 +17,7 @@ namespace webapi.Migrations
         {
 #pragma warning disable 612, 618
             modelBuilder
-                .HasAnnotation("ProductVersion", "7.0.14")
+                .HasAnnotation("ProductVersion", "8.0.3")
                 .HasAnnotation("Relational:MaxIdentifierLength", 63);
 
             NpgsqlModelBuilderExtensions.UseIdentityByDefaultColumns(modelBuilder);
@@ -77,7 +77,7 @@ namespace webapi.Migrations
 
                     b.HasKey("mime_id");
 
-                    b.ToTable("allowedmime");
+                    b.ToTable("forbidden_mimes");
                 });
 
             modelBuilder.Entity("webapi.Models.FileModel", b =>

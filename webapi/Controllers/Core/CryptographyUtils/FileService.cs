@@ -47,7 +47,7 @@ namespace webapi.Controllers.Base.CryptographyUtils
         {
             string lowerType = type.ToLowerInvariant();
 
-            string[] typesArray = new string[]
+            string[] typesArray =
             {
                 privateType,
                 internalType,
@@ -64,7 +64,7 @@ namespace webapi.Controllers.Base.CryptographyUtils
                 if (file.Length == 0 || file.ContentType is null)
                     return false;
 
-                if (!await CheckMIME(file.ContentType))
+                if (await CheckMIME(file.ContentType))
                     return false;
 
                 // !!!!!

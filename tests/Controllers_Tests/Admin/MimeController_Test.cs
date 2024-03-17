@@ -44,27 +44,23 @@ namespace tests.Controllers_Tests.Admin
             Assert.Equal(500, objectResult.StatusCode);
         }
 
-        [Theory]
-        [InlineData(true)]
-        [InlineData(false)]
-        public async Task CreateMIMICollection_Success(bool secure)
+        [Fact]
+        public async Task CreateMIMICollection_Success()
         {
             var mimeRepositoryMock = new Mock<IRepository<FileMimeModel>>();
             var fileManagerMock = new Mock<IFileManager>();
             var redisCacheMock = new Mock<IRedisCache>();
 
             var mimeController = new Admin_MimeController(mimeRepositoryMock.Object, null, redisCacheMock.Object, fileManagerMock.Object);
-            var result = await mimeController.CreateMIMICollection(secure);
+            var result = await mimeController.CreateMIMICollection();
 
             Assert.IsType<ObjectResult>(result);
             var objectResult = (ObjectResult)result;
             Assert.Equal(201, objectResult.StatusCode);
         }
 
-        [Theory]
-        [InlineData(true)]
-        [InlineData(false)]
-        public async Task CreateMIMICollection_DbConnectionFailed(bool secure)
+        [Fact]
+        public async Task CreateMIMICollection_DbConnectionFailed()
         {
             var mimeRepositoryMock = new Mock<IRepository<FileMimeModel>>();
             var fileManagerMock = new Mock<IFileManager>();
@@ -74,17 +70,15 @@ namespace tests.Controllers_Tests.Admin
                 .ThrowsAsync((Exception)Activator.CreateInstance(typeof(OperationCanceledException)));
 
             var mimeController = new Admin_MimeController(mimeRepositoryMock.Object, null, redisCacheMock.Object, fileManagerMock.Object);
-            var result = await mimeController.CreateMIMICollection(secure);
+            var result = await mimeController.CreateMIMICollection();
 
             Assert.IsType<ObjectResult>(result);
             var objectResult = (ObjectResult)result;
             Assert.Equal(500, objectResult.StatusCode);
         }
 
-        [Theory]
-        [InlineData(true)]
-        [InlineData(false)]
-        public async Task CreateMIMICollection_EntityNotCreated(bool secure)
+        [Fact]
+        public async Task CreateMIMICollection_EntityNotCreated()
         {
             var mimeRepositoryMock = new Mock<IRepository<FileMimeModel>>();
             var fileManagerMock = new Mock<IFileManager>();
@@ -94,7 +88,7 @@ namespace tests.Controllers_Tests.Admin
                 .ThrowsAsync((Exception)Activator.CreateInstance(typeof(EntityNotCreatedException)));
 
             var mimeController = new Admin_MimeController(mimeRepositoryMock.Object, null, redisCacheMock.Object, fileManagerMock.Object);
-            var result = await mimeController.CreateMIMICollection(secure);
+            var result = await mimeController.CreateMIMICollection();
 
             Assert.IsType<ObjectResult>(result);
             var objectResult = (ObjectResult)result;

@@ -7,7 +7,6 @@ using webapi.Localization;
 using webapi.Models;
 using Microsoft.AspNetCore.Authorization;
 using webapi.Helpers;
-using webapi.Attributes;
 
 namespace webapi.Controllers.Admin
 {
@@ -62,7 +61,7 @@ namespace webapi.Controllers.Admin
         [Authorize(Roles = "HighestAdmin")]
         [ProducesResponseType(typeof(object), 201)]
         [ProducesResponseType(typeof(object), 500)]
-        public async Task<IActionResult> CreateMIMICollection([FromQuery] bool secured)
+        public async Task<IActionResult> CreateMIMICollection()
         {
             try
             {
@@ -70,11 +69,7 @@ namespace webapi.Controllers.Admin
                 var existingMimes = await _mimeRepository.GetAll();
                 var mimes = existingMimes.Select(m => m.mime_name).ToHashSet();
 
-                if (!secured)
-                    _fileManager.AddFullCollection(ref mimeModels, mimes);
-                else
-                    _fileManager.AddSecureCollection(ref mimeModels, mimes);
-
+                _fileManager.AddMimeCollection(ref mimeModels, mimes);
                 await _mimeRepository.AddRange(mimeModels);
                 return StatusCode(201, new { message = Message.CREATED });
             }
