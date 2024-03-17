@@ -6,11 +6,15 @@
 
 *No storage or analysis of the content of your files*
 
+**
+
 ## Key Features
 
 * *Open API for use by third party services*
 
 * *Encryption keys are stored in encrypted form*
+
+* *You can sign your file when encrypting file, this will increase security*
 
 * *Encryption any files without saving them on the server or in the cloud*
 
@@ -35,7 +39,7 @@
 **Elasticsearch,**
 **Kibana,**
 
-[![My Skills](https://skillicons.dev/icons?i=cs,dotnet,postgres,redis,elasticsearch,docker)](https://skillicons.dev)
+[![My Skills](https://skillicons.dev/icons?i=cs,docker,dotnet,redis,elasticsearch,postgres&perline=3)](https://skillicons.dev)
 
 ---
 ### Frontend
@@ -44,7 +48,7 @@
 **Reactjs,**
 **CSS,**
 
-[![My Skills](https://skillicons.dev/icons?i=js,ts,react,html,css,vite)](https://skillicons.dev)
+[![My Skills](https://skillicons.dev/icons?i=js,react,ts,html,vite,css&perline=3)](https://skillicons.dev)
 
 ---
 
