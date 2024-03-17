@@ -1,4 +1,8 @@
+<div align="center">
+
 # FileCryptWeb
+
+</div>
 
 *The FileCrypt web project is designed to securely encrypt user data and securely transfer encryption keys.*
 
@@ -6,7 +10,11 @@
 
 *No storage or analysis of the content of your files*
 
+<div align="center">
+
 ## Key Features
+
+</div>
 
 * *Open API for use by third party services*
 
@@ -21,7 +29,6 @@
 * *Secure exchange of encryption keys between users, without using third-party services*
 
 * *Secure store encryption keys in a vault. It is possible to add an access code for the storage, and an encryption flag for the keys inside the storage*
-
  
 <div align="center">
 
