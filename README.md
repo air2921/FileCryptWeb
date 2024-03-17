@@ -6,8 +6,6 @@
 
 *No storage or analysis of the content of your files*
 
-**
-
 ## Key Features
 
 * *Open API for use by third party services*
