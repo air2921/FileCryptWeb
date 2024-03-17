@@ -27,7 +27,6 @@
 
 ## Project Technologies
 
----
 ### Backend
 **C#,**
 **ASP.NET Core,**
@@ -39,7 +38,6 @@
 
 [![My Skills](https://skillicons.dev/icons?i=cs,docker,dotnet,redis,elasticsearch,postgres&perline=3)](https://skillicons.dev)
 
----
 ### Frontend
 **TypeScript,**
 **JavaScript,**
