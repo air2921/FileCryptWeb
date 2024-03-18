@@ -84,7 +84,18 @@ services:
     networks:
       - "webapi"
     depends_on:
-      - elasticsearch   
+      - elasticsearch
+
+  pgadmin:
+    container_name: pgadmin
+    image: dpage/pgadmin4
+    ports:
+      - "5050:80"
+    networks:
+      - "webapi"
+    environment:
+      PGADMIN_DEFAULT_EMAIL: FileCrypt147@gmail.com
+      PGADMIN_DEFAULT_PASSWORD: FileCrypt123
 
 volumes:
   postgres-data:
