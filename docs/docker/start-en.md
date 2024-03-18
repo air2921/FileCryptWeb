@@ -53,10 +53,39 @@ C:\Users\User\source\repos\github\FileCryptWeb>docker-compose up
 ---
 ## Endpoints:
 
-**You can test the API via `Swagger UI`**
+### You can test the API via `Swagger UI`
 
 *It's available at: `https://localhost:8081/swagger/index.html`* in your browser
 
-**You can monitor logs via `Kibana`**
+### You can monitor logs via `Kibana`
 
 *It's available at: `http://localhost:5601/app/home`* in your browser
+
+### You can manage the database via `PgAdmin GUI`
+
+*It's available at: `http://localhost:5050`* in your browser
+
+---
+
+# PgAdmin
+
+## PgAdmin Login
+**You can log into PgAdmin which is listed in the environment**
+
+**Login: `FileCrypt147@gmail.com`**
+
+**Password: `FileCrypt123`**
+
+## Server connect
+
+**To connect to the server we also use the default values ​​from the environment**
+
+**Host name/Address: `postgres_db`**
+
+**Port: `5432`**
+
+**Maintenance database: `filecrypt`**
+
+**Username: `postgres`**
+
+**Password: `123`**
