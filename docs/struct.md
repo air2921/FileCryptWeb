@@ -3,13 +3,13 @@ project/
 │
 ├── github
 │   └── workflow/
-|
+│
 ├── docs/
 │   ├── api/
 │   ├── docker/
-|   |   ├── start-en.md
-|   |   └── start-ru.md
-|   └── struct.md
+│   |   ├── start-en.md
+│   |   └── start-ru.md
+│   └── struct.md
 │
 ├── reactapp     # Will be added later
 │   ├── public/
