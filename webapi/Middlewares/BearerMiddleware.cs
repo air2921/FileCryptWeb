@@ -36,7 +36,8 @@ namespace webapi.Middlewares
                 context.Request.Headers.Add("Authorization", $"Bearer {jwt}");
                 AddSecurityHeaders(context);
 
-                await _next(context); return;
+                await _next(context);
+                return;
             }
 
             string refresh = null;
@@ -61,7 +62,8 @@ namespace webapi.Middlewares
                 if (userAndToken is null || userAndToken.token.expiry_date < DateTime.UtcNow || userAndToken.user.is_blocked == true)
                 {
                     tokenService.DeleteTokens();
-                    await _next(context); return;
+                    await _next(context);
+                    return;
                 }
 
                 string createdJWT = tokenService.GenerateJwtToken(userAndToken.user, ImmutableData.JwtExpiry);
@@ -73,7 +75,8 @@ namespace webapi.Middlewares
                 AddSecurityHeaders(context);
             }
 
-            await _next(context); return;
+            await _next(context);
+            return;
         }
 
         private void AddSecurityHeaders(HttpContext context)
