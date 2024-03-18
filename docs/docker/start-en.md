@@ -55,15 +55,15 @@ C:\Users\User\source\repos\github\FileCryptWeb>docker-compose up
 
 ### You can test the API via `Swagger UI`
 
-*It's available at: `https://localhost:8081/swagger/index.html`* in your browser
+*It's available at: `https://localhost:8081/swagger/index.html` in your browser*
 
 ### You can monitor logs via `Kibana`
 
-*It's available at: `http://localhost:5601/app/home`* in your browser
+*It's available at: `http://localhost:5601/app/home` in your browser*
 
 ### You can manage the database via `PgAdmin GUI`
 
-*It's available at: `http://localhost:5050`* in your browser
+*It's available at: `http://localhost:5050` in your browser*
 
 ---
 
