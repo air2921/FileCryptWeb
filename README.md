@@ -55,4 +55,6 @@
 
 ---
 
+### The documentation is located in the **`./docs`** folder of the current repository
+
 </div>
