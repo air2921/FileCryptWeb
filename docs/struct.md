@@ -75,10 +75,10 @@ project/
 ├── .dockerignore
 ├── .gitattributes
 ├── .gitignore
-├── FileCryptWeb.sln
 ├── docker-compose.yml
 ├── docker-compose-override.yml
 ├── docker-compose.dcproj
 ├── LICENSE.txt
-└── README.md
+├── README.md
+└── FileCryptWeb.sln
 ```
