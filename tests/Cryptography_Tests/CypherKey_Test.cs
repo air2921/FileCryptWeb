@@ -2,7 +2,7 @@
 using webapi.Cryptography;
 using webapi.Interfaces.Cryptography;
 
-namespace tests.Cryptography_Test
+namespace tests.Cryptography_Tests
 {
     public class CypherKey_Test
     {
