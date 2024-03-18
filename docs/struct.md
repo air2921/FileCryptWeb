@@ -3,7 +3,9 @@ project/
 │
 ├── github
 │   └── workflow/
-│
+│       ├── build.yml
+│       ├── notify.yml
+|       └── tests.yml
 ├── docs/
 │   ├── api/
 │   ├── docker/
@@ -70,5 +72,13 @@ project/
 │   ├── appsettings.json
 │   └── webapi.csproj
 │
+├── .dockerignore
+├── .gitattributes
+├── .gitignore
+├── FileCryptWeb.sln
+├── docker-compose.yml
+├── docker-compose-override.yml
+├── docker-compose.dcproj
+├── LICENSE.txt
 └── README.md
 ```
