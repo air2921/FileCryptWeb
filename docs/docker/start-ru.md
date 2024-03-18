@@ -55,8 +55,40 @@ C:\Users\User\source\repos\github\FileCryptWeb>docker-compose up
 
 **Протестировать API можно через `Swagger UI`**
 
-*Он доступен по пути: `https://localhost:8081/swagger/index.html`* в вашем браузере
+*Он доступен по пути: `https://localhost:8081/swagger/index.html` в вашем браузере*
 
 **Мониторить логи можно через `Kibana`**
 
-*Он доступен по пути: `http://localhost:5601/app/home`* в вашем браузере
+*Он доступен по пути: `http://localhost:5601/app/home` в вашем браузере*
+
+**Управлять данными в БД можно через GUI PgAdmin**
+
+*Он доступен по пути `http://localhost:5050` в вашем браузере*
+
+---
+
+# PgAdmin
+
+## Вход в PgAdmin
+**Вы можете войти в PgAdmin с помощью настроек которые указаны в окружении**
+
+**Логин: `FileCrypt147@gmail.com`**
+
+**Пароль: `FileCrypt123`**
+
+## Подключение к серверу
+**Для подключения к серверу также нужно использовать значения по умолчанию из окружения**
+
+**Имя/Адрес сервера: `postgres_db`**
+
+**Порт: `5432`**
+
+**Служебная база данных: `filecrypt`**
+
+**Имя пользователя: `postgres`**
+
+**Пароль: `123`**
+
+---
+
+![Screenshot_2](https://github.com/air2921/FileCryptWeb/assets/92780383/db653ac8-8363-4d42-b468-92d54481c9d4)
