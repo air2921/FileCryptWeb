@@ -70,14 +70,13 @@ C:\Users\User\source\repos\github\FileCryptWeb>docker-compose up
 # PgAdmin
 
 ## PgAdmin Login
-**You can log into PgAdmin which is listed in the environment**
+**You can log into PgAdmin using the settings provided in the environment**
 
 **Login: `FileCrypt147@gmail.com`**
 
 **Password: `FileCrypt123`**
 
 ## Server connect
-
 **To connect to the server we also use the default values ​​from the environment**
 
 **Host name/Address: `postgres_db`**
@@ -89,5 +88,7 @@ C:\Users\User\source\repos\github\FileCryptWeb>docker-compose up
 **Username: `postgres`**
 
 **Password: `123`**
+
+---
 
 ![Screenshot_1](https://github.com/air2921/FileCryptWeb/assets/92780383/6e2cb6ef-cdd4-46bd-8d37-cba08cf3da03)
