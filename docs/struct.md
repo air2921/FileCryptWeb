@@ -16,8 +16,10 @@ project/
 │       ├── notify.yml
 │       └── tests.yml
 ├── docs/
-│   ├── Readme_RU.md
-│   └── Readme_US.md
+│   ├── struct.md
+│   └── docker/
+│       ├── start-en.md
+│       └── start-ru.md
 ├── reactapp/
 │   ├── .eslintrc.cjs
 │   ├── .gitignore
@@ -151,7 +153,7 @@ project/
 │   │       ├── SendEmailController_Test.cs
 │   │       ├── TokenController_Test.cs
 │   │       └── UserController_Test.cs
-│   ├── Cryptography_Tests/
+│   ├── Cryptography_Test/
 │   │   ├── CypherKey_Test.cs
 │   │   └── Cypher_Test.cs
 │   ├── Db_Tests/
