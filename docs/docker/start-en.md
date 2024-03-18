@@ -89,3 +89,5 @@ C:\Users\User\source\repos\github\FileCryptWeb>docker-compose up
 **Username: `postgres`**
 
 **Password: `123`**
+
+![Screenshot_1](https://github.com/air2921/FileCryptWeb/assets/92780383/6e2cb6ef-cdd4-46bd-8d37-cba08cf3da03)
