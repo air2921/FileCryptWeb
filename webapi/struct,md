@@ -1,0 +1,153 @@
+```
+webapi/
+├── appsettings.Development.json
+├── appsettings.json
+├── Dockerfile
+├── Program.cs
+├── Startup.cs
+├── webapi.csproj
+├── webapi.csproj.user
+├── Attributes/
+│   ├── AuxiliaryObjectAttribute.cs
+│   ├── HelperAttribute.cs
+│   └── ImplementationKeyAttribute.cs
+├── Controllers/
+│   ├── Account/
+│   │   ├── AuthRegistrationController.cs
+│   │   ├── AuthSessionController.cs
+│   │   ├── RecoveryController.cs
+│   │   └── Edit/
+│   │       ├── 2FaController.cs
+│   │       ├── EmailController.cs
+│   │       ├── PasswordController.cs
+│   │       └── UsernameController.cs
+│   ├── Admin/
+│   │   ├── Admin_ApiController.cs
+│   │   ├── Admin_FileController.cs
+│   │   ├── Admin_KeyController.cs
+│   │   ├── Admin_LinkController.cs
+│   │   ├── Admin_MimeController.cs
+│   │   ├── Admin_NotificationController.cs
+│   │   ├── Admin_OfferController.cs
+│   │   ├── Admin_TokenController.cs
+│   │   ├── Admin_UserController.cs
+│   │   ├── AppController.cs
+│   │   └── SendEmailController.cs
+│   ├── Core/
+│   │   ├── ApiController.cs
+│   │   ├── CryptographyController.cs
+│   │   ├── FileController.cs
+│   │   ├── KeysController.cs
+│   │   ├── KeyStorageController.cs
+│   │   ├── NotificationController.cs
+│   │   ├── OfferController.cs
+│   │   ├── UserController.cs
+│   │   └── CryptographyUtils/
+│   │       ├── CryptographyHelper.cs
+│   │       └── FileService.cs
+│   └── Public API/
+│       └── CryptographyController.cs
+├── Cryptography/
+│   ├── AesCreator.cs
+│   ├── CryptographyResult.cs
+│   ├── Cypher.cs
+│   └── CypherKey.cs
+├── CFileCryptWeb/
+├── DB/
+│   ├── FileCryptDbContext.cs
+│   ├── Repository.cs
+│   ├── Sorting.cs
+│   └── RedisDb/
+│       ├── RedisCache.cs
+│       ├── RedisDbContext.cs
+│       └── RedisKeys.cs
+├── DTO/
+│   ├── AuthDTO.cs
+│   ├── EmailDto.cs
+│   ├── KeyDTO.cs
+│   ├── NotifyDTO.cs
+│   ├── PasswordDto.cs
+│   ├── RegisterDTO.cs
+│   ├── StorageDTO.cs
+│   └── UpdateStorageDTO.cs
+├── Exceptions/
+│   ├── EntityNotCreatedException.cs
+│   ├── EntityNotDeletedException.cs
+│   ├── EntityNotUpdatedException.cs
+│   ├── InvalidConfigurationException.cs
+│   ├── InvalidRouteException.cs
+│   └── SmtpClientException.cs
+├── Helpers/
+│   ├── FileManager.cs
+│   ├── ImmutableData.cs
+│   ├── ImplementationFinder.cs
+│   ├── UserData.cs
+│   └── Validation.cs
+├── Interfaces/
+│   ├── IRepository.cs
+│   ├── Controllers/
+│   │   ├── ICryptographyControllerBase.cs
+│   │   ├── ICryptographyParamsProvider.cs
+│   │   └── IFileService.cs
+│   ├── Cryptography/
+│   │   ├── IAes.cs
+│   │   ├── ICypher.cs
+│   │   └── ICypherKey.cs
+│   ├── Redis/
+│   │   ├── IRedisCache.cs
+│   │   ├── IRedisDbContext.cs
+│   │   └── IRedisKeys.cs
+│   └── Services/
+│       ├── IEmailSender.cs
+│       ├── IFileManager.cs
+│       ├── IGenerate.cs
+│       ├── IGetSize.cs
+│       ├── IImplementationFinder.cs
+│       ├── IPasswordManager.cs
+│       ├── ITokenService.cs
+│       ├── IUserInfo.cs
+│       ├── IValidation.cs
+│       └── IVirusCheck.cs
+├── Localization/
+│   ├── EmailMessage.cs
+│   ├── Message.cs
+│   └── NotificationMessage.cs
+├── Mapper/
+│   ├── KeyDtoToKeyStorageItemModelMapping.cs
+│   ├── NotifyDtoToNotificationModelMapping.cs
+│   └── StorageDtoToKeyStorageModelMapping.cs
+├── Middlewares/
+│   ├── BearerMiddleware.cs
+│   ├── ExceptionHandleMiddleware.cs
+│   ├── Freeze Service Middleware.cs
+│   ├── LogMiddleware.cs
+│   ├── UserSessionMiddleware.cs
+│   └── XSRF Protection Middleware.cs
+├── Migrations/
+│   ├── 20240317155330_Init.cs
+│   ├── 20240317155330_Init.Designer.cs
+│   └── FileCryptDbContextModelSnapshot.cs
+├── Models/
+│   ├── ApiModel.cs
+│   ├── FileMimeModel.cs
+│   ├── FileModel.cs
+│   ├── KeyModel.cs
+│   ├── KeyStorageItemModel.cs
+│   ├── KeyStorageModel.cs
+│   ├── LinkModel.cs
+│   ├── NotificationModel.cs
+│   ├── OfferModel.cs
+│   ├── TokenModel.cs
+│   └── UserModel.cs
+├── Security/
+│   ├── Generate.cs
+│   ├── PasswordManager.cs
+│   └── TokenService.cs
+├── Startup Extensions/
+│   ├── AppConfigurationCheck.cs
+│   ├── AppServices.cs
+│   └── DependencyContainer.cs
+└── Third Party Services/
+    ├── ClamAV.cs
+    └── EmailSender.cs
+```
