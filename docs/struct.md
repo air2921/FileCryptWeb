@@ -233,7 +233,6 @@ project/
     │   ├── CryptographyResult.cs
     │   ├── Cypher.cs
     │   └── CypherKey.cs
-    ├── CFileCryptWeb/
     ├── DB/
     │   ├── FileCryptDbContext.cs
     │   ├── Repository.cs
