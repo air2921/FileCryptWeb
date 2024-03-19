@@ -2,7 +2,7 @@
 import Message from '../../../utils/helpers/message/Message';
 import AxiosRequest from '../../../utils/api/AxiosRequest';
 import Font from '../../../utils/helpers/icon/Font';
-import FileList from '../../../components/List/FileList/FileList';
+import FileList from '../../../components/lists/files/FileList';
 import axios from 'axios';
 
 interface FileButtonProps {

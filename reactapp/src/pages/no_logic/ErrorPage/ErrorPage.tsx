@@ -2,7 +2,7 @@ import React from 'react';
 import { Link } from 'react-router-dom';
 import './ErrorPage.css'
 
-const ErrorPage = ({ statusCode, message }: ErrorPageProps) => {
+const ErrorPage: React.FC<{ statusCode: number; message: string }> = ({ statusCode, message }) => {
     return (
         <div className="error-container">
             <div className="error-code">

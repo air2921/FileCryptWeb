@@ -1,10 +1,10 @@
 ﻿import React, { useEffect, useState } from 'react';
 import { useNavigate, useParams } from 'react-router-dom';
-import UserData from '../../../components/User/UserData';
-import UserKeys from '../../../components/User/UserKeys';
-import OfferList from '../../../components/List/OfferList/OfferList';
-import AxiosRequest from '../../../utils/api/AxiosRequest';
-import FileList from '../../../components/List/FileList/FileList';
+import UserData from './UserData';
+import UserKeys from './UserKeys';
+import OfferList from '../../components/lists/offers/OfferList';
+import AxiosRequest from '../../utils/api/AxiosRequest';
+import FileList from '../../components/lists/files/FileList';
 
 const User = () => {
     const { userId } = useParams();

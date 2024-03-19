@@ -2,6 +2,18 @@ import React from 'react';
 import Font from '../../utils/helpers/icon/Font';
 import { useNavigate } from 'react-router-dom';
 
+interface UserDataProps {
+    user: {
+        username: string;
+        id: string;
+        role: string;
+        email: string;
+        is_blocked: boolean
+    };
+    isOwner: boolean
+    showButton: boolean
+}
+
 function UserData({ user, isOwner, showButton }: UserDataProps) {
     const navigate = useNavigate();
 

@@ -4,8 +4,8 @@ import { Link, Outlet, useNavigate } from 'react-router-dom';
 import cookie from 'react-cookies'
 import AxiosRequest from '../../utils/api/AxiosRequest';
 import './Layout.css'
-import useResize from '../UseResize/useResize';
-import useAuth from '../UseAuth/UseAuth';
+import useResize from '../hooks/useResize';
+import useAuth from '../hooks/useAuth';
 
 function Layout() {
     const [username, setUsername] = useState(cookie.load('auth_username'));

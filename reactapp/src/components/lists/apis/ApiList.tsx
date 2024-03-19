@@ -1,8 +1,25 @@
 ﻿import React, { useEffect, useState } from 'react';
 import Message from '../../../utils/helpers/message/Message';
-import Modal from '../../Modal/Modal';
+import Modal from '../../modal/Modal';
 import DateComponent from '../../../utils/helpers/date/Date';
 import Font from '../../../utils/helpers/icon/Font';
+
+interface ApiListProps {
+    apis: ApiProps[] | null,
+    deleteApi?: (apiId: number) => void
+}
+
+interface ApiProps {
+    api_id: number,
+    api_key: string,
+    type: string,
+    expiry_date?: string | null,
+    is_blocked: boolean,
+    last_time_activity: string,
+    max_request_of_day: number,
+    user_id: number,
+    apiCallLeft?: number
+}
 
 function ApiList({ apis, deleteApi }: ApiListProps) {
     const [isActive, setActive] = useState(false);

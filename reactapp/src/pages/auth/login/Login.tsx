@@ -1,7 +1,7 @@
 import React, { FormEvent, useState } from 'react';
 import { useNavigate } from 'react-router-dom'
 import AxiosRequest from '../../../utils/api/AxiosRequest';
-import Modal from '../../../components/Modal/Modal';
+import Modal from '../../../components/modal/Modal';
 import CreateRecovery from '../recovery/CreateRecovery';
 import Message from '../../../utils/helpers/message/Message';
 import './Login.css'

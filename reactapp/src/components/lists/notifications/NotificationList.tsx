@@ -3,6 +3,21 @@ import Message from '../../../utils/helpers/message/Message';
 import DateComponent from '../../../utils/helpers/date/Date';
 import Font from '../../../utils/helpers/icon/Font';
 
+interface NotificationListProps {
+    notifications: NotificationProps[] | null,
+    deleteNotification?: (notificationId: number) => void,
+}
+
+interface NotificationProps {
+    notification_id: number,
+    message_header: string,
+    message: string,
+    priority: string,
+    send_time: string,
+    is_checked: boolean,
+    receiver_id: number
+}
+
 function NotificationList({ notifications, deleteNotification }: NotificationListProps) {
 
     if (!notifications || notifications.every(notification => notification === null)) {

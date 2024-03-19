@@ -1,4 +1,4 @@
-﻿import { useState, useEffect } from 'react';
+import { useState, useEffect } from 'react';
 import cookie from 'react-cookies'
 import AxiosRequest from '../../utils/api/AxiosRequest';
 import { useNavigate } from 'react-router-dom';

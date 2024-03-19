@@ -1,6 +1,14 @@
 import axios from 'axios';
 
-const BASE_URL = 'https://localhost:7067/';
+const BASE_URL = 'https://localhost:8081/';
+
+interface RequestProps {
+    endpoint: string,
+    method: string,
+    withCookie: boolean,
+    requestBody: any,
+    responseType?: 'arraybuffer' | 'blob' | 'document' | 'json' | 'text'
+}
 
 const AxiosRequest = async ({ endpoint, method, withCookie, requestBody, responseType }: RequestProps) => {
     try {

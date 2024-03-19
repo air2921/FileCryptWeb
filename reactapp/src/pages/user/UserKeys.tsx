@@ -1,6 +1,14 @@
 import React from 'react';
 import Font from '../../utils/helpers/icon/Font';
 
+interface UserKeysProps {
+    keys: {
+        privateKey: boolean;
+        internalKey: boolean;
+        receivedKey: boolean;
+    };
+}
+
 function UserKeys({ keys }: UserKeysProps) {
     return (
         <div className="keys-container">

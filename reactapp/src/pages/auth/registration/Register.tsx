@@ -1,5 +1,5 @@
 ﻿import React, { ChangeEvent, FormEvent, useState } from 'react';
-import Modal from '../../../components/Modal/Modal';
+import Modal from '../../../components/modal/Modal';
 import { useNavigate } from 'react-router-dom';
 import Message from '../../../utils/helpers/message/Message';
 import AxiosRequest from '../../../utils/api/AxiosRequest';
