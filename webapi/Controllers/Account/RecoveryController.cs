@@ -86,14 +86,14 @@ namespace webapi.Controllers.Account
         [ProducesResponseType(typeof(object), 404)]
         [ProducesResponseType(typeof(object), 422)]
         [ProducesResponseType(typeof(object), 500)]
-        public async Task<IActionResult> RecoveryAccountByToken([FromQuery] string password, [FromQuery] string token)
+        public async Task<IActionResult> RecoveryAccountByToken([FromBody] RecoveryDTO recovery)
         {
             try
             {
-                if (!_recoveryService.IsValidPassword(password))
+                if (!_recoveryService.IsValidPassword(recovery.password))
                     return StatusCode(400, new { message = Message.INVALID_FORMAT });
 
-                var link = await _linkRepository.GetByFilter(query => query.Where(l => l.u_token.Equals(token)));
+                var link = await _linkRepository.GetByFilter(query => query.Where(l => l.u_token.Equals(recovery.token)));
                 if (link is null)
                     return StatusCode(404, new { message = Message.NOT_FOUND });
 
@@ -106,7 +106,7 @@ namespace webapi.Controllers.Account
                 var user = await _userRepository.GetById(link.user_id);
                 if (user is null)
                     return StatusCode(404, new { message = Message.NOT_FOUND });
-                await _recoveryService.RecoveryAccountTransaction(user, token, password);
+                await _recoveryService.RecoveryAccountTransaction(user, recovery.token, recovery.password);
 
                 await _redisCache.DeteteCacheByKeyPattern($"{ImmutableData.NOTIFICATIONS_PREFIX}{user.id}");
                 await _redisCache.DeteteCacheByKeyPattern($"{ImmutableData.USER_DATA_PREFIX}{user.id}");

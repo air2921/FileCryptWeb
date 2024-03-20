@@ -1,9 +1,9 @@
 import React, { FormEvent, useState } from 'react';
 import { useNavigate } from 'react-router-dom'
-import AxiosRequest from '../../../utils/api/AxiosRequest';
 import Modal from '../../../components/modal/Modal';
 import CreateRecovery from '../recovery/CreateRecovery';
 import Message from '../../../utils/helpers/message/Message';
+import { login, verifyLogin } from '../../../utils/api/Auth';
 import './Login.css'
 
 const Login = () => {
@@ -12,24 +12,43 @@ const Login = () => {
     const [errorMessage, setErrorMessage] = useState('');
     const [verificationRequired, setVerification] = useState(false);
     const [recoveryAccount, setRecovery] = useState(false);
+    const [code, setCode] = useState<number>();
     const navigate = useNavigate();
 
-    const handleSubmit = async (e: FormEvent) => {
+    const loginSubmit = async (e: FormEvent) => {
         e.preventDefault();
 
-        const response = await AxiosRequest({ endpoint: 'api/auth/login', method: 'POST', withCookie: true, requestBody: { email: email, password: password, } });
+        const result = await login(email, password);
+        if (result.statusCode === 200 && result.verificationRequired) {
+            setVerification(true);
+        } else if (result.statusCode === 200 && !result.verificationRequired) {
+            navigate('/');
+        } else {
+            setErrorMessage(result.message);
 
-        if (response.isSuccess) {
-            if (response.data.confirm !== null && response.data.confirm !== undefined) {
-                localStorage.setItem('login_email', email);
-                setVerification(true);
-            }
-            else {
-                navigate('/');
-            }
+            setTimeout(() => {
+                setErrorMessage('');
+            }, 5000)
         }
-        else {
-            setErrorMessage(response.data);
+    };
+
+    const verifySubmit = async (e: FormEvent) => {
+        e.preventDefault();
+
+        if (code === undefined) {
+            setErrorMessage('Code cannot be empty');
+
+            setTimeout(() => {
+                setErrorMessage('');
+            }, 5000)
+            return;
+        }
+
+        const result = await verifyLogin(code);
+        if (result.statusCode === 200) {
+            navigate('/')
+        } else {
+            setErrorMessage(result.message);
 
             setTimeout(() => {
                 setErrorMessage('');
@@ -38,34 +57,12 @@ const Login = () => {
     };
 
     const Verify = () => {
-        const [code, setCode] = useState<number>();
-
-        const handleSubmit = async (e: FormEvent) => {
-            e.preventDefault();
-
-            const email = localStorage.getItem('login_email');
-
-            const response = await AxiosRequest({ endpoint: `api/auth/verify/2fa?code=${code}&email=${email}`, method: 'POST', withCookie: true, requestBody: null });
-
-            if (response.isSuccess) {
-                navigate('/');
-                localStorage.removeItem('login_email');
-            }
-            else {
-                setErrorMessage(response.data);
-
-                setTimeout(() => {
-                    setErrorMessage('');
-                }, 5000)
-            }
-        };
-
         return (
             <div className="verify-container">
                 <div className="verify-header">
                     Two-Factor Authentication
                 </div>
-                <form className="verify-form" onSubmit={handleSubmit}>
+                <form className="verify-form" onSubmit={verifySubmit}>
                     <div className="code-text">Enter your numeric code from your email</div>
                     <div className="code-container">
                         <label htmlFor="code" className="code-label">
@@ -104,7 +101,7 @@ const Login = () => {
                 <div className="login-header">
                     Sign in to FileCryptWeb
                 </div>
-                <form className="login-form" onSubmit={handleSubmit}>
+                <form className="login-form" onSubmit={loginSubmit}>
                     <div className="input-container">
                         <div className="email-container">
                             <div className="email-text">Email</div>
