@@ -2,7 +2,6 @@
 using Microsoft.AspNetCore.Mvc;
 using Newtonsoft.Json;
 using webapi.Attributes;
-using webapi.DB;
 using webapi.DTO;
 using webapi.Exceptions;
 using webapi.Helpers;
@@ -24,7 +23,7 @@ namespace webapi.Controllers.Account.Edit
         #region fields and constructor
 
         private readonly IRepository<UserModel> _userRepository;
-        private readonly IApi2FaService _api2FaService;
+        private readonly I2FaService _api2FaService;
         private readonly IPasswordManager _passwordManager;
         private readonly IUserInfo _userInfo;
         private readonly IGenerate _generate;
@@ -32,7 +31,7 @@ namespace webapi.Controllers.Account.Edit
 
         public _2FaController(
             IRepository<UserModel> userRepository,
-            IApi2FaService api2FaService,
+            I2FaService api2FaService,
             IPasswordManager passwordManager,
             IUserInfo userInfo,
             IGenerate generate,
@@ -102,7 +101,7 @@ namespace webapi.Controllers.Account.Edit
                 if (user is null)
                     return StatusCode(404, new { message = Message.NOT_FOUND });
 
-                await _api2FaService.DbTransaction(user, enable);
+                await _api2FaService.UpdateTransaction(user, enable);
                 await _api2FaService.ClearData(_userInfo.UserId);
 
                 return StatusCode(200);
@@ -122,44 +121,40 @@ namespace webapi.Controllers.Account.Edit
         }
     }
 
-    public interface IApi2FaService
+    public interface I2FaService
     {
-        public Task DbTransaction(UserModel user, bool enable);
+        public Task UpdateTransaction(UserModel user, bool enable);
         public Task SendMessage(string username, string email, int code);
         public Task ClearData(int userId);
         public Task SetData(string key, object data);
         public Task<int> GetCode(string key);
     }
 
-    public class _2FaService : IApi2FaService
+    public class _2FaService : I2FaService
     {
-        private const string CODE = "2FaCode";
-
+        private readonly IDatabaseTransaction _transaction;
         private readonly IRepository<UserModel> _userRepository;
         private readonly IRepository<NotificationModel> _notificationRepository;
-        private readonly FileCryptDbContext _dbContext;
         private readonly IRedisCache _redisCache;
         private readonly IEmailSender _emailSender;
 
         public _2FaService(
+            IDatabaseTransaction transaction,
             IRepository<UserModel> userRepository,
             IRepository<NotificationModel> notificationRepository,
-            FileCryptDbContext dbContext,
             IRedisCache redisCache,
             IEmailSender emailSender)
         {
+            _transaction = transaction;
             _userRepository = userRepository;
             _notificationRepository = notificationRepository;
-            _dbContext = dbContext;
             _redisCache = redisCache;
             _emailSender = emailSender;
         }
 
         [Helper]
-        public async Task DbTransaction(UserModel user, bool enable)
+        public async Task UpdateTransaction(UserModel user, bool enable)
         {
-            using var transaction = await _dbContext.Database.BeginTransactionAsync();
-
             try
             {
                 if (user.is_2fa_enabled == enable)
@@ -178,17 +173,21 @@ namespace webapi.Controllers.Account.Edit
                     user_id = user.id
                 });
 
-                await transaction.CommitAsync();
+                await _transaction.CommitAsync();
             }
             catch (EntityNotCreatedException)
             {
-                await transaction.RollbackAsync();
+                await _transaction.RollbackAsync();
                 throw;
             }
             catch (EntityNotUpdatedException)
             {
-                await transaction.RollbackAsync();
+                await _transaction.RollbackAsync();
                 throw;
+            }
+            finally
+            {
+                await _transaction.DisposeAsync();
             }
         }
 

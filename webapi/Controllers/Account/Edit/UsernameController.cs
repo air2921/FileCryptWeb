@@ -20,14 +20,14 @@ namespace webapi.Controllers.Account.Edit
         #region fields and constructor
 
         private readonly IRepository<UserModel> _userRepository;
-        private readonly IApiUsernameService _usernameService;
+        private readonly IUsernameService _usernameService;
         private readonly ILogger<UsernameController> _logger;
         private readonly IUserInfo _userInfo;
         private readonly ITokenService _tokenService;
 
         public UsernameController(
             IRepository<UserModel> userRepository,
-            IApiUsernameService usernameService,
+            IUsernameService usernameService,
             ILogger<UsernameController> logger,
             IUserInfo userInfo,
             ITokenService tokenService)
@@ -81,14 +81,14 @@ namespace webapi.Controllers.Account.Edit
         }
     }
 
-    public interface IApiUsernameService
+    public interface IUsernameService
     {
         public Task DbUpdate(UserModel user, string username);
         public Task ClearData(int userId);
         public bool ValidateUsername(string username);
     }
 
-    public class UsernameService : IApiUsernameService
+    public class UsernameService : IUsernameService
     {
         private readonly IRepository<UserModel> _userRepository;
         private readonly ITokenService _tokenService;

@@ -2,7 +2,6 @@
 using Microsoft.AspNetCore.Mvc;
 using Newtonsoft.Json;
 using webapi.Attributes;
-using webapi.DB;
 using webapi.DTO;
 using webapi.Exceptions;
 using webapi.Helpers;
@@ -25,9 +24,8 @@ namespace webapi.Controllers.Account.Edit
         private readonly string OLD_EMAIL_CODE;
         private readonly string NEW_EMAIL_CODE;
 
-        private readonly IApiEmailService _emailService;
+        private readonly IEmailService _emailService;
         private readonly IRepository<UserModel> _userRepository;
-        private readonly ILogger<EmailController> _logger;
         private readonly IPasswordManager _passwordManager;
         private readonly IGenerate _generate;
         private readonly ITokenService _tokenService;
@@ -35,9 +33,8 @@ namespace webapi.Controllers.Account.Edit
         private readonly IValidation _validation;
 
         public EmailController(
-            IApiEmailService emailService,
+            IEmailService emailService,
             IRepository<UserModel> userRepository,
-            ILogger<EmailController> logger,
             IPasswordManager passwordManager,
             IGenerate generate,
             ITokenService tokenService,
@@ -46,7 +43,6 @@ namespace webapi.Controllers.Account.Edit
         {
             _emailService = emailService;
             _userRepository = userRepository;
-            _logger = logger;
             _passwordManager = passwordManager;
             _generate = generate;
             _tokenService = tokenService;
@@ -154,7 +150,7 @@ namespace webapi.Controllers.Account.Edit
                 if (user is null)
                     return StatusCode(404, new { message = Message.NOT_FOUND });
 
-                await _emailService.DbTransaction(user, email);
+                await _emailService.UpdateTransaction(user, email);
                 await _tokenService.UpdateJwtToken();
                 await _emailService.ClearData(_userInfo.UserId);
 
@@ -180,9 +176,9 @@ namespace webapi.Controllers.Account.Edit
         }
     }
 
-    public interface IApiEmailService
+    public interface IEmailService
     {
-        public Task DbTransaction(UserModel user, string email);
+        public Task UpdateTransaction(UserModel user, string email);
         public Task SendMessage(string username, string email, string header, string body);
         public Task ClearData(int userId);
         public Task SetData(string key, object data);
@@ -190,11 +186,11 @@ namespace webapi.Controllers.Account.Edit
         public Task<string> GetString(string key);
     }
 
-    public class EmailService : IApiEmailService
+    public class EmailService : IEmailService
     {
         #region fields and constructor
 
-        private readonly FileCryptDbContext _dbContext;
+        private readonly IDatabaseTransaction _transaction;
         private readonly IRepository<UserModel> _userRepository;
         private readonly IRepository<NotificationModel> _notificationRepository;
         private readonly IUserInfo _userInfo;
@@ -202,14 +198,14 @@ namespace webapi.Controllers.Account.Edit
         private readonly IRedisCache _redisCache;
 
         public EmailService(
-            FileCryptDbContext dbContext,
+            IDatabaseTransaction transaction,
             IRepository<UserModel> userRepository,
             IRepository<NotificationModel> notificationRepository,
             IUserInfo userInfo,
             IEmailSender emailSender,
             IRedisCache redisCache)
         {
-            _dbContext = dbContext;
+            _transaction = transaction;
             _userRepository = userRepository;
             _notificationRepository = notificationRepository;
             _userInfo = userInfo;
@@ -220,10 +216,8 @@ namespace webapi.Controllers.Account.Edit
         #endregion
 
         [Helper]
-        public async Task DbTransaction(UserModel user, string email)
+        public async Task UpdateTransaction(UserModel user, string email)
         {
-            using var transaction = await _dbContext.Database.BeginTransactionAsync();
-
             try
             {
                 user.email = email;
@@ -239,22 +233,26 @@ namespace webapi.Controllers.Account.Edit
                     user_id = _userInfo.UserId
                 });
 
-                await transaction.CommitAsync();
+                await _transaction.CommitAsync();
             }
             catch (EntityNotCreatedException)
             {
-                await transaction.RollbackAsync();
+                await _transaction.RollbackAsync();
                 throw;
             }
             catch (EntityNotUpdatedException)
             {
-                await transaction.RollbackAsync();
+                await _transaction.RollbackAsync();
                 throw;
             }
             catch (OperationCanceledException)
             {
-                await transaction.RollbackAsync();
+                await _transaction.RollbackAsync();
                 throw;
+            }
+            finally
+            {
+                await _transaction.DisposeAsync();
             }
         }
 

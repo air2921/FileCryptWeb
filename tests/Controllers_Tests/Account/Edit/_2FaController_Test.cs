@@ -1,5 +1,4 @@
-﻿using Microsoft.AspNetCore.Http;
-using Microsoft.AspNetCore.Mvc;
+﻿using Microsoft.AspNetCore.Mvc;
 using webapi.Controllers.Account.Edit;
 using webapi.Exceptions;
 using webapi.Interfaces;
@@ -15,7 +14,7 @@ namespace tests.Controllers_Tests.Account.Edit
         {
             var userRepositoryMock = new Mock<IRepository<UserModel>>();
             var passwordManagerMock = new Mock<IPasswordManager>();
-            var _2faServiceMock = new Mock<IApi2FaService>();
+            var _2faServiceMock = new Mock<I2FaService>();
             var generateMock = new Mock<IGenerate>();
             var userInfoMock = new Mock<IUserInfo>();
 
@@ -108,7 +107,7 @@ namespace tests.Controllers_Tests.Account.Edit
         {
             var userRepositoryMock = new Mock<IRepository<UserModel>>();
             var passwordManagerMock = new Mock<IPasswordManager>();
-            var _2faServiceMock = new Mock<IApi2FaService>();
+            var _2faServiceMock = new Mock<I2FaService>();
             var generateMock = new Mock<IGenerate>();
             var userInfoMock = new Mock<IUserInfo>();
 
@@ -143,7 +142,7 @@ namespace tests.Controllers_Tests.Account.Edit
         {
             var userInfoMock = new Mock<IUserInfo>();
             var userRepositoryMock = new Mock<IRepository<UserModel>>();
-            var _2faServiceMock = new Mock<IApi2FaService>();
+            var _2faServiceMock = new Mock<I2FaService>();
             var validationMock = new Mock<IValidation>();
 
             userInfoMock.Setup(x => x.UserId).Returns(1);
@@ -153,7 +152,7 @@ namespace tests.Controllers_Tests.Account.Edit
             });
             _2faServiceMock.Setup(x => x.GetCode(It.IsAny<string>())).ReturnsAsync(It.IsAny<int>());
             _2faServiceMock.Setup(x => x.ClearData(1)).Returns(Task.CompletedTask);
-            _2faServiceMock.Setup(x => x.DbTransaction(It.IsAny<UserModel>(), true)).Returns(Task.CompletedTask);
+            _2faServiceMock.Setup(x => x.UpdateTransaction(It.IsAny<UserModel>(), true)).Returns(Task.CompletedTask);
             validationMock.Setup(x => x.IsSixDigit(It.IsAny<int>())).Returns(true);
 
             var _2faController = new _2FaController(userRepositoryMock.Object, _2faServiceMock.Object,
@@ -167,7 +166,7 @@ namespace tests.Controllers_Tests.Account.Edit
         [Fact]
         public async Task UpdateState_Failed_InvalidSavedCode()
         {
-            var _2faServiceMock = new Mock<IApi2FaService>();
+            var _2faServiceMock = new Mock<I2FaService>();
             var validationMock = new Mock<IValidation>();
             var userInfoMock = new Mock<IUserInfo>();
 
@@ -190,7 +189,7 @@ namespace tests.Controllers_Tests.Account.Edit
         {
             var userRepositoryMock = new Mock<IRepository<UserModel>>();
             var userInfoMock = new Mock<IUserInfo>();
-            var _2faServiceMock = new Mock<IApi2FaService>();
+            var _2faServiceMock = new Mock<I2FaService>();
             var validationMock = new Mock<IValidation>();
 
             userRepositoryMock.Setup(x => x.GetById(It.IsAny<int>(), CancellationToken.None)).ReturnsAsync((UserModel)null);
@@ -213,7 +212,7 @@ namespace tests.Controllers_Tests.Account.Edit
         {
             var userRepositoryMock = new Mock<IRepository<UserModel>>();
             var userInfoMock = new Mock<IUserInfo>();
-            var _2faServiceMock = new Mock<IApi2FaService>();
+            var _2faServiceMock = new Mock<I2FaService>();
             var validationMock = new Mock<IValidation>();
 
             userRepositoryMock.Setup(x => x.GetById(It.IsAny<int>(), CancellationToken.None))
@@ -240,7 +239,7 @@ namespace tests.Controllers_Tests.Account.Edit
         {
             var userInfoMock = new Mock<IUserInfo>();
             var userRepositoryMock = new Mock<IRepository<UserModel>>();
-            var _2faServiceMock = new Mock<IApi2FaService>();
+            var _2faServiceMock = new Mock<I2FaService>();
             var validationMock = new Mock<IValidation>();
 
             userInfoMock.Setup(x => x.UserId).Returns(1);
@@ -254,7 +253,7 @@ namespace tests.Controllers_Tests.Account.Edit
 
             validationMock.Setup(x => x.IsSixDigit(It.IsAny<int>())).Returns(true);
             _2faServiceMock.Setup(x => x.GetCode(It.IsAny<string>())).ReturnsAsync(It.IsAny<int>());
-            _2faServiceMock.Setup(x => x.DbTransaction(It.IsAny<UserModel>(), true))
+            _2faServiceMock.Setup(x => x.UpdateTransaction(It.IsAny<UserModel>(), true))
                 .ThrowsAsync((Exception)Activator.CreateInstance(exType));
 
             var _2faController = new _2FaController(userRepositoryMock.Object, _2faServiceMock.Object,

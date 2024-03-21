@@ -1,7 +1,6 @@
 ﻿using Microsoft.AspNetCore.Mvc;
 using System.Text.RegularExpressions;
 using webapi.Attributes;
-using webapi.DB;
 using webapi.DTO;
 using webapi.Exceptions;
 using webapi.Helpers;
@@ -19,7 +18,7 @@ namespace webapi.Controllers.Account
     {
         #region fields and constructor
 
-        private readonly IApiRecoveryService _recoveryService;
+        private readonly IRecoveryService _recoveryService;
         private readonly IRepository<UserModel> _userRepository;
         private readonly IRedisCache _redisCache;
         private readonly IRepository<LinkModel> _linkRepository;
@@ -27,7 +26,7 @@ namespace webapi.Controllers.Account
         private readonly IGenerate _generate;
 
         public RecoveryController(
-            IApiRecoveryService recoveryService,
+            IRecoveryService recoveryService,
             IRepository<UserModel> userRepository,
             IRedisCache redisCache,
             IRepository<LinkModel> linkRepository,
@@ -58,7 +57,7 @@ namespace webapi.Controllers.Account
                     return StatusCode(404, new { message = Message.NOT_FOUND });
 
                 string token = Guid.NewGuid().ToString("N") + Guid.NewGuid().ToString() + _generate.GenerateKey();
-                await _recoveryService.CreateRecoveryTransaction(user, token);
+                await _recoveryService.CreateTokenTransaction(user, token);
                 await _recoveryService.SendMessage(user.username, user.email, token);
 
                 await _redisCache.DeteteCacheByKeyPattern($"{ImmutableData.NOTIFICATIONS_PREFIX}{user.id}");
@@ -106,7 +105,7 @@ namespace webapi.Controllers.Account
                 var user = await _userRepository.GetById(link.user_id);
                 if (user is null)
                     return StatusCode(404, new { message = Message.NOT_FOUND });
-                await _recoveryService.RecoveryAccountTransaction(user, recovery.token, recovery.password);
+                await _recoveryService.RecoveryTransaction(user, recovery.token, recovery.password);
 
                 await _redisCache.DeteteCacheByKeyPattern($"{ImmutableData.NOTIFICATIONS_PREFIX}{user.id}");
                 await _redisCache.DeteteCacheByKeyPattern($"{ImmutableData.USER_DATA_PREFIX}{user.id}");
@@ -132,17 +131,17 @@ namespace webapi.Controllers.Account
         }
     }
 
-    public interface IApiRecoveryService
+    public interface IRecoveryService
     {
-        public Task RecoveryAccountTransaction(UserModel user, string token, string password);
+        public Task RecoveryTransaction(UserModel user, string token, string password);
         public Task SendMessage(string username, string email, string token);
-        public Task CreateRecoveryTransaction(UserModel user, string token);
+        public Task CreateTokenTransaction(UserModel user, string token);
         public bool IsValidPassword(string password);
     }
 
-    public class RecoveryService : IApiRecoveryService
+    public class RecoveryService : IRecoveryService
     {
-        private readonly FileCryptDbContext _dbContext;
+        private readonly IDatabaseTransaction _transaction;
         private readonly IRepository<UserModel> _userRepository;
         private readonly IRepository<NotificationModel> _notificationRepository;
         private readonly IRepository<LinkModel> _linkRepository;
@@ -152,7 +151,7 @@ namespace webapi.Controllers.Account
         private readonly IFileManager _fileManager;
 
         public RecoveryService(
-            FileCryptDbContext dbContext,
+            IDatabaseTransaction transaction,
             IRepository<UserModel> userRepository,
             IRepository<NotificationModel> notificationRepository,
             IRepository<LinkModel> linkRepository,
@@ -161,7 +160,7 @@ namespace webapi.Controllers.Account
             IEmailSender emailSender,
             IFileManager fileManager)
         {
-            _dbContext = dbContext;
+            _transaction = transaction;
             _userRepository = userRepository;
             _notificationRepository = notificationRepository;
             _linkRepository = linkRepository;
@@ -178,10 +177,8 @@ namespace webapi.Controllers.Account
         }
 
         [Helper]
-        public async Task RecoveryAccountTransaction(UserModel user, string token, string password)
+        public async Task RecoveryTransaction(UserModel user, string token, string password)
         {
-            using var transaction = await _dbContext.Database.BeginTransactionAsync();
-
             try
             {
                 user.password = _passwordManager.HashingPassword(password);
@@ -206,22 +203,26 @@ namespace webapi.Controllers.Account
 
                 await _tokenRepository.DeleteMany(tokens);
 
-                await transaction.CommitAsync();
+                await _transaction.CommitAsync();
             }
             catch (EntityNotUpdatedException)
             {
-                await transaction.RollbackAsync();
+                await _transaction.RollbackAsync();
                 throw;
             }
             catch (EntityNotCreatedException)
             {
-                await transaction.RollbackAsync();
+                await _transaction.RollbackAsync();
                 throw;
             }
             catch (EntityNotDeletedException)
             {
-                await transaction.RollbackAsync();
+                await _transaction.RollbackAsync();
                 throw;
+            }
+            finally
+            {
+                await _transaction.DisposeAsync();
             }
         }
 
@@ -245,10 +246,8 @@ namespace webapi.Controllers.Account
         }
 
         [Helper]
-        public async Task CreateRecoveryTransaction(UserModel user, string token)
+        public async Task CreateTokenTransaction(UserModel user, string token)
         {
-            using var transaction = await _dbContext.Database.BeginTransactionAsync();
-
             try
             {
                 await _linkRepository.Add(new LinkModel
@@ -270,12 +269,16 @@ namespace webapi.Controllers.Account
                     user_id = user.id
                 });
 
-                await transaction.CommitAsync();
+                await _transaction.CommitAsync();
             }
             catch (EntityNotCreatedException)
             {
-                await transaction.RollbackAsync();
+                await _transaction.RollbackAsync();
                 throw;
+            }
+            finally
+            {
+                await _transaction.DisposeAsync();
             }
         }
     }

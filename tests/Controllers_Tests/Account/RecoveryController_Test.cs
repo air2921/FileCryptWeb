@@ -1,6 +1,6 @@
 ﻿using Microsoft.AspNetCore.Mvc;
-using Org.BouncyCastle.Tsp;
 using webapi.Controllers.Account;
+using webapi.DTO;
 using webapi.Exceptions;
 using webapi.Interfaces;
 using webapi.Interfaces.Redis;
@@ -16,7 +16,7 @@ namespace tests.Controllers_Tests.Account
         {
             var userRepositoryMock = new Mock<IRepository<UserModel>>();
             var generateMock = new Mock<IGenerate>();
-            var recoveryServiceMock = new Mock<IApiRecoveryService>();
+            var recoveryServiceMock = new Mock<IRecoveryService>();
             var redisCacheMock = new Mock<IRedisCache>();
 
             userRepositoryMock.Setup(x => x.GetByFilter(It.IsAny<Func<IQueryable<UserModel>, IQueryable<UserModel>>>(), CancellationToken.None))
@@ -78,7 +78,7 @@ namespace tests.Controllers_Tests.Account
         {
             var userRepositoryMock = new Mock<IRepository<UserModel>>();
             var generateMock = new Mock<IGenerate>();
-            var recoveryServiceMock = new Mock<IApiRecoveryService>();
+            var recoveryServiceMock = new Mock<IRecoveryService>();
 
             userRepositoryMock.Setup(x => x.GetByFilter(It.IsAny<Func<IQueryable<UserModel>, IQueryable<UserModel>>>(), CancellationToken.None))
                 .ReturnsAsync(new UserModel
@@ -87,7 +87,7 @@ namespace tests.Controllers_Tests.Account
                     email = string.Empty
                 });
             generateMock.Setup(x => x.GenerateKey()).Returns(string.Empty);
-            recoveryServiceMock.Setup(x => x.CreateRecoveryTransaction(It.IsAny<UserModel>(), It.IsAny<string>()))
+            recoveryServiceMock.Setup(x => x.CreateTokenTransaction(It.IsAny<UserModel>(), It.IsAny<string>()))
                 .ThrowsAsync((Exception)Activator.CreateInstance(typeof(EntityNotCreatedException)));
 
             var recoveryController = new RecoveryController(recoveryServiceMock.Object, userRepositoryMock.Object,
@@ -105,7 +105,7 @@ namespace tests.Controllers_Tests.Account
         {
             var userRepositoryMock = new Mock<IRepository<UserModel>>();
             var generateMock = new Mock<IGenerate>();
-            var recoveryServiceMock = new Mock<IApiRecoveryService>();
+            var recoveryServiceMock = new Mock<IRecoveryService>();
 
             userRepositoryMock.Setup(x => x.GetByFilter(It.IsAny<Func<IQueryable<UserModel>, IQueryable<UserModel>>>(), CancellationToken.None))
                 .ReturnsAsync(new UserModel
@@ -130,7 +130,7 @@ namespace tests.Controllers_Tests.Account
         [Fact]
         public async Task RecoveryAccountByToken_Success()
         {
-            var recoveryServiceMock = new Mock<IApiRecoveryService>();
+            var recoveryServiceMock = new Mock<IRecoveryService>();
             var linkRepositoryMock = new Mock<IRepository<LinkModel>>();
             var userRepositoryMock = new Mock<IRepository<UserModel>>();
             var redisCacheMock = new Mock<IRedisCache>();
@@ -148,7 +148,7 @@ namespace tests.Controllers_Tests.Account
             var recoveryController = new RecoveryController(recoveryServiceMock.Object, userRepositoryMock.Object,
                 redisCacheMock.Object, linkRepositoryMock.Object, null, null);
 
-            var result = await recoveryController.RecoveryAccountByToken(string.Empty, string.Empty);
+            var result = await recoveryController.RecoveryAccountByToken(new RecoveryDTO { password = string.Empty, token = string.Empty });
 
             Assert.Equal(200, ((StatusCodeResult)result).StatusCode);
         }
@@ -156,14 +156,14 @@ namespace tests.Controllers_Tests.Account
         [Fact]
         public async Task RecoveryAccountByToken_InvalidPassword()
         {
-            var recoveryServiceMock = new Mock<IApiRecoveryService>();
+            var recoveryServiceMock = new Mock<IRecoveryService>();
 
             recoveryServiceMock.Setup(x => x.IsValidPassword(It.IsAny<string>())).Returns(false);
 
             var recoveryController = new RecoveryController(recoveryServiceMock.Object, null,
                 null, null, null, null);
 
-            var result = await recoveryController.RecoveryAccountByToken(string.Empty, string.Empty);
+            var result = await recoveryController.RecoveryAccountByToken(new RecoveryDTO { password = string.Empty, token = string.Empty });
 
             Assert.IsType<ObjectResult>(result);
             var objectResult = (ObjectResult)result;
@@ -173,7 +173,7 @@ namespace tests.Controllers_Tests.Account
         [Fact]
         public async Task RecoveryAccountByToken_LinkNotFound()
         {
-            var recoveryServiceMock = new Mock<IApiRecoveryService>();
+            var recoveryServiceMock = new Mock<IRecoveryService>();
             var linkRepositoryMock = new Mock<IRepository<LinkModel>>();
 
             recoveryServiceMock.Setup(x => x.IsValidPassword(It.IsAny<string>())).Returns(true);
@@ -183,7 +183,7 @@ namespace tests.Controllers_Tests.Account
             var recoveryController = new RecoveryController(recoveryServiceMock.Object, null,
                 null, linkRepositoryMock.Object, null, null);
 
-            var result = await recoveryController.RecoveryAccountByToken(string.Empty, string.Empty);
+            var result = await recoveryController.RecoveryAccountByToken(new RecoveryDTO { password = string.Empty, token = string.Empty });
 
             Assert.IsType<ObjectResult>(result);
             var objectResult = (ObjectResult)result;
@@ -193,7 +193,7 @@ namespace tests.Controllers_Tests.Account
         [Fact]
         public async Task RecoveryAccountByToken_LinkExpired()
         {
-            var recoveryServiceMock = new Mock<IApiRecoveryService>();
+            var recoveryServiceMock = new Mock<IRecoveryService>();
             var linkRepositoryMock = new Mock<IRepository<LinkModel>>();
 
             recoveryServiceMock.Setup(x => x.IsValidPassword(It.IsAny<string>())).Returns(true);
@@ -208,7 +208,7 @@ namespace tests.Controllers_Tests.Account
             var recoveryController = new RecoveryController(recoveryServiceMock.Object, null,
                 null, linkRepositoryMock.Object, null, null);
 
-            var result = await recoveryController.RecoveryAccountByToken(string.Empty, string.Empty);
+            var result = await recoveryController.RecoveryAccountByToken(new RecoveryDTO { password = string.Empty, token = string.Empty });
 
             Assert.IsType<ObjectResult>(result);
             var objectResult = (ObjectResult)result;
@@ -218,7 +218,7 @@ namespace tests.Controllers_Tests.Account
         [Fact]
         public async Task RecoveryAccountByToken_UserNotFound()
         {
-            var recoveryServiceMock = new Mock<IApiRecoveryService>();
+            var recoveryServiceMock = new Mock<IRecoveryService>();
             var linkRepositoryMock = new Mock<IRepository<LinkModel>>();
             var userRepositoryMock = new Mock<IRepository<UserModel>>();
 
@@ -235,7 +235,7 @@ namespace tests.Controllers_Tests.Account
             var recoveryController = new RecoveryController(recoveryServiceMock.Object, userRepositoryMock.Object,
                 null, linkRepositoryMock.Object, null, null);
 
-            var result = await recoveryController.RecoveryAccountByToken(string.Empty, string.Empty);
+            var result = await recoveryController.RecoveryAccountByToken(new RecoveryDTO { password = string.Empty, token = string.Empty });
 
             Assert.IsType<ObjectResult>(result);
             var objectResult = (ObjectResult)result;
@@ -245,7 +245,7 @@ namespace tests.Controllers_Tests.Account
         [Fact]
         public async Task RecoveryAccountByToken_DbConnectionFailed()
         {
-            var recoveryServiceMock = new Mock<IApiRecoveryService>();
+            var recoveryServiceMock = new Mock<IRecoveryService>();
             var linkRepositoryMock = new Mock<IRepository<LinkModel>>();
 
             recoveryServiceMock.Setup(x => x.IsValidPassword(It.IsAny<string>())).Returns(true);
@@ -255,7 +255,7 @@ namespace tests.Controllers_Tests.Account
             var recoveryController = new RecoveryController(recoveryServiceMock.Object, null,
                 null, linkRepositoryMock.Object, null, null);
 
-            var result = await recoveryController.RecoveryAccountByToken(string.Empty, string.Empty);
+            var result = await recoveryController.RecoveryAccountByToken(new RecoveryDTO { password = string.Empty, token = string.Empty });
 
             Assert.IsType<ObjectResult>(result);
             var objectResult = (ObjectResult)result;
@@ -265,7 +265,7 @@ namespace tests.Controllers_Tests.Account
         [Fact]
         public async Task RecoveryAccountByToken_LinkNotDeleted()
         {
-            var recoveryServiceMock = new Mock<IApiRecoveryService>();
+            var recoveryServiceMock = new Mock<IRecoveryService>();
             var linkRepositoryMock = new Mock<IRepository<LinkModel>>();
 
             recoveryServiceMock.Setup(x => x.IsValidPassword(It.IsAny<string>())).Returns(true);
@@ -282,7 +282,7 @@ namespace tests.Controllers_Tests.Account
             var recoveryController = new RecoveryController(recoveryServiceMock.Object, null,
                 null, linkRepositoryMock.Object, null, null);
 
-            var result = await recoveryController.RecoveryAccountByToken(string.Empty, string.Empty);
+            var result = await recoveryController.RecoveryAccountByToken(new RecoveryDTO { password = string.Empty, token = string.Empty });
 
             Assert.IsType<ObjectResult>(result);
             var objectResult = (ObjectResult)result;
@@ -295,12 +295,12 @@ namespace tests.Controllers_Tests.Account
         [InlineData(typeof(EntityNotCreatedException))]
         public async Task RecoveryAccountByToken_RecoveryAccountTransactionFailed(Type ex)
         {
-            var recoveryServiceMock = new Mock<IApiRecoveryService>();
+            var recoveryServiceMock = new Mock<IRecoveryService>();
             var linkRepositoryMock = new Mock<IRepository<LinkModel>>();
             var userRepositoryMock = new Mock<IRepository<UserModel>>();
 
             recoveryServiceMock.Setup(x => x.IsValidPassword(It.IsAny<string>())).Returns(true);
-            recoveryServiceMock.Setup(x => x.RecoveryAccountTransaction(It.IsAny<UserModel>(), It.IsAny<string>(), It.IsAny<string>()))
+            recoveryServiceMock.Setup(x => x.RecoveryTransaction(It.IsAny<UserModel>(), It.IsAny<string>(), It.IsAny<string>()))
                 .ThrowsAsync((Exception)Activator.CreateInstance(ex));
             linkRepositoryMock.Setup(x => x.GetByFilter(It.IsAny<Func<IQueryable<LinkModel>, IQueryable<LinkModel>>>(), CancellationToken.None))
                 .ReturnsAsync(new LinkModel
@@ -314,7 +314,7 @@ namespace tests.Controllers_Tests.Account
             var recoveryController = new RecoveryController(recoveryServiceMock.Object, userRepositoryMock.Object,
                 null, linkRepositoryMock.Object, null, null);
 
-            var result = await recoveryController.RecoveryAccountByToken(string.Empty, string.Empty);
+            var result = await recoveryController.RecoveryAccountByToken(new RecoveryDTO { password = string.Empty, token = string.Empty });
 
             Assert.IsType<ObjectResult>(result);
             var objectResult = (ObjectResult)result;

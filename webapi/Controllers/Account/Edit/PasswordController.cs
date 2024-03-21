@@ -2,7 +2,6 @@
 using Microsoft.AspNetCore.Mvc;
 using System.Text.RegularExpressions;
 using webapi.Attributes;
-using webapi.DB;
 using webapi.DTO;
 using webapi.Exceptions;
 using webapi.Helpers;
@@ -21,14 +20,14 @@ namespace webapi.Controllers.Account.Edit
     {
         #region fields and contructor
 
-        private readonly IApiPasswordService _passwordService;
+        private readonly IPasswordService _passwordService;
         private readonly IRepository<UserModel> _userRepository;
         private readonly ILogger<PasswordController> _logger;
         private readonly IPasswordManager _passwordManager;
         private readonly IUserInfo _userInfo;
 
         public PasswordController(
-            IApiPasswordService passwordService,
+            IPasswordService passwordService,
             IRepository<UserModel> userRepository,
             ILogger<PasswordController> logger,
             IPasswordManager passwordManager,
@@ -65,7 +64,7 @@ namespace webapi.Controllers.Account.Edit
                 if (!IsCorrect)
                     return StatusCode(401, new { message = Message.INCORRECT });
 
-                await _passwordService.DbTransaction(user, passwordDto.NewPassword);
+                await _passwordService.UpdateTransaction(user, passwordDto.NewPassword);
                 await _passwordService.ClearData(_userInfo.UserId);
 
                 return StatusCode(200, new { message = Message.UPDATED });
@@ -85,16 +84,16 @@ namespace webapi.Controllers.Account.Edit
         }
     }
 
-    public interface IApiPasswordService
+    public interface IPasswordService
     {
-        public Task DbTransaction(UserModel user, string password);
+        public Task UpdateTransaction(UserModel user, string password);
         public Task ClearData(int userId);
         public bool ValidatePassword(string password);
     }
 
-    public class PasswordService : IApiPasswordService
+    public class PasswordService : IPasswordService
     {
-        private readonly FileCryptDbContext _dbContext;
+        private readonly IDatabaseTransaction _transaction;
         private readonly IPasswordManager _passwordManager;
         private readonly IRepository<UserModel> _userRepository;
         private readonly IRepository<NotificationModel> _notificationRepository;
@@ -102,14 +101,14 @@ namespace webapi.Controllers.Account.Edit
         private readonly IUserInfo _userInfo;
 
         public PasswordService(
-            FileCryptDbContext dbContext,
+            IDatabaseTransaction transaction,
             IPasswordManager passwordManager,
             IRepository<UserModel> userRepository,
             IRepository<NotificationModel> notificationRepository,
             IRedisCache redisCache,
             IUserInfo userInfo)
         {
-            _dbContext = dbContext;
+            _transaction = transaction;
             _passwordManager = passwordManager;
             _userRepository = userRepository;
             _notificationRepository = notificationRepository;
@@ -118,10 +117,8 @@ namespace webapi.Controllers.Account.Edit
         }
 
         [Helper]
-        public async Task DbTransaction(UserModel user, string password)
+        public async Task UpdateTransaction(UserModel user, string password)
         {
-            using var transaction = await _dbContext.Database.BeginTransactionAsync();
-
             try
             {
                 user.password = _passwordManager.HashingPassword(password);
@@ -137,17 +134,21 @@ namespace webapi.Controllers.Account.Edit
                     user_id = _userInfo.UserId
                 });
 
-                await transaction.CommitAsync();
+                await _transaction.CommitAsync();
             }
             catch (EntityNotUpdatedException)
             {
-                await transaction.RollbackAsync();
+                await _transaction.RollbackAsync();
                 throw;
             }
             catch (EntityNotCreatedException)
             {
-                await transaction.RollbackAsync();
+                await _transaction.RollbackAsync();
                 throw;
+            }
+            finally
+            {
+                await _transaction.DisposeAsync();
             }
         }
 

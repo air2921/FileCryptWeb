@@ -31,6 +31,7 @@ namespace webapi
             services.AddScoped<IRedisCache, RedisCache>();
 
             services.AddScoped(typeof(IRepository<>), typeof(Repository<>));
+            services.AddScoped<IDatabaseTransaction, DatabaseTransaction>();
             services.AddScoped<ISorting, Sorting>();
 
             services.AddScoped<ICryptographyControllerBase, CryptographyHelper>();
@@ -51,13 +52,13 @@ namespace webapi
 
         private static void ControllerServices(IServiceCollection services)
         {
-            services.AddScoped<IApi2FaService, _2FaService>();
-            services.AddScoped<IApiEmailService, EmailService>();
-            services.AddScoped<IApiPasswordService, PasswordService>();
-            services.AddScoped<IApiUsernameService, UsernameService>();
-            services.AddScoped<IApiRegistrationService, RegistrationService>();
-            services.AddScoped<IApiSessionService, SessionService>();
-            services.AddScoped<IApiRecoveryService, RecoveryService>();
+            services.AddScoped<I2FaService, _2FaService>();
+            services.AddScoped<IEmailService, EmailService>();
+            services.AddScoped<IPasswordService, PasswordService>();
+            services.AddScoped<IUsernameService, UsernameService>();
+            services.AddScoped<IRegistrationService, RegistrationService>();
+            services.AddScoped<ISessionService, SessionService>();
+            services.AddScoped<IRecoveryService, RecoveryService>();
             services.AddScoped<IApiAdminKeysService, AdminKeysService>();
             services.AddScoped<IApiAdminTokenService, AdminTokenService>();
             services.AddScoped<IApiAdminUserService, AdminUserService>();

@@ -24,7 +24,7 @@ namespace webapi.Controllers.Account
         #region fields and constructor
 
         private readonly IRepository<UserModel> _userRepository;
-        private readonly IApiRegistrationService _registrationService;
+        private readonly IRegistrationService _registrationService;
         private readonly ILogger<AuthRegistrationController> _logger;
         private readonly IPasswordManager _passwordManager;
         private readonly IConfiguration _configuration;
@@ -33,7 +33,7 @@ namespace webapi.Controllers.Account
 
         public AuthRegistrationController(
             IRepository<UserModel> userRepository,
-            IApiRegistrationService registrationService,
+            IRegistrationService registrationService,
             ILogger<AuthRegistrationController> logger,
             IPasswordManager passwordManager,
             IConfiguration configuration,
@@ -111,7 +111,7 @@ namespace webapi.Controllers.Account
                 if (!IsCorrect)
                     return StatusCode(422, new { message = Message.INCORRECT });
 
-                await _registrationService.DbTransaction(user);
+                await _registrationService.RegisterTransaction(user);
 
                 return StatusCode(201);
             }
@@ -122,18 +122,18 @@ namespace webapi.Controllers.Account
         }
     }
 
-    public interface IApiRegistrationService
+    public interface IRegistrationService
     {
         public bool IsValidData(RegisterDTO userDTO);
-        public Task DbTransaction(UserObject user);
+        public Task RegisterTransaction(UserObject user);
         public Task SendMessage(string username, string email, int code);
         public Task SetUser(string key, UserObject user);
         public Task<UserObject> GetUser(string key);
     }
 
-    public class RegistrationService : IApiRegistrationService
+    public class RegistrationService : IRegistrationService
     {
-        private readonly FileCryptDbContext _dbContext;
+        private readonly IDatabaseTransaction _transaction;
         private readonly IConfiguration _configuration;
         private readonly IRepository<UserModel> _userRepository;
         private readonly IRepository<KeyModel> _keyRepository;
@@ -145,7 +145,7 @@ namespace webapi.Controllers.Account
         private readonly byte[] secretKey;
 
         public RegistrationService(
-            FileCryptDbContext dbContext,
+            IDatabaseTransaction transaction,
             IConfiguration configuration,
             IRepository<UserModel> userRepository,
             IRepository<KeyModel> keyRepository,
@@ -155,7 +155,7 @@ namespace webapi.Controllers.Account
             IEmailSender emailSender,
             [FromKeyedServices("Encrypt")] ICypherKey encrypt)
         {
-            _dbContext = dbContext;
+            _transaction = transaction;
             _configuration = configuration;
             _userRepository = userRepository;
             _keyRepository = keyRepository;
@@ -177,10 +177,8 @@ namespace webapi.Controllers.Account
         }
 
         [Helper]
-        public async Task DbTransaction(UserObject user)
+        public async Task RegisterTransaction(UserObject user)
         {
-            using var transaction = await _dbContext.Database.BeginTransactionAsync();
-
             try
             {
                 var id = await _userRepository.Add(new UserModel
@@ -199,12 +197,16 @@ namespace webapi.Controllers.Account
                     private_key = await _encrypt.CypherKeyAsync(_generate.GenerateKey(), secretKey)
                 });
 
-                await transaction.CommitAsync();
+                await _transaction.CommitAsync();
             }
             catch (EntityNotCreatedException)
             {
-                await transaction.RollbackAsync();
+                await _transaction.RollbackAsync();
                 throw;
+            }
+            finally
+            {
+                await _transaction.DisposeAsync();
             }
         }
 

@@ -56,7 +56,7 @@ namespace webapi.Controllers.Admin
             }
         }
 
-        [HttpPost("many")]
+        [HttpPost("range")]
         [ValidateAntiForgeryToken]
         [Authorize(Roles = "HighestAdmin")]
         [ProducesResponseType(typeof(object), 201)]
@@ -108,7 +108,7 @@ namespace webapi.Controllers.Admin
             }
         }
 
-        [HttpGet("all")]
+        [HttpGet("range")]
         [Authorize(Roles = "HighestAdmin,Admin")]
         [ProducesResponseType(typeof(IEnumerable<FileMimeModel>), 200)]
         [ProducesResponseType(typeof(object), 400)]
@@ -151,7 +151,7 @@ namespace webapi.Controllers.Admin
             }
         }
 
-        [HttpDelete("many")]
+        [HttpDelete("range")]
         [ValidateAntiForgeryToken]
         [Authorize(Roles = "HighestAdmin,Admin")]
         [ProducesResponseType(204)]

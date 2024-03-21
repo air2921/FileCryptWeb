@@ -15,7 +15,7 @@ namespace tests.Controllers_Tests.Account.Edit
             var userRepositoryMock = new Mock<IRepository<UserModel>>();
             var userInfoMock = new Mock<IUserInfo>();
             var tokenServiceMock = new Mock<ITokenService>();
-            var usernameServiceMock = new Mock<IApiUsernameService>();
+            var usernameServiceMock = new Mock<IUsernameService>();
 
             userRepositoryMock.Setup(x => x.GetById(It.IsAny<int>(), CancellationToken.None)).ReturnsAsync(new UserModel());
             userInfoMock.Setup(x => x.UserId).Returns(1);
@@ -34,7 +34,7 @@ namespace tests.Controllers_Tests.Account.Edit
         [Fact]
         public async Task UpdateUsername_InvalidUsername()
         {
-            var usernameServiceMock = new Mock<IApiUsernameService>();
+            var usernameServiceMock = new Mock<IUsernameService>();
 
             usernameServiceMock.Setup(x => x.ValidateUsername(It.IsAny<string>())).Returns(false);
 
@@ -51,7 +51,7 @@ namespace tests.Controllers_Tests.Account.Edit
         public async Task UpdateUsername_UserNotFound()
         {
             var userRepositoryMock = new Mock<IRepository<UserModel>>();
-            var usernameServiceMock = new Mock<IApiUsernameService>();
+            var usernameServiceMock = new Mock<IUsernameService>();
             var userInfoMock = new Mock<IUserInfo>();
 
             userRepositoryMock.Setup(x => x.GetById(It.IsAny<int>(), CancellationToken.None)).ReturnsAsync((UserModel)null);
@@ -72,7 +72,7 @@ namespace tests.Controllers_Tests.Account.Edit
         public async Task UpdateUsername_DbConnectionFailed()
         {
             var userRepositoryMock = new Mock<IRepository<UserModel>>();
-            var usernameServiceMock = new Mock<IApiUsernameService>();
+            var usernameServiceMock = new Mock<IUsernameService>();
             var userInfoMock = new Mock<IUserInfo>();
 
             userRepositoryMock.Setup(x => x.GetById(It.IsAny<int>(), CancellationToken.None))
@@ -94,7 +94,7 @@ namespace tests.Controllers_Tests.Account.Edit
         public async Task UpdateUsername_UpdateFailed_ThrowsException()
         {
             var userRepositoryMock = new Mock<IRepository<UserModel>>();
-            var usernameServiceMock = new Mock<IApiUsernameService>();
+            var usernameServiceMock = new Mock<IUsernameService>();
             var userInfoMock = new Mock<IUserInfo>();
 
             userRepositoryMock.Setup(x => x.GetById(It.IsAny<int>(), CancellationToken.None)).ReturnsAsync(new UserModel());
@@ -119,7 +119,7 @@ namespace tests.Controllers_Tests.Account.Edit
             var userRepositoryMock = new Mock<IRepository<UserModel>>();
             var userInfoMock = new Mock<IUserInfo>();
             var tokenServiceMock = new Mock<ITokenService>();
-            var usernameServiceMock = new Mock<IApiUsernameService>();
+            var usernameServiceMock = new Mock<IUsernameService>();
 
             userRepositoryMock.Setup(x => x.GetById(It.IsAny<int>(), CancellationToken.None)).ReturnsAsync(new UserModel());
             userInfoMock.Setup(x => x.UserId).Returns(1);

@@ -2,7 +2,6 @@
 using Microsoft.AspNetCore.Mvc;
 using Newtonsoft.Json;
 using webapi.Attributes;
-using webapi.DB;
 using webapi.DTO;
 using webapi.Exceptions;
 using webapi.Helpers;
@@ -22,30 +21,21 @@ namespace webapi.Controllers.Account
 
         #region fields and costructor
 
-        private readonly IApiSessionService _sessionService;
+        private readonly ISessionService _sessionService;
         private readonly IRepository<UserModel> _userRepository;
-        private readonly IRepository<TokenModel> _tokenRepository;
-        private readonly ILogger<AuthSessionController> _logger;
-        private readonly IUserInfo _userInfo;
         private readonly IPasswordManager _passwordManager;
         private readonly ITokenService _tokenService;
         private readonly IGenerate _generate;
 
         public AuthSessionController(
-            IApiSessionService sessionService,
+            ISessionService sessionService,
             IRepository<UserModel> userRepository,
-            IRepository<TokenModel> tokenRepository,
-            ILogger<AuthSessionController> logger,
-            IUserInfo userInfo,
             IPasswordManager passwordManager,
             ITokenService tokenService,
             IGenerate generate)
         {
             _sessionService = sessionService;
             _userRepository = userRepository;
-            _tokenRepository = tokenRepository;
-            _logger = logger;
-            _userInfo = userInfo;
             _passwordManager = passwordManager;
             _tokenService = tokenService;
             _generate = generate;
@@ -162,41 +152,38 @@ namespace webapi.Controllers.Account
         }
     }
 
-    public interface IApiSessionService
+    public interface ISessionService
     {
         public Task<IActionResult> CreateTokens(UserModel user, HttpContext context);
-        public Task RevokeToken(HttpContext content);
+        public Task RevokeToken(HttpContext context);
         public Task SendMessage(string username, string email, int code);
         public Task SetData(string key, UserContextObject user);
         public Task<UserContextObject> GetData(string key);
     }
 
-    public class SessionService : ControllerBase, IApiSessionService
+    public class SessionService : ControllerBase, ISessionService
     {
         #region fields and constructor
 
-        private readonly FileCryptDbContext _dbContext;
+        private readonly IDatabaseTransaction _transaction;
         private readonly IRepository<TokenModel> _tokenRepository;
         private readonly IRepository<NotificationModel> _notificationRepository;
         private readonly IEmailSender _emailSender;
-        private readonly IPasswordManager _passwordManager;
         private readonly IRedisCache _redisCache;
         private readonly ITokenService _tokenService;
 
         public SessionService(
-            FileCryptDbContext dbContext,
+            IDatabaseTransaction transaction,
             IRepository<TokenModel> tokenRepository,
             IRepository<NotificationModel> notificationRepository,
             IEmailSender emailSender,
-            IPasswordManager passwordManager,
             IRedisCache redisCache,
             ITokenService tokenService)
         {
-            _dbContext = dbContext;
+            _transaction = transaction;
             _tokenRepository = tokenRepository;
             _notificationRepository = notificationRepository;
             _emailSender = emailSender;
-            _passwordManager = passwordManager;
             _redisCache = redisCache;
             _tokenService = tokenService;
         }
@@ -223,10 +210,8 @@ namespace webapi.Controllers.Account
         }
 
         [Helper]
-        private async Task DbTransaction(UserModel user, string refreshToken)
+        private async Task LoginTransaction(UserModel user, string refreshToken)
         {
-            using var transaction = await _dbContext.Database.BeginTransactionAsync();
-
             try
             {
                 await _tokenRepository.Add(new TokenModel
@@ -246,12 +231,16 @@ namespace webapi.Controllers.Account
                     user_id = user.id
                 });
 
-                await transaction.CommitAsync();
+                await _transaction.CommitAsync();
             }
             catch (EntityNotCreatedException)
             {
-                await transaction.RollbackAsync();
+                await _transaction.RollbackAsync();
                 throw;
+            }
+            finally
+            {
+                await _transaction.DisposeAsync();
             }
         }
 
@@ -262,7 +251,7 @@ namespace webapi.Controllers.Account
             try
             {
                 string refreshToken = _tokenService.GenerateRefreshToken();
-                await DbTransaction(user, refreshToken);
+                await LoginTransaction(user, refreshToken);
                 CookieAppend(user, context, refreshToken);
 
                 await _redisCache.DeteteCacheByKeyPattern($"{ImmutableData.NOTIFICATIONS_PREFIX}{user.id}");

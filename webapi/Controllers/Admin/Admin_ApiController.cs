@@ -54,7 +54,7 @@ namespace webapi.Controllers.Admin
             }
         }
 
-        [HttpGet("many")]
+        [HttpGet("range")]
         [ProducesResponseType(typeof(IEnumerable<ApiModel>), 200)]
         [ProducesResponseType(typeof(object), 500)]
         public async Task<IActionResult> GetRangeApi([FromQuery] int userId)
@@ -90,7 +90,7 @@ namespace webapi.Controllers.Admin
             }
         }
 
-        [HttpDelete("many")]
+        [HttpDelete("range")]
         [ValidateAntiForgeryToken]
         [ProducesResponseType(204)]
         [ProducesResponseType(typeof(object), 500)]

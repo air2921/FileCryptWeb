@@ -16,7 +16,7 @@ namespace tests.Controllers_Tests.Account.Edit
             var userRepositoryMock = new Mock<IRepository<UserModel>>();
             var userInfoMock = new Mock<IUserInfo>();
             var passwordManagerMock = new Mock<IPasswordManager>();
-            var passwordServiceMock = new Mock<IApiPasswordService>();
+            var passwordServiceMock = new Mock<IPasswordService>();
 
             userRepositoryMock.Setup(x => x.GetById(It.IsAny<int>(), CancellationToken.None)).ReturnsAsync(new UserModel
             {
@@ -25,7 +25,7 @@ namespace tests.Controllers_Tests.Account.Edit
             });
             userInfoMock.Setup(x => x.UserId).Returns(1);
             passwordManagerMock.Setup(x => x.CheckPassword(It.IsAny<string>(), It.IsAny<string>())).Returns(true);
-            passwordServiceMock.Setup(x => x.DbTransaction(It.IsAny<UserModel>(), It.IsAny<string>())).Returns(Task.CompletedTask);
+            passwordServiceMock.Setup(x => x.UpdateTransaction(It.IsAny<UserModel>(), It.IsAny<string>())).Returns(Task.CompletedTask);
             passwordServiceMock.Setup(x => x.ClearData(It.IsAny<int>())).Returns(Task.CompletedTask);
             passwordServiceMock.Setup(x => x.ValidatePassword(It.IsAny<string>())).Returns(true);
 
@@ -42,7 +42,7 @@ namespace tests.Controllers_Tests.Account.Edit
         [Fact]
         public async Task UpdatePassword_NewPassword_InvalidFormat()
         {
-            var passwordServiceMock = new Mock<IApiPasswordService>();
+            var passwordServiceMock = new Mock<IPasswordService>();
             passwordServiceMock.Setup(x => x.ValidatePassword(It.IsAny<string>())).Returns(false);
 
             var passwordController = new PasswordController(passwordServiceMock.Object, null, null, null, null);
@@ -59,7 +59,7 @@ namespace tests.Controllers_Tests.Account.Edit
         {
             var userRepositoryMock = new Mock<IRepository<UserModel>>();
             var userInfoMock = new Mock<IUserInfo>();
-            var passwordServiceMock = new Mock<IApiPasswordService>();
+            var passwordServiceMock = new Mock<IPasswordService>();
 
             userRepositoryMock.Setup(x => x.GetById(It.IsAny<int>(), CancellationToken.None)).ReturnsAsync((UserModel)null);
             userInfoMock.Setup(x => x.UserId).Returns(1);
@@ -79,7 +79,7 @@ namespace tests.Controllers_Tests.Account.Edit
         {
             var userRepositoryMock = new Mock<IRepository<UserModel>>();
             var userInfoMock = new Mock<IUserInfo>();
-            var passwordServiceMock = new Mock<IApiPasswordService>();
+            var passwordServiceMock = new Mock<IPasswordService>();
 
             userRepositoryMock.Setup(x => x.GetById(It.IsAny<int>(), CancellationToken.None))
                 .ThrowsAsync((Exception)Activator.CreateInstance(typeof(OperationCanceledException)));
@@ -101,7 +101,7 @@ namespace tests.Controllers_Tests.Account.Edit
             var userRepositoryMock = new Mock<IRepository<UserModel>>();
             var userInfoMock = new Mock<IUserInfo>();
             var passwordManagerMock = new Mock<IPasswordManager>();
-            var passwordServiceMock = new Mock<IApiPasswordService>();
+            var passwordServiceMock = new Mock<IPasswordService>();
 
             userRepositoryMock.Setup(x => x.GetById(It.IsAny<int>(), CancellationToken.None))
                 .ReturnsAsync(new UserModel
@@ -130,7 +130,7 @@ namespace tests.Controllers_Tests.Account.Edit
             var userRepositoryMock = new Mock<IRepository<UserModel>>();
             var userInfoMock = new Mock<IUserInfo>();
             var passwordManagerMock = new Mock<IPasswordManager>();
-            var passwordServiceMock = new Mock<IApiPasswordService>();
+            var passwordServiceMock = new Mock<IPasswordService>();
 
             userRepositoryMock.Setup(x => x.GetById(It.IsAny<int>(), CancellationToken.None)).ReturnsAsync(new UserModel
             {
@@ -140,7 +140,7 @@ namespace tests.Controllers_Tests.Account.Edit
             userInfoMock.Setup(x => x.UserId).Returns(1);
             passwordServiceMock.Setup(x => x.ValidatePassword(It.IsAny<string>())).Returns(true);
             passwordManagerMock.Setup(x => x.CheckPassword(It.IsAny<string>(), It.IsAny<string>())).Returns(true);
-            passwordServiceMock.Setup(x => x.DbTransaction(It.IsAny<UserModel>(), It.IsAny<string>()))
+            passwordServiceMock.Setup(x => x.UpdateTransaction(It.IsAny<UserModel>(), It.IsAny<string>()))
                 .ThrowsAsync((Exception)Activator.CreateInstance(ex));
 
             var passwordController = new PasswordController(passwordServiceMock.Object, userRepositoryMock.Object,

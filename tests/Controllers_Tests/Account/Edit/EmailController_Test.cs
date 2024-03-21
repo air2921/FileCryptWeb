@@ -16,7 +16,7 @@ namespace tests.Controllers_Tests.Account.Edit
             var userRepositoryMock = new Mock<IRepository<UserModel>>();
             var userInfoMock = new Mock<IUserInfo>();
             var passwordManagerMock = new Mock<IPasswordManager>();
-            var emailServiceMock = new Mock<IApiEmailService>();
+            var emailServiceMock = new Mock<IEmailService>();
             var generateMock = new Mock<IGenerate>();
 
             userRepositoryMock.Setup(x => x.GetById(It.IsAny<int>(), CancellationToken.None)).ReturnsAsync(new UserModel
@@ -32,7 +32,7 @@ namespace tests.Controllers_Tests.Account.Edit
             emailServiceMock.Setup(x => x.SetData(It.IsAny<string>(), It.IsAny<int>()));
 
             var emailController = new EmailController(emailServiceMock.Object, userRepositoryMock.Object,
-                null, passwordManagerMock.Object, generateMock.Object, null, userInfoMock.Object, null);
+                passwordManagerMock.Object, generateMock.Object, null, userInfoMock.Object, null);
 
             var result = await emailController.StartEmailChangeProcess(It.IsAny<string>());
 
@@ -50,7 +50,7 @@ namespace tests.Controllers_Tests.Account.Edit
             userRepositoryMock.Setup(x => x.GetById(It.IsAny<int>(), CancellationToken.None)).ReturnsAsync((UserModel)null);
             userInfoMock.Setup(x => x.UserId).Returns(1);
 
-            var emailController = new EmailController(null, userRepositoryMock.Object, null, null, null, null, userInfoMock.Object, null);
+            var emailController = new EmailController(null, userRepositoryMock.Object, null, null, null, userInfoMock.Object, null);
 
             var result = await emailController.StartEmailChangeProcess(string.Empty);
 
@@ -69,7 +69,7 @@ namespace tests.Controllers_Tests.Account.Edit
                 .ThrowsAsync((Exception)Activator.CreateInstance(typeof(OperationCanceledException)));
             userInfoMock.Setup(x => x.UserId).Returns(1);
 
-            var emailController = new EmailController(null, userRepositoryMock.Object, null, null, null, null, userInfoMock.Object, null);
+            var emailController = new EmailController(null, userRepositoryMock.Object, null, null, null, userInfoMock.Object, null);
 
             var result = await emailController.StartEmailChangeProcess(string.Empty);
 
@@ -93,7 +93,7 @@ namespace tests.Controllers_Tests.Account.Edit
             userInfoMock.Setup(x => x.UserId).Returns(1);
             passwordManagerMock.Setup(x => x.CheckPassword(It.IsAny<string>(), It.IsAny<string>())).Returns(false);
 
-            var emailController = new EmailController(null, userRepositoryMock.Object, null,
+            var emailController = new EmailController(null, userRepositoryMock.Object,
                 passwordManagerMock.Object, null, null, userInfoMock.Object, null);
 
             var result = await emailController.StartEmailChangeProcess("incorrect123");
@@ -109,7 +109,7 @@ namespace tests.Controllers_Tests.Account.Edit
             var userRepositoryMock = new Mock<IRepository<UserModel>>();
             var userInfoMock = new Mock<IUserInfo>();
             var passwordManagerMock = new Mock<IPasswordManager>();
-            var emailServiceMock = new Mock<IApiEmailService>();
+            var emailServiceMock = new Mock<IEmailService>();
             var generateMock = new Mock<IGenerate>();
 
             userRepositoryMock.Setup(x => x.GetById(It.IsAny<int>(), CancellationToken.None)).ReturnsAsync(new UserModel
@@ -124,7 +124,7 @@ namespace tests.Controllers_Tests.Account.Edit
                 .ThrowsAsync((Exception)Activator.CreateInstance(typeof(SmtpClientException)));
 
             var emailController = new EmailController(emailServiceMock.Object, userRepositoryMock.Object,
-                null, passwordManagerMock.Object, generateMock.Object, null, userInfoMock.Object, null);
+                passwordManagerMock.Object, generateMock.Object, null, userInfoMock.Object, null);
 
             var result = await emailController.StartEmailChangeProcess("incorrect123");
 
@@ -136,7 +136,7 @@ namespace tests.Controllers_Tests.Account.Edit
         [Fact]
         public async Task ConfirmOldEmail_Success()
         {
-            var emailServiceMock = new Mock<IApiEmailService>();
+            var emailServiceMock = new Mock<IEmailService>();
             var validationMock = new Mock<IValidation>();
             var generateMock = new Mock<IGenerate>();
             var userRepositoryMock = new Mock<IRepository<UserModel>>();
@@ -154,7 +154,7 @@ namespace tests.Controllers_Tests.Account.Edit
                 .ReturnsAsync((UserModel)null);
 
             var emailController = new EmailController(emailServiceMock.Object, userRepositoryMock.Object,
-                null, null, generateMock.Object, null, userInfoMock.Object, validationMock.Object);
+                null, generateMock.Object, null, userInfoMock.Object, validationMock.Object);
 
             var result = await emailController.ConfirmOldEmail("TestEmail134@mail.com", 123456);
 
@@ -166,7 +166,7 @@ namespace tests.Controllers_Tests.Account.Edit
         [Fact]
         public async Task ConfirmOldEmail_InvalidCode()
         {
-            var emailServiceMock = new Mock<IApiEmailService>();
+            var emailServiceMock = new Mock<IEmailService>();
             var validationMock = new Mock<IValidation>();
             var userInfoMock = new Mock<IUserInfo>();
 
@@ -175,7 +175,7 @@ namespace tests.Controllers_Tests.Account.Edit
             userInfoMock.Setup(x => x.UserId).Returns(1);
 
             var emailController = new EmailController(emailServiceMock.Object, null,
-                null, null, null, null, userInfoMock.Object, validationMock.Object);
+                null, null, null, userInfoMock.Object, validationMock.Object);
 
             var result = await emailController.ConfirmOldEmail("TestEmail134@mail.com", 123);
 
@@ -187,7 +187,7 @@ namespace tests.Controllers_Tests.Account.Edit
         [Fact]
         public async Task ConfirmOldEmail_UserAlreadyExists()
         {
-            var emailServiceMock = new Mock<IApiEmailService>();
+            var emailServiceMock = new Mock<IEmailService>();
             var validationMock = new Mock<IValidation>();
             var userRepositoryMock = new Mock<IRepository<UserModel>>();
             var userInfoMock = new Mock<IUserInfo>();
@@ -199,7 +199,7 @@ namespace tests.Controllers_Tests.Account.Edit
             userInfoMock.Setup(x => x.UserId).Returns(1);
 
             var emailController = new EmailController(emailServiceMock.Object, userRepositoryMock.Object,
-                null, null, null, null, userInfoMock.Object, validationMock.Object);
+                null, null, null, userInfoMock.Object, validationMock.Object);
 
             var result = await emailController.ConfirmOldEmail("TestEmail134@mail.com", 123456);
 
@@ -211,7 +211,7 @@ namespace tests.Controllers_Tests.Account.Edit
         [Fact]
         public async Task ConfirmOldEmail_DbConnectionFailed()
         {
-            var emailServiceMock = new Mock<IApiEmailService>();
+            var emailServiceMock = new Mock<IEmailService>();
             var validationMock = new Mock<IValidation>();
             var userRepositoryMock = new Mock<IRepository<UserModel>>();
             var userInfoMock = new Mock<IUserInfo>();
@@ -223,7 +223,7 @@ namespace tests.Controllers_Tests.Account.Edit
             userInfoMock.Setup(x => x.UserId).Returns(1);
 
             var emailController = new EmailController(emailServiceMock.Object, userRepositoryMock.Object,
-                null, null, null, null, userInfoMock.Object, validationMock.Object);
+                null, null, null, userInfoMock.Object, validationMock.Object);
 
             var result = await emailController.ConfirmOldEmail("TestEmail134@mail.com", 123456);
 
@@ -235,7 +235,7 @@ namespace tests.Controllers_Tests.Account.Edit
         [Fact]
         public async Task ConfirmOldEmail_EmailSendFailed()
         {
-            var emailServiceMock = new Mock<IApiEmailService>();
+            var emailServiceMock = new Mock<IEmailService>();
             var validationMock = new Mock<IValidation>();
             var generateMock = new Mock<IGenerate>();
             var userInfoMock = new Mock<IUserInfo>();
@@ -251,7 +251,7 @@ namespace tests.Controllers_Tests.Account.Edit
                 .ReturnsAsync((UserModel)null);
 
             var emailController = new EmailController(emailServiceMock.Object, userRepositoryMock.Object,
-                null, null, generateMock.Object, null, userInfoMock.Object, validationMock.Object);
+                null, generateMock.Object, null, userInfoMock.Object, validationMock.Object);
 
             var result = await emailController.ConfirmOldEmail("TestEmail134@mail.com", 123456);
 
@@ -263,7 +263,7 @@ namespace tests.Controllers_Tests.Account.Edit
         [Fact]
         public async Task ConfirmAndUpdateNewEmail_Success()
         {
-            var emailServiceMock = new Mock<IApiEmailService>();
+            var emailServiceMock = new Mock<IEmailService>();
             var validationMock = new Mock<IValidation>();
             var tokenServiceMock = new Mock<ITokenService>();
             var userInfoMock = new Mock<IUserInfo>();
@@ -277,7 +277,7 @@ namespace tests.Controllers_Tests.Account.Edit
             userRepositoryMock.Setup(x => x.GetById(It.IsAny<int>(), CancellationToken.None)).ReturnsAsync(new UserModel());
 
             var emailController = new EmailController(emailServiceMock.Object, userRepositoryMock.Object,
-                null, null, null, tokenServiceMock.Object, userInfoMock.Object, validationMock.Object);
+                null, null, tokenServiceMock.Object, userInfoMock.Object, validationMock.Object);
 
             var result = await emailController.ConfirmAndUpdateNewEmail(123456);
 
@@ -287,7 +287,7 @@ namespace tests.Controllers_Tests.Account.Edit
         [Fact]
         public async Task ConfirmAndUpdateNewEmail_InvalidCode()
         {
-            var emailServiceMock = new Mock<IApiEmailService>();
+            var emailServiceMock = new Mock<IEmailService>();
             var validationMock = new Mock<IValidation>();
             var userInfoMock = new Mock<IUserInfo>();
 
@@ -295,7 +295,7 @@ namespace tests.Controllers_Tests.Account.Edit
             validationMock.Setup(x => x.IsSixDigit(It.IsAny<int>())).Returns(false);
             userInfoMock.Setup(x => x.UserId).Returns(1);
 
-            var emailController = new EmailController(emailServiceMock.Object, null, null,
+            var emailController = new EmailController(emailServiceMock.Object, null,
                 null, null, null, userInfoMock.Object, validationMock.Object);
 
             var result = await emailController.ConfirmAndUpdateNewEmail(123);
@@ -308,7 +308,7 @@ namespace tests.Controllers_Tests.Account.Edit
         [Fact]
         public async Task ConfirmAndUpdateNewEmail_SavedEmailNull()
         {
-            var emailServiceMock = new Mock<IApiEmailService>();
+            var emailServiceMock = new Mock<IEmailService>();
             var validationMock = new Mock<IValidation>();
             var userInfoMock = new Mock<IUserInfo>();
 
@@ -317,7 +317,7 @@ namespace tests.Controllers_Tests.Account.Edit
             validationMock.Setup(x => x.IsSixDigit(It.IsAny<int>())).Returns(true);
             userInfoMock.Setup(x => x.UserId).Returns(1);
 
-            var emailController = new EmailController(emailServiceMock.Object, null, null, null,
+            var emailController = new EmailController(emailServiceMock.Object, null, null,
                 null, null, userInfoMock.Object, validationMock.Object);
 
             var result = await emailController.ConfirmAndUpdateNewEmail(123);
@@ -330,7 +330,7 @@ namespace tests.Controllers_Tests.Account.Edit
         [Fact]
         public async Task ConfirmAndUpdateNewEmail_UserNotFound()
         {
-            var emailServiceMock = new Mock<IApiEmailService>();
+            var emailServiceMock = new Mock<IEmailService>();
             var validationMock = new Mock<IValidation>();
             var userInfoMock = new Mock<IUserInfo>();
             var userRepositoryMock = new Mock<IRepository<UserModel>>();
@@ -342,7 +342,7 @@ namespace tests.Controllers_Tests.Account.Edit
             userRepositoryMock.Setup(x => x.GetById(It.IsAny<int>(), CancellationToken.None)).ReturnsAsync((UserModel)null);
 
             var emailController = new EmailController(emailServiceMock.Object, userRepositoryMock.Object,
-                null, null, null, null, userInfoMock.Object, validationMock.Object);
+                null, null, null, userInfoMock.Object, validationMock.Object);
 
             var result = await emailController.ConfirmAndUpdateNewEmail(123);
 
@@ -354,7 +354,7 @@ namespace tests.Controllers_Tests.Account.Edit
         [Fact]
         public async Task ConfirmAndUpdateNewEmail_DbConnectionFailed()
         {
-            var emailServiceMock = new Mock<IApiEmailService>();
+            var emailServiceMock = new Mock<IEmailService>();
             var validationMock = new Mock<IValidation>();
             var userInfoMock = new Mock<IUserInfo>();
             var userRepositoryMock = new Mock<IRepository<UserModel>>();
@@ -367,7 +367,7 @@ namespace tests.Controllers_Tests.Account.Edit
                  .ThrowsAsync((Exception)Activator.CreateInstance(typeof(OperationCanceledException)));
 
             var emailController = new EmailController(emailServiceMock.Object, userRepositoryMock.Object,
-                null, null, null, null, userInfoMock.Object, validationMock.Object);
+                null, null, null, userInfoMock.Object, validationMock.Object);
 
             var result = await emailController.ConfirmAndUpdateNewEmail(123);
 
@@ -381,21 +381,21 @@ namespace tests.Controllers_Tests.Account.Edit
         [InlineData(typeof(EntityNotCreatedException))]
         public async Task ConfirmAndUpdateNewEmail_ThrowsException(Type ex)
         {
-            var emailServiceMock = new Mock<IApiEmailService>();
+            var emailServiceMock = new Mock<IEmailService>();
             var validationMock = new Mock<IValidation>();
             var userInfoMock = new Mock<IUserInfo>();
             var userRepositoryMock = new Mock<IRepository<UserModel>>();
 
             emailServiceMock.Setup(x => x.GetCode(It.IsAny<string>())).ReturnsAsync(123);
             emailServiceMock.Setup(x => x.GetString(It.IsAny<string>())).ReturnsAsync("TestEmail134@mail.com");
-            emailServiceMock.Setup(x => x.DbTransaction(It.IsAny<UserModel>(), It.IsAny<string>()))
+            emailServiceMock.Setup(x => x.UpdateTransaction(It.IsAny<UserModel>(), It.IsAny<string>()))
                 .ThrowsAsync((Exception)Activator.CreateInstance(ex));
             validationMock.Setup(x => x.IsSixDigit(It.IsAny<int>())).Returns(true);
             userInfoMock.Setup(x => x.UserId).Returns(1);
             userRepositoryMock.Setup(x => x.GetById(It.IsAny<int>(), CancellationToken.None)).ReturnsAsync(new UserModel());
 
             var emailController = new EmailController(emailServiceMock.Object, userRepositoryMock.Object,
-                null, null, null, null, userInfoMock.Object, validationMock.Object);
+                null, null, null, userInfoMock.Object, validationMock.Object);
 
             var result = await emailController.ConfirmAndUpdateNewEmail(123);
 
@@ -407,7 +407,7 @@ namespace tests.Controllers_Tests.Account.Edit
         [Fact]
         public async Task ConfirmAndUpdateNewEmail_JwtUpdateFailed()
         {
-            var emailServiceMock = new Mock<IApiEmailService>();
+            var emailServiceMock = new Mock<IEmailService>();
             var validationMock = new Mock<IValidation>();
             var userInfoMock = new Mock<IUserInfo>();
             var tokenServiceMock = new Mock<ITokenService>();
@@ -415,7 +415,7 @@ namespace tests.Controllers_Tests.Account.Edit
 
             emailServiceMock.Setup(x => x.GetCode(It.IsAny<string>())).ReturnsAsync(123);
             emailServiceMock.Setup(x => x.GetString(It.IsAny<string>())).ReturnsAsync("TestEmail134@mail.com");
-            emailServiceMock.Setup(x => x.DbTransaction(It.IsAny<UserModel>(), It.IsAny<string>())).Returns(Task.CompletedTask);
+            emailServiceMock.Setup(x => x.UpdateTransaction(It.IsAny<UserModel>(), It.IsAny<string>())).Returns(Task.CompletedTask);
             validationMock.Setup(x => x.IsSixDigit(It.IsAny<int>())).Returns(true);
             userInfoMock.Setup(x => x.UserId).Returns(1);
             tokenServiceMock.Setup(x => x.UpdateJwtToken())
@@ -423,7 +423,7 @@ namespace tests.Controllers_Tests.Account.Edit
             userRepositoryMock.Setup(x => x.GetById(It.IsAny<int>(), CancellationToken.None)).ReturnsAsync(new UserModel());
 
             var emailController = new EmailController(emailServiceMock.Object, userRepositoryMock.Object,
-                null, null, null, tokenServiceMock.Object, userInfoMock.Object, validationMock.Object);
+                null, null, tokenServiceMock.Object, userInfoMock.Object, validationMock.Object);
 
             var result = await emailController.ConfirmAndUpdateNewEmail(123);
 

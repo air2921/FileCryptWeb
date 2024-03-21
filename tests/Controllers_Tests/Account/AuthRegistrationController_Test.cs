@@ -15,7 +15,7 @@ namespace tests.Controllers_Tests.Account
         {
             var generateMock = new Mock<IGenerate>();
             var userRepositoryMock = new Mock<IRepository<UserModel>>();
-            var registrationServiceMock = new Mock<IApiRegistrationService>();
+            var registrationServiceMock = new Mock<IRegistrationService>();
 
             generateMock.Setup(x => x.GenerateSixDigitCode()).Returns(123456);
             userRepositoryMock.Setup(x => x.GetByFilter(It.IsAny<Func<IQueryable<UserModel>, IQueryable<UserModel>>>(), CancellationToken.None))
@@ -42,7 +42,7 @@ namespace tests.Controllers_Tests.Account
         public async Task Registration_InvalidData()
         {
             var generateMock = new Mock<IGenerate>();
-            var registrationServiceMock = new Mock<IApiRegistrationService>();
+            var registrationServiceMock = new Mock<IRegistrationService>();
 
             generateMock.Setup(x => x.GenerateSixDigitCode()).Returns(123456);
             registrationServiceMock.Setup(x => x.IsValidData(It.IsAny<RegisterDTO>())).Returns(false);
@@ -68,7 +68,7 @@ namespace tests.Controllers_Tests.Account
         {
             var generateMock = new Mock<IGenerate>();
             var userRepositoryMock = new Mock<IRepository<UserModel>>();
-            var registrationServiceMock = new Mock<IApiRegistrationService>();
+            var registrationServiceMock = new Mock<IRegistrationService>();
 
             generateMock.Setup(x => x.GenerateSixDigitCode()).Returns(123456);
             userRepositoryMock.Setup(x => x.GetByFilter(It.IsAny<Func<IQueryable<UserModel>, IQueryable<UserModel>>>(), CancellationToken.None))
@@ -96,7 +96,7 @@ namespace tests.Controllers_Tests.Account
         {
             var generateMock = new Mock<IGenerate>();
             var userRepositoryMock = new Mock<IRepository<UserModel>>();
-            var registrationServiceMock = new Mock<IApiRegistrationService>();
+            var registrationServiceMock = new Mock<IRegistrationService>();
 
             generateMock.Setup(x => x.GenerateSixDigitCode()).Returns(123456);
             userRepositoryMock.Setup(x => x.GetByFilter(It.IsAny<Func<IQueryable<UserModel>, IQueryable<UserModel>>>(), CancellationToken.None))
@@ -124,7 +124,7 @@ namespace tests.Controllers_Tests.Account
         {
             var generateMock = new Mock<IGenerate>();
             var userRepositoryMock = new Mock<IRepository<UserModel>>();
-            var registrationServiceMock = new Mock<IApiRegistrationService>();
+            var registrationServiceMock = new Mock<IRegistrationService>();
 
             generateMock.Setup(x => x.GenerateSixDigitCode()).Returns(123456);
             userRepositoryMock.Setup(x => x.GetByFilter(It.IsAny<Func<IQueryable<UserModel>, IQueryable<UserModel>>>(), CancellationToken.None))
@@ -152,7 +152,7 @@ namespace tests.Controllers_Tests.Account
         [Fact]
         public async Task VerifyAccount_Success()
         {
-            var registrationServiceMock = new Mock<IApiRegistrationService>();
+            var registrationServiceMock = new Mock<IRegistrationService>();
             var passwordManagerMock = new Mock<IPasswordManager>();
 
             registrationServiceMock.Setup(x => x.GetUser(It.IsAny<string>())).ReturnsAsync(new UserObject
@@ -172,7 +172,7 @@ namespace tests.Controllers_Tests.Account
         [Fact]
         public async Task VerifyAccount_UserDataIsNull()
         {
-            var registrationServiceMock = new Mock<IApiRegistrationService>();
+            var registrationServiceMock = new Mock<IRegistrationService>();
 
             registrationServiceMock.Setup(x => x.GetUser(It.IsAny<string>())).ReturnsAsync((UserObject)null);
 
@@ -189,7 +189,7 @@ namespace tests.Controllers_Tests.Account
         [Fact]
         public async Task VerifyAccount_CodeIncorrect()
         {
-            var registrationServiceMock = new Mock<IApiRegistrationService>();
+            var registrationServiceMock = new Mock<IRegistrationService>();
             var passwordManagerMock = new Mock<IPasswordManager>();
 
             registrationServiceMock.Setup(x => x.GetUser(It.IsAny<string>())).ReturnsAsync(new UserObject
@@ -211,14 +211,14 @@ namespace tests.Controllers_Tests.Account
         [Fact]
         public async Task VerifyAccount_UserNotCreated_ThrowsException()
         {
-            var registrationServiceMock = new Mock<IApiRegistrationService>();
+            var registrationServiceMock = new Mock<IRegistrationService>();
             var passwordManagerMock = new Mock<IPasswordManager>();
 
             registrationServiceMock.Setup(x => x.GetUser(It.IsAny<string>())).ReturnsAsync(new UserObject
             {
                 Code = string.Empty
             });
-            registrationServiceMock.Setup(x => x.DbTransaction(It.IsAny<UserObject>()))
+            registrationServiceMock.Setup(x => x.RegisterTransaction(It.IsAny<UserObject>()))
                 .ThrowsAsync((Exception)Activator.CreateInstance(typeof(EntityNotCreatedException)));
             passwordManagerMock.Setup(x => x.CheckPassword(It.IsAny<string>(), It.IsAny<string>())).Returns(true);
 
