@@ -64,6 +64,13 @@
     {
         public const string ENCRYPT_KEY = "EncryptKey";
         public const string DECRYPT_KEY = "DecryptKey";
+
+        public const string ACCOUNT_2FA_SERVICE = "Account_2FaServiceImplementation";
+        public const string ACCOUNT_EMAIL_SERVICE = "Account_EmailServiceImplementation";
+        public const string ACCOUNT_PASSWORD_SERVICE = "Account_PasswordServiceImplementation";
+        public const string ACCOUNT_USERNAME_SERVICE = "Account_UsernameServiceImplementation";
+        public const string ACCOUNT_REGISTRATION_SERVICE = "Account_RegistrationServiceImplementation";
+        public const string ACCOUNT_SESSION_SERVICE = "Account_SessionServiceImplementation";
     }
 
     public static class App

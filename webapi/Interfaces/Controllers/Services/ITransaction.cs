@@ -1,7 +1,7 @@
 ﻿namespace webapi.Interfaces.Controllers.Services
 {
-    public interface ITransaction<T> where T : class
+    public interface ITransaction<T>
     {
-        public Task BeginTransaction(T data, object? parameter = null);
+        public Task CreateTransaction(T data, object? parameter = null);
     }
 }

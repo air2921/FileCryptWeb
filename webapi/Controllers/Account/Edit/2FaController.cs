@@ -1,12 +1,10 @@
 ﻿using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
-using Newtonsoft.Json;
-using webapi.Attributes;
 using webapi.DTO;
 using webapi.Exceptions;
 using webapi.Helpers;
 using webapi.Interfaces;
-using webapi.Interfaces.Redis;
+using webapi.Interfaces.Controllers.Services;
 using webapi.Interfaces.Services;
 using webapi.Localization;
 using webapi.Models;
@@ -18,31 +16,36 @@ namespace webapi.Controllers.Account.Edit
     [Authorize]
     public class _2FaController : ControllerBase
     {
-        private readonly string CODE;
-
         #region fields and constructor
 
+        private readonly string CODE;
+        private readonly ITransaction<UserModel> _transaction;
+        private readonly IDataManagament _dataManagament;
+        private readonly IValidator _validator;
+        private readonly IEmailSender _emailSender;
         private readonly IRepository<UserModel> _userRepository;
-        private readonly I2FaService _api2FaService;
         private readonly IPasswordManager _passwordManager;
         private readonly IUserInfo _userInfo;
         private readonly IGenerate _generate;
-        private readonly IValidation _validation;
 
         public _2FaController(
+            [FromKeyedServices(ImplementationKey.ACCOUNT_2FA_SERVICE)] ITransaction<UserModel> transaction,
+            [FromKeyedServices(ImplementationKey.ACCOUNT_2FA_SERVICE)] IDataManagament dataManagament,
+            [FromKeyedServices(ImplementationKey.ACCOUNT_2FA_SERVICE)] IValidator validator,
+            IEmailSender emailSender,
             IRepository<UserModel> userRepository,
-            I2FaService api2FaService,
             IPasswordManager passwordManager,
             IUserInfo userInfo,
-            IGenerate generate,
-            IValidation validation)
+            IGenerate generate)
         {
+            _transaction = transaction;
+            _dataManagament = dataManagament;
+            _emailSender = emailSender;
+            _validator = validator;
             _userRepository = userRepository;
-            _api2FaService = api2FaService;
             _passwordManager = passwordManager;
             _userInfo = userInfo;
             _generate = generate;
-            _validation = validation;
             CODE = $"_2FaController_VerificationCode#{_userInfo.UserId}";
         }
 
@@ -62,14 +65,19 @@ namespace webapi.Controllers.Account.Edit
                 if (user is null)
                     return StatusCode(404, new { message = Message.NOT_FOUND });
 
-                bool IsCorrect = _passwordManager.CheckPassword(password, user.password);
-                if (!IsCorrect)
+                if (!_passwordManager.CheckPassword(password, user.password))
                     return StatusCode(401, new { message = Message.INCORRECT });
 
                 int code = _generate.GenerateSixDigitCode();
-                await _api2FaService.SendMessage(user.username, user.email, code);
+                await _emailSender.SendMessage(new EmailDto
+                {
+                    username = user.username,
+                    email = user.email,
+                    subject = EmailMessage.Change2FaHeader,
+                    message = EmailMessage.Change2FaBody + code
+                });
 
-                await _api2FaService.SetData(CODE, code);
+                await _dataManagament.SetData(CODE, code);
 
                 return StatusCode(200);
             }
@@ -93,16 +101,15 @@ namespace webapi.Controllers.Account.Edit
         {
             try
             {
-                int correctCode = await _api2FaService.GetCode(CODE);
-                if (!_validation.IsSixDigit(correctCode) || !code.Equals(correctCode))
+                if (_validator.IsValid(await _dataManagament.GetData(CODE), code))
                     return StatusCode(400, new { message = Message.INCORRECT });
 
                 var user = await _userRepository.GetById(_userInfo.UserId);
                 if (user is null)
                     return StatusCode(404, new { message = Message.NOT_FOUND });
 
-                await _api2FaService.UpdateTransaction(user, enable);
-                await _api2FaService.ClearData(_userInfo.UserId);
+                await _transaction.CreateTransaction(user, enable);
+                await _dataManagament.DeleteData(_userInfo.UserId);
 
                 return StatusCode(200);
             }
@@ -118,120 +125,6 @@ namespace webapi.Controllers.Account.Edit
             {
                 return StatusCode(500, new { message = ex.Message });
             }
-        }
-    }
-
-    public interface I2FaService
-    {
-        public Task UpdateTransaction(UserModel user, bool enable);
-        public Task SendMessage(string username, string email, int code);
-        public Task ClearData(int userId);
-        public Task SetData(string key, object data);
-        public Task<int> GetCode(string key);
-    }
-
-    public class _2FaService : I2FaService
-    {
-        private readonly IDatabaseTransaction _transaction;
-        private readonly IRepository<UserModel> _userRepository;
-        private readonly IRepository<NotificationModel> _notificationRepository;
-        private readonly IRedisCache _redisCache;
-        private readonly IEmailSender _emailSender;
-
-        public _2FaService(
-            IDatabaseTransaction transaction,
-            IRepository<UserModel> userRepository,
-            IRepository<NotificationModel> notificationRepository,
-            IRedisCache redisCache,
-            IEmailSender emailSender)
-        {
-            _transaction = transaction;
-            _userRepository = userRepository;
-            _notificationRepository = notificationRepository;
-            _redisCache = redisCache;
-            _emailSender = emailSender;
-        }
-
-        [Helper]
-        public async Task UpdateTransaction(UserModel user, bool enable)
-        {
-            try
-            {
-                if (user.is_2fa_enabled == enable)
-                    throw new EntityNotUpdatedException(Message.CONFLICT);
-
-                user.is_2fa_enabled = enable;
-                await _userRepository.Update(user);
-
-                await _notificationRepository.Add(new NotificationModel
-                {
-                    message_header = NotificationMessage.AUTH_2FA_HEADER,
-                    message = enable ? NotificationMessage.AUTH_2FA_ENABLE_BODY : NotificationMessage.AUTH_2FA_DISABLE_BODY,
-                    priority = Priority.Security.ToString(),
-                    send_time = DateTime.UtcNow,
-                    is_checked = false,
-                    user_id = user.id
-                });
-
-                await _transaction.CommitAsync();
-            }
-            catch (EntityNotCreatedException)
-            {
-                await _transaction.RollbackAsync();
-                throw;
-            }
-            catch (EntityNotUpdatedException)
-            {
-                await _transaction.RollbackAsync();
-                throw;
-            }
-            finally
-            {
-                await _transaction.DisposeAsync();
-            }
-        }
-
-        [Helper]
-        public async Task SendMessage(string username, string email, int code)
-        {
-            try
-            {
-                await _emailSender.SendMessage(new EmailDto
-                {
-                    username = username,
-                    email = email,
-                    subject = EmailMessage.Change2FaHeader,
-                    message = EmailMessage.Change2FaBody + code
-                });
-            }
-            catch (SmtpClientException)
-            {
-                throw;
-            }
-        }
-
-        [Helper]
-        public async Task ClearData(int userId)
-        {
-            await _redisCache.DeleteCache($"_2FaController_VerificationCode#{userId}");
-            await _redisCache.DeteteCacheByKeyPattern($"{ImmutableData.USER_DATA_PREFIX}{userId}");
-            await _redisCache.DeteteCacheByKeyPattern($"{ImmutableData.NOTIFICATIONS_PREFIX}{userId}");
-        }
-
-        [Helper]
-        public async Task SetData(string key, object data)
-        {
-            await _redisCache.CacheData(key, data, TimeSpan.FromMinutes(10));
-        }
-
-        [Helper]
-        public async Task<int> GetCode(string key)
-        {
-            var code = await _redisCache.GetCachedData(key);
-            if (code is not null)
-                return JsonConvert.DeserializeObject<int>(code);
-            else
-                return 0;
         }
     }
 }

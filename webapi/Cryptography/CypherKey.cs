@@ -5,7 +5,6 @@ using webapi.Interfaces.Cryptography;
 
 namespace webapi.Cryptography
 {
-    [ImplementationKey(ImplementationKey.ENCRYPT_KEY)]
     public class EncryptKey : ICypherKey
     {
         private readonly IAes _aes;
@@ -48,7 +47,6 @@ namespace webapi.Cryptography
         }
     }
 
-    [ImplementationKey(ImplementationKey.DECRYPT_KEY)]
     public class DecryptKey : ICypherKey
     {
         private readonly IAes _aes;

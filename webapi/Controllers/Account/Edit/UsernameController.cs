@@ -1,11 +1,8 @@
 ﻿using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
-using System.Text.RegularExpressions;
-using webapi.Attributes;
 using webapi.Exceptions;
-using webapi.Helpers;
 using webapi.Interfaces;
-using webapi.Interfaces.Redis;
+using webapi.Interfaces.Controllers.Services;
 using webapi.Interfaces.Services;
 using webapi.Localization;
 using webapi.Models;
@@ -15,29 +12,16 @@ namespace webapi.Controllers.Account.Edit
     [Route("api/account/edit/username")]
     [ApiController]
     [Authorize]
-    public class UsernameController : ControllerBase
+    public class UsernameController(
+        ITransaction<UserModel> transaction,
+        IDataManagament dataManagament,
+        IValidator validator,
+        IRepository<UserModel> userRepository,
+        IUserInfo userInfo,
+        ITokenService tokenService) : ControllerBase
     {
+
         #region fields and constructor
-
-        private readonly IRepository<UserModel> _userRepository;
-        private readonly IUsernameService _usernameService;
-        private readonly ILogger<UsernameController> _logger;
-        private readonly IUserInfo _userInfo;
-        private readonly ITokenService _tokenService;
-
-        public UsernameController(
-            IRepository<UserModel> userRepository,
-            IUsernameService usernameService,
-            ILogger<UsernameController> logger,
-            IUserInfo userInfo,
-            ITokenService tokenService)
-        {
-            _userRepository = userRepository;
-            _usernameService = usernameService;
-            _logger = logger;
-            _userInfo = userInfo;
-            _tokenService = tokenService;
-        }
 
         #endregion
 
@@ -52,16 +36,16 @@ namespace webapi.Controllers.Account.Edit
         {
             try
             {
-                if (!_usernameService.ValidateUsername(username))
+                if (!validator.IsValid(username))
                     return StatusCode(400, new { message = Message.INVALID_FORMAT });
 
-                var user = await _userRepository.GetById(_userInfo.UserId);
+                var user = await userRepository.GetById(userInfo.UserId);
                 if (user is null)
                     return StatusCode(404, new { message = Message.NOT_FOUND });
 
-                await _usernameService.DbUpdate(user, username);
-                await _tokenService.UpdateJwtToken();
-                await _usernameService.ClearData(_userInfo.UserId);
+                await transaction.CreateTransaction(user, username);
+                await tokenService.UpdateJwtToken();
+                await dataManagament.DeleteData(userInfo.UserId);
 
                 return StatusCode(200, new { message = Message.UPDATED });
             }
@@ -75,57 +59,9 @@ namespace webapi.Controllers.Account.Edit
             }
             catch (UnauthorizedAccessException ex)
             {
-                _tokenService.DeleteTokens();
+                tokenService.DeleteTokens();
                 return StatusCode(206, new { message = ex.Message });
             }
-        }
-    }
-
-    public interface IUsernameService
-    {
-        public Task DbUpdate(UserModel user, string username);
-        public Task ClearData(int userId);
-        public bool ValidateUsername(string username);
-    }
-
-    public class UsernameService : IUsernameService
-    {
-        private readonly IRepository<UserModel> _userRepository;
-        private readonly ITokenService _tokenService;
-        private readonly IRedisCache _redisCache;
-
-        public UsernameService(IRepository<UserModel> userRepository, ITokenService tokenService, IRedisCache redisCache)
-        {
-            _userRepository = userRepository;
-            _tokenService = tokenService;
-            _redisCache = redisCache;
-        }
-
-        [Helper]
-        public async Task DbUpdate(UserModel user, string username)
-        {
-            try
-            {
-                user.username = username;
-                await _userRepository.Update(user);
-            }
-            catch (EntityNotUpdatedException)
-            {
-                throw;
-            }
-        }
-
-        [Helper]
-        public bool ValidateUsername(string username)
-        {
-            return Regex.IsMatch(username, Validation.Username);
-        }
-
-        [Helper]
-        public async Task ClearData(int userId)
-        {
-            _tokenService.DeleteUserDataSession();
-            await _redisCache.DeteteCacheByKeyPattern($"{ImmutableData.USER_DATA_PREFIX}{userId}");
         }
     }
 }

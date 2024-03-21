@@ -2,6 +2,6 @@
 {
     public interface IValidator
     {
-        public bool IsValid(object data);
+        public bool IsValid(object data, object parameter = null);
     }
 }

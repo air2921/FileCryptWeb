@@ -22,7 +22,6 @@ namespace webapi.Controllers.Account
         private readonly IRepository<UserModel> _userRepository;
         private readonly IRedisCache _redisCache;
         private readonly IRepository<LinkModel> _linkRepository;
-        private readonly ILogger<RecoveryController> _logger;
         private readonly IGenerate _generate;
 
         public RecoveryController(
@@ -30,14 +29,12 @@ namespace webapi.Controllers.Account
             IRepository<UserModel> userRepository,
             IRedisCache redisCache,
             IRepository<LinkModel> linkRepository,
-            ILogger<RecoveryController> logger,
             IGenerate generate)
         {
             _recoveryService = recoveryService;
             _userRepository = userRepository;
             _redisCache = redisCache;
             _linkRepository = linkRepository;
-            _logger = logger;
             _generate = generate;
         }
 
