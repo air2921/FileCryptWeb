@@ -25,6 +25,7 @@ namespace webapi.DB
         public async ValueTask DisposeAsync()
         {
             await _transaction.DisposeAsync();
+            GC.SuppressFinalize(this);
         }
     }
 }

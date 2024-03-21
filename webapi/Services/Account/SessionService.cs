@@ -1,7 +1,6 @@
 ﻿using Microsoft.AspNetCore.Mvc;
 using Newtonsoft.Json;
 using webapi.Attributes;
-using webapi.Controllers.Account;
 using webapi.Exceptions;
 using webapi.Helpers;
 using webapi.Interfaces;

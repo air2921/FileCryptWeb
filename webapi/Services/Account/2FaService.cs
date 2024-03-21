@@ -1,6 +1,5 @@
 ﻿using Newtonsoft.Json;
 using webapi.Attributes;
-using webapi.DTO;
 using webapi.Exceptions;
 using webapi.Helpers;
 using webapi.Interfaces;

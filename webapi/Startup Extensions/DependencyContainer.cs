@@ -77,7 +77,9 @@ namespace webapi
             services.AddKeyedScoped<IDataManagament, SessionService>(ImplementationKey.ACCOUNT_SESSION_SERVICE);
             services.AddScoped<ISessionHelpers, SessionService>();
 
-            services.AddScoped<IRecoveryService, RecoveryService>();
+            services.AddKeyedScoped<IValidator, RecoveryService>("");
+            services.AddScoped<IRecoveryHelpers, RecoveryService>();
+
             services.AddScoped<IApiAdminKeysService, AdminKeysService>();
             services.AddScoped<IApiAdminTokenService, AdminTokenService>();
             services.AddScoped<IApiAdminUserService, AdminUserService>();

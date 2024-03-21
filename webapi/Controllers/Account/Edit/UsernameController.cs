@@ -20,11 +20,6 @@ namespace webapi.Controllers.Account.Edit
         IUserInfo userInfo,
         ITokenService tokenService) : ControllerBase
     {
-
-        #region fields and constructor
-
-        #endregion
-
         [HttpPut]
         [ValidateAntiForgeryToken]
         [ProducesResponseType(typeof(object), 200)]

@@ -71,6 +71,7 @@
         public const string ACCOUNT_USERNAME_SERVICE = "Account_UsernameServiceImplementation";
         public const string ACCOUNT_REGISTRATION_SERVICE = "Account_RegistrationServiceImplementation";
         public const string ACCOUNT_SESSION_SERVICE = "Account_SessionServiceImplementation";
+        public const string ACCOUNT_RECOVERY_SERVICE = "Account_RecoveryServiceImplementation";
     }
 
     public static class App
