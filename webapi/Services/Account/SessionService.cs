@@ -18,28 +18,13 @@ namespace webapi.Services.Account
         public Task RevokeToken(HttpContext context);
     }
 
-    public sealed class SessionService : ControllerBase, IDataManagement, ISessionHelpers
+    public sealed class SessionService(
+        IDatabaseTransaction transaction,
+        IRepository<TokenModel> tokenRepository,
+        IRepository<NotificationModel> notificationRepository,
+        IRedisCache redisCache,
+        ITokenService tokenService) : ControllerBase, IDataManagement, ISessionHelpers
     {
-        private readonly IDatabaseTransaction _transaction;
-        private readonly IRepository<TokenModel> _tokenRepository;
-        private readonly IRepository<NotificationModel> _notificationRepository;
-        private readonly IRedisCache _redisCache;
-        private readonly ITokenService _tokenService;
-
-        public SessionService(
-            IDatabaseTransaction transaction,
-            IRepository<TokenModel> tokenRepository,
-            IRepository<NotificationModel> notificationRepository,
-            IRedisCache redisCache,
-            ITokenService tokenService)
-        {
-            _transaction = transaction;
-            _tokenRepository = tokenRepository;
-            _notificationRepository = notificationRepository;
-            _redisCache = redisCache;
-            _tokenService = tokenService;
-        }
-
         private void CookieAppend(UserModel user, HttpContext context, string refreshToken)
         {
             var cookieOptions = new CookieOptions
@@ -51,8 +36,8 @@ namespace webapi.Services.Account
                 IsEssential = false
             };
 
-            context.Response.Cookies.Append(ImmutableData.JWT_COOKIE_KEY, _tokenService.GenerateJwtToken(user, ImmutableData.JwtExpiry), _tokenService.SetCookieOptions(ImmutableData.JwtExpiry));
-            context.Response.Cookies.Append(ImmutableData.REFRESH_COOKIE_KEY, refreshToken, _tokenService.SetCookieOptions(ImmutableData.RefreshExpiry));
+            context.Response.Cookies.Append(ImmutableData.JWT_COOKIE_KEY, tokenService.GenerateJwtToken(user, ImmutableData.JwtExpiry), tokenService.SetCookieOptions(ImmutableData.JwtExpiry));
+            context.Response.Cookies.Append(ImmutableData.REFRESH_COOKIE_KEY, refreshToken, tokenService.SetCookieOptions(ImmutableData.RefreshExpiry));
             context.Response.Cookies.Append(ImmutableData.IS_AUTHORIZED, true.ToString(), cookieOptions);
             context.Response.Cookies.Append(ImmutableData.USER_ID_COOKIE_KEY, user.id.ToString(), cookieOptions);
             context.Response.Cookies.Append(ImmutableData.USERNAME_COOKIE_KEY, user.username, cookieOptions);
@@ -64,14 +49,14 @@ namespace webapi.Services.Account
         {
             try
             {
-                await _tokenRepository.Add(new TokenModel
+                await tokenRepository.Add(new TokenModel
                 {
                     user_id = user.id,
-                    refresh_token = _tokenService.HashingToken(refreshToken),
+                    refresh_token = tokenService.HashingToken(refreshToken),
                     expiry_date = DateTime.UtcNow + ImmutableData.RefreshExpiry
                 });
 
-                await _notificationRepository.Add(new NotificationModel
+                await notificationRepository.Add(new NotificationModel
                 {
                     message_header = NotificationMessage.AUTH_NEW_LOGIN_HEADER,
                     message = NotificationMessage.AUTH_NEW_LOGIN_BODY,
@@ -81,16 +66,16 @@ namespace webapi.Services.Account
                     user_id = user.id
                 });
 
-                await _transaction.CommitAsync();
+                await transaction.CommitAsync();
             }
             catch (EntityNotCreatedException)
             {
-                await _transaction.RollbackAsync();
+                await transaction.RollbackAsync();
                 throw;
             }
             finally
             {
-                await _transaction.DisposeAsync();
+                await transaction.DisposeAsync();
             }
         }
 
@@ -100,11 +85,11 @@ namespace webapi.Services.Account
         {
             try
             {
-                string refreshToken = _tokenService.GenerateRefreshToken();
+                string refreshToken = tokenService.GenerateRefreshToken();
                 await LoginTransaction(user, refreshToken);
                 CookieAppend(user, context, refreshToken);
 
-                await _redisCache.DeteteCacheByKeyPattern($"{ImmutableData.NOTIFICATIONS_PREFIX}{user.id}");
+                await redisCache.DeteteCacheByKeyPattern($"{ImmutableData.NOTIFICATIONS_PREFIX}{user.id}");
 
                 return StatusCode(200);
             }
@@ -123,8 +108,8 @@ namespace webapi.Services.Account
                 if (refresh is null)
                     return;
 
-                var token = await _tokenRepository.DeleteByFilter(query => query
-                    .Where(t => t.refresh_token.Equals(_tokenService.HashingToken(refresh))));
+                var token = await tokenRepository.DeleteByFilter(query => query
+                    .Where(t => t.refresh_token.Equals(tokenService.HashingToken(refresh))));
             }
             catch (EntityNotDeletedException)
             {
@@ -133,12 +118,12 @@ namespace webapi.Services.Account
         }
 
         [Helper]
-        public async Task SetData(string key, object data) => await _redisCache.CacheData(key, data, TimeSpan.FromMinutes(8));
+        public async Task SetData(string key, object data) => await redisCache.CacheData(key, data, TimeSpan.FromMinutes(8));
 
         [Helper]
         public async Task<object> GetData(string key)
         {
-            var user = await _redisCache.GetCachedData(key);
+            var user = await redisCache.GetCachedData(key);
             if (user is not null)
                 return JsonConvert.DeserializeObject<UserContextObject>(user);
             else

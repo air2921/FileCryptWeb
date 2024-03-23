@@ -16,7 +16,7 @@ namespace webapi.Controllers.Account
     [ApiController]
     public class RecoveryController(
         IRecoveryHelpers recoveryHelper,
-        IValidator validator,
+        [FromKeyedServices(ImplementationKey.ACCOUNT_RECOVERY_SERVICE)] IValidator validator,
         IRepository<UserModel> userRepository,
         IRepository<LinkModel> linkRepository,
         IEmailSender emailSender,

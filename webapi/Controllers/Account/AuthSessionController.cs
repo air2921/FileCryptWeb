@@ -2,6 +2,7 @@
 using Microsoft.AspNetCore.Mvc;
 using webapi.DTO;
 using webapi.Exceptions;
+using webapi.Helpers;
 using webapi.Interfaces;
 using webapi.Interfaces.Controllers.Services;
 using webapi.Interfaces.Services;
@@ -15,7 +16,7 @@ namespace webapi.Controllers.Account
     [ApiController]
     public class AuthSessionController(
         ISessionHelpers sessionHelper,
-        IDataManagement dataManagament,
+        [FromKeyedServices(ImplementationKey.ACCOUNT_REGISTRATION_SERVICE)] IDataManagement dataManagament,
         IRepository<UserModel> userRepository,
         IEmailSender emailSender,
         IPasswordManager passwordManager,

@@ -1,6 +1,7 @@
 ﻿using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 using webapi.Exceptions;
+using webapi.Helpers;
 using webapi.Interfaces;
 using webapi.Interfaces.Controllers.Services;
 using webapi.Interfaces.Services;
@@ -13,9 +14,9 @@ namespace webapi.Controllers.Account.Edit
     [ApiController]
     [Authorize]
     public class UsernameController(
-        ITransaction<UserModel> transaction,
-        IDataManagement dataManagament,
-        IValidator validator,
+        [FromKeyedServices(ImplementationKey.ACCOUNT_USERNAME_SERVICE)] ITransaction<UserModel> transaction,
+        [FromKeyedServices(ImplementationKey.ACCOUNT_USERNAME_SERVICE)] IDataManagement dataManagament,
+        [FromKeyedServices(ImplementationKey.ACCOUNT_USERNAME_SERVICE)] IValidator validator,
         IRepository<UserModel> userRepository,
         IUserInfo userInfo,
         ITokenService tokenService) : ControllerBase

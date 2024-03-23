@@ -3,6 +3,7 @@ import { useLocation, useNavigate } from 'react-router-dom';
 import Message from '../../../utils/helpers/message/Message';
 import AxiosRequest from '../../../utils/api/AxiosRequest';
 import './RecoveryAccount.css'
+import { recoveryAccount } from '../../../utils/api/Auth';
 
 const RecoveryAccount = () => {
     const location = useLocation();
@@ -13,26 +14,34 @@ const RecoveryAccount = () => {
     const [font, setFont] = useState('');
     const navigate = useNavigate();
 
-    const handleSubmit = async (e: FormEvent) => {
+    const recoveryAccountSubmit = async (e: FormEvent) => {
         e.preventDefault();
 
-        const response = await AxiosRequest({ endpoint: `api/auth/recovery/account?password=${password}&token=${token}`, method: 'POST', withCookie: true, requestBody: null });
-
-        if (response.isSuccess) {
-            navigate('/auth/login');
+        if (token === null || token === undefined) {
+            return;
         }
-        else {
-            setMessage(response.data);
+
+        const result = await recoveryAccount(password, token);
+
+        if (result.statusCode === 200) {
+            navigate('/auth/login');
+        } else {
+            setMessage(result.message);
             setFont('error');
         }
-    };
+
+        setTimeout(() => {
+            setMessage('');
+            setFont('');
+        }, 5000)
+    }
 
     return (
         <div className="account-recovery-container">
             <div className="account-recovery-header">
                 Link available no more 30 minutes
             </div>
-            <form className="account-recovery-form" onSubmit={handleSubmit}>
+            <form className="account-recovery-form" onSubmit={recoveryAccountSubmit}>
                 <div className="account-recovery-text">
                     Enter you new password
                 </div>

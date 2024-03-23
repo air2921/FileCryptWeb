@@ -1,6 +1,7 @@
 ﻿using Microsoft.AspNetCore.Mvc;
 using webapi.DTO;
 using webapi.Exceptions;
+using webapi.Helpers;
 using webapi.Interfaces;
 using webapi.Interfaces.Controllers.Services;
 using webapi.Interfaces.Services;
@@ -13,9 +14,9 @@ namespace webapi.Controllers.Account
     [Route("api/auth")]
     [ApiController]
     public class AuthRegistrationController(
-        ITransaction<UserObject> transaction,
-        IDataManagement dataManagament,
-        IValidator validator,
+        [FromKeyedServices(ImplementationKey.ACCOUNT_REGISTRATION_SERVICE)] ITransaction<UserObject> transaction,
+        [FromKeyedServices(ImplementationKey.ACCOUNT_REGISTRATION_SERVICE)] IDataManagement dataManagament,
+        [FromKeyedServices(ImplementationKey.ACCOUNT_REGISTRATION_SERVICE)] IValidator validator,
         IRepository<UserModel> userRepository,
         IEmailSender emailSender,
         IPasswordManager passwordManager,

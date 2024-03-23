@@ -1,33 +1,38 @@
 import React, { FormEvent, useState } from 'react';
 import Message from '../../../utils/helpers/message/Message';
 import AxiosRequest from '../../../utils/api/AxiosRequest';
+import { createRecovery } from '../../../utils/api/Auth';
 
 const CreateRecovery = () => {
     const [email, setEmail] = useState('');
     const [message, setMessage] = useState('');
     const [font, setFont] = useState('');
 
-    const handleSubmit = async (e: FormEvent) => {
+    const createRecoverySubmit = async (e: FormEvent) => {
         e.preventDefault();
 
-        const response = await AxiosRequest({ endpoint: `api/auth/recovery/unique/token?email=${email}`, method: 'POST', withCookie: true, requestBody: null });
+        const result = await createRecovery(email);
 
-        if (response.isSuccess) {
-            setMessage(response.data.message);
+        if (result.statusCode === 201) {
+            setMessage(result.message);
             setFont('check_small')
+        } else {
+            setMessage(result.message);
+            setFont('error')
         }
-        else {
-            setMessage(response.data);
-            setFont('error');
-        }
-    };
+
+        setTimeout(() => {
+            setMessage('');
+            setFont('');
+        }, 5000)
+    }
 
     return (
         <div className="recovery-container">
             <div className="recovery-header">
                 Recovery Account
             </div>
-            <form className="recovery-form" onSubmit={handleSubmit}>
+            <form className="recovery-form" onSubmit={createRecoverySubmit}>
                 <div className="recovery-text">Enter your latest email address</div>
                 <div className="recovery-email-container">
                     <label htmlFor="recovery-email">

@@ -124,3 +124,67 @@ export async function recoveryAccount(password: string, token: string) {
         };
     }
 }
+
+export async function registration(email: string, password: string, username: string, is2fa: boolean) {
+    try {
+        const response = await axios.post(BASE_URL + 'api/auth/register', {
+            email: email,
+            password: password,
+            username: username,
+            is_2fa_enabled: is2fa
+        }, { withCredentials: true });
+
+        localStorage.setItem('registration_email', email);
+        return {
+            statusCode: response.status,
+            message: response.data.message
+        };
+
+    } catch (error: any) {
+        console.error(error);
+        let statusCode = 500;
+        let errorMessage = 'An error occurred during the request';
+        if (error.response) {
+            errorMessage = error.response.data && error.response.data.message ? error.response.data.message : 'Unknown error';
+            statusCode = error.response.status;
+        }
+
+        return {
+            statusCode: statusCode,
+            message: errorMessage
+        };
+    }
+}
+
+export async function verifyRegistration(code: number) {
+    try {
+        const email = localStorage.getItem('registration_email');
+        if (email === null || email === undefined) {
+            return {
+                statusCode: 400,
+                message: 'Try again later'
+            }
+        }
+
+        const response = await axios.post(BASE_URL + `api/auth/verify?code=${code}&email=${email}`, null, { withCredentials: true });
+        localStorage.removeItem('registration_email')
+
+        return {
+            statusCode: response.status,
+            message: undefined
+        }
+    } catch (error: any) {
+        console.error(error);
+        let statusCode = 500;
+        let errorMessage = 'An error occurred during the request';
+        if (error.response) {
+            errorMessage = error.response.data && error.response.data.message ? error.response.data.message : 'Unknown error';
+            statusCode = error.response.status;
+        }
+
+        return {
+            statusCode: statusCode,
+            message: errorMessage
+        };
+    }
+}

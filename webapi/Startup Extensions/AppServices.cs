@@ -46,13 +46,6 @@ namespace webapi
                            .AllowCredentials();
                 });
 
-                options.AddPolicy("AllowAnyOrigin", builder =>
-                {
-                    builder.AllowAnyOrigin()
-                           .AllowAnyHeader()
-                           .AllowAnyMethod();
-                });
-
                 options.AddPolicy("AllowOriginAPI", builder =>
                 {
                     builder.AllowAnyOrigin()
