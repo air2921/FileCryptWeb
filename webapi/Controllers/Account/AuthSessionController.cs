@@ -15,7 +15,7 @@ namespace webapi.Controllers.Account
     [ApiController]
     public class AuthSessionController(
         ISessionHelpers sessionHelper,
-        IDataManagament dataManagament,
+        IDataManagement dataManagament,
         IRepository<UserModel> userRepository,
         IEmailSender emailSender,
         IPasswordManager passwordManager,
@@ -118,13 +118,9 @@ namespace webapi.Controllers.Account
 
                 return StatusCode(200);
             }
-            catch (EntityNotUpdatedException ex)
+            catch (EntityNotDeletedException ex)
             {
                 return StatusCode(404, new { message = ex.Message });
-            }
-            catch (OperationCanceledException ex)
-            {
-                return StatusCode(500, new { message = ex.Message });
             }
         }
 

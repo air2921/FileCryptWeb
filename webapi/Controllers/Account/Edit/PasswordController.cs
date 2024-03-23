@@ -16,7 +16,7 @@ namespace webapi.Controllers.Account.Edit
     [Authorize]
     public class PasswordController(
         [FromKeyedServices(ImplementationKey.ACCOUNT_PASSWORD_SERVICE)] ITransaction<UserModel> transaction,
-        [FromKeyedServices(ImplementationKey.ACCOUNT_PASSWORD_SERVICE)] IDataManagament dataManagament,
+        [FromKeyedServices(ImplementationKey.ACCOUNT_PASSWORD_SERVICE)] IDataManagement dataManagament,
         [FromKeyedServices(ImplementationKey.ACCOUNT_PASSWORD_SERVICE)] IValidator validator,
         IRepository<UserModel> userRepository,
         IPasswordManager passwordManager,

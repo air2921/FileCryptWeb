@@ -13,7 +13,7 @@ namespace webapi.Services.Account
     public sealed class UsernameService(
         IRepository<UserModel> userRepository,
         ITokenService tokenService,
-        IRedisCache redisCache) : ITransaction<UserModel>, IDataManagament, IValidator
+        IRedisCache redisCache) : ITransaction<UserModel>, IDataManagement, IValidator
     {
         public async Task CreateTransaction(UserModel user, object? parameter = null)
         {

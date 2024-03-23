@@ -1,7 +1,9 @@
 ﻿using Microsoft.AspNetCore.Mvc;
 using webapi.Controllers.Account.Edit;
+using webapi.DTO;
 using webapi.Exceptions;
 using webapi.Interfaces;
+using webapi.Interfaces.Controllers.Services;
 using webapi.Interfaces.Services;
 using webapi.Models;
 
@@ -12,9 +14,10 @@ namespace tests.Controllers_Tests.Account.Edit
         [Fact]
         public async Task SendCode_Success()
         {
+            var dataManagement = new Mock<IDataManagement>();
             var userRepositoryMock = new Mock<IRepository<UserModel>>();
             var passwordManagerMock = new Mock<IPasswordManager>();
-            var _2faServiceMock = new Mock<I2FaService>();
+            var emailSenderMock = new Mock<IEmailSender>();
             var generateMock = new Mock<IGenerate>();
             var userInfoMock = new Mock<IUserInfo>();
 
@@ -28,12 +31,12 @@ namespace tests.Controllers_Tests.Account.Edit
 
             passwordManagerMock.Setup(x => x.CheckPassword(It.IsAny<string>(), It.IsAny<string>())).Returns(true);
             generateMock.Setup(x => x.GenerateSixDigitCode()).Returns(111111);
-            _2faServiceMock.Setup(x => x.SendMessage(It.IsAny<string>(), It.IsAny<string>(), It.IsAny<int>())).Returns(Task.CompletedTask);
-            _2faServiceMock.Setup(x => x.SetData(It.IsAny<string>(), It.IsAny<int>()));
+            dataManagement.Setup(x => x.SetData(It.IsAny<string>(), It.IsAny<int>())).Returns(Task.CompletedTask);
+            emailSenderMock.Setup(x => x.SendMessage(It.IsAny<EmailDto>())).Returns(Task.CompletedTask);
             userInfoMock.Setup(x => x.UserId).Returns(1);
 
-            var _2faController = new _2FaController(userRepositoryMock.Object, _2faServiceMock.Object,
-                passwordManagerMock.Object, userInfoMock.Object, generateMock.Object, null);
+            var _2faController = new _2FaController(null, dataManagement.Object, null, emailSenderMock.Object,
+                userRepositoryMock.Object, passwordManagerMock.Object, userInfoMock.Object, generateMock.Object);
 
             var result = await _2faController.SendVerificationCode(string.Empty);
 
@@ -49,7 +52,8 @@ namespace tests.Controllers_Tests.Account.Edit
             userRepositoryMock.Setup(x => x.GetById(It.IsAny<int>(), CancellationToken.None)).ReturnsAsync((UserModel)null);
             userInfoMock.Setup(x => x.UserId).Returns(1);
 
-            var _2faController = new _2FaController(userRepositoryMock.Object, null, null, userInfoMock.Object, null, null);
+            var _2faController = new _2FaController(null, null, null, null,
+                userRepositoryMock.Object, null, userInfoMock.Object, null);
 
             var result = await _2faController.SendVerificationCode(string.Empty);
 
@@ -68,7 +72,8 @@ namespace tests.Controllers_Tests.Account.Edit
                 .ThrowsAsync((Exception)Activator.CreateInstance(typeof(OperationCanceledException)));
             userInfoMock.Setup(x => x.UserId).Returns(1);
 
-            var _2faController = new _2FaController(userRepositoryMock.Object, null, null, userInfoMock.Object, null, null);
+            var _2faController = new _2FaController(null, null, null, null,
+                userRepositoryMock.Object, null, userInfoMock.Object, null);
 
             var result = await _2faController.SendVerificationCode(string.Empty);
 
@@ -92,8 +97,8 @@ namespace tests.Controllers_Tests.Account.Edit
             passwordManagerMock.Setup(x => x.CheckPassword(It.IsAny<string>(), It.IsAny<string>())).Returns(false);
             userInfoMock.Setup(x => x.UserId).Returns(1);
 
-            var _2faController = new _2FaController(userRepositoryMock.Object, null, passwordManagerMock.Object,
-                userInfoMock.Object, null, null);
+            var _2faController = new _2FaController(null, null, null, null,
+                userRepositoryMock.Object, passwordManagerMock.Object, userInfoMock.Object, null);
 
             var result = await _2faController.SendVerificationCode(string.Empty);
 
@@ -107,7 +112,8 @@ namespace tests.Controllers_Tests.Account.Edit
         {
             var userRepositoryMock = new Mock<IRepository<UserModel>>();
             var passwordManagerMock = new Mock<IPasswordManager>();
-            var _2faServiceMock = new Mock<I2FaService>();
+            var emailSernderMock = new Mock<IEmailSender>();
+            var dataManagement = new Mock<IDataManagement>();
             var generateMock = new Mock<IGenerate>();
             var userInfoMock = new Mock<IUserInfo>();
 
@@ -121,14 +127,14 @@ namespace tests.Controllers_Tests.Account.Edit
 
             passwordManagerMock.Setup(x => x.CheckPassword(It.IsAny<string>(), It.IsAny<string>())).Returns(true);
             generateMock.Setup(x => x.GenerateSixDigitCode()).Returns(111111);
-            _2faServiceMock.Setup(x => x.SendMessage(It.IsAny<string>(), It.IsAny<string>(), It.IsAny<int>()))
+            emailSernderMock.Setup(x => x.SendMessage(It.IsAny<EmailDto>()))
                 .ThrowsAsync((Exception)Activator.CreateInstance(typeof(SmtpClientException)));
 
-            _2faServiceMock.Setup(x => x.SetData(It.IsAny<string>(), It.IsAny<int>()));
+            dataManagement.Setup(x => x.SetData(It.IsAny<string>(), It.IsAny<int>()));
             userInfoMock.Setup(x => x.UserId).Returns(1);
 
-            var _2faController = new _2FaController(userRepositoryMock.Object, _2faServiceMock.Object,
-                passwordManagerMock.Object, userInfoMock.Object, generateMock.Object, null);
+            var _2faController = new _2FaController(null, dataManagement.Object,
+                null, emailSernderMock.Object, userRepositoryMock.Object, passwordManagerMock.Object, userInfoMock.Object, generateMock.Object);
 
             var result = await _2faController.SendVerificationCode(string.Empty);
 
@@ -142,23 +148,24 @@ namespace tests.Controllers_Tests.Account.Edit
         {
             var userInfoMock = new Mock<IUserInfo>();
             var userRepositoryMock = new Mock<IRepository<UserModel>>();
-            var _2faServiceMock = new Mock<I2FaService>();
-            var validationMock = new Mock<IValidation>();
+            var dataManagementMock = new Mock<IDataManagement>();
+            var transactionMock = new Mock<ITransaction<UserModel>>();
+            var validatorMock = new Mock<IValidator>();
 
             userInfoMock.Setup(x => x.UserId).Returns(1);
             userRepositoryMock.Setup(x => x.GetById(It.IsAny<int>(), CancellationToken.None)).ReturnsAsync(new UserModel
             {
                 id = 1,
             });
-            _2faServiceMock.Setup(x => x.GetCode(It.IsAny<string>())).ReturnsAsync(It.IsAny<int>());
-            _2faServiceMock.Setup(x => x.ClearData(1)).Returns(Task.CompletedTask);
-            _2faServiceMock.Setup(x => x.UpdateTransaction(It.IsAny<UserModel>(), true)).Returns(Task.CompletedTask);
-            validationMock.Setup(x => x.IsSixDigit(It.IsAny<int>())).Returns(true);
+            dataManagementMock.Setup(x => x.GetData(It.IsAny<string>())).ReturnsAsync(1);
+            dataManagementMock.Setup(x => x.DeleteData(1)).Returns(Task.CompletedTask);
+            transactionMock.Setup(x => x.CreateTransaction(It.IsAny<UserModel>(), true)).Returns(Task.CompletedTask);
+            validatorMock.Setup(x => x.IsValid(It.IsAny<int>(), It.IsAny<int>())).Returns(true);
 
-            var _2faController = new _2FaController(userRepositoryMock.Object, _2faServiceMock.Object,
-                null, userInfoMock.Object, null, validationMock.Object);
+            var _2faController = new _2FaController(transactionMock.Object, dataManagementMock.Object, validatorMock.Object,
+                null, userRepositoryMock.Object, null, userInfoMock.Object, null);
 
-            var result = await _2faController.Update2FaState(It.IsAny<int>(), true);
+            var result = await _2faController.Update2FaState(123, true);
 
             Assert.Equal(200, ((StatusCodeResult)result).StatusCode);
         }
@@ -166,16 +173,16 @@ namespace tests.Controllers_Tests.Account.Edit
         [Fact]
         public async Task UpdateState_Failed_InvalidSavedCode()
         {
-            var _2faServiceMock = new Mock<I2FaService>();
-            var validationMock = new Mock<IValidation>();
             var userInfoMock = new Mock<IUserInfo>();
+            var dataManagementMock = new Mock<IDataManagement>();
+            var validatorMock = new Mock<IValidator>();
 
-            _2faServiceMock.Setup(x => x.GetCode(It.IsAny<string>())).ReturnsAsync(It.IsAny<int>());
-            validationMock.Setup(x => x.IsSixDigit(It.IsAny<int>())).Returns(false);
+            dataManagementMock.Setup(x => x.GetData(It.IsAny<string>())).ReturnsAsync(1);
+            validatorMock.Setup(x => x.IsValid(It.IsAny<int>(), It.IsAny<int>())).Returns(false);
             userInfoMock.Setup(x => x.UserId).Returns(1);
 
-            var _2faController = new _2FaController(null, _2faServiceMock.Object,
-                null, userInfoMock.Object, null, validationMock.Object);
+            var _2faController = new _2FaController(null, dataManagementMock.Object, validatorMock.Object, null,
+                null, null, userInfoMock.Object, null);
 
             var result = await _2faController.Update2FaState(It.IsAny<int>(), true);
 
@@ -189,16 +196,16 @@ namespace tests.Controllers_Tests.Account.Edit
         {
             var userRepositoryMock = new Mock<IRepository<UserModel>>();
             var userInfoMock = new Mock<IUserInfo>();
-            var _2faServiceMock = new Mock<I2FaService>();
-            var validationMock = new Mock<IValidation>();
+            var dataManagementMock = new Mock<IDataManagement>();
+            var validatorMock = new Mock<IValidator>();
 
             userRepositoryMock.Setup(x => x.GetById(It.IsAny<int>(), CancellationToken.None)).ReturnsAsync((UserModel)null);
             userInfoMock.Setup(x => x.UserId).Returns(1);
-            _2faServiceMock.Setup(x => x.GetCode(It.IsAny<string>())).ReturnsAsync(It.IsAny<int>());
-            validationMock.Setup(x => x.IsSixDigit(It.IsAny<int>())).Returns(true);
+            dataManagementMock.Setup(x => x.GetData(It.IsAny<string>())).ReturnsAsync(1);
+            validatorMock.Setup(x => x.IsValid(It.IsAny<int>(), It.IsAny<int>())).Returns(true);
 
-            var _2faController = new _2FaController(userRepositoryMock.Object, _2faServiceMock.Object,
-                null, userInfoMock.Object, null, validationMock.Object);
+            var _2faController = new _2FaController(null, dataManagementMock.Object, validatorMock.Object,
+                null, userRepositoryMock.Object, null, userInfoMock.Object, null);
 
             var result = await _2faController.Update2FaState(It.IsAny<int>(), true);
 
@@ -212,18 +219,18 @@ namespace tests.Controllers_Tests.Account.Edit
         {
             var userRepositoryMock = new Mock<IRepository<UserModel>>();
             var userInfoMock = new Mock<IUserInfo>();
-            var _2faServiceMock = new Mock<I2FaService>();
-            var validationMock = new Mock<IValidation>();
+            var dataManagementMock = new Mock<IDataManagement>();
+            var validatorMock = new Mock<IValidator>();
 
             userRepositoryMock.Setup(x => x.GetById(It.IsAny<int>(), CancellationToken.None))
                 .ThrowsAsync((Exception)Activator.CreateInstance(typeof(OperationCanceledException)));
 
             userInfoMock.Setup(x => x.UserId).Returns(1);
-            _2faServiceMock.Setup(x => x.GetCode(It.IsAny<string>())).ReturnsAsync(It.IsAny<int>());
-            validationMock.Setup(x => x.IsSixDigit(It.IsAny<int>())).Returns(true);
+            dataManagementMock.Setup(x => x.GetData(It.IsAny<string>())).ReturnsAsync(1);
+            validatorMock.Setup(x => x.IsValid(It.IsAny<int>(), It.IsAny<int>())).Returns(true);
 
-            var _2faController = new _2FaController(userRepositoryMock.Object, _2faServiceMock.Object,
-                null, userInfoMock.Object, null, validationMock.Object);
+            var _2faController = new _2FaController(null, dataManagementMock.Object, validatorMock.Object,
+                null, userRepositoryMock.Object, null, userInfoMock.Object, null);
 
             var result = await _2faController.Update2FaState(It.IsAny<int>(), true);
 
@@ -235,12 +242,13 @@ namespace tests.Controllers_Tests.Account.Edit
         [Theory]
         [InlineData(typeof(EntityNotCreatedException))]
         [InlineData(typeof(EntityNotUpdatedException))]
-        public async Task UpdateState_DbOperationFailed(Type exType)
+        public async Task UpdateState_TransactionFailed(Type exType)
         {
             var userInfoMock = new Mock<IUserInfo>();
             var userRepositoryMock = new Mock<IRepository<UserModel>>();
-            var _2faServiceMock = new Mock<I2FaService>();
-            var validationMock = new Mock<IValidation>();
+            var transactionMock = new Mock<ITransaction<UserModel>>();
+            var dataManagementMock = new Mock<IDataManagement>();
+            var validatorMock = new Mock<IValidator>();
 
             userInfoMock.Setup(x => x.UserId).Returns(1);
             userRepositoryMock.Setup(x => x.GetById(1, CancellationToken.None)).ReturnsAsync(new UserModel
@@ -251,13 +259,13 @@ namespace tests.Controllers_Tests.Account.Edit
                 password = "AirPassword"
             });
 
-            validationMock.Setup(x => x.IsSixDigit(It.IsAny<int>())).Returns(true);
-            _2faServiceMock.Setup(x => x.GetCode(It.IsAny<string>())).ReturnsAsync(It.IsAny<int>());
-            _2faServiceMock.Setup(x => x.UpdateTransaction(It.IsAny<UserModel>(), true))
+            validatorMock.Setup(x => x.IsValid(It.IsAny<int>(), It.IsAny<int>())).Returns(true);
+            dataManagementMock.Setup(x => x.GetData(It.IsAny<string>())).ReturnsAsync(1);
+            transactionMock.Setup(x => x.CreateTransaction(It.IsAny<UserModel>(), true))
                 .ThrowsAsync((Exception)Activator.CreateInstance(exType));
 
-            var _2faController = new _2FaController(userRepositoryMock.Object, _2faServiceMock.Object,
-                null, userInfoMock.Object, null, validationMock.Object);
+            var _2faController = new _2FaController(transactionMock.Object, dataManagementMock.Object, validatorMock.Object,
+                null, userRepositoryMock.Object, null, userInfoMock.Object, null);
 
             var result = await _2faController.Update2FaState(It.IsAny<int>(), true);
 

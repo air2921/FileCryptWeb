@@ -13,7 +13,7 @@ using webapi.Models;
 
 namespace webapi.Services.Account
 {
-    public class RegistrationService : ITransaction<UserObject>, IDataManagament, IValidator
+    public class RegistrationService : ITransaction<UserObject>, IDataManagement, IValidator
     {
         private readonly IDatabaseTransaction _transaction;
         private readonly IConfiguration _configuration;

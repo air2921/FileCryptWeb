@@ -14,7 +14,7 @@ namespace webapi.Controllers.Account
     [ApiController]
     public class AuthRegistrationController(
         ITransaction<UserObject> transaction,
-        IDataManagament dataManagament,
+        IDataManagement dataManagament,
         IValidator validator,
         IRepository<UserModel> userRepository,
         IEmailSender emailSender,

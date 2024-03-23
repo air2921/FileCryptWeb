@@ -18,7 +18,7 @@ namespace webapi.Services.Account
         public Task RevokeToken(HttpContext context);
     }
 
-    public sealed class SessionService : ControllerBase, IDataManagament, ISessionHelpers
+    public sealed class SessionService : ControllerBase, IDataManagement, ISessionHelpers
     {
         private readonly IDatabaseTransaction _transaction;
         private readonly IRepository<TokenModel> _tokenRepository;

@@ -20,7 +20,7 @@ namespace webapi.Controllers.Account.Edit
 
         private readonly string CODE;
         private readonly ITransaction<UserModel> _transaction;
-        private readonly IDataManagament _dataManagament;
+        private readonly IDataManagement _dataManagament;
         private readonly IValidator _validator;
         private readonly IEmailSender _emailSender;
         private readonly IRepository<UserModel> _userRepository;
@@ -30,7 +30,7 @@ namespace webapi.Controllers.Account.Edit
 
         public _2FaController(
             [FromKeyedServices(ImplementationKey.ACCOUNT_2FA_SERVICE)] ITransaction<UserModel> transaction,
-            [FromKeyedServices(ImplementationKey.ACCOUNT_2FA_SERVICE)] IDataManagament dataManagament,
+            [FromKeyedServices(ImplementationKey.ACCOUNT_2FA_SERVICE)] IDataManagement dataManagament,
             [FromKeyedServices(ImplementationKey.ACCOUNT_2FA_SERVICE)] IValidator validator,
             IEmailSender emailSender,
             IRepository<UserModel> userRepository,
@@ -101,7 +101,7 @@ namespace webapi.Controllers.Account.Edit
         {
             try
             {
-                if (_validator.IsValid(await _dataManagament.GetData(CODE), code))
+                if (!_validator.IsValid(await _dataManagament.GetData(CODE), code))
                     return StatusCode(400, new { message = Message.INCORRECT });
 
                 var user = await _userRepository.GetById(_userInfo.UserId);

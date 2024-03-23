@@ -23,7 +23,7 @@ namespace webapi.Controllers.Account.Edit
         private readonly string NEW_EMAIL_CODE;
 
         private readonly ITransaction<UserModel> _transaction;
-        private readonly IDataManagament _dataManagament;
+        private readonly IDataManagement _dataManagament;
         private readonly IValidator _validator;
         private readonly IRepository<UserModel> _userRepository;
         private readonly IEmailSender _emailSender;
@@ -34,7 +34,7 @@ namespace webapi.Controllers.Account.Edit
 
         public EmailController(
             [FromKeyedServices(ImplementationKey.ACCOUNT_EMAIL_SERVICE)] ITransaction<UserModel> transaction,
-            [FromKeyedServices(ImplementationKey.ACCOUNT_EMAIL_SERVICE)] IDataManagament dataManagament,
+            [FromKeyedServices(ImplementationKey.ACCOUNT_EMAIL_SERVICE)] IDataManagement dataManagament,
             [FromKeyedServices(ImplementationKey.ACCOUNT_EMAIL_SERVICE)] IValidator validator,
             IRepository<UserModel> userRepository,
             IEmailSender emailSender,

@@ -14,7 +14,7 @@ namespace webapi.Controllers.Account.Edit
     [Authorize]
     public class UsernameController(
         ITransaction<UserModel> transaction,
-        IDataManagament dataManagament,
+        IDataManagement dataManagament,
         IValidator validator,
         IRepository<UserModel> userRepository,
         IUserInfo userInfo,

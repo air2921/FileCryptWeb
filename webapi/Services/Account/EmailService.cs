@@ -16,7 +16,7 @@ namespace webapi.Services.Account
         IRepository<NotificationModel> notificationRepository,
         IValidation validation,
         IUserInfo userInfo,
-        IRedisCache redisCache) : ITransaction<UserModel>, IDataManagament, IValidator
+        IRedisCache redisCache) : ITransaction<UserModel>, IDataManagement, IValidator
     {
         public async Task CreateTransaction(UserModel user, object? parameter = null)
         {
