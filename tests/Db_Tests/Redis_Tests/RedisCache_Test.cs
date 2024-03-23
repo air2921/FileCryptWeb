@@ -63,7 +63,6 @@ namespace tests.Db_Tests.Redis_Tests
             var mockDatabase = new Mock<IDatabase>();
 
             mockContext.Setup(c => c.GetDatabase()).Returns(mockDatabase.Object);
-
             var redisCache = new RedisCache(mockContext.Object);
 
             var srcData = new TestObject { Name = "Air", Age = 20, UserId = 1 };
@@ -76,42 +75,9 @@ namespace tests.Db_Tests.Redis_Tests
             var cachedDataJson = await redisCache.GetCachedData("testKey");
             Assert.Null(cachedDataJson);
         }
-
-        //[Fact]
-        //public async Task DeleteRedisCache_DeletesCacheForAllUsers()
-        //{
-        //    var connection = ConnectionMultiplexer.Connect("localhost");
-        //    var redisCache = new RedisCache(new TestRedisDbContext(connection));
-
-        //    var data = new List<TestObject>
-        //    {
-        //        new TestObject { Name = "Air", Age = 20, UserId = 1 },
-        //        new TestObject { Name = "Air", Age = 20, UserId = 1 },
-        //        new TestObject { Name = "Air", Age = 20, UserId = 1 },
-        //        new TestObject { Name = "Zanfery", Age = 20, UserId = 6 },
-        //        new TestObject { Name = "baby_mary", Age = 19, UserId = 12 },
-        //        new TestObject { Name = "common", Age = 20, UserId = 87 },
-        //        new TestObject { Name = "Zanfery", Age = 20, UserId = 6 },
-        //    };
-
-        //    Func<TestObject, int> getUserId = dataItem => dataItem.UserId;
-
-        //    foreach (var item in data)
-        //        await redisCache.CacheData($"testPrefix{item.UserId}", data, TimeSpan.FromMinutes(1));
-
-        //    await redisCache.DeleteRedisCache(data, "testPrefix", getUserId);
-
-        //    foreach (var item in data)
-        //    {
-        //        var cacheKey = $"testPrefix{item.UserId}";
-        //        var cachedData = await redisCache.GetCachedData(cacheKey);
-
-        //        Assert.Null(cachedData);
-        //    }
-        //}
     }
 
-    internal class TestObject
+    public class TestObject
     {
         public int UserId { get; set; }
         public string Name { get; set; }
