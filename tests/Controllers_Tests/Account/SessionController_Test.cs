@@ -4,8 +4,10 @@ using webapi.Controllers.Account;
 using webapi.DTO;
 using webapi.Exceptions;
 using webapi.Interfaces;
+using webapi.Interfaces.Controllers.Services;
 using webapi.Interfaces.Services;
 using webapi.Models;
+using webapi.Services.Account;
 
 namespace tests.Controllers_Tests.Account
 {
@@ -17,7 +19,8 @@ namespace tests.Controllers_Tests.Account
             var userRepositoryMock = new Mock<IRepository<UserModel>>();
             var passwordManagerMock = new Mock<IPasswordManager>();
             var generateMock = new Mock<IGenerate>();
-            var sessionServiceMock = new Mock<IApiSessionService>();
+            var sessionServiceMock = new Mock<ISessionHelpers>();
+            var dataManagementMock = new Mock<IDataManagement>();
 
             userRepositoryMock.Setup(x => x.GetByFilter(It.IsAny<Func<IQueryable<UserModel>, IQueryable<UserModel>>>(), CancellationToken.None))
                 .ReturnsAsync(new UserModel
@@ -34,8 +37,8 @@ namespace tests.Controllers_Tests.Account
             sessionServiceMock.Setup(x => x.CreateTokens(It.IsAny<UserModel>(), It.IsAny<HttpContext>()))
                 .Returns(Task.FromResult<IActionResult>(new StatusCodeResult(200)));
 
-            var sessionController = new AuthSessionController(sessionServiceMock.Object, userRepositoryMock.Object,
-                null, null, null, passwordManagerMock.Object, null, generateMock.Object);
+            var sessionController = new AuthSessionController(sessionServiceMock.Object, dataManagementMock.Object,
+                userRepositoryMock.Object, null, passwordManagerMock.Object, null, generateMock.Object);
 
             var result = await sessionController.Login(new AuthDTO { email = string.Empty, password = string.Empty });
 
@@ -48,7 +51,8 @@ namespace tests.Controllers_Tests.Account
             var userRepositoryMock = new Mock<IRepository<UserModel>>();
             var passwordManagerMock = new Mock<IPasswordManager>();
             var generateMock = new Mock<IGenerate>();
-            var sessionServiceMock = new Mock<IApiSessionService>();
+            var dataManagementMock = new Mock<IDataManagement>();
+            var emailSenderMock = new Mock<IEmailSender>();
 
             userRepositoryMock.Setup(x => x.GetByFilter(It.IsAny<Func<IQueryable<UserModel>, IQueryable<UserModel>>>(), CancellationToken.None))
                 .ReturnsAsync(new UserModel
@@ -62,11 +66,11 @@ namespace tests.Controllers_Tests.Account
                 });
             passwordManagerMock.Setup(x => x.CheckPassword(It.IsAny<string>(), It.IsAny<string>())).Returns(true);
             generateMock.Setup(x => x.GenerateSixDigitCode()).Returns(123);
-            sessionServiceMock.Setup(x => x.CreateTokens(It.IsAny<UserModel>(), It.IsAny<HttpContext>()))
-                .Returns(Task.FromResult<IActionResult>(new ObjectResult(new { message = string.Empty, confirm = true }) { StatusCode = 200 }));
+            dataManagementMock.Setup(x => x.SetData(It.IsAny<string>(), It.IsAny<UserObject>())).Returns(Task.CompletedTask);
+            emailSenderMock.Setup(x => x.SendMessage(It.IsAny<EmailDto>())).Returns(Task.CompletedTask);
 
-            var sessionController = new AuthSessionController(sessionServiceMock.Object, userRepositoryMock.Object,
-                null, null, null, passwordManagerMock.Object, null, generateMock.Object);
+            var sessionController = new AuthSessionController(null, dataManagementMock.Object,
+                userRepositoryMock.Object, emailSenderMock.Object, passwordManagerMock.Object, null, generateMock.Object);
 
             var result = await sessionController.Login(new AuthDTO { email = string.Empty, password = string.Empty });
 
@@ -83,8 +87,7 @@ namespace tests.Controllers_Tests.Account
             userRepositoryMock.Setup(x => x.GetByFilter(It.IsAny<Func<IQueryable<UserModel>, IQueryable<UserModel>>>(), CancellationToken.None))
                 .ReturnsAsync((UserModel)null);
 
-            var sessionController = new AuthSessionController(null, userRepositoryMock.Object,
-                null, null, null, null, null, null);
+            var sessionController = new AuthSessionController(null, null, userRepositoryMock.Object, null, null, null, null);
 
             var result = await sessionController.Login(new AuthDTO { email = string.Empty, password = string.Empty });
 
@@ -101,8 +104,7 @@ namespace tests.Controllers_Tests.Account
             userRepositoryMock.Setup(x => x.GetByFilter(It.IsAny<Func<IQueryable<UserModel>, IQueryable<UserModel>>>(), CancellationToken.None))
                 .ThrowsAsync((Exception)Activator.CreateInstance(typeof(OperationCanceledException)));
 
-            var sessionController = new AuthSessionController(null, userRepositoryMock.Object,
-                null, null, null, null, null, null);
+            var sessionController = new AuthSessionController(null, null, userRepositoryMock.Object, null, null, null, null);
 
             var result = await sessionController.Login(new AuthDTO { email = string.Empty, password = string.Empty });
 
@@ -123,8 +125,7 @@ namespace tests.Controllers_Tests.Account
                     is_blocked = true
                 });
 
-            var sessionController = new AuthSessionController(null, userRepositoryMock.Object,
-                null, null, null, null, null, null);
+            var sessionController = new AuthSessionController(null, null, userRepositoryMock.Object, null, null, null, null);
 
             var result = await sessionController.Login(new AuthDTO { email = string.Empty, password = string.Empty });
 
@@ -147,8 +148,8 @@ namespace tests.Controllers_Tests.Account
                     is_blocked = false
                 });
 
-            var sessionController = new AuthSessionController(null, userRepositoryMock.Object,
-                null, null, null, passwordManagerMock.Object, null, null);
+            var sessionController = new AuthSessionController(null, null, userRepositoryMock.Object, null,
+                passwordManagerMock.Object, null, null);
 
             var result = await sessionController.Login(new AuthDTO { email = string.Empty, password = string.Empty });
 
@@ -163,7 +164,7 @@ namespace tests.Controllers_Tests.Account
             var userRepositoryMock = new Mock<IRepository<UserModel>>();
             var passwordManagerMock = new Mock<IPasswordManager>();
             var generateMock = new Mock<IGenerate>();
-            var sessionServiceMock = new Mock<IApiSessionService>();
+            var emailSenderMock = new Mock<IEmailSender>();
 
             userRepositoryMock.Setup(x => x.GetByFilter(It.IsAny<Func<IQueryable<UserModel>, IQueryable<UserModel>>>(), CancellationToken.None))
                 .ReturnsAsync(new UserModel
@@ -177,11 +178,11 @@ namespace tests.Controllers_Tests.Account
                 });
             passwordManagerMock.Setup(x => x.CheckPassword(It.IsAny<string>(), It.IsAny<string>())).Returns(true);
             generateMock.Setup(x => x.GenerateSixDigitCode()).Returns(123);
-            sessionServiceMock.Setup(x => x.SendMessage(It.IsAny<string>(), It.IsAny<string>(), It.IsAny<int>()))
+            emailSenderMock.Setup(x => x.SendMessage(It.IsAny<EmailDto>()))
                 .ThrowsAsync((Exception)Activator.CreateInstance(typeof(SmtpClientException)));
 
-            var sessionController = new AuthSessionController(sessionServiceMock.Object, userRepositoryMock.Object,
-                null, null, null, passwordManagerMock.Object, null, generateMock.Object);
+            var sessionController = new AuthSessionController(null, null, userRepositoryMock.Object, emailSenderMock.Object,
+                passwordManagerMock.Object, null, generateMock.Object);
 
             var result = await sessionController.Login(new AuthDTO { email = string.Empty, password = string.Empty });
 
@@ -195,17 +196,18 @@ namespace tests.Controllers_Tests.Account
         {
             var userRepositoryMock = new Mock<IRepository<UserModel>>();
             var passwordManagerMock = new Mock<IPasswordManager>();
-            var sessionServiceMock = new Mock<IApiSessionService>();
+            var sessionServiceMock = new Mock<ISessionHelpers>();
+            var dataManagementMock = new Mock<IDataManagement>();
 
             userRepositoryMock.Setup(x => x.GetById(It.IsAny<int>(), CancellationToken.None)).ReturnsAsync(new UserModel());
             passwordManagerMock.Setup(x => x.CheckPassword(It.IsAny<string>(), It.IsAny<string>())).Returns(true);
-            sessionServiceMock.Setup(x => x.GetData(It.IsAny<string>()))
+            dataManagementMock.Setup(x => x.GetData(It.IsAny<string>()))
                 .ReturnsAsync(new UserContextObject { Code = string.Empty, UserId = 1 });
             sessionServiceMock.Setup(x => x.CreateTokens(It.IsAny<UserModel>(), It.IsAny<HttpContext>()))
                 .Returns(Task.FromResult<IActionResult>(new StatusCodeResult(200)));
 
-            var sessionController = new AuthSessionController(sessionServiceMock.Object, userRepositoryMock.Object,
-            null, null, null, passwordManagerMock.Object, null, null);
+            var sessionController = new AuthSessionController(sessionServiceMock.Object, dataManagementMock.Object,
+                userRepositoryMock.Object, null, passwordManagerMock.Object, null, null);
 
             var result = await sessionController.VerifyTwoFA(123, string.Empty);
 
@@ -215,12 +217,11 @@ namespace tests.Controllers_Tests.Account
         [Fact]
         public async Task VerifyTwoFA_UserContextIsNull()
         {
-            var sessionServiceMock = new Mock<IApiSessionService>();
+            var dataManagementMock = new Mock<IDataManagement>();
 
-            sessionServiceMock.Setup(x => x.GetData(It.IsAny<string>())).ReturnsAsync((UserContextObject)null);
+            dataManagementMock.Setup(x => x.GetData(It.IsAny<string>())).ReturnsAsync((UserContextObject)null);
 
-            var sessionController = new AuthSessionController(sessionServiceMock.Object, null,
-                null, null, null, null, null, null);
+            var sessionController = new AuthSessionController(null, dataManagementMock.Object, null, null, null, null, null);
 
             var result = await sessionController.VerifyTwoFA(123, string.Empty);
 
@@ -232,15 +233,15 @@ namespace tests.Controllers_Tests.Account
         [Fact]
         public async Task VerifyTwoFA_CodeIncorrect()
         {
-            var sessionServiceMock = new Mock<IApiSessionService>();
+            var dataManagementMock = new Mock<IDataManagement>();
             var passwordManagerMock = new Mock<IPasswordManager>();
 
-            sessionServiceMock.Setup(x => x.GetData(It.IsAny<string>()))
-                .ReturnsAsync(new UserContextObject { Code = string.Empty, UserId = 1});
+            dataManagementMock.Setup(x => x.GetData(It.IsAny<string>()))
+                .ReturnsAsync(new UserContextObject { Code = string.Empty, UserId = 1 });
             passwordManagerMock.Setup(x => x.CheckPassword(It.IsAny<string>(), It.IsAny<string>())).Returns(false);
 
-            var sessionController = new AuthSessionController(sessionServiceMock.Object, null,
-                null, null, null, passwordManagerMock.Object, null, null);
+            var sessionController = new AuthSessionController(null, dataManagementMock.Object, null,
+                null, passwordManagerMock.Object, null, null);
 
             var result = await sessionController.VerifyTwoFA(123, string.Empty);
 
@@ -252,17 +253,17 @@ namespace tests.Controllers_Tests.Account
         [Fact]
         public async Task VerifyTwoFA_UserNotFound()
         {
-            var sessionServiceMock = new Mock<IApiSessionService>();
+            var dataManagementMock = new Mock<IDataManagement>();
             var passwordManagerMock = new Mock<IPasswordManager>();
             var userRepositoryMock = new Mock<IRepository<UserModel>>();
 
-            sessionServiceMock.Setup(x => x.GetData(It.IsAny<string>()))
+            dataManagementMock.Setup(x => x.GetData(It.IsAny<string>()))
                 .ReturnsAsync(new UserContextObject { Code = string.Empty, UserId = 1 });
             passwordManagerMock.Setup(x => x.CheckPassword(It.IsAny<string>(), It.IsAny<string>())).Returns(true);
             userRepositoryMock.Setup(x => x.GetById(It.IsAny<int>(), CancellationToken.None)).ReturnsAsync((UserModel)null);
 
-            var sessionController = new AuthSessionController(sessionServiceMock.Object, userRepositoryMock.Object,
-                null, null, null, passwordManagerMock.Object, null, null);
+            var sessionController = new AuthSessionController(null, dataManagementMock.Object, userRepositoryMock.Object,
+                null, passwordManagerMock.Object, null, null);
 
             var result = await sessionController.VerifyTwoFA(123, string.Empty);
 
@@ -274,24 +275,60 @@ namespace tests.Controllers_Tests.Account
         [Fact]
         public async Task VerifyTwoFA_DbConnectionFailed()
         {
-            var sessionServiceMock = new Mock<IApiSessionService>();
+            var dataManagementMock = new Mock<IDataManagement>();
             var passwordManagerMock = new Mock<IPasswordManager>();
             var userRepositoryMock = new Mock<IRepository<UserModel>>();
 
-            sessionServiceMock.Setup(x => x.GetData(It.IsAny<string>()))
+            dataManagementMock.Setup(x => x.GetData(It.IsAny<string>()))
                 .ReturnsAsync(new UserContextObject { Code = string.Empty, UserId = 1 });
             passwordManagerMock.Setup(x => x.CheckPassword(It.IsAny<string>(), It.IsAny<string>())).Returns(true);
             userRepositoryMock.Setup(x => x.GetById(It.IsAny<int>(), CancellationToken.None))
                 .ThrowsAsync((Exception)Activator.CreateInstance(typeof(OperationCanceledException)));
 
-            var sessionController = new AuthSessionController(sessionServiceMock.Object, userRepositoryMock.Object,
-                null, null, null, passwordManagerMock.Object, null, null);
+            var sessionController = new AuthSessionController(null, dataManagementMock.Object, userRepositoryMock.Object,
+                null, passwordManagerMock.Object, null, null);
 
             var result = await sessionController.VerifyTwoFA(123, string.Empty);
 
             Assert.IsType<ObjectResult>(result);
             var objectResult = (ObjectResult)result;
             Assert.Equal(500, objectResult.StatusCode);
+        }
+
+        [Fact]
+        public async Task Logout_Success()
+        {
+            var sessionServiceMock = new Mock<ISessionHelpers>();
+            var tokenServiceMock = new Mock<ITokenService>();
+
+            sessionServiceMock.Setup(x => x.RevokeToken(It.IsAny<HttpContext>())).Returns(Task.CompletedTask);
+
+            var sessionController = new AuthSessionController(sessionServiceMock.Object, null, null,
+                null, null, tokenServiceMock.Object, null);
+
+            var result = await sessionController.Logout();
+
+            Assert.Equal(200, ((StatusCodeResult)result).StatusCode);
+        }
+
+        [Theory]
+        [InlineData(typeof(EntityNotDeletedException))]
+        public async Task Logout_ThrowsException(Type ex)
+        {
+            var sessionServiceMock = new Mock<ISessionHelpers>();
+            var tokenServiceMock = new Mock<ITokenService>();
+
+            sessionServiceMock.Setup(x => x.RevokeToken(It.IsAny<HttpContext>()))
+                .ThrowsAsync((Exception)Activator.CreateInstance(ex));
+
+            var sessionController = new AuthSessionController(sessionServiceMock.Object, null, null,
+                null, null, tokenServiceMock.Object, null);
+
+            var result = await sessionController.Logout();
+
+            Assert.IsType<ObjectResult>(result);
+            var objectResult = (ObjectResult)result;
+            Assert.Equal(404, objectResult.StatusCode);
         }
     }
 }

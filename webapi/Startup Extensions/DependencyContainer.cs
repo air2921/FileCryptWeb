@@ -12,9 +12,10 @@ using webapi.Security;
 using webapi.Helpers;
 using webapi.Third_Party_Services;
 using static webapi.Third_Party_Services.EmailSender;
-using webapi.Controllers.Account.Edit;
-using webapi.Controllers.Account;
 using webapi.Controllers.Admin;
+using webapi.Interfaces.Controllers.Services;
+using webapi.Models;
+using webapi.Services.Account;
 
 namespace webapi
 {
@@ -31,6 +32,7 @@ namespace webapi
             services.AddScoped<IRedisCache, RedisCache>();
 
             services.AddScoped(typeof(IRepository<>), typeof(Repository<>));
+            services.AddScoped<IDatabaseTransaction, DatabaseTransaction>();
             services.AddScoped<ISorting, Sorting>();
 
             services.AddScoped<ICryptographyControllerBase, CryptographyHelper>();
@@ -51,13 +53,32 @@ namespace webapi
 
         private static void ControllerServices(IServiceCollection services)
         {
-            services.AddScoped<IApi2FaService, _2FaService>();
-            services.AddScoped<IApiEmailService, EmailService>();
-            services.AddScoped<IApiPasswordService, PasswordService>();
-            services.AddScoped<IApiUsernameService, UsernameService>();
-            services.AddScoped<IApiRegistrationService, RegistrationService>();
-            services.AddScoped<IApiSessionService, SessionService>();
-            services.AddScoped<IApiRecoveryService, RecoveryService>();
+            services.AddKeyedScoped<ITransaction<UserModel>, _2FaService>(ImplementationKey.ACCOUNT_2FA_SERVICE);
+            services.AddKeyedScoped<IDataManagement, _2FaService>(ImplementationKey.ACCOUNT_2FA_SERVICE);
+            services.AddKeyedScoped<IValidator, _2FaService>(ImplementationKey.ACCOUNT_2FA_SERVICE);
+
+            services.AddKeyedScoped<ITransaction<UserModel>, EmailService>(ImplementationKey.ACCOUNT_EMAIL_SERVICE);
+            services.AddKeyedScoped<IDataManagement, EmailService>(ImplementationKey.ACCOUNT_EMAIL_SERVICE);
+            services.AddKeyedScoped<IValidator, EmailService>(ImplementationKey.ACCOUNT_EMAIL_SERVICE);
+
+            services.AddKeyedScoped<ITransaction<UserModel>, PasswordService>(ImplementationKey.ACCOUNT_PASSWORD_SERVICE);
+            services.AddKeyedScoped<IDataManagement, PasswordService>(ImplementationKey.ACCOUNT_PASSWORD_SERVICE);
+            services.AddKeyedScoped<IValidator, PasswordService>(ImplementationKey.ACCOUNT_PASSWORD_SERVICE);
+
+            services.AddKeyedScoped<ITransaction<UserModel>, UsernameService>(ImplementationKey.ACCOUNT_USERNAME_SERVICE);
+            services.AddKeyedScoped<IDataManagement, UsernameService>(ImplementationKey.ACCOUNT_USERNAME_SERVICE);
+            services.AddKeyedScoped<IValidator, UsernameService>(ImplementationKey.ACCOUNT_USERNAME_SERVICE);
+
+            services.AddKeyedScoped<ITransaction<UserObject>, RegistrationService>(ImplementationKey.ACCOUNT_REGISTRATION_SERVICE);
+            services.AddKeyedScoped<IDataManagement, RegistrationService>(ImplementationKey.ACCOUNT_REGISTRATION_SERVICE);
+            services.AddKeyedScoped<IValidator, RegistrationService>(ImplementationKey.ACCOUNT_REGISTRATION_SERVICE);
+
+            services.AddKeyedScoped<IDataManagement, SessionService>(ImplementationKey.ACCOUNT_SESSION_SERVICE);
+            services.AddScoped<ISessionHelpers, SessionService>();
+
+            services.AddKeyedScoped<IValidator, RecoveryService>("");
+            services.AddScoped<IRecoveryHelpers, RecoveryService>();
+
             services.AddScoped<IApiAdminKeysService, AdminKeysService>();
             services.AddScoped<IApiAdminTokenService, AdminTokenService>();
             services.AddScoped<IApiAdminUserService, AdminUserService>();

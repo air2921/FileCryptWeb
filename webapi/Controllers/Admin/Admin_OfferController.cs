@@ -51,7 +51,7 @@ namespace webapi.Controllers.Admin
             }
         }
 
-        [HttpGet("many")]
+        [HttpGet("range")]
         [ProducesResponseType(typeof(IEnumerable<OfferModel>), 200)]
         [ProducesResponseType(typeof(object), 500)]
         public async Task<IActionResult> GetRangeOffers([FromQuery] int? userId, [FromQuery] int skip, [FromQuery] int count,
@@ -92,7 +92,7 @@ namespace webapi.Controllers.Admin
             }
         }
 
-        [HttpDelete("many")]
+        [HttpDelete("range")]
         [ValidateAntiForgeryToken]
         [ProducesResponseType(204)]
         [ProducesResponseType(typeof(object), 500)]

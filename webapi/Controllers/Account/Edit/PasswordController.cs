@@ -1,13 +1,10 @@
 ﻿using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
-using System.Text.RegularExpressions;
-using webapi.Attributes;
-using webapi.DB;
 using webapi.DTO;
 using webapi.Exceptions;
 using webapi.Helpers;
 using webapi.Interfaces;
-using webapi.Interfaces.Redis;
+using webapi.Interfaces.Controllers.Services;
 using webapi.Interfaces.Services;
 using webapi.Localization;
 using webapi.Models;
@@ -17,31 +14,14 @@ namespace webapi.Controllers.Account.Edit
     [Route("api/account/edit/password")]
     [ApiController]
     [Authorize]
-    public class PasswordController : ControllerBase
+    public class PasswordController(
+        [FromKeyedServices(ImplementationKey.ACCOUNT_PASSWORD_SERVICE)] ITransaction<UserModel> transaction,
+        [FromKeyedServices(ImplementationKey.ACCOUNT_PASSWORD_SERVICE)] IDataManagement dataManagament,
+        [FromKeyedServices(ImplementationKey.ACCOUNT_PASSWORD_SERVICE)] IValidator validator,
+        IRepository<UserModel> userRepository,
+        IPasswordManager passwordManager,
+        IUserInfo userInfo) : ControllerBase
     {
-        #region fields and contructor
-
-        private readonly IApiPasswordService _passwordService;
-        private readonly IRepository<UserModel> _userRepository;
-        private readonly ILogger<PasswordController> _logger;
-        private readonly IPasswordManager _passwordManager;
-        private readonly IUserInfo _userInfo;
-
-        public PasswordController(
-            IApiPasswordService passwordService,
-            IRepository<UserModel> userRepository,
-            ILogger<PasswordController> logger,
-            IPasswordManager passwordManager,
-            IUserInfo userInfo)
-        {
-            _passwordService = passwordService;
-            _userRepository = userRepository;
-            _logger = logger;
-            _passwordManager = passwordManager;
-            _userInfo = userInfo;
-        }
-
-        #endregion
 
         [HttpPut]
         [ValidateAntiForgeryToken]
@@ -54,19 +34,18 @@ namespace webapi.Controllers.Account.Edit
         {
             try
             {
-                if (!_passwordService.ValidatePassword(passwordDto.NewPassword))
+                if (!validator.IsValid(passwordDto.NewPassword))
                     return StatusCode(422, new { message = Message.INVALID_FORMAT });
 
-                var user = await _userRepository.GetById(_userInfo.UserId);
+                var user = await userRepository.GetById(userInfo.UserId);
                 if (user is null)
                     return StatusCode(404, new { message = Message.NOT_FOUND });
 
-                bool IsCorrect = _passwordManager.CheckPassword(passwordDto.OldPassword, user.password);
-                if (!IsCorrect)
+                if (!passwordManager.CheckPassword(passwordDto.OldPassword, user.password))
                     return StatusCode(401, new { message = Message.INCORRECT });
 
-                await _passwordService.DbTransaction(user, passwordDto.NewPassword);
-                await _passwordService.ClearData(_userInfo.UserId);
+                await transaction.CreateTransaction(user, passwordDto.NewPassword);
+                await dataManagament.DeleteData(userInfo.UserId);
 
                 return StatusCode(200, new { message = Message.UPDATED });
             }
@@ -82,85 +61,6 @@ namespace webapi.Controllers.Account.Edit
             {
                 return StatusCode(500, new { message = ex.Message });
             }
-        }
-    }
-
-    public interface IApiPasswordService
-    {
-        public Task DbTransaction(UserModel user, string password);
-        public Task ClearData(int userId);
-        public bool ValidatePassword(string password);
-    }
-
-    public class PasswordService : IApiPasswordService
-    {
-        private readonly FileCryptDbContext _dbContext;
-        private readonly IPasswordManager _passwordManager;
-        private readonly IRepository<UserModel> _userRepository;
-        private readonly IRepository<NotificationModel> _notificationRepository;
-        private readonly IRedisCache _redisCache;
-        private readonly IUserInfo _userInfo;
-
-        public PasswordService(
-            FileCryptDbContext dbContext,
-            IPasswordManager passwordManager,
-            IRepository<UserModel> userRepository,
-            IRepository<NotificationModel> notificationRepository,
-            IRedisCache redisCache,
-            IUserInfo userInfo)
-        {
-            _dbContext = dbContext;
-            _passwordManager = passwordManager;
-            _userRepository = userRepository;
-            _notificationRepository = notificationRepository;
-            _redisCache = redisCache;
-            _userInfo = userInfo;
-        }
-
-        [Helper]
-        public async Task DbTransaction(UserModel user, string password)
-        {
-            using var transaction = await _dbContext.Database.BeginTransactionAsync();
-
-            try
-            {
-                user.password = _passwordManager.HashingPassword(password);
-                await _userRepository.Update(user);
-
-                await _notificationRepository.Add(new NotificationModel
-                {
-                    message_header = NotificationMessage.AUTH_PASSWORD_CHANGED_HEADER,
-                    message = NotificationMessage.AUTH_PASSWORD_CHANGED_BODY,
-                    priority = Priority.Security.ToString(),
-                    send_time = DateTime.UtcNow,
-                    is_checked = false,
-                    user_id = _userInfo.UserId
-                });
-
-                await transaction.CommitAsync();
-            }
-            catch (EntityNotUpdatedException)
-            {
-                await transaction.RollbackAsync();
-                throw;
-            }
-            catch (EntityNotCreatedException)
-            {
-                await transaction.RollbackAsync();
-                throw;
-            }
-        }
-
-        [Helper]
-        public async Task ClearData(int userId)
-        {
-            await _redisCache.DeteteCacheByKeyPattern($"{ImmutableData.NOTIFICATIONS_PREFIX}{userId}");
-            await _redisCache.DeteteCacheByKeyPattern($"{ImmutableData.USER_DATA_PREFIX}{userId}");
-        }
-
-        public bool ValidatePassword(string password)
-        {
-            return Regex.IsMatch(password, Validation.Password);
         }
     }
 }

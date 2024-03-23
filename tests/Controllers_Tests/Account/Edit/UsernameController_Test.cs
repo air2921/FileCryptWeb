@@ -2,6 +2,7 @@
 using webapi.Controllers.Account.Edit;
 using webapi.Exceptions;
 using webapi.Interfaces;
+using webapi.Interfaces.Controllers.Services;
 using webapi.Interfaces.Services;
 using webapi.Models;
 
@@ -15,14 +16,19 @@ namespace tests.Controllers_Tests.Account.Edit
             var userRepositoryMock = new Mock<IRepository<UserModel>>();
             var userInfoMock = new Mock<IUserInfo>();
             var tokenServiceMock = new Mock<ITokenService>();
-            var usernameServiceMock = new Mock<IApiUsernameService>();
+            var transactionMock = new Mock<ITransaction<UserModel>>();
+            var dateManagementMock = new Mock<IDataManagement>();
+            var validatorMock = new Mock<IValidator>();
 
             userRepositoryMock.Setup(x => x.GetById(It.IsAny<int>(), CancellationToken.None)).ReturnsAsync(new UserModel());
             userInfoMock.Setup(x => x.UserId).Returns(1);
-            usernameServiceMock.Setup(x => x.ValidateUsername(It.IsAny<string>())).Returns(true);
+            validatorMock.Setup(x => x.IsValid(It.IsAny<string>(), null)).Returns(true);
+            transactionMock.Setup(x => x.CreateTransaction(It.IsAny<UserModel>(), It.IsAny<string>())).Returns(Task.CompletedTask);
+            dateManagementMock.Setup(x => x.DeleteData(It.IsAny<int>())).Returns(Task.CompletedTask);
+            tokenServiceMock.Setup(x => x.UpdateJwtToken()).Returns(Task.CompletedTask);
 
-            var usernameController = new UsernameController(userRepositoryMock.Object, usernameServiceMock.Object,
-                null, userInfoMock.Object, tokenServiceMock.Object);
+            var usernameController = new UsernameController(transactionMock.Object, dateManagementMock.Object, validatorMock.Object,
+                userRepositoryMock.Object, userInfoMock.Object, tokenServiceMock.Object);
 
             var result = await usernameController.UpdateUsername(string.Empty);
 
@@ -34,11 +40,11 @@ namespace tests.Controllers_Tests.Account.Edit
         [Fact]
         public async Task UpdateUsername_InvalidUsername()
         {
-            var usernameServiceMock = new Mock<IApiUsernameService>();
+            var validatorMock = new Mock<IValidator>();
 
-            usernameServiceMock.Setup(x => x.ValidateUsername(It.IsAny<string>())).Returns(false);
+            validatorMock.Setup(x => x.IsValid(It.IsAny<string>(), null)).Returns(false);
 
-            var usernameController = new UsernameController(null, usernameServiceMock.Object, null, null, null);
+            var usernameController = new UsernameController(null, null, validatorMock.Object, null, null, null);
 
             var result = await usernameController.UpdateUsername(string.Empty);
 
@@ -51,15 +57,15 @@ namespace tests.Controllers_Tests.Account.Edit
         public async Task UpdateUsername_UserNotFound()
         {
             var userRepositoryMock = new Mock<IRepository<UserModel>>();
-            var usernameServiceMock = new Mock<IApiUsernameService>();
             var userInfoMock = new Mock<IUserInfo>();
+            var validatorMock = new Mock<IValidator>();
 
             userRepositoryMock.Setup(x => x.GetById(It.IsAny<int>(), CancellationToken.None)).ReturnsAsync((UserModel)null);
             userInfoMock.Setup(x => x.UserId).Returns(1);
-            usernameServiceMock.Setup(x => x.ValidateUsername(It.IsAny<string>())).Returns(true);
+            validatorMock.Setup(x => x.IsValid(It.IsAny<string>(), null)).Returns(true);
 
-            var usernameController = new UsernameController(userRepositoryMock.Object, usernameServiceMock.Object,
-                null, userInfoMock.Object, null);
+            var usernameController = new UsernameController(null, null, validatorMock.Object, userRepositoryMock.Object,
+                userInfoMock.Object, null);
 
             var result = await usernameController.UpdateUsername(string.Empty);
 
@@ -72,16 +78,16 @@ namespace tests.Controllers_Tests.Account.Edit
         public async Task UpdateUsername_DbConnectionFailed()
         {
             var userRepositoryMock = new Mock<IRepository<UserModel>>();
-            var usernameServiceMock = new Mock<IApiUsernameService>();
             var userInfoMock = new Mock<IUserInfo>();
+            var validatorMock = new Mock<IValidator>();
 
             userRepositoryMock.Setup(x => x.GetById(It.IsAny<int>(), CancellationToken.None))
                 .ThrowsAsync((Exception)Activator.CreateInstance(typeof(OperationCanceledException)));
             userInfoMock.Setup(x => x.UserId).Returns(1);
-            usernameServiceMock.Setup(x => x.ValidateUsername(It.IsAny<string>())).Returns(true);
+            validatorMock.Setup(x => x.IsValid(It.IsAny<string>(), null)).Returns(true);
 
-            var usernameController = new UsernameController(userRepositoryMock.Object, usernameServiceMock.Object,
-                null, userInfoMock.Object, null);
+            var usernameController = new UsernameController(null, null, validatorMock.Object, userRepositoryMock.Object,
+                userInfoMock.Object, null);
 
             var result = await usernameController.UpdateUsername(string.Empty);
 
@@ -94,17 +100,22 @@ namespace tests.Controllers_Tests.Account.Edit
         public async Task UpdateUsername_UpdateFailed_ThrowsException()
         {
             var userRepositoryMock = new Mock<IRepository<UserModel>>();
-            var usernameServiceMock = new Mock<IApiUsernameService>();
             var userInfoMock = new Mock<IUserInfo>();
+            var tokenServiceMock = new Mock<ITokenService>();
+            var transactionMock = new Mock<ITransaction<UserModel>>();
+            var dateManagementMock = new Mock<IDataManagement>();
+            var validatorMock = new Mock<IValidator>();
 
             userRepositoryMock.Setup(x => x.GetById(It.IsAny<int>(), CancellationToken.None)).ReturnsAsync(new UserModel());
             userInfoMock.Setup(x => x.UserId).Returns(1);
-            usernameServiceMock.Setup(x => x.ValidateUsername(It.IsAny<string>())).Returns(true);
-            usernameServiceMock.Setup(x => x.DbUpdate(It.IsAny<UserModel>(), It.IsAny<string>()))
+            validatorMock.Setup(x => x.IsValid(It.IsAny<string>(), null)).Returns(true);
+            transactionMock.Setup(x => x.CreateTransaction(It.IsAny<UserModel>(), It.IsAny<string>()))
                 .ThrowsAsync((Exception)Activator.CreateInstance(typeof(EntityNotUpdatedException)));
+            dateManagementMock.Setup(x => x.DeleteData(It.IsAny<int>())).Returns(Task.CompletedTask);
+            tokenServiceMock.Setup(x => x.UpdateJwtToken()).Returns(Task.CompletedTask);
 
-            var usernameController = new UsernameController(userRepositoryMock.Object, usernameServiceMock.Object,
-                null, userInfoMock.Object, null);
+            var usernameController = new UsernameController(transactionMock.Object, dateManagementMock.Object, validatorMock.Object,
+                userRepositoryMock.Object, userInfoMock.Object, tokenServiceMock.Object);
 
             var result = await usernameController.UpdateUsername(string.Empty);
 
@@ -119,15 +130,20 @@ namespace tests.Controllers_Tests.Account.Edit
             var userRepositoryMock = new Mock<IRepository<UserModel>>();
             var userInfoMock = new Mock<IUserInfo>();
             var tokenServiceMock = new Mock<ITokenService>();
-            var usernameServiceMock = new Mock<IApiUsernameService>();
+            var transactionMock = new Mock<ITransaction<UserModel>>();
+            var dateManagementMock = new Mock<IDataManagement>();
+            var validatorMock = new Mock<IValidator>();
 
             userRepositoryMock.Setup(x => x.GetById(It.IsAny<int>(), CancellationToken.None)).ReturnsAsync(new UserModel());
             userInfoMock.Setup(x => x.UserId).Returns(1);
-            usernameServiceMock.Setup(x => x.ValidateUsername(It.IsAny<string>())).Returns(true);
-            tokenServiceMock.Setup(x => x.UpdateJwtToken()).ThrowsAsync((Exception)Activator.CreateInstance(typeof(UnauthorizedAccessException)));
+            validatorMock.Setup(x => x.IsValid(It.IsAny<string>(), null)).Returns(true);
+            transactionMock.Setup(x => x.CreateTransaction(It.IsAny<UserModel>(), It.IsAny<string>())).Returns(Task.CompletedTask);
+            dateManagementMock.Setup(x => x.DeleteData(It.IsAny<int>())).Returns(Task.CompletedTask);
+            tokenServiceMock.Setup(x => x.UpdateJwtToken())
+                .ThrowsAsync((Exception)Activator.CreateInstance(typeof(UnauthorizedAccessException)));
 
-            var usernameController = new UsernameController(userRepositoryMock.Object, usernameServiceMock.Object,
-                null, userInfoMock.Object, tokenServiceMock.Object);
+            var usernameController = new UsernameController(transactionMock.Object, dateManagementMock.Object, validatorMock.Object,
+                userRepositoryMock.Object, userInfoMock.Object, tokenServiceMock.Object);
 
             var result = await usernameController.UpdateUsername(string.Empty);
 
