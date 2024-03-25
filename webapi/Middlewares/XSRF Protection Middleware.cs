@@ -17,9 +17,12 @@ namespace webapi.Middlewares
 
         public async Task Invoke(HttpContext context)
         {
-            var xsrf = context.Request.Cookies[ImmutableData.XSRF_COOKIE_KEY];
-            if (!string.IsNullOrWhiteSpace(xsrf))
-                context.Request.Headers.Append(ImmutableData.XSRF_HEADER_NAME, xsrf);
+            if (!context.Request.Headers.ContainsKey(ImmutableData.XSRF_HEADER_NAME))
+            {
+                var xsrf = context.Request.Cookies[ImmutableData.XSRF_COOKIE_KEY];
+                if (!string.IsNullOrWhiteSpace(xsrf))
+                    context.Request.Headers.Append(ImmutableData.XSRF_HEADER_NAME, xsrf);
+            }
 
             context.Response.Cookies.Append(
             ImmutableData.XSRF_COOKIE_KEY,

@@ -66,6 +66,8 @@ namespace webapi.Services.Account
                     user_id = user.id
                 });
 
+                await DeleteExpiredTokens(user.id);
+
                 await transaction.CommitAsync();
             }
             catch (EntityNotCreatedException)
@@ -73,9 +75,40 @@ namespace webapi.Services.Account
                 await transaction.RollbackAsync();
                 throw;
             }
+            catch (EntityNotDeletedException)
+            {
+                await transaction.RollbackAsync();
+                throw;
+            }
+            catch (OperationCanceledException)
+            {
+                await transaction.RollbackAsync();
+                throw;
+            }
             finally
             {
                 await transaction.DisposeAsync();
+            }
+        }
+
+        private async Task DeleteExpiredTokens(int id)
+        {
+            try
+            {
+                var tokens = await tokenRepository.GetAll(query => query.Where(t => t.user_id.Equals(id) && t.expiry_date < DateTime.UtcNow));
+                var expiredTokens = new List<int>();
+                foreach (var token in tokens)
+                    expiredTokens.Add(token.token_id);
+
+                await tokenRepository.DeleteMany(expiredTokens);
+            }
+            catch (OperationCanceledException)
+            {
+                throw;
+            }
+            catch (EntityNotDeletedException)
+            {
+                throw;
             }
         }
 
@@ -94,6 +127,14 @@ namespace webapi.Services.Account
                 return StatusCode(200);
             }
             catch (EntityNotCreatedException ex)
+            {
+                return StatusCode(500, new { message = ex.Message });
+            }
+            catch (EntityNotDeletedException ex)
+            {
+                return StatusCode(500, new { message = ex.Message });
+            }
+            catch (OperationCanceledException ex)
             {
                 return StatusCode(500, new { message = ex.Message });
             }

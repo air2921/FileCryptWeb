@@ -3,21 +3,12 @@ import DateComponent from '../../../utils/helpers/date/Date';
 import Modal from '../../modal/Modal';
 import Message from '../../../utils/helpers/message/Message';
 import Font from '../../../utils/helpers/icon/Font';
+import { FileProps } from '../../../utils/api/Files';
 
 interface FileListProps {
     files: FileProps[] | null,
     isOwner: boolean,
     deleteFile?: (offerId: number) => void,
-}
-
-interface FileProps {
-    file_id: number,
-    user_id: number,
-    file_name: string,
-    operation_date: string,
-    type: string,
-    file_mime: string,
-    file_mime_category: string
 }
 
 function FileList({ files, isOwner, deleteFile }: FileListProps) {

@@ -21,16 +21,7 @@ namespace webapi.Middlewares
 
         public async Task Invoke(HttpContext context, FileCryptDbContext dbContext, ITokenService tokenService)
         {
-            string jwt = null;
-
-            context.Request.Cookies.TryGetValue(ImmutableData.JWT_COOKIE_KEY, out string? jwtCookie);
-            var jwtHeaders = context.Request.Headers[ImmutableData.JWT_TOKEN_HEADER_NAME];
-
-            if (!string.IsNullOrWhiteSpace(jwtCookie))
-                jwt = jwtCookie;
-            else
-                jwt = jwtHeaders.ToString();
-
+            string? jwt = GetJwt(context);
             if (!string.IsNullOrWhiteSpace(jwt))
             {
                 context.Request.Headers.Add("Authorization", $"Bearer {jwt}");
@@ -40,26 +31,20 @@ namespace webapi.Middlewares
                 return;
             }
 
-            string refresh = null;
-            var refreshHeaders = context.Request.Headers[ImmutableData.REFRESH_TOKEN_HEADER_NAME];
-            context.Request.Cookies.TryGetValue(ImmutableData.REFRESH_COOKIE_KEY, out string? refreshCookie);
-
-            if (!string.IsNullOrWhiteSpace(refreshCookie))
-                refresh = refreshCookie;
-            else
-                refresh = refreshHeaders.ToString();
-
+            string? refresh = GetRefresh(context);
             if (!string.IsNullOrWhiteSpace(refresh))
             {
                 if (_env.IsDevelopment())
                     _logger.LogWarning(tokenService.HashingToken(refresh));
 
-                var userAndToken = await dbContext.Tokens
-                    .Where(t => t.refresh_token == tokenService.HashingToken(refresh))
-                    .Join(dbContext.Users, token => token.user_id, user => user.id, (token, user) => new { token, user })
+                var userAndToken =
+                    await (from token in dbContext.Tokens
+                    where token.refresh_token.Equals(tokenService.HashingToken(refresh))
+                    join user in dbContext.Users on token.user_id equals user.id
+                    select new { token, user })
                     .FirstOrDefaultAsync();
-
-                if (userAndToken is null || userAndToken.token.expiry_date < DateTime.UtcNow || userAndToken.user.is_blocked == true)
+                
+                if (userAndToken is null || userAndToken.token.expiry_date < DateTime.UtcNow || userAndToken.user.is_blocked)
                 {
                     tokenService.DeleteTokens();
                     await _next(context);
@@ -67,16 +52,35 @@ namespace webapi.Middlewares
                 }
 
                 string createdJWT = tokenService.GenerateJwtToken(userAndToken.user, ImmutableData.JwtExpiry);
-                var jwtCookieOptions = tokenService.SetCookieOptions(ImmutableData.JwtExpiry);
-
-                context.Response.Cookies.Append(ImmutableData.JWT_COOKIE_KEY, createdJWT, jwtCookieOptions);
-
+                context.Response.Cookies.Append(ImmutableData.JWT_COOKIE_KEY, createdJWT, tokenService.SetCookieOptions(ImmutableData.JwtExpiry));
                 context.Request.Headers.Add("Authorization", $"Bearer {createdJWT}");
                 AddSecurityHeaders(context);
             }
 
             await _next(context);
             return;
+        }
+
+        private string GetJwt(HttpContext context)
+        {
+            context.Request.Cookies.TryGetValue(ImmutableData.JWT_COOKIE_KEY, out string? jwtCookie);
+            var jwtHeaders = context.Request.Headers[ImmutableData.JWT_TOKEN_HEADER_NAME];
+
+            if (!string.IsNullOrWhiteSpace(jwtCookie))
+                return jwtCookie;
+            else
+                return jwtHeaders.ToString();
+        }
+
+        private string GetRefresh(HttpContext context)
+        {
+            var refreshHeaders = context.Request.Headers[ImmutableData.REFRESH_TOKEN_HEADER_NAME];
+            context.Request.Cookies.TryGetValue(ImmutableData.REFRESH_COOKIE_KEY, out string? refreshCookie);
+
+            if (!string.IsNullOrWhiteSpace(refreshCookie))
+                return refreshCookie;
+            else
+                return refreshHeaders.ToString();
         }
 
         private void AddSecurityHeaders(HttpContext context)

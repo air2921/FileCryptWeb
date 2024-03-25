@@ -1,5 +1,6 @@
 import axios from 'axios';
-const BASE_URL = 'https://localhost:8081/';
+import { BASE_URL } from './Url';
+import { errorHandler } from './ErrorHandler';
 
 const EMAIL_IN_STORAGE = 'login_email';
 
@@ -11,27 +12,24 @@ export async function login(email: string, password: string) {
                 password: password
             }, { withCredentials: true }
         );
+
         localStorage.setItem(EMAIL_IN_STORAGE, email);
 
         return {
+            success: true,
             statusCode: response.status,
             verificationRequired: response.data.confirm,
             message: response.data.message
         }
 
     } catch (error: any) {
-        console.error(error);
-        let statusCode = 500;
-        let errorMessage = 'An error occurred during the request';
-        if (error.response) {
-            errorMessage = error.response.data && error.response.data.message ? error.response.data.message : 'Unknown error';
-            statusCode = error.response.status;
-        }
+        error = errorHandler(error);
 
         return {
-            statusCode: statusCode,
+            success: false,
+            statusCode: error.statusCode,
             verificationRequired: false,
-            message: errorMessage
+            message: error.message
         };
     }
 }
@@ -52,23 +50,12 @@ export async function verifyLogin(code: number) {
         localStorage.removeItem(EMAIL_IN_STORAGE);
 
         return {
+            success: true,
             statusCode: response.status,
             message: response.data.message
         }
-
     } catch (error: any) {
-        console.error(error);
-        let statusCode = 500;
-        let errorMessage = 'An error occurred during the request';
-        if (error.response) {
-            errorMessage = error.response.data && error.response.data.message ? error.response.data.message : 'Unknown error';
-            statusCode = error.response.status;
-        }
-
-        return {
-            statusCode: statusCode,
-            message: errorMessage
-        };
+        return errorHandler(error);
     }
 }
 
@@ -77,24 +64,14 @@ export async function createRecovery(email: string) {
         const response = await axios.post(BASE_URL + `api/auth/recovery/unique/token?email=${email}`, null, {
             withCredentials: true
         });
+
         return {
+            success: true,
             statusCode: response.status,
             message: response.data.message
         };
-
     } catch (error: any) {
-        console.error(error);
-        let statusCode = 500;
-        let errorMessage = 'An error occurred during the request';
-        if (error.response) {
-            errorMessage = error.response.data && error.response.data.message ? error.response.data.message : 'Unknown error';
-            statusCode = error.response.status;
-        }
-
-        return {
-            statusCode: statusCode,
-            message: errorMessage
-        };
+        return errorHandler(error);
     }
 }
 
@@ -104,24 +81,14 @@ export async function recoveryAccount(password: string, token: string) {
             password: password,
             token: token
         }, { withCredentials: true })
+
         return {
+            success: true,
             statusCode: response.status,
             message: response.data.message
         };
-
     } catch (error: any) {
-        console.error(error);
-        let statusCode = 500;
-        let errorMessage = 'An error occurred during the request';
-        if (error.response) {
-            errorMessage = error.response.data && error.response.data.message ? error.response.data.message : 'Unknown error';
-            statusCode = error.response.status;
-        }
-
-        return {
-            statusCode: statusCode,
-            message: errorMessage
-        };
+        return errorHandler(error);
     }
 }
 
@@ -135,31 +102,21 @@ export async function registration(email: string, password: string, username: st
         }, { withCredentials: true });
 
         localStorage.setItem('registration_email', email);
+
         return {
+            success: true,
             statusCode: response.status,
             message: response.data.message
         };
-
     } catch (error: any) {
-        console.error(error);
-        let statusCode = 500;
-        let errorMessage = 'An error occurred during the request';
-        if (error.response) {
-            errorMessage = error.response.data && error.response.data.message ? error.response.data.message : 'Unknown error';
-            statusCode = error.response.status;
-        }
-
-        return {
-            statusCode: statusCode,
-            message: errorMessage
-        };
+        return errorHandler(error);
     }
 }
 
 export async function verifyRegistration(code: number) {
     try {
         const email = localStorage.getItem('registration_email');
-        if (email === null || email === undefined) {
+        if (!email || email === undefined) {
             return {
                 statusCode: 400,
                 message: 'Try again later'
@@ -170,21 +127,11 @@ export async function verifyRegistration(code: number) {
         localStorage.removeItem('registration_email')
 
         return {
+            success: true,
             statusCode: response.status,
             message: undefined
         }
     } catch (error: any) {
-        console.error(error);
-        let statusCode = 500;
-        let errorMessage = 'An error occurred during the request';
-        if (error.response) {
-            errorMessage = error.response.data && error.response.data.message ? error.response.data.message : 'Unknown error';
-            statusCode = error.response.status;
-        }
-
-        return {
-            statusCode: statusCode,
-            message: errorMessage
-        };
+        return errorHandler(error);
     }
 }

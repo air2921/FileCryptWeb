@@ -1,9 +1,8 @@
 ﻿import React, { ChangeEvent, useEffect, useState } from 'react';
 import Message from '../../../utils/helpers/message/Message';
-import AxiosRequest from '../../../utils/api/AxiosRequest';
 import Font from '../../../utils/helpers/icon/Font';
 import FileList from '../../../components/lists/files/FileList';
-import axios from 'axios';
+import { FileProps, cypherFile, deleteFile, getFiles } from '../../../utils/api/Files';
 
 interface FileButtonProps {
     id: string,
@@ -22,93 +21,51 @@ const Files = () => {
     const [mime, setMime] = useState('');
     const [mimeCategory, setCategory] = useState('');
 
-    const [errorMessage, setErrorMessage] = useState('');
-    const [filesList, setFiles] = useState(null);
+    const [files, setFiles] = useState<FileProps[] | null>();
     const [lastTimeModified, setLastTimeModified] = useState(Date.now());
     const [message, setMessage] = useState('');
-    const [font, setFont] = useState('');
+    const [icon, setIcon] = useState('');
 
     const fetchData = async () => {
-        const response = await AxiosRequest({
-            endpoint: `api/core/files/all?skip=${skip}&count=${step}&byDesc=${orderBy}&type=${type}&category=${mimeCategory}&mime=${mime}`,
-            method: 'GET',
-            withCookie: true,
-            requestBody: null
+        const result = await getFiles({
+            skip: skip,
+            type: type,
+            orderByDesc: orderBy,
+            mime: mime,
+            category: mimeCategory,
+            count: step
         });
 
-        if (response.isSuccess) {
-            setFiles(response.data);
-        }
-        else {
-            setErrorMessage(response.data);
-        }
-    }
-
-    const handleLoadMore = () => {
-        setSkip(prevSkip => prevSkip + step);
-    };
-
-    const handleBack = () => {
-        setSkip(prevSkip => Math.max(0, prevSkip - step));
-    };
-
-    const deleteFile = async (fileId: number) => {
-        const response = await AxiosRequest({ endpoint: `api/core/files/${fileId}`, method: 'DELETE', withCookie: true, requestBody: null });
-
-        if (response.isSuccess) {
-            setLastTimeModified(Date.now());
-        }
-        else {
-            setMessage(response.data);
-            setFont('error')
+        if (result.success) {
+            setFiles(result.data);
+        } else {
+            setMessage(result.message);
         }
 
         resetMessageAfterDelay();
     }
 
-    const downloadFile = (file: Blob, filename: string) => {
-        const blob = new Blob([file], { type: file.type });
+    const deleteFileSubmit = async (fileId: number) => {
+        const result = await deleteFile(fileId);
+        if (result.success) {
+            setLastTimeModified(Date.now());
+        } else {
+            setMessage(result.message!);
+            setIcon('error');
+        }
 
-        const fileURL = URL.createObjectURL(blob);
-
-        const downloadLink = document.createElement('a');
-        downloadLink.href = fileURL;
-        downloadLink.setAttribute('download', filename);
-
-        document.body.appendChild(downloadLink);
-        downloadLink.click();
-
-        document.body.removeChild(downloadLink);
-        URL.revokeObjectURL(fileURL);
+        resetMessageAfterDelay();
     }
 
-    const encryptFile = async (file: FormData, fileType: string, operationType: string, filename: string) => {
-        try {
-            const response = await axios.post(
-                `https://localhost:7067/api/core/cryptography/${fileType}/${operationType}`,
-                file,
-                {
-                    withCredentials: true,
-                    responseType: 'blob'
-                }
-            );
-
+    const cypherFileSubmit = async (file: FormData, fileType: string, operationType: string, filename: string) => {
+        const result = await cypherFile(file, fileType, operationType, filename);
+        if (result.success) {
             setMessage('');
-            setFont('');
+            setIcon('');
             setLastTimeModified(Date.now());
-            downloadFile(response.data, filename);
-        }
-        catch (error: any) {
-            const errorText = await error.response.data.text();
-            try {
-                const errorJson = JSON.parse(errorText);
-                setMessage(errorJson.message)
-                setFont('error');
-            }
-            catch (e) {
-                setMessage('Unexpected error')
-                setFont('error');
-            }
+        } else {
+            setMessage(result.message);
+            setIcon('error');
         }
 
         resetMessageAfterDelay();
@@ -120,26 +77,78 @@ const Files = () => {
             const formData = new FormData();
             formData.append('file', file);
 
-            encryptFile(formData, fileType, operationType, file.name);
+            cypherFileSubmit(formData, fileType, operationType, file.name);
         }
     };
 
     const resetMessageAfterDelay = () => {
         setTimeout(() => {
             setMessage('');
-            setFont('');
+            setIcon('');
         }, 3000);
     };
+
+    const handleLoadMore = () => {
+        setSkip(prevSkip => prevSkip + step);
+    };
+
+    const handleLoadLess = () => {
+        setSkip(prevSkip => Math.max(0, prevSkip - step));
+    };
+
+    //const downloadFile = (file: Blob, filename: string) => {
+    //    const fileURL = URL.createObjectURL(new Blob([file], { type: file.type }));
+
+    //    const downloadLink = document.createElement('a');
+    //    downloadLink.href = fileURL;
+    //    downloadLink.setAttribute('download', filename);
+
+    //    document.body.appendChild(downloadLink);
+    //    downloadLink.click();
+
+    //    document.body.removeChild(downloadLink);
+    //    URL.revokeObjectURL(fileURL);
+    //}
+
+    //const encryptFile = async (file: FormData, fileType: string, operationType: string, filename: string) => {
+    //    try {
+    //        const response = await axios.post(
+    //            `https://localhost:7067/api/core/cryptography/${fileType}/${operationType}`,
+    //            file,
+    //            {
+    //                withCredentials: true,
+    //                responseType: 'blob'
+    //            }
+    //        );
+
+    //        setMessage('');
+    //        setIcon('');
+    //        setLastTimeModified(Date.now());
+    //        downloadFile(response.data, filename);
+    //    }
+    //    catch (error: any) {
+    //        const errorText = await error.response.data.text();
+    //        try {
+    //            const errorJson = JSON.parse(errorText);
+    //            setMessage(errorJson.message)
+    //            setIcon('error');
+    //        }
+    //        catch (e) {
+    //            setMessage('Unexpected error')
+    //            setIcon('error');
+    //        }
+    //    }
+
+    //    resetMessageAfterDelay();
+    //}
 
     useEffect(() => {
         fetchData();
     }, [lastTimeModified, skip, orderBy, type, mimeCategory, mime]);
 
-    if (!filesList) {
-        return <div className="error">{errorMessage || 'Loading...'}</div>;
+    if (!files) {
+        return <div className="error">{message || 'Loading...'}</div>;
     }
-
-    const { files } = filesList as { files: any[] }
 
     function FileButton({ id, font, onChange, fileType, operationType }: FileButtonProps) {
 
@@ -262,14 +271,14 @@ const Files = () => {
             <SetFileAndEncrypt />
             <div className="files">
                 <SortFiles />
-                <FileList files={files} isOwner={true} deleteFile={deleteFile} />
+                <FileList files={files} isOwner={true} deleteFile={deleteFileSubmit} />
                 <div className="scroll">
-                    {skip > 0 && <button onClick={handleBack}>Previous</button>}
+                    {skip > 0 && <button onClick={handleLoadLess}>Previous</button>}
                     {files.length > step - 1 && <button onClick={handleLoadMore}>Next</button>}
                 </div>
             </div>
             <div className="message">
-                {message && font && < Message message={message} font={font} />}
+                {message && icon && < Message message={message} font={icon} />}
             </div>
         </div>
     );
