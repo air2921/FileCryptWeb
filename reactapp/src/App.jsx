@@ -3,14 +3,14 @@ import { Routes, Route } from 'react-router-dom';
 
 import Register from './pages/auth/registration/Register';
 import Login from './pages/auth/login/Login';
-import Home from './pages/no_logic/Home';
-import About from './pages/no_logic/About';
-import Policy from './pages/no_logic/Policy'
+import Home from './pages/static/main/Home';
+import About from './pages/static/main/About';
+import Policy from './pages/static/main/Policy'
 import User from './pages/user/User';
 import Settings from './pages/user/Settings'
 import Files from './pages/list/files/Files';
 import RecoveryAccount from './pages/auth/recovery/RecoveryAccount'
-import ErrorPage from './pages/no_logic/ErrorPage/ErrorPage'
+import ErrorPage from './pages/static/error-status/ErrorPage'
 import Layout from './components/Layout/Layout';
 import useAuth from './components/hooks/useAuth';
 

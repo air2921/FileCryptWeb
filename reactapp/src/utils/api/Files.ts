@@ -1,6 +1,6 @@
-import axios from "axios";
+import axios from 'axios';
 import { BASE_URL } from '../api/Url';
-import { errorHandler } from "./ErrorHandler";
+import { errorHandler } from './ErrorHandler';
 
 export interface FilesSortProps {
     skip: number,
@@ -31,7 +31,7 @@ export async function getFiles(sort: FilesSortProps) {
             success: true,
             statusCode: response.status,
             message: undefined,
-            data: response.data as FileProps[]
+            data: response.data.files as FileProps[]
         }
     } catch (error: any) {
         error = errorHandler(error);
@@ -59,10 +59,10 @@ export async function deleteFile(id: number) {
     }
 }
 
-export async function cypherFile(file: FormData, fileType: string, operationType: string, filename: string) {
+export async function cypherFile(file: FormData, fileType: string, operationType: string, filename: string, signature: string) {
     try {
         const response = await axios.post(
-            BASE_URL + `api/core/cryptography/${fileType}/${operationType}`,
+            BASE_URL + `api/core/cryptography/${fileType}/${operationType}?validate=${signature}`,
             file,
             {
                 withCredentials: true,

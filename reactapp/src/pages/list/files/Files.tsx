@@ -3,6 +3,7 @@ import Message from '../../../utils/helpers/message/Message';
 import Font from '../../../utils/helpers/icon/Font';
 import FileList from '../../../components/lists/files/FileList';
 import { FileProps, cypherFile, deleteFile, getFiles } from '../../../utils/api/Files';
+import Loader from '../../static/loader/Loader';
 
 interface FileButtonProps {
     id: string,
@@ -14,8 +15,8 @@ interface FileButtonProps {
 
 
 const Files = () => {
-    const [skip, setSkip] = useState(0);
     const step = 10;
+    const [skip, setSkip] = useState(0);
     const [orderBy, setOrderBy] = useState('true');
     const [type, setType] = useState('');
     const [mime, setMime] = useState('');
@@ -57,8 +58,8 @@ const Files = () => {
         resetMessageAfterDelay();
     }
 
-    const cypherFileSubmit = async (file: FormData, fileType: string, operationType: string, filename: string) => {
-        const result = await cypherFile(file, fileType, operationType, filename);
+    const cypherFileSubmit = async (file: FormData, fileType: string, operationType: string, filename: string, signature: string) => {
+        const result = await cypherFile(file, fileType, operationType, filename, signature);
         if (result.success) {
             setMessage('');
             setIcon('');
@@ -71,13 +72,13 @@ const Files = () => {
         resetMessageAfterDelay();
     }
 
-    const handleFileChange = (event: ChangeEvent<HTMLInputElement>, fileType: string, operationType: string) => {
+    const handleFileChange = (event: ChangeEvent<HTMLInputElement>, fileType: string, operationType: string, signature: string) => {
         const file = event.target.files ? event.target.files[0] : null;
         if (file) {
             const formData = new FormData();
             formData.append('file', file);
 
-            cypherFileSubmit(formData, fileType, operationType, file.name);
+            cypherFileSubmit(formData, fileType, operationType, file.name, signature);
         }
     };
 
@@ -96,58 +97,12 @@ const Files = () => {
         setSkip(prevSkip => Math.max(0, prevSkip - step));
     };
 
-    //const downloadFile = (file: Blob, filename: string) => {
-    //    const fileURL = URL.createObjectURL(new Blob([file], { type: file.type }));
-
-    //    const downloadLink = document.createElement('a');
-    //    downloadLink.href = fileURL;
-    //    downloadLink.setAttribute('download', filename);
-
-    //    document.body.appendChild(downloadLink);
-    //    downloadLink.click();
-
-    //    document.body.removeChild(downloadLink);
-    //    URL.revokeObjectURL(fileURL);
-    //}
-
-    //const encryptFile = async (file: FormData, fileType: string, operationType: string, filename: string) => {
-    //    try {
-    //        const response = await axios.post(
-    //            `https://localhost:7067/api/core/cryptography/${fileType}/${operationType}`,
-    //            file,
-    //            {
-    //                withCredentials: true,
-    //                responseType: 'blob'
-    //            }
-    //        );
-
-    //        setMessage('');
-    //        setIcon('');
-    //        setLastTimeModified(Date.now());
-    //        downloadFile(response.data, filename);
-    //    }
-    //    catch (error: any) {
-    //        const errorText = await error.response.data.text();
-    //        try {
-    //            const errorJson = JSON.parse(errorText);
-    //            setMessage(errorJson.message)
-    //            setIcon('error');
-    //        }
-    //        catch (e) {
-    //            setMessage('Unexpected error')
-    //            setIcon('error');
-    //        }
-    //    }
-
-    //    resetMessageAfterDelay();
-    //}
-
     useEffect(() => {
         fetchData();
     }, [lastTimeModified, skip, orderBy, type, mimeCategory, mime]);
 
     if (!files) {
-        return <div className="error">{message || 'Loading...'}</div>;
+        return message ? <div>{message}</div> : <Loader />;
     }
 
     function FileButton({ id, font, onChange, fileType, operationType }: FileButtonProps) {
@@ -175,6 +130,7 @@ const Files = () => {
     const SetFileAndEncrypt = () => {
         const [operation, setOperation] = useState('encrypt');
         const [keyType, setKeyType] = useState('private');
+        const [signature, setSignature] = useState('false')
 
         return (
             <div>
@@ -201,8 +157,19 @@ const Files = () => {
                     <option value="encrypt">Encrypt file</option>
                     <option value="decrypt">Decrypt file</option>
                 </select>
+                <p>Signature</p>
+                <select
+                    className="signature-required"
+                    id="signature"
+                    required={true}
+                    value={keyType}
+                    onChange={(e) => setSignature(e.target.value)}>
 
-                <FileButton id={`${keyType}-${operation}`} font={'add'} onChange={(e) => handleFileChange(e, keyType, operation)} fileType={keyType} operationType={operation} />
+                    <option value="true">Add signature</option>
+                    <option value="false">No signature</option>
+                </select>
+
+                <FileButton id={`${keyType}-${operation}`} font={'add'} onChange={(e) => handleFileChange(e, keyType, operation, signature)} fileType={keyType} operationType={operation} />
             </div>
         );
     }
