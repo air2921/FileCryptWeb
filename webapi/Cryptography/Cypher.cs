@@ -13,12 +13,7 @@ namespace webapi.Cryptography
             try
             {
                 if (username is not null && id is not null)
-                {
-                    string signature = $"{username}#{id}";
-
-                    byte[] signatureBytes = Encoding.UTF8.GetBytes(signature);
-                    await target.WriteAsync(signatureBytes, cancellationToken);
-                }
+                    await target.WriteAsync(Encoding.UTF8.GetBytes($"{username}#{id}"), cancellationToken);
 
                 using var aes = _aes.GetAesInstance();
 
@@ -44,9 +39,7 @@ namespace webapi.Cryptography
             {
                 if (username is not null && id is not null)
                 {
-                    string expectedSignature = $"{username}#{id}";
-
-                    byte[] expectedSignatureBytes = Encoding.UTF8.GetBytes(expectedSignature);
+                    byte[] expectedSignatureBytes = Encoding.UTF8.GetBytes($"{username}#{id}");
                     byte[] readSignatureBytes = new byte[expectedSignatureBytes.Length];
                     await source.ReadAsync(readSignatureBytes, cancellationToken);
 

@@ -4,26 +4,9 @@ using webapi.Interfaces.Redis;
 
 namespace webapi.DB.RedisDb
 {
-    public class RedisDbContext : IRedisDbContext
+    public class RedisDbContext(IConfiguration configuration) : IRedisDbContext
     {
-        private readonly IDatabase _database;
-        private readonly ConnectionMultiplexer _redis;
-        private readonly IConfiguration _configuration;
-
-        public RedisDbContext(IConfiguration configuration)
-        {
-            _configuration = configuration;
-
-            string connectionString = _configuration.GetConnectionString(App.REDIS_DB)!;
-
-            _redis = ConnectionMultiplexer.Connect(connectionString);
-
-            _database = _redis.GetDatabase();
-        }
-
-        public IDatabase GetDatabase()
-        {
-            return _database;
-        }
+        private readonly IDatabase _database = ConnectionMultiplexer.Connect(configuration.GetConnectionString(App.REDIS_DB)!).GetDatabase();
+        public IDatabase GetDatabase() => _database;
     }
 }
