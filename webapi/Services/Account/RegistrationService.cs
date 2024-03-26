@@ -13,44 +13,23 @@ using webapi.Models;
 
 namespace webapi.Services.Account
 {
-    public class RegistrationService : ITransaction<UserObject>, IDataManagement, IValidator
+    public class RegistrationService(
+        IDatabaseTransaction transaction,
+        IConfiguration configuration,
+        IRepository<UserModel> userRepository,
+        IRepository<KeyModel> keyRepository,
+        IRedisCache redisCache,
+        IGenerate generate,
+        IPasswordManager passwordManager,
+        [FromKeyedServices("Encrypt")] ICypherKey encrypt) : ITransaction<UserObject>, IDataManagement, IValidator
     {
-        private readonly IDatabaseTransaction _transaction;
-        private readonly IConfiguration _configuration;
-        private readonly IRepository<UserModel> _userRepository;
-        private readonly IRepository<KeyModel> _keyRepository;
-        private readonly IRedisCache _redisCache;
-        private readonly IGenerate _generate;
-        private readonly IPasswordManager _passwordManager;
-        private readonly ICypherKey _encrypt;
-        private readonly byte[] secretKey;
-
-        public RegistrationService(
-            IDatabaseTransaction transaction,
-            IConfiguration configuration,
-            IRepository<UserModel> userRepository,
-            IRepository<KeyModel> keyRepository,
-            IRedisCache redisCache,
-            IGenerate generate,
-            IPasswordManager passwordManager,
-            [FromKeyedServices("Encrypt")] ICypherKey encrypt)
-        {
-            _transaction = transaction;
-            _configuration = configuration;
-            _userRepository = userRepository;
-            _keyRepository = keyRepository;
-            _redisCache = redisCache;
-            _generate = generate;
-            _passwordManager = passwordManager;
-            _encrypt = encrypt;
-            secretKey = Convert.FromBase64String(_configuration[App.ENCRYPTION_KEY]!);
-        }
+        private readonly byte[] secretKey = Convert.FromBase64String(configuration[App.ENCRYPTION_KEY]!);
 
         public async Task CreateTransaction(UserObject user, object? parameter = null)
         {
             try
             {
-                var id = await _userRepository.Add(new UserModel
+                var id = await userRepository.Add(new UserModel
                 {
                     email = user.Email,
                     password = user.Password,
@@ -60,22 +39,22 @@ namespace webapi.Services.Account
                     is_blocked = false
                 }, e => e.id);
 
-                await _keyRepository.Add(new KeyModel
+                await keyRepository.Add(new KeyModel
                 {
                     user_id = id,
-                    private_key = await _encrypt.CypherKeyAsync(_generate.GenerateKey(), secretKey)
+                    private_key = await encrypt.CypherKeyAsync(generate.GenerateKey(), secretKey)
                 });
 
-                await _transaction.CommitAsync();
+                await transaction.CommitAsync();
             }
             catch (EntityNotCreatedException)
             {
-                await _transaction.RollbackAsync();
+                await transaction.RollbackAsync();
                 throw;
             }
             finally
             {
-                await _transaction.DisposeAsync();
+                await transaction.DisposeAsync();
             }
         }
 
@@ -83,7 +62,7 @@ namespace webapi.Services.Account
 
         public async Task<object> GetData(string key)
         {
-            var userObject = await _redisCache.GetCachedData(key);
+            var userObject = await redisCache.GetCachedData(key);
             if (userObject is not null)
                 return JsonConvert.DeserializeObject<UserObject>(userObject);
             else
@@ -99,10 +78,10 @@ namespace webapi.Services.Account
             if (user is null)
                 throw new ArgumentException();
 
-            user.Password = _passwordManager.HashingPassword(user.Password);
-            user.Code = _passwordManager.HashingPassword(user.Code);
+            user.Password = passwordManager.HashingPassword(user.Password);
+            user.Code = passwordManager.HashingPassword(user.Code);
 
-            await _redisCache.CacheData(key, user, TimeSpan.FromMinutes(10));
+            await redisCache.CacheData(key, user, TimeSpan.FromMinutes(10));
         }
 
         public bool IsValid(object data, object parameter = null)

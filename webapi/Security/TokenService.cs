@@ -11,28 +11,15 @@ using webapi.Models;
 
 namespace webapi.Security
 {
-    public class TokenService : ITokenService
+    public class TokenService(
+        IConfiguration configuration,
+        IGenerate generate,
+        FileCryptDbContext dbContext,
+        IHttpContextAccessor context) : ITokenService
     {
-        private readonly IConfiguration _configuration;
-        private readonly IGenerate _generate;
-        private readonly FileCryptDbContext _dbContext;
-        private readonly IHttpContextAccessor _context;
-
-        public TokenService(
-            IConfiguration configuration,
-            IGenerate generate,
-            FileCryptDbContext dbContext,
-            IHttpContextAccessor context)
-        {
-            _configuration = configuration;
-            _generate = generate;
-            _dbContext = dbContext;
-            _context = context;
-        }
-
         public string GenerateJwtToken(UserModel userModel, TimeSpan expiry)
         {
-            SymmetricSecurityKey key = new SymmetricSecurityKey(Encoding.ASCII.GetBytes(_configuration[App.SECRET_KEY]!));
+            SymmetricSecurityKey key = new SymmetricSecurityKey(Encoding.ASCII.GetBytes(configuration[App.SECRET_KEY]!));
             var credentials = new SigningCredentials(key, SecurityAlgorithms.HmacSha256);
 
             var claims = new[]
@@ -55,7 +42,7 @@ namespace webapi.Security
 
         public string GenerateRefreshToken()
         {
-            var str = Guid.NewGuid().ToString("N") + "_" + _generate.GenerateKey() + "_" + Guid.NewGuid().ToString();
+            var str = Guid.NewGuid().ToString("N") + "_" + generate.GenerateKey() + "_" + Guid.NewGuid().ToString();
 
             return InsertRandomChars(str, 75);
         }
@@ -100,12 +87,12 @@ namespace webapi.Security
 
         public async Task UpdateJwtToken()
         {
-            if (!_context.HttpContext.Request.Cookies.TryGetValue(ImmutableData.REFRESH_COOKIE_KEY, out string? refresh))
+            if (!context.HttpContext.Request.Cookies.TryGetValue(ImmutableData.REFRESH_COOKIE_KEY, out string? refresh))
                 throw new UnauthorizedAccessException("Refresh Token was not found");
 
-            var userAndToken = await _dbContext.Tokens
+            var userAndToken = await dbContext.Tokens
                 .Where(t => t.refresh_token == HashingToken(refresh))
-                .Join(_dbContext.Users, token => token.user_id, user => user.id, (token, user) => new { token, user })
+                .Join(dbContext.Users, token => token.user_id, user => user.id, (token, user) => new { token, user })
                 .FirstOrDefaultAsync() ?? throw new UnauthorizedAccessException("User was not found");
 
             if (userAndToken.token.expiry_date < DateTime.UtcNow || userAndToken.user.is_blocked)
@@ -114,30 +101,30 @@ namespace webapi.Security
                 throw new UnauthorizedAccessException("Refresh Token is invalid");
             }
 
-            if (_context.HttpContext.Request.Cookies.ContainsKey(ImmutableData.JWT_COOKIE_KEY))
-                _context.HttpContext.Response.Cookies.Delete(ImmutableData.JWT_COOKIE_KEY);
+            if (context.HttpContext.Request.Cookies.ContainsKey(ImmutableData.JWT_COOKIE_KEY))
+                context.HttpContext.Response.Cookies.Delete(ImmutableData.JWT_COOKIE_KEY);
 
             string jwt = GenerateJwtToken(userAndToken.user, ImmutableData.JwtExpiry);
-            _context.HttpContext.Response.Cookies.Append(ImmutableData.JWT_COOKIE_KEY, jwt, SetCookieOptions(ImmutableData.JwtExpiry));
+            context.HttpContext.Response.Cookies.Append(ImmutableData.JWT_COOKIE_KEY, jwt, SetCookieOptions(ImmutableData.JwtExpiry));
         }
 
         public void DeleteTokens()
         {
-            _context.HttpContext.Response.Cookies.Delete(ImmutableData.REFRESH_COOKIE_KEY);
-            _context.HttpContext.Response.Cookies.Delete(ImmutableData.JWT_COOKIE_KEY);
+            context.HttpContext.Response.Cookies.Delete(ImmutableData.REFRESH_COOKIE_KEY);
+            context.HttpContext.Response.Cookies.Delete(ImmutableData.JWT_COOKIE_KEY);
 
-            _context.HttpContext.Response.Cookies.Delete(ImmutableData.IS_AUTHORIZED);
-            _context.HttpContext.Response.Cookies.Delete(ImmutableData.USERNAME_COOKIE_KEY);
-            _context.HttpContext.Response.Cookies.Delete(ImmutableData.USER_ID_COOKIE_KEY);
-            _context.HttpContext.Response.Cookies.Delete(ImmutableData.ROLE_COOKIE_KEY);
+            context.HttpContext.Response.Cookies.Delete(ImmutableData.IS_AUTHORIZED);
+            context.HttpContext.Response.Cookies.Delete(ImmutableData.USERNAME_COOKIE_KEY);
+            context.HttpContext.Response.Cookies.Delete(ImmutableData.USER_ID_COOKIE_KEY);
+            context.HttpContext.Response.Cookies.Delete(ImmutableData.ROLE_COOKIE_KEY);
         }
 
         public void DeleteUserDataSession()
         {
-            _context.HttpContext.Response.Cookies.Delete(ImmutableData.IS_AUTHORIZED);
-            _context.HttpContext.Response.Cookies.Delete(ImmutableData.USERNAME_COOKIE_KEY);
-            _context.HttpContext.Response.Cookies.Delete(ImmutableData.USER_ID_COOKIE_KEY);
-            _context.HttpContext.Response.Cookies.Delete(ImmutableData.ROLE_COOKIE_KEY);
+            context.HttpContext.Response.Cookies.Delete(ImmutableData.IS_AUTHORIZED);
+            context.HttpContext.Response.Cookies.Delete(ImmutableData.USERNAME_COOKIE_KEY);
+            context.HttpContext.Response.Cookies.Delete(ImmutableData.USER_ID_COOKIE_KEY);
+            context.HttpContext.Response.Cookies.Delete(ImmutableData.ROLE_COOKIE_KEY);
         }
     }
 }

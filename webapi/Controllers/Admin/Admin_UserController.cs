@@ -11,29 +11,12 @@ namespace webapi.Controllers.Admin
 {
     [Route("api/admin/users")]
     [ApiController]
-    public class Admin_UserController : ControllerBase
+    public class Admin_UserController(
+        IApiAdminUserService userService,
+        IRepository<UserModel> userRepository,
+        IRepository<TokenModel> tokenRepository,
+        FileCryptDbContext dbContext) : ControllerBase
     {
-        #region fields and constructor
-
-        private readonly IApiAdminUserService _userService;
-        private readonly IRepository<UserModel> _userRepository;
-        private readonly IRepository<TokenModel> _tokenRepository;
-        private readonly FileCryptDbContext _dbContext;
-
-        public Admin_UserController(
-            IApiAdminUserService userService,
-            IRepository<UserModel> userRepository,
-            IRepository<TokenModel> tokenRepository,
-            FileCryptDbContext dbContext)
-        {
-            _userService = userService;
-            _userRepository = userRepository;
-            _tokenRepository = tokenRepository;
-            _dbContext = dbContext;
-        }
-
-        #endregion
-
         [HttpGet("{userId}")]
         [Authorize(Roles = "HighestAdmin,Admin")]
         [ProducesResponseType(typeof(object), 200)]
@@ -43,7 +26,7 @@ namespace webapi.Controllers.Admin
         {
             try
             {
-                var user = await _userRepository.GetById(userId);
+                var user = await userRepository.GetById(userId);
                 if (user is null)
                     return StatusCode(404, new { message = Message.NOT_FOUND });
 
@@ -66,14 +49,14 @@ namespace webapi.Controllers.Admin
         {
             try
             {
-                var target = await _userRepository.GetById(userId);
+                var target = await userRepository.GetById(userId);
                 if (target is null)
                     return StatusCode(404, new { message = Message.NOT_FOUND });
 
-                if (_userService.IsHighestAdmin(target.role))
+                if (userService.IsHighestAdmin(target.role))
                     return StatusCode(403, new { message = Message.FORBIDDEN });
 
-                await _userRepository.Delete(userId);
+                await userRepository.Delete(userId);
                 return StatusCode(204);
             }
             catch (EntityNotDeletedException ex)
@@ -97,14 +80,14 @@ namespace webapi.Controllers.Admin
         {
             try
             {
-                var target = await _userRepository.GetById(userId);
+                var target = await userRepository.GetById(userId);
                 if (target is null)
                     return StatusCode(404, new { message = Message.NOT_FOUND });
 
-                if (_userService.IsHighestAdmin(target.role))
+                if (userService.IsHighestAdmin(target.role))
                     return StatusCode(403, new { message = Message.FORBIDDEN });
 
-                await _userService.DbTransaction(target, block);
+                await userService.DbTransaction(target, block);
                 return StatusCode(200, new { message = Message.UPDATED });
             }
             catch (EntityNotUpdatedException ex)
@@ -132,18 +115,18 @@ namespace webapi.Controllers.Admin
         {
             try
             {
-                if (_userService.IsHighestAdmin(role))
+                if (userService.IsHighestAdmin(role))
                     return StatusCode(403, new { message = Message.FORBIDDEN });
 
-                var target = await _userRepository.GetById(userId);
+                var target = await userRepository.GetById(userId);
                 if (target is null)
                     return StatusCode(404, new { message = Message.NOT_FOUND });
 
-                if (_userService.IsHighestAdmin(target.role))
+                if (userService.IsHighestAdmin(target.role))
                     return StatusCode(403, new { message = Message.FORBIDDEN });
 
                 target.role = role;
-                await _userRepository.Update(target);
+                await userRepository.Update(target);
 
                 return StatusCode(200, new { message = Message.UPDATED });
             }

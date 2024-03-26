@@ -13,21 +13,8 @@ namespace webapi.Controllers.Admin
     [Route("api/admin/api")]
     [ApiController]
     [Authorize(Roles = "HighestAdmin,Admin")]
-    public class Admin_ApiController : ControllerBase
+    public class Admin_ApiController(IRepository<ApiModel> apiRepository, IRedisCache redisCache) : ControllerBase
     {
-        #region fields and constructor
-
-        private readonly IRepository<ApiModel> _apiRepository;
-        private readonly IRedisCache _redisCache;
-
-        public Admin_ApiController(IRepository<ApiModel> apiRepository, IRedisCache redisCache)
-        {
-            _apiRepository = apiRepository;
-            _redisCache = redisCache;
-        }
-
-        #endregion
-
         [HttpGet]
         [ProducesResponseType(typeof(ApiModel), 200)]
         [ProducesResponseType(typeof(object), 404)]
@@ -39,9 +26,9 @@ namespace webapi.Controllers.Admin
                 ApiModel api = null;
 
                 if (apiId.HasValue)
-                    api = await _apiRepository.GetById(apiId.Value);
+                    api = await apiRepository.GetById(apiId.Value);
                 else if (!string.IsNullOrWhiteSpace(key))
-                    api = await _apiRepository.GetByFilter(query => query.Where(a => a.api_key.Equals(key)));
+                    api = await apiRepository.GetByFilter(query => query.Where(a => a.api_key.Equals(key)));
 
                 if (api is null)
                     return StatusCode(404, new { message = Message.NOT_FOUND });
@@ -61,7 +48,7 @@ namespace webapi.Controllers.Admin
         {
             try
             {
-                return StatusCode(200, new { api = await _apiRepository
+                return StatusCode(200, new { api = await apiRepository
                     .GetAll(query => query.Where(a => a.user_id.Equals(userId))) });
             }
             catch (OperationCanceledException ex)
@@ -78,9 +65,9 @@ namespace webapi.Controllers.Admin
         {
             try
             {
-                var deletedApi = await _apiRepository.Delete(apiId);
+                var deletedApi = await apiRepository.Delete(apiId);
                 if (deletedApi is not null)
-                    await _redisCache.DeteteCacheByKeyPattern($"{ImmutableData.API_PREFIX}{deletedApi.user_id}");
+                    await redisCache.DeteteCacheByKeyPattern($"{ImmutableData.API_PREFIX}{deletedApi.user_id}");
 
                 return StatusCode(204);
             }
@@ -98,8 +85,8 @@ namespace webapi.Controllers.Admin
         {
             try
             {
-                var apiList = await _apiRepository.DeleteMany(identifiers);
-                await _redisCache.DeleteRedisCache(apiList, ImmutableData.API_PREFIX, item => item.user_id);
+                var apiList = await apiRepository.DeleteMany(identifiers);
+                await redisCache.DeleteRedisCache(apiList, ImmutableData.API_PREFIX, item => item.user_id);
                 return StatusCode(204);
             }
             catch (EntityNotDeletedException ex)

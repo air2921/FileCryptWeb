@@ -13,29 +13,12 @@ namespace webapi.Controllers.Admin
     [Route("api/admin/tokens")]
     [ApiController]
     [Authorize(Roles = "HighestAdmin,Admin")]
-    public class Admin_TokenController : ControllerBase
+    public class Admin_TokenController(
+        IApiAdminTokenService adminTokenService,
+        IRepository<TokenModel> tokenRepository,
+        IRepository<UserModel> userRepository,
+        IUserInfo userInfo) : ControllerBase
     {
-        #region fields and constructor
-
-        private readonly IApiAdminTokenService _adminTokenService;
-        private readonly IRepository<TokenModel> _tokenRepository;
-        private readonly IRepository<UserModel> _userRepository;
-        private readonly IUserInfo _userInfo;
-
-        public Admin_TokenController(
-            IApiAdminTokenService adminTokenService,
-            IRepository<TokenModel> tokenRepository,
-            IRepository<UserModel> userRepository,
-            IUserInfo userInfo)
-        {
-            _adminTokenService = adminTokenService;
-            _tokenRepository = tokenRepository;
-            _userRepository = userRepository;
-            _userInfo = userInfo;
-        }
-
-        #endregion
-
         [HttpDelete("revoke/all/{userId}")]
         [ValidateAntiForgeryToken]
         [ProducesResponseType(typeof(object), 200)]
@@ -46,14 +29,14 @@ namespace webapi.Controllers.Admin
         {
             try
             {
-                var target = await _userRepository.GetById(userId);
+                var target = await userRepository.GetById(userId);
                 if (target is null)
                     return StatusCode(404, new { message = Message.NOT_FOUND });
 
-                if (!_adminTokenService.IsAllowed(target, _userInfo.Role))
+                if (!adminTokenService.IsAllowed(target, userInfo.Role))
                     return StatusCode(403, new { message = Message.FORBIDDEN });
 
-                await _adminTokenService.DbTransaction(await _tokenRepository
+                await adminTokenService.DbTransaction(await tokenRepository
                     .GetAll(query => query.Where(t => t.user_id.Equals(userId))),target.id);
                 return StatusCode(200, new { message = Message.REMOVED });
             }
@@ -77,18 +60,18 @@ namespace webapi.Controllers.Admin
         {
             try
             {
-                var token = await _tokenRepository.GetById(tokenId);
+                var token = await tokenRepository.GetById(tokenId);
                 if (token is null)
                     return StatusCode(404, new { message = Message.NOT_FOUND });
 
-                var target = await _userRepository.GetById(token.user_id);
+                var target = await userRepository.GetById(token.user_id);
                 if (target is null)
                     return StatusCode(404, new { message = Message.NOT_FOUND });
 
-                if (!_adminTokenService.IsAllowed(target, _userInfo.Role))
+                if (!adminTokenService.IsAllowed(target, userInfo.Role))
                     return StatusCode(403, new { message = Message.FORBIDDEN });
 
-                await _tokenRepository.Delete(tokenId);
+                await tokenRepository.Delete(tokenId);
                 return StatusCode(200, new { message = Message.REMOVED });
             }
             catch (OperationCanceledException ex)

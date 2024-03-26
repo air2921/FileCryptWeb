@@ -3,14 +3,9 @@ using webapi.Interfaces;
 
 namespace webapi.DB
 {
-    public class DatabaseTransaction : IDatabaseTransaction
+    public class DatabaseTransaction(FileCryptDbContext dbContext) : IDatabaseTransaction
     {
-        private readonly IDbContextTransaction _transaction;
-
-        public DatabaseTransaction(FileCryptDbContext dbContext)
-        {
-            _transaction = dbContext.Database.BeginTransaction();
-        }
+        private readonly IDbContextTransaction _transaction = dbContext.Database.BeginTransaction();
 
         public async Task CommitAsync()
         {

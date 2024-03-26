@@ -13,26 +13,11 @@ namespace webapi.Controllers.Admin
     [Route("api/admin/email/and/notification")]
     [ApiController]
     [Authorize(Roles = "HighestAdmin,Admin")]
-    public class SendEmailController : ControllerBase
+    public class SendEmailController(
+        IRepository<NotificationModel> notificationRepository,
+        IMapper mapper,
+        IEmailSender emailSender) : ControllerBase
     {
-        #region fields and constructor
-
-        private readonly IRepository<NotificationModel> _notificationRepository;
-        private readonly IMapper _mapper;
-        private readonly IEmailSender _emailSender;
-
-        public SendEmailController(
-            IRepository<NotificationModel> notificationRepository,
-            IMapper mapper,
-            IEmailSender emailSender)
-        {
-            _notificationRepository = notificationRepository;
-            _mapper = mapper;
-            _emailSender = emailSender;
-        }
-
-        #endregion
-
         [HttpPost("send")]
         [ValidateAntiForgeryToken]
         [ProducesResponseType(typeof(object), 201)]
@@ -41,13 +26,13 @@ namespace webapi.Controllers.Admin
         {
             try
             {
-                var notificationModel = _mapper.Map<NotifyDTO, NotificationModel>(notifyDTO);
+                var notificationModel = mapper.Map<NotifyDTO, NotificationModel>(notifyDTO);
                 notificationModel.is_checked = false;
                 notificationModel.send_time = DateTime.UtcNow;
 
-                await _notificationRepository.Add(notificationModel);
+                await notificationRepository.Add(notificationModel);
 
-                await _emailSender.SendMessage(new EmailDto
+                await emailSender.SendMessage(new EmailDto
                 {
                     username = username,
                     email = email,

@@ -4,25 +4,14 @@ using webapi.Interfaces.Services;
 
 namespace webapi.Third_Party_Services
 {
-    public class ClamAV : IVirusCheck
+    public class ClamAV(ILogger<ClamAV> logger, IConfiguration configuration, IClamSetting clamSetting) : IVirusCheck
     {
-        private readonly ILogger<ClamAV> _logger;
-        private readonly IConfiguration _configuration;
-        private readonly IClamSetting _clamSetting;
-
-        public ClamAV(ILogger<ClamAV> logger, IConfiguration configuration, IClamSetting clamSetting)
-        {
-            _logger = logger;
-            _configuration = configuration;
-            _clamSetting = clamSetting;
-        }
-
         public async Task<bool> GetResultScan(IFormFile file, CancellationToken cancellationToken)
         {
             try
             {
                 var fileStream = file.OpenReadStream();
-                var clam = _clamSetting.SetClam(_configuration[App.CLAM_SERVER]!, int.Parse(_configuration[App.CLAM_PORT]!));
+                var clam = clamSetting.SetClam(configuration[App.CLAM_SERVER]!, int.Parse(configuration[App.CLAM_PORT]!));
 
                 var scanResult = await clam.SendAndScanFileAsync(fileStream, cancellationToken);
                 var rerult = scanResult.Result.Equals(ClamScanResults.Clean);
@@ -31,7 +20,7 @@ namespace webapi.Third_Party_Services
             }
             catch (Exception ex)
             {
-                _logger.LogCritical(ex.ToString());
+                logger.LogCritical(ex.ToString());
                 return false;
             }
         }

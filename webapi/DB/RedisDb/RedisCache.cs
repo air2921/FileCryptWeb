@@ -4,14 +4,9 @@ using webapi.Interfaces.Redis;
 
 namespace webapi.DB.RedisDb
 {
-    public class RedisCache : IRedisCache
+    public class RedisCache(IRedisDbContext context) : IRedisCache
     {
-        private readonly IDatabase _db;
-
-        public RedisCache(IRedisDbContext context)
-        {
-            _db = context.GetDatabase();
-        }
+        private readonly IDatabase _db = context.GetDatabase();
 
         public async Task CacheData(string key, object value, TimeSpan expire)
         {

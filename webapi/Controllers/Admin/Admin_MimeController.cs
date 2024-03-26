@@ -12,29 +12,12 @@ namespace webapi.Controllers.Admin
 {
     [Route("api/admin/mime")]
     [ApiController]
-    public class Admin_MimeController : ControllerBase
+    public class Admin_MimeController(
+        IRepository<FileMimeModel> mimeRepository,
+        ILogger<Admin_MimeController> logger,
+        IRedisCache redisCache,
+        IFileManager fileManager) : ControllerBase
     {
-        #region fields and constructor
-
-        private readonly IRepository<FileMimeModel> _mimeRepository;
-        private readonly ILogger<Admin_MimeController> _logger;
-        private readonly IRedisCache _redisCache;
-        private readonly IFileManager _fileManager;
-
-        public Admin_MimeController(
-            IRepository<FileMimeModel> mimeRepository,
-            ILogger<Admin_MimeController> logger,
-            IRedisCache redisCache,
-            IFileManager fileManager)
-        {
-            _mimeRepository = mimeRepository;
-            _redisCache = redisCache;
-            _logger = logger;
-            _fileManager = fileManager;
-        }
-
-        #endregion
-
         [HttpPost]
         [ValidateAntiForgeryToken]
         [Authorize(Roles = "HighestAdmin")]
@@ -44,9 +27,9 @@ namespace webapi.Controllers.Admin
         {
             try
             {
-                await _mimeRepository.Add(new FileMimeModel { mime_name = mime });
-                await _redisCache.DeleteCache(ImmutableData.MIME_COLLECTION);
-                _logger.LogWarning($"new MIME type: {mime}. Added in db");
+                await mimeRepository.Add(new FileMimeModel { mime_name = mime });
+                await redisCache.DeleteCache(ImmutableData.MIME_COLLECTION);
+                logger.LogWarning($"new MIME type: {mime}. Added in db");
 
                 return StatusCode(201, new { message = Message.CREATED });
             }
@@ -66,11 +49,11 @@ namespace webapi.Controllers.Admin
             try
             {
                 var mimeModels = new HashSet<FileMimeModel>();
-                var existingMimes = await _mimeRepository.GetAll();
+                var existingMimes = await mimeRepository.GetAll();
                 var mimes = existingMimes.Select(m => m.mime_name).ToHashSet();
 
-                _fileManager.AddMimeCollection(ref mimeModels, mimes);
-                await _mimeRepository.AddRange(mimeModels);
+                fileManager.AddMimeCollection(ref mimeModels, mimes);
+                await mimeRepository.AddRange(mimeModels);
                 return StatusCode(201, new { message = Message.CREATED });
             }
             catch (EntityNotCreatedException ex)
@@ -83,7 +66,7 @@ namespace webapi.Controllers.Admin
             }
             finally
             {
-                await _redisCache.DeleteCache(ImmutableData.MIME_COLLECTION);
+                await redisCache.DeleteCache(ImmutableData.MIME_COLLECTION);
             }
         }
 
@@ -96,7 +79,7 @@ namespace webapi.Controllers.Admin
         {
             try
             {
-                var mime = await _mimeRepository.GetById(mimeId);
+                var mime = await mimeRepository.GetById(mimeId);
                 if (mime is null)
                     return StatusCode(404, new { message = Message.NOT_FOUND });
 
@@ -121,9 +104,9 @@ namespace webapi.Controllers.Admin
                     return StatusCode(400);
 
                 if (!skip.HasValue && !count.HasValue)
-                    return StatusCode(200, new { mimes = await _mimeRepository.GetAll() });
+                    return StatusCode(200, new { mimes = await mimeRepository.GetAll() });
 
-                return StatusCode(200, new { mimes = await _mimeRepository
+                return StatusCode(200, new { mimes = await mimeRepository
                     .GetAll(query => query.Skip(skip.Value).Take(count.Value)) });
             }
             catch (OperationCanceledException ex)
@@ -141,8 +124,8 @@ namespace webapi.Controllers.Admin
         {
             try
             {
-                await _mimeRepository.Delete(mimeId);
-                await _redisCache.DeleteCache(ImmutableData.MIME_COLLECTION);
+                await mimeRepository.Delete(mimeId);
+                await redisCache.DeleteCache(ImmutableData.MIME_COLLECTION);
                 return StatusCode(204);
             }
             catch (EntityNotDeletedException ex)
@@ -160,8 +143,8 @@ namespace webapi.Controllers.Admin
         {
             try
             {
-                await _mimeRepository.DeleteMany(identifiers);
-                await _redisCache.DeleteCache(ImmutableData.MIME_COLLECTION);
+                await mimeRepository.DeleteMany(identifiers);
+                await redisCache.DeleteCache(ImmutableData.MIME_COLLECTION);
                 return StatusCode(204);
             }
             catch (EntityNotDeletedException ex)

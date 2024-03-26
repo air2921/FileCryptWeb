@@ -52,7 +52,6 @@ namespace webapi.Controllers.Core
             try
             {
                 var param = await _cryptographyParams.GetCryptographyParams(type, operation);
-                var username = validate ? _userInfo.Username : null;
                 var encryptedFile = await _cryptographyController.EncryptFile(new CryptographyOperationOptions
                 {
                     Key = param.EncryptionKey,
@@ -60,7 +59,7 @@ namespace webapi.Controllers.Core
                     Operation = operation,
                     File = file,
                     UserID = _userInfo.UserId,
-                    Username = username
+                    Username = validate ? _userInfo.Username : null
                 });
 
                 await _redisCache.DeteteCacheByKeyPattern($"{ImmutableData.FILES_PREFIX}{_userInfo.UserId}");

@@ -3,14 +3,9 @@ using webapi.Interfaces.Services;
 
 namespace webapi.Helpers
 {
-    public class UserData : IUserInfo
+    public class UserData(IHttpContextAccessor httpContextAccessor) : IUserInfo
     {
-        private readonly HttpContext _httpContext;
-
-        public UserData(IHttpContextAccessor httpContextAccessor)
-        {
-            _httpContext = httpContextAccessor.HttpContext ?? throw new InvalidOperationException("User is not authenticated");
-        }
+        private readonly HttpContext _httpContext = httpContextAccessor.HttpContext ?? throw new InvalidOperationException("User is not authenticated");
 
         public int UserId => GetIntClaimValue(ClaimTypes.NameIdentifier);
 

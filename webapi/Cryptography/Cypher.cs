@@ -4,16 +4,9 @@ using webapi.Interfaces.Cryptography;
 
 namespace webapi.Cryptography
 {
-    public class Cypher : ICypher
+    public class Cypher(IAes aes, ILogger<Cypher> logger) : ICypher
     {
-        private readonly IAes _aes;
-        private readonly ILogger<Cypher> _logger;
-
-        public Cypher(IAes aes, ILogger<Cypher> logger)
-        {
-            _aes = aes;
-            _logger = logger;
-        }
+        private readonly IAes _aes = aes;
 
         private async Task EncryptionAsync(Stream src, Stream target, byte[] key, CancellationToken cancellationToken, string? username = null, int? id = null)
         {
@@ -107,7 +100,7 @@ namespace webapi.Cryptography
             }
             catch (Exception ex)
             {
-                _logger.LogCritical(ex.ToString());
+                logger.LogCritical(ex.ToString());
                 return new CryptographyResult { Success = false };
             }
         }

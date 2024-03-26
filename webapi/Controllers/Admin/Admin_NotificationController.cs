@@ -14,23 +14,8 @@ namespace webapi.Controllers.Admin
     [Route("api/admin/notifications")]
     [ApiController]
     [Authorize(Roles = "HighestAdmin,Admin")]
-    public class Admin_NotificationController : ControllerBase
+    public class Admin_NotificationController(IRepository<NotificationModel> notificationRepository, IRedisCache redisCache, ISorting sorting) : ControllerBase
     {
-        #region fields and constructor
-
-        private readonly IRepository<NotificationModel> _notificationRepository;
-        private readonly IRedisCache _redisCache;
-        private readonly ISorting _sorting;
-
-        public Admin_NotificationController(IRepository<NotificationModel> notificationRepository, IRedisCache redisCache, ISorting sorting)
-        {
-            _notificationRepository = notificationRepository;
-            _redisCache = redisCache;
-            _sorting = sorting;
-        }
-
-        #endregion
-
         [HttpGet("{notificationId}")]
         [ProducesResponseType(typeof(NotificationModel), 200)]
         [ProducesResponseType(typeof(object), 404)]
@@ -39,7 +24,7 @@ namespace webapi.Controllers.Admin
         {
             try
             {
-                var notification = await _notificationRepository.GetById(notificationId);
+                var notification = await notificationRepository.GetById(notificationId);
                 if (notification is null)
                     return StatusCode(404, new { message = Message.NOT_FOUND });
 
@@ -58,8 +43,8 @@ namespace webapi.Controllers.Admin
         {
             try
             {
-                return StatusCode(200, new { notification = await _notificationRepository
-                    .GetAll(_sorting.SortNotifications(userId, skip, count, byDesc, null, null)) });
+                return StatusCode(200, new { notification = await notificationRepository
+                    .GetAll(sorting.SortNotifications(userId, skip, count, byDesc, null, null)) });
             }
             catch (OperationCanceledException ex)
             {
@@ -75,9 +60,9 @@ namespace webapi.Controllers.Admin
         {
             try
             {
-                var notification = await _notificationRepository.Delete(notificationId);
+                var notification = await notificationRepository.Delete(notificationId);
                 if (notification is not null)
-                    await _redisCache.DeteteCacheByKeyPattern($"{ImmutableData.NOTIFICATIONS_PREFIX}{notification.user_id}");
+                    await redisCache.DeteteCacheByKeyPattern($"{ImmutableData.NOTIFICATIONS_PREFIX}{notification.user_id}");
 
                 return StatusCode(204);
             }
@@ -95,8 +80,8 @@ namespace webapi.Controllers.Admin
         {
             try
             {
-                var notificationList = await _notificationRepository.DeleteMany(identifiers);
-                await _redisCache.DeleteRedisCache(notificationList, ImmutableData.NOTIFICATIONS_PREFIX, item => item.user_id);
+                var notificationList = await notificationRepository.DeleteMany(identifiers);
+                await redisCache.DeleteRedisCache(notificationList, ImmutableData.NOTIFICATIONS_PREFIX, item => item.user_id);
                 return StatusCode(204);
             }
             catch (EntityNotDeletedException ex)

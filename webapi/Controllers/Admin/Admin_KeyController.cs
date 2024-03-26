@@ -15,23 +15,10 @@ namespace webapi.Controllers.Admin
     [Route("api/admin/keys")]
     [ApiController]
     [Authorize(Roles = "HighestAdmin")]
-    public class Admin_KeyController : ControllerBase
+    public class Admin_KeyController(
+        IApiAdminKeysService keysService,
+        IRepository<KeyModel> keyRepository) : ControllerBase
     {
-        #region fields and constructor
-
-        private readonly IApiAdminKeysService _keysService;
-        private readonly IRepository<KeyModel> _keyRepository;
-
-        public Admin_KeyController(
-            IApiAdminKeysService keysService,
-            IRepository<KeyModel> keyRepository)
-        {
-            _keysService = keysService;
-            _keyRepository = keyRepository;
-        }
-
-        #endregion
-
         [HttpGet("all/{userId}")]
         [ProducesResponseType(typeof(HashSet<string>), 200)]
         [ProducesResponseType(typeof(object), 404)]
@@ -40,11 +27,11 @@ namespace webapi.Controllers.Admin
         {
             try
             {        
-                var userKeys = await _keyRepository.GetByFilter(query => query.Where(k => k.user_id.Equals(userId)));
+                var userKeys = await keyRepository.GetByFilter(query => query.Where(k => k.user_id.Equals(userId)));
                 if (userKeys is null)
                     return StatusCode(404, new { message = Message.NOT_FOUND });
 
-                return StatusCode(200, new { keys = await _keysService.GetKeys(userKeys) });
+                return StatusCode(200, new { keys = await keysService.GetKeys(userKeys) });
             }
             catch (OperationCanceledException ex)
             {
@@ -61,12 +48,12 @@ namespace webapi.Controllers.Admin
         {
             try
             {
-                var keys = await _keyRepository.GetByFilter(query => query.Where(k => k.user_id.Equals(userId)));
+                var keys = await keyRepository.GetByFilter(query => query.Where(k => k.user_id.Equals(userId)));
                 if (keys is null)
                     return StatusCode(404, new { message = Message.NOT_FOUND });
 
-                await _keysService.UpdateKey(keys);
-                await _keysService.UpdateCache(userId);
+                await keysService.UpdateKey(keys);
+                await keysService.UpdateCache(userId);
 
                 return StatusCode(200, new { message = Message.REMOVED });
             }
