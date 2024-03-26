@@ -24,15 +24,19 @@ namespace webapi.Middlewares
                     context.Request.Headers.Append(ImmutableData.XSRF_HEADER_NAME, xsrf);
             }
 
-            context.Response.Cookies.Append(
-            ImmutableData.XSRF_COOKIE_KEY,
-            _antiforgery.GetAndStoreTokens(context).RequestToken,
-            new CookieOptions
+            var requstToken = _antiforgery.GetAndStoreTokens(context).RequestToken;
+            if (requstToken is not null)
             {
-                HttpOnly = false,
-                Secure = true,
-                MaxAge = TimeSpan.FromMinutes(60)
-            });
+                context.Response.Cookies.Append(
+                ImmutableData.XSRF_COOKIE_KEY,
+                requstToken,
+                new CookieOptions
+                {
+                    HttpOnly = false,
+                    Secure = true,
+                    MaxAge = TimeSpan.FromMinutes(60)
+                });
+            }
 
             await _next(context);
         }

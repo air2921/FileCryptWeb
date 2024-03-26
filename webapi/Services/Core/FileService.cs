@@ -13,7 +13,9 @@ namespace webapi.Services.Core
         IRepository<FileModel> fileRepository,
         IRepository<FileMimeModel> mimeRepository,
         IGetSize getSize,
+#pragma warning disable CS9113 // Параметр не прочитан.
         IVirusCheck virusCheck,
+#pragma warning restore CS9113 // Параметр не прочитан.
         IRedisCache redisCache,
         ILogger<FileService> logger) : IFileService
     {

@@ -24,7 +24,7 @@ namespace webapi.Middlewares
             string? jwt = GetJwt(context);
             if (!string.IsNullOrWhiteSpace(jwt))
             {
-                context.Request.Headers.Add("Authorization", $"Bearer {jwt}");
+                context.Request.Headers.Append("Authorization", $"Bearer {jwt}");
                 AddSecurityHeaders(context);
 
                 await _next(context);
@@ -53,7 +53,7 @@ namespace webapi.Middlewares
 
                 string createdJWT = tokenService.GenerateJwtToken(userAndToken.user, ImmutableData.JwtExpiry);
                 context.Response.Cookies.Append(ImmutableData.JWT_COOKIE_KEY, createdJWT, tokenService.SetCookieOptions(ImmutableData.JwtExpiry));
-                context.Request.Headers.Add("Authorization", $"Bearer {createdJWT}");
+                context.Request.Headers.Append("Authorization", $"Bearer {createdJWT}");
                 AddSecurityHeaders(context);
             }
 
@@ -85,10 +85,10 @@ namespace webapi.Middlewares
 
         private void AddSecurityHeaders(HttpContext context)
         {
-            context.Response.Headers.Add("X-Content-Type-Options", "nosniff");
-            context.Response.Headers.Add("X-Xss-Protection", "1");
-            context.Response.Headers.Add("X-Frame-Options", "DENY");
-            context.Response.Headers.Add("Content-Security-Policy", "default-src 'self'; script-src 'self' https://cdnjs.cloudflare.com; style-src 'self' https://fonts.googleapis.com; font-src 'self' https://fonts.gstatic.com; img-src 'self' data:;");
+            context.Response.Headers.Append("X-Content-Type-Options", "nosniff");
+            context.Response.Headers.Append("X-Xss-Protection", "1");
+            context.Response.Headers.Append("X-Frame-Options", "DENY");
+            context.Response.Headers.Append("Content-Security-Policy", "default-src 'self'; script-src 'self' https://cdnjs.cloudflare.com; style-src 'self' https://fonts.googleapis.com; font-src 'self' https://fonts.gstatic.com; img-src 'self' data:;");
         }
     }
 

@@ -103,11 +103,11 @@ namespace webapi.Controllers.Admin
                 if ((!skip.HasValue && count.HasValue) || (skip.HasValue && !count.HasValue))
                     return StatusCode(400);
 
-                if (!skip.HasValue && !count.HasValue)
+                if (skip.HasValue && count.HasValue)
+                    return StatusCode(200, new { mimes = await mimeRepository
+                        .GetAll(query => query.Skip(skip.Value).Take(count.Value))});
+                else
                     return StatusCode(200, new { mimes = await mimeRepository.GetAll() });
-
-                return StatusCode(200, new { mimes = await mimeRepository
-                    .GetAll(query => query.Skip(skip.Value).Take(count.Value)) });
             }
             catch (OperationCanceledException ex)
             {
