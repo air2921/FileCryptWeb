@@ -1,47 +1,26 @@
-﻿using webapi.Interfaces.Redis;
-using webapi.Interfaces.Services;
-using webapi.Models;
-using Newtonsoft.Json;
-using webapi.Interfaces.Controllers;
-using webapi.Interfaces;
-using webapi.Helpers;
+﻿using Newtonsoft.Json;
 using webapi.Exceptions;
+using webapi.Helpers;
+using webapi.Interfaces.Controllers.Services;
+using webapi.Interfaces.Redis;
+using webapi.Interfaces.Services;
+using webapi.Interfaces;
+using webapi.Models;
 
-namespace webapi.Controllers.Base.CryptographyUtils
+namespace webapi.Services.Core
 {
-    public class FileService : IFileService
+    public class FileService(
+        IRepository<FileModel> fileRepository,
+        IRepository<FileMimeModel> mimeRepository,
+        IGetSize getSize,
+        IVirusCheck virusCheck,
+        IRedisCache redisCache,
+        ILogger<FileService> logger) : IFileService
     {
         private readonly string privateType = FileType.Private.ToString().ToLowerInvariant();
         private readonly string internalType = FileType.Internal.ToString().ToLowerInvariant();
         private readonly string receivedType = FileType.Received.ToString().ToLowerInvariant();
         private const int TASK_AWAITING = 10000;
-
-        #region fields and constructor
-
-        private readonly IRepository<FileModel> _fileRepository;
-        private readonly IRepository<FileMimeModel> _mimeRepository;
-        private readonly IGetSize _getSize;
-        private readonly IVirusCheck _virusCheck;
-        private readonly IRedisCache _redisCache;
-        private readonly ILogger<FileService> _logger;
-
-        public FileService(
-            IRepository<FileModel> fileRepository,
-            IRepository<FileMimeModel> mimeRepository,
-            IGetSize getSize,
-            IVirusCheck virusCheck,
-            IRedisCache redisCache,
-            ILogger<FileService> logger)
-        {
-            _fileRepository = fileRepository;
-            _mimeRepository = mimeRepository;
-            _getSize = getSize;
-            _virusCheck = virusCheck;
-            _redisCache = redisCache;
-            _logger = logger;
-        }
-
-        #endregion
 
         public bool CheckFileType(string type)
         {
@@ -57,31 +36,31 @@ namespace webapi.Controllers.Base.CryptographyUtils
             return typesArray.Contains(lowerType);
         }
 
-        public async Task<bool> CheckFile(IFormFile file)
+        public bool CheckFile(IFormFile file)
         {
             try
             {
                 if (file.Length == 0 || file.ContentType is null)
                     return false;
 
-                if (await CheckMIME(file.ContentType))
+                if (getSize.GetFileSizeInMb(file) > 75)
                     return false;
 
                 // !!!!!
-                // If you are a country where ClamAV is blocked, leave this block of code commented out
+                // If you are a country where ClamAV is blocked, leave this block of code commented out and make method asynchronous
                 // !!!!!
 
                 //using var cts = new CancellationTokenSource();
                 //var cancellationToken = cts.Token;
 
-                //var virusCheckTask = _virusCheck.GetResultScan(file, cancellationToken);
+                //var virusCheckTask = virusCheck.GetResultScan(file, cancellationToken);
                 //var timeoutTask = Task.Delay(TASK_AWAITING);
                 //var completedTask = await Task.WhenAny(virusCheckTask, timeoutTask);
 
                 //if (completedTask == timeoutTask)
                 //{
                 //    cts.Cancel();
-                //    _logger.LogCritical("Virus check task was cancelled", nameof(CheckFile));
+                //    logger.LogCritical("Virus check task was cancelled", nameof(CheckFile));
                 //    return false;
                 //}
 
@@ -92,22 +71,17 @@ namespace webapi.Controllers.Base.CryptographyUtils
             }
             catch (Exception ex)
             {
-                _logger.LogCritical(ex.ToString(), nameof(CheckFile));
+                logger.LogCritical(ex.ToString(), nameof(CheckFile));
                 return false;
             }
         }
 
-        public bool CheckSize(IFormFile file)
+        public async Task<bool> IsProhibitedMIME(string mime)
         {
-            return _getSize.GetFileSizeInMb(file) < 75;
-        }
-
-        private async Task<bool> CheckMIME(string mime)
-        {
-            var mimes = await _redisCache.GetCachedData(ImmutableData.MIME_COLLECTION);
-            if (mimes is not null)
+            var cacheMimes = await redisCache.GetCachedData(ImmutableData.MIME_COLLECTION);
+            if (cacheMimes is not null)
             {
-                string[] mimesArray = JsonConvert.DeserializeObject<string[]>(mimes);
+                string[] mimesArray = JsonConvert.DeserializeObject<string[]>(cacheMimes);
                 if (mimesArray is null || mimesArray.Length.Equals(0))
                     return false;
 
@@ -115,12 +89,10 @@ namespace webapi.Controllers.Base.CryptographyUtils
             }
             else
             {
-                var mimesDb = await _mimeRepository.GetAll();
-                string[] mimesArray = mimesDb.Select(m => m.mime_name).ToArray();
+                string[] dbMimes = (await mimeRepository.GetAll()).Select(m => m.mime_name).ToArray();
+                await redisCache.CacheData(ImmutableData.MIME_COLLECTION, dbMimes, TimeSpan.FromDays(3));
 
-                await _redisCache.CacheData(ImmutableData.MIME_COLLECTION, mimesArray, TimeSpan.FromDays(3));
-
-                return mimesArray.Contains(mime);
+                return dbMimes.Contains(mime);
             }
         }
 
@@ -161,7 +133,7 @@ namespace webapi.Controllers.Base.CryptographyUtils
         {
             try
             {
-                await _fileRepository.Add(new FileModel
+                await fileRepository.Add(new FileModel
                 {
                     user_id = userID,
                     file_name = uniqueFileName,

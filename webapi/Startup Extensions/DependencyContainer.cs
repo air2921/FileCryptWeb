@@ -1,10 +1,7 @@
 ﻿using webapi.DB.RedisDb;
-using webapi.Interfaces.Controllers;
 using webapi.Interfaces.Cryptography;
 using webapi.Interfaces.Redis;
 using webapi.Interfaces.Services;
-using webapi.Controllers.Base;
-using webapi.Controllers.Base.CryptographyUtils;
 using webapi.Interfaces;
 using webapi.DB;
 using webapi.Cryptography;
@@ -16,6 +13,7 @@ using webapi.Controllers.Admin;
 using webapi.Interfaces.Controllers.Services;
 using webapi.Models;
 using webapi.Services.Account;
+using webapi.Services.Core;
 
 namespace webapi
 {
@@ -35,8 +33,8 @@ namespace webapi
             services.AddScoped<IDatabaseTransaction, DatabaseTransaction>();
             services.AddScoped<ISorting, Sorting>();
 
-            services.AddScoped<ICryptographyControllerBase, CryptographyHelper>();
-            services.AddScoped<ICryptographyParamsProvider, CryptographyHelper>();
+            services.AddScoped<ICryptographyHelper, CryptographyHelper>();
+            services.AddScoped<ICryptographyProvider, CryptographyService>();
             services.AddScoped<IFileService, FileService>();
             services.AddScoped<IValidation, Validation>();
             services.AddScoped<IGenerate, Generate>();

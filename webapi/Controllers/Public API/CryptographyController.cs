@@ -2,15 +2,14 @@
 using Microsoft.AspNetCore.Mvc;
 using Newtonsoft.Json;
 using webapi.Attributes;
-using webapi.Controllers.Base;
 using webapi.Exceptions;
 using webapi.Helpers;
 using webapi.Interfaces;
-using webapi.Interfaces.Controllers;
-using webapi.Interfaces.Cryptography;
+using webapi.Interfaces.Controllers.Services;
 using webapi.Interfaces.Redis;
 using webapi.Localization;
 using webapi.Models;
+using webapi.Services.Core;
 
 namespace webapi.Controllers.Public_API
 {
@@ -22,20 +21,17 @@ namespace webapi.Controllers.Public_API
         #region fields and constructor
 
         private readonly IRepository<ApiModel> _apiRepository;
-        private readonly ICryptographyControllerBase _cryptographyController;
+        private readonly ICryptographyProvider _provider;
         private readonly IRedisCache _redisCache;
-        private readonly ICypher _cypher;
 
         public CryptographyController(
             IRepository<ApiModel> apiRepository,
-            ICryptographyControllerBase cryptographyController,
-            IRedisCache redisCache,
-            ICypher cypher)
+            ICryptographyProvider provider,
+            IRedisCache redisCache)
         {
             _apiRepository = apiRepository;
-            _cryptographyController = cryptographyController;
+            _provider = provider;
             _redisCache = redisCache;
-            _cypher = cypher;
         }
 
         #endregion
@@ -57,7 +53,7 @@ namespace webapi.Controllers.Public_API
                 var apiData = await IsValidAPI(apiKey);
                 await ControlRequestCount(apiKey, apiData.MaxRequest);
 
-                return await _cryptographyController.EncryptFile(new CryptographyOperationOptions
+                return await _provider.EncryptFile(new CryptographyOperationOptions
                 {
                     Key = encryptionKey,
                     File = file,
