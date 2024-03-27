@@ -16,29 +16,12 @@ namespace webapi.Controllers.Core
     [Route("api/core/files")]
     [ApiController]
     [Authorize]
-    public class FileController : ControllerBase
+    public class FileController(
+        IRepository<FileModel> fileRepository,
+        ISorting sorting,
+        IRedisCache redisCache,
+        IUserInfo userInfo) : ControllerBase
     {
-        #region fields and constructor
-
-        private readonly IRepository<FileModel> _fileRepository;
-        private readonly ISorting _sorting;
-        private readonly IRedisCache _redisCache;
-        private readonly IUserInfo _userInfo;
-
-        public FileController(
-            IRepository<FileModel> fileRepository,
-            ISorting sorting,
-            IRedisCache redisCache,
-            IUserInfo userInfo)
-        {
-            _fileRepository = fileRepository;
-            _sorting = sorting;
-            _redisCache = redisCache;
-            _userInfo = userInfo;
-        }
-
-        #endregion
-
         [HttpDelete("{fileId}")]
         [ValidateAntiForgeryToken]
         [ProducesResponseType(204)]
@@ -47,8 +30,8 @@ namespace webapi.Controllers.Core
         {
             try
             {
-                await _fileRepository.DeleteByFilter(query => query.Where(f => f.file_id.Equals(fileId) && f.user_id.Equals(_userInfo.UserId)));
-                await _redisCache.DeteteCacheByKeyPattern($"{ImmutableData.FILES_PREFIX}{_userInfo.UserId}");
+                await fileRepository.DeleteByFilter(query => query.Where(f => f.file_id.Equals(fileId) && f.user_id.Equals(userInfo.UserId)));
+                await redisCache.DeteteCacheByKeyPattern($"{ImmutableData.FILES_PREFIX}{userInfo.UserId}");
 
                 return StatusCode(204);
             }
@@ -66,17 +49,17 @@ namespace webapi.Controllers.Core
         {
             try
             {
-                var cacheKey = $"{ImmutableData.FILES_PREFIX}{_userInfo.UserId}_{fileId}";
+                var cacheKey = $"{ImmutableData.FILES_PREFIX}{userInfo.UserId}_{fileId}";
 
-                var cache = await _redisCache.GetCachedData(cacheKey);
+                var cache = await redisCache.GetCachedData(cacheKey);
                 if (cache is not null)
                     return StatusCode(200, new { file = JsonConvert.DeserializeObject<FileModel>(cache) });
 
-                var file = await _fileRepository.GetByFilter(query => query.Where(f => f.file_id.Equals(fileId) && f.user_id.Equals(_userInfo.UserId)));
+                var file = await fileRepository.GetByFilter(query => query.Where(f => f.file_id.Equals(fileId) && f.user_id.Equals(userInfo.UserId)));
                 if (file is null)
                     return StatusCode(404, new { message = Message.NOT_FOUND });
 
-                await _redisCache.CacheData(cacheKey, file, TimeSpan.FromMinutes(5));
+                await redisCache.CacheData(cacheKey, file, TimeSpan.FromMinutes(5));
 
                 return StatusCode(200, new { file });
             }
@@ -94,15 +77,15 @@ namespace webapi.Controllers.Core
         {
             try
             {
-                var cacheKey = $"{ImmutableData.FILES_PREFIX}{_userInfo.UserId}_{skip}_{count}_{byDesc}_{type}_{category}_{mime}";
+                var cacheKey = $"{ImmutableData.FILES_PREFIX}{userInfo.UserId}_{skip}_{count}_{byDesc}_{type}_{category}_{mime}";
 
-                var cacheFiles = await _redisCache.GetCachedData(cacheKey);
+                var cacheFiles = await redisCache.GetCachedData(cacheKey);
                 if (cacheFiles is not null)
                     return StatusCode(200, new { files = JsonConvert.DeserializeObject<IEnumerable<FileModel>>(cacheFiles) });
 
-                var files = await _fileRepository.GetAll(_sorting.SortFiles(_userInfo.UserId, skip, count, byDesc, type, mime, category));
+                var files = await fileRepository.GetAll(sorting.SortFiles(userInfo.UserId, skip, count, byDesc, type, mime, category));
 
-                await _redisCache.CacheData(cacheKey, files, TimeSpan.FromMinutes(3));
+                await redisCache.CacheData(cacheKey, files, TimeSpan.FromMinutes(3));
 
                 return StatusCode(200, new { files });
             }

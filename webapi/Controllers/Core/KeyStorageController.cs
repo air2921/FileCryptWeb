@@ -62,8 +62,7 @@ namespace webapi.Controllers.Core
         [HttpDelete("storage/{storageId}")]
         [ValidateAntiForgeryToken]
         [ProducesResponseType(204)]
-        [ProducesResponseType(typeof(object), 403)]
-        [ProducesResponseType(typeof(object), 404)]
+        [ProducesResponseType(typeof(object), 400)]
         [ProducesResponseType(typeof(object), 500)]
         public async Task<IActionResult> DeleteStorage([FromRoute] int storageId, [FromQuery] int code)
         {
@@ -83,20 +82,15 @@ namespace webapi.Controllers.Core
             {
                 return StatusCode(500, new { message = ex.Message });
             }
-            catch (ArgumentNullException ex)
-            {
-                return StatusCode(404, new { message = ex.Message });
-            }
             catch (ArgumentException ex)
             {
-                return StatusCode(403, new { message = ex.Message });
+                return StatusCode(400, new { message = ex.Message });
             }
         }
 
         [HttpGet("storage/{storageId}")]
         [ProducesResponseType(typeof(object), 200)]
-        [ProducesResponseType(typeof(object), 403)]
-        [ProducesResponseType(typeof(object), 404)]
+        [ProducesResponseType(typeof(object), 400)]
         [ProducesResponseType(typeof(object), 500)]
         public async Task<IActionResult> GetStorageAndItems([FromRoute] int storageId, [FromQuery] int code)
         {
@@ -125,13 +119,9 @@ namespace webapi.Controllers.Core
             {
                 return StatusCode(500, new { message = ex.Message });
             }
-            catch (ArgumentNullException ex)
-            {
-                return StatusCode(404, new { message = ex.Message });
-            }
             catch (ArgumentException ex)
             {
-                return StatusCode(403, new { message = ex.Message });
+                return StatusCode(400, new { message = ex.Message });
             }
         }
 
@@ -154,8 +144,7 @@ namespace webapi.Controllers.Core
         [HttpPost("key/{storageId}")]
         [ValidateAntiForgeryToken]
         [ProducesResponseType(201)]
-        [ProducesResponseType(typeof(object), 403)]
-        [ProducesResponseType(typeof(object), 404)]
+        [ProducesResponseType(typeof(object), 400)]
         [ProducesResponseType(typeof(object), 500)]
         public async Task<IActionResult> AddKey([FromRoute] int storageId, [FromQuery] int code, [FromBody] KeyDTO keyDTO)
         {
@@ -184,20 +173,15 @@ namespace webapi.Controllers.Core
             {
                 return StatusCode(500, new { message = ex.Message });
             }
-            catch (ArgumentNullException ex)
-            {
-                return StatusCode(404, new { message = ex.Message });
-            }
             catch (ArgumentException ex)
             {
-                return StatusCode(403, new { message = ex.Message });
+                return StatusCode(400, new { message = ex.Message });
             }
         }
 
         [HttpGet("key/{storageId}/{keyId}")]
         [ProducesResponseType(typeof(object), 200)]
-        [ProducesResponseType(typeof(object), 403)]
-        [ProducesResponseType(typeof(object), 404)]
+        [ProducesResponseType(typeof(object), 400)]
         [ProducesResponseType(typeof(object), 500)]
         public async Task<IActionResult> GetKey([FromRoute] int storageId, [FromRoute] int keyId, [FromQuery] int code)
         {
@@ -213,17 +197,13 @@ namespace webapi.Controllers.Core
 
                 return StatusCode(200, new { key = decryptKey.CypherKeyAsync(key.key_value, secretKey) });
             }
+            catch (ArgumentException ex)
+            {
+                return StatusCode(400, new { message = ex.Message });
+            }
             catch (OperationCanceledException ex)
             {
                 return StatusCode(500, new { message = ex.Message });
-            }
-            catch (ArgumentNullException ex)
-            {
-                return StatusCode(404, new { message = ex.Message });
-            }
-            catch (ArgumentException ex)
-            {
-                return StatusCode(403, new { message = ex.Message });
             }
             catch (CryptographicException)
             {
@@ -251,13 +231,9 @@ namespace webapi.Controllers.Core
             {
                 return StatusCode(500, new { message = ex.Message });
             }
-            catch (ArgumentNullException ex)
-            {
-                return StatusCode(404, new { message = ex.Message });
-            }
             catch (ArgumentException ex)
             {
-                return StatusCode(403, new { message = ex.Message });
+                return StatusCode(400, new { message = ex.Message });
             }
         }
     }

@@ -75,7 +75,7 @@ namespace webapi
             services.AddScoped<ISessionHelpers, SessionService>();
 
             services.AddKeyedScoped<IValidator, RecoveryService>(ImplementationKey.ACCOUNT_RECOVERY_SERVICE);
-            services.AddScoped<IRecoveryHelpers, RecoveryService>();
+            services.AddTransient<IRecoveryHelpers, RecoveryService>();
 
             services.AddKeyedTransient<ITransaction<KeyModel>, OfferService>(ImplementationKey.CORE_OFFER_SERVICE);
             services.AddKeyedTransient<ITransaction<Participants>, OfferService>(ImplementationKey.CORE_OFFER_SERVICE);
@@ -83,6 +83,8 @@ namespace webapi
 
             services.AddKeyedScoped<IValidator, KeyStorageService>(ImplementationKey.CORE_KEY_STORAGE_SERVICE);
             services.AddScoped<IStorageHelpers, KeyStorageService>();
+
+            services.AddScoped<IUserHelpers, UserService>();
 
             services.AddScoped<IApiAdminKeysService, AdminKeysService>();
             services.AddScoped<IApiAdminTokenService, AdminTokenService>();

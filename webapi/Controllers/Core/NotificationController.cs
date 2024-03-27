@@ -16,29 +16,12 @@ namespace webapi.Controllers.Core
     [Route("api/core/notifications")]
     [ApiController]
     [Authorize]
-    public class NotificationController : ControllerBase
+    public class NotificationController(
+        IRepository<NotificationModel> notificationRepository,
+        ISorting sorting,
+        IRedisCache redisCache,
+        IUserInfo userInfo) : ControllerBase
     {
-        #region fields and constructor
-
-        private readonly IRepository<NotificationModel> _notificationRepository;
-        private readonly ISorting _sorting;
-        private readonly IRedisCache _redisCache;
-        private readonly IUserInfo _userInfo;
-
-        public NotificationController(
-            IRepository<NotificationModel> notificationRepository,
-            ISorting sorting,
-            IRedisCache redisCache,
-            IUserInfo userInfo)
-        {
-            _notificationRepository = notificationRepository;
-            _sorting = sorting;
-            _redisCache = redisCache;
-            _userInfo = userInfo;
-        }
-
-        #endregion
-
         [HttpGet("{notificationId}")]
         [ProducesResponseType(typeof(NotificationModel), 200)]
         [ProducesResponseType(typeof(object), 404)]
@@ -47,19 +30,19 @@ namespace webapi.Controllers.Core
         {
             try
             {
-                var cacheKey = $"{ImmutableData.NOTIFICATIONS_PREFIX}{_userInfo.UserId}_{notificationId}";
+                var cacheKey = $"{ImmutableData.NOTIFICATIONS_PREFIX}{userInfo.UserId}_{notificationId}";
 
-                var cacheNotification = await _redisCache.GetCachedData(cacheKey);
+                var cacheNotification = await redisCache.GetCachedData(cacheKey);
                 if (cacheNotification is not null)
                     return StatusCode(200, new { notification = JsonConvert.DeserializeObject<NotificationModel>(cacheNotification) });
 
-                var notification = await _notificationRepository.GetByFilter
-                    (query => query.Where(n => n.notification_id.Equals(notificationId) && n.user_id.Equals(_userInfo.UserId)));
+                var notification = await notificationRepository.GetByFilter
+                    (query => query.Where(n => n.notification_id.Equals(notificationId) && n.user_id.Equals(userInfo.UserId)));
 
                 if (notification is null)
                     return StatusCode(404, new { message = Message.NOT_FOUND });
 
-                await _redisCache.CacheData(cacheKey, notification, TimeSpan.FromMinutes(10));
+                await redisCache.CacheData(cacheKey, notification, TimeSpan.FromMinutes(10));
 
                 return StatusCode(200, new { notification });
             }
@@ -78,15 +61,15 @@ namespace webapi.Controllers.Core
         {
             try
             {
-                var cacheKey = $"{ImmutableData.NOTIFICATIONS_PREFIX}{_userInfo.UserId}_{skip}_{count}_{byDesc}_{priority}_{isChecked}";
+                var cacheKey = $"{ImmutableData.NOTIFICATIONS_PREFIX}{userInfo.UserId}_{skip}_{count}_{byDesc}_{priority}_{isChecked}";
 
-                var cacheNotifications = await _redisCache.GetCachedData(cacheKey);
+                var cacheNotifications = await redisCache.GetCachedData(cacheKey);
                 if (cacheNotifications is not null)
                     return StatusCode(200, new { notifications = JsonConvert.DeserializeObject<IEnumerable<NotificationModel>>(cacheNotifications) });
 
-                var notifications = await _notificationRepository.GetAll(_sorting.SortNotifications(_userInfo.UserId, skip, count, byDesc, priority, isChecked));
+                var notifications = await notificationRepository.GetAll(sorting.SortNotifications(userInfo.UserId, skip, count, byDesc, priority, isChecked));
 
-                await _redisCache.CacheData(cacheKey, notifications, TimeSpan.FromMinutes(3));
+                await redisCache.CacheData(cacheKey, notifications, TimeSpan.FromMinutes(3));
 
                 return StatusCode(200, new { notifications });
             }
@@ -104,8 +87,8 @@ namespace webapi.Controllers.Core
         {
             try
             {
-                await _notificationRepository.DeleteByFilter(query => query.Where(n => n.notification_id.Equals(notificationId) && n.user_id.Equals(_userInfo.UserId)));
-                await _redisCache.DeteteCacheByKeyPattern($"{ImmutableData.NOTIFICATIONS_PREFIX}{_userInfo.UserId}");
+                await notificationRepository.DeleteByFilter(query => query.Where(n => n.notification_id.Equals(notificationId) && n.user_id.Equals(userInfo.UserId)));
+                await redisCache.DeteteCacheByKeyPattern($"{ImmutableData.NOTIFICATIONS_PREFIX}{userInfo.UserId}");
 
                 return StatusCode(204);
             }

@@ -34,7 +34,7 @@ namespace webapi.Services.Core
             {
                 var storage = await storageRepository.GetByFilter(query => query
                     .Where(s => s.user_id.Equals(userId) && s.storage_id.Equals(storageId))) ??
-                        throw new ArgumentNullException(Message.NOT_FOUND);
+                        throw new ArgumentException(Message.NOT_FOUND);
 
                 if (!passwordManager.CheckPassword(code.ToString(), storage.access_code))
                     throw new ArgumentException(Message.INCORRECT);
@@ -67,12 +67,13 @@ namespace webapi.Services.Core
             return keys;
         }
 
-        public bool IsValid(object key, object parameter = null)
+        public bool IsValid(object data, object parameter = null)
         {
-            if (key is not string)
+            if (data is not string)
                 return false;
 
-            return !string.IsNullOrWhiteSpace((string)key) && validation.IsBase64String((string)key) && Regex.IsMatch((string)key, Validation.EncryptionKey);
+            string key = (string)data;
+            return !string.IsNullOrWhiteSpace(key) && validation.IsBase64String(key) && Regex.IsMatch(key, Validation.EncryptionKey);
         }
     }
 }
