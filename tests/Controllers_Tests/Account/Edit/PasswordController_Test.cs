@@ -29,7 +29,7 @@ namespace tests.Controllers_Tests.Account.Edit
             userInfoMock.Setup(x => x.UserId).Returns(1);
             passwordManagerMock.Setup(x => x.CheckPassword(It.IsAny<string>(), It.IsAny<string>())).Returns(true);
             transactionMock.Setup(x => x.CreateTransaction(It.IsAny<UserModel>(), It.IsAny<string>())).Returns(Task.CompletedTask);
-            dataManagementMock.Setup(x => x.DeleteData(It.IsAny<int>())).Returns(Task.CompletedTask);
+            dataManagementMock.Setup(x => x.DeleteData(It.IsAny<int>(), null)).Returns(Task.CompletedTask);
             validatorMock.Setup(x => x.IsValid(It.IsAny<string>(), null)).Returns(true);
 
             var passwordController = new PasswordController(transactionMock.Object, dataManagementMock.Object, validatorMock.Object,
@@ -148,7 +148,7 @@ namespace tests.Controllers_Tests.Account.Edit
             passwordManagerMock.Setup(x => x.CheckPassword(It.IsAny<string>(), It.IsAny<string>())).Returns(true);
             transactionMock.Setup(x => x.CreateTransaction(It.IsAny<UserModel>(), It.IsAny<string>()))
                 .ThrowsAsync((Exception)Activator.CreateInstance(ex));
-            dataManagementMock.Setup(x => x.DeleteData(It.IsAny<int>())).Returns(Task.CompletedTask);
+            dataManagementMock.Setup(x => x.DeleteData(It.IsAny<int>(), null)).Returns(Task.CompletedTask);
             validatorMock.Setup(x => x.IsValid(It.IsAny<string>(), null)).Returns(true);
 
             var passwordController = new PasswordController(transactionMock.Object, dataManagementMock.Object, validatorMock.Object,

@@ -3,65 +3,37 @@ using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 using Newtonsoft.Json;
 using System.Security.Cryptography;
-using System.Text.RegularExpressions;
-using webapi.Attributes;
 using webapi.DTO;
 using webapi.Exceptions;
 using webapi.Helpers;
 using webapi.Interfaces;
+using webapi.Interfaces.Controllers.Services;
 using webapi.Interfaces.Cryptography;
 using webapi.Interfaces.Redis;
 using webapi.Interfaces.Services;
 using webapi.Localization;
 using webapi.Models;
+using webapi.Services.Core;
 
 namespace webapi.Controllers.Core
 {
     [Route("api/core")]
     [ApiController]
     [Authorize]
-    public class KeyStorageController : ControllerBase
+    public class KeyStorageController(
+        IStorageHelpers helpers,
+        [FromKeyedServices(ImplementationKey.CORE_KEY_STORAGE_SERVICE)] IValidator validator,
+        IRepository<KeyStorageModel> storageRepository,
+        IRepository<KeyStorageItemModel> storageItemRepository,
+        IMapper mapper,
+        IRedisCache redisCache,
+        [FromKeyedServices("Decrypt")] ICypherKey decryptKey,
+        [FromKeyedServices("Encrypt")] ICypherKey encryptKey,
+        IPasswordManager passwordManager,
+        IUserInfo userInfo,
+        IConfiguration configuration) : ControllerBase
     {
-        #region fields and constructor
-
-        private readonly IRepository<KeyStorageModel> _storageRepository;
-        private readonly IRepository<KeyStorageItemModel> _storageItemRepository;
-        private readonly IMapper _mapper;
-        private readonly IRedisCache _redisCache;
-        private readonly ICypherKey _decryptKey;
-        private readonly ICypherKey _encryptKey;
-        private readonly IPasswordManager _passwordManager;
-        private readonly IValidation _validation;
-        private readonly IUserInfo _userInfo;
-        private readonly IConfiguration _configuration;
-        private readonly byte[] secretKey;
-
-        public KeyStorageController(
-            IRepository<KeyStorageModel> storageRepository,
-            IRepository<KeyStorageItemModel> storageItemRepository,
-            IMapper mapper,
-            IRedisCache redisCache,
-            ICypherKey decryptKey,
-            ICypherKey encryptKey,
-            IPasswordManager passwordManager,
-            IValidation validation,
-            IUserInfo userInfo,
-            IConfiguration configuration)
-        {
-            _storageRepository = storageRepository;
-            _storageItemRepository = storageItemRepository;
-            _mapper = mapper;
-            _redisCache = redisCache;
-            _decryptKey = decryptKey;
-            _encryptKey = encryptKey;
-            _passwordManager = passwordManager;
-            _validation = validation;
-            _userInfo = userInfo;
-            _configuration = configuration;
-            secretKey = Convert.FromBase64String(_configuration[App.ENCRYPTION_KEY]!);
-        }
-
-        #endregion
+        private readonly byte[] secretKey = Convert.FromBase64String(configuration[App.ENCRYPTION_KEY]!);
 
         [HttpPost("storage")]
         [ValidateAntiForgeryToken]
@@ -71,54 +43,19 @@ namespace webapi.Controllers.Core
         {
             try
             {
-                var keyStorageModel = _mapper.Map<StorageDTO, KeyStorageModel>(storageDTO);
-                keyStorageModel.user_id = _userInfo.UserId;
+                var keyStorageModel = mapper.Map<StorageDTO, KeyStorageModel>(storageDTO);
+                keyStorageModel.user_id = userInfo.UserId;
                 keyStorageModel.last_time_modified = DateTime.UtcNow;
-                keyStorageModel.access_code = _passwordManager.HashingPassword(storageDTO.access_code.ToString());
+                keyStorageModel.access_code = passwordManager.HashingPassword(storageDTO.access_code.ToString());
 
-                await _storageRepository.Add(keyStorageModel);
+                await storageRepository.Add(keyStorageModel);
 
-                await _redisCache.DeteteCacheByKeyPattern($"{ImmutableData.STORAGES_PREFIX}{_userInfo.UserId}");
+                await redisCache.DeteteCacheByKeyPattern($"{ImmutableData.STORAGES_PREFIX}{userInfo.UserId}");
                 return StatusCode(201);
             }
             catch (EntityNotCreatedException ex)
             {
                 return StatusCode(500, new { message = ex.Message });
-            }
-        }
-
-        [HttpPut("storage/{storageId}")]
-        [ValidateAntiForgeryToken]
-        [ProducesResponseType(typeof(object), 200)]
-        [ProducesResponseType(typeof(object), 403)]
-        [ProducesResponseType(typeof(object), 404)]
-        [ProducesResponseType(typeof(object), 500)]
-        public async Task<IActionResult> UpdateStorage([FromRoute] int storageId, [FromQuery] int code,
-            [FromBody] UpdateStorageDTO storageDTO)
-        {
-            try
-            {
-                var storage = await GetAndValidateStorage(storageId, _userInfo.UserId, code);
-                await DbUpdate(storageDTO, storage);
-
-                await _redisCache.DeteteCacheByKeyPattern($"{ImmutableData.STORAGES_PREFIX}{_userInfo.UserId}");
-                return StatusCode(200, new { message = Message.UPDATED });
-            }
-            catch (EntityNotUpdatedException ex)
-            {
-                return StatusCode(500, new { message = ex.Message });
-            }
-            catch (OperationCanceledException ex)
-            {
-                return StatusCode(500, new { message = ex.Message });
-            }
-            catch (ArgumentNullException ex)
-            {
-                return StatusCode(404, new { message = ex.Message });
-            }
-            catch (UnauthorizedAccessException ex)
-            {
-                return StatusCode(403, new { message = ex.Message });
             }
         }
 
@@ -132,10 +69,10 @@ namespace webapi.Controllers.Core
         {
             try
             {
-                var storage = await GetAndValidateStorage(storageId, _userInfo.UserId, code);
-                await _storageRepository.Delete(storageId);
+                var storage = await helpers.GetAndValidateStorage(storageId, userInfo.UserId, code);
+                await storageRepository.Delete(storageId);
 
-                await _redisCache.DeteteCacheByKeyPattern($"{ImmutableData.STORAGES_PREFIX}{_userInfo.UserId}");
+                await redisCache.DeteteCacheByKeyPattern($"{ImmutableData.STORAGES_PREFIX}{userInfo.UserId}");
                 return StatusCode(204);
             }
             catch (EntityNotDeletedException ex)
@@ -150,7 +87,7 @@ namespace webapi.Controllers.Core
             {
                 return StatusCode(404, new { message = ex.Message });
             }
-            catch (UnauthorizedAccessException ex)
+            catch (ArgumentException ex)
             {
                 return StatusCode(403, new { message = ex.Message });
             }
@@ -165,22 +102,22 @@ namespace webapi.Controllers.Core
         {
             try
             {
-                var storage = await GetAndValidateStorage(storageId, _userInfo.UserId, code);
+                var storage = await helpers.GetAndValidateStorage(storageId, userInfo.UserId, code);
                 storage.access_code = string.Empty;
 
-                var cacheKey = $"{ImmutableData.STORAGES_PREFIX}{_userInfo.UserId}_{storageId}_{storage.encrypt}";
+                var cacheKey = $"{ImmutableData.STORAGES_PREFIX}{userInfo.UserId}_{storageId}_{storage.encrypt}";
 
-                var cache = await _redisCache.GetCachedData(cacheKey);
+                var cache = await redisCache.GetCachedData(cacheKey);
                 if (cache is not null)
                     return StatusCode(200, new { storage, keys = JsonConvert.DeserializeObject<IEnumerable<KeyStorageItemModel>>(cache) });
 
-                var keys = await _storageItemRepository.GetAll(query => query
+                var keys = await storageItemRepository.GetAll(query => query
                     .Where(s => s.storage_id.Equals(storage.storage_id)));
 
                 if (storage.encrypt)
-                    keys = await CypherKeys(keys, false);
+                    keys = await helpers.CypherKeys(keys, false);
 
-                await _redisCache.CacheData(cacheKey, keys, TimeSpan.FromMinutes(10));
+                await redisCache.CacheData(cacheKey, keys, TimeSpan.FromMinutes(10));
 
                 return StatusCode(200, new { storage, keys });
             }
@@ -192,7 +129,7 @@ namespace webapi.Controllers.Core
             {
                 return StatusCode(404, new { message = ex.Message });
             }
-            catch (UnauthorizedAccessException ex)
+            catch (ArgumentException ex)
             {
                 return StatusCode(403, new { message = ex.Message });
             }
@@ -206,9 +143,7 @@ namespace webapi.Controllers.Core
             try
             {
                 return StatusCode(200, new {
-                    storages = await _storageRepository
-                        .GetAll(query => query.Where(s => s.user_id.Equals(_userInfo.UserId)))
-                });
+                    storages = await storageRepository.GetAll(query => query.Where(s => s.user_id.Equals(userInfo.UserId)))});
             }
             catch (OperationCanceledException ex)
             {
@@ -226,19 +161,19 @@ namespace webapi.Controllers.Core
         {
             try
             {
-                if (!IsValidKey(keyDTO.key_value))
+                if (!validator.IsValid(keyDTO.key_value))
                     return StatusCode(422, new { message = Message.INVALID_FORMAT });
 
-                var storage = await GetAndValidateStorage(storageId, _userInfo.UserId, code);
+                var storage = await helpers.GetAndValidateStorage(storageId, userInfo.UserId, code);
 
-                var keyItemModel = _mapper.Map<KeyDTO, KeyStorageItemModel>(keyDTO);
-                keyItemModel.key_value = await Cypher(storage.encrypt, keyDTO.key_value);
+                var keyItemModel = mapper.Map<KeyDTO, KeyStorageItemModel>(keyDTO);
+                keyItemModel.key_value = storage.encrypt ? await encryptKey.CypherKeyAsync(keyDTO.key_value, secretKey) : keyDTO.key_value;
                 keyItemModel.storage_id = storageId;
                 keyItemModel.created_at = DateTime.UtcNow;
 
-                await _storageItemRepository.Add(keyItemModel);
+                await storageItemRepository.Add(keyItemModel);
 
-                await _redisCache.DeteteCacheByKeyPattern($"{ImmutableData.STORAGES_PREFIX}{_userInfo.UserId}");
+                await redisCache.DeteteCacheByKeyPattern($"{ImmutableData.STORAGES_PREFIX}{userInfo.UserId}");
                 return StatusCode(201);
             }
             catch (EntityNotCreatedException ex)
@@ -253,7 +188,7 @@ namespace webapi.Controllers.Core
             {
                 return StatusCode(404, new { message = ex.Message });
             }
-            catch (UnauthorizedAccessException ex)
+            catch (ArgumentException ex)
             {
                 return StatusCode(403, new { message = ex.Message });
             }
@@ -268,15 +203,15 @@ namespace webapi.Controllers.Core
         {
             try
             {
-                var storage = await GetAndValidateStorage(storageId, _userInfo.UserId, code);
+                var storage = await helpers.GetAndValidateStorage(storageId, userInfo.UserId, code);
 
-                var key = await _storageItemRepository.GetByFilter(query => query
+                var key = await storageItemRepository.GetByFilter(query => query
                     .Where(s => s.key_id.Equals(keyId) && s.storage_id.Equals(storageId)));
 
                 if (key is null)
                     return StatusCode(404, new { message = Message.NOT_FOUND });
 
-                return StatusCode(200, new { key = _decryptKey.CypherKeyAsync(key.key_value, secretKey) });
+                return StatusCode(200, new { key = decryptKey.CypherKeyAsync(key.key_value, secretKey) });
             }
             catch (OperationCanceledException ex)
             {
@@ -286,7 +221,7 @@ namespace webapi.Controllers.Core
             {
                 return StatusCode(404, new { message = ex.Message });
             }
-            catch (UnauthorizedAccessException ex)
+            catch (ArgumentException ex)
             {
                 return StatusCode(403, new { message = ex.Message });
             }
@@ -304,117 +239,25 @@ namespace webapi.Controllers.Core
         {
             try
             {
-                var storage = await GetAndValidateStorage(storageId, _userInfo.UserId, code);
+                var storage = await helpers.GetAndValidateStorage(storageId, userInfo.UserId, code);
 
-                await _storageItemRepository.DeleteByFilter(query => query
+                await storageItemRepository.DeleteByFilter(query => query
                         .Where(s => s.key_id.Equals(keyId) && s.storage_id.Equals(storage.storage_id)));
 
-                await _redisCache.DeteteCacheByKeyPattern($"{ImmutableData.STORAGES_PREFIX}{_userInfo.UserId}");
+                await redisCache.DeteteCacheByKeyPattern($"{ImmutableData.STORAGES_PREFIX}{userInfo.UserId}");
                 return StatusCode(204);
             }
             catch (EntityNotDeletedException ex)
             {
                 return StatusCode(500, new { message = ex.Message });
             }
-        }
-
-        [Helper]
-        private async Task<string> Cypher(bool encrypt, string key)
-        {
-            if (encrypt)
-                return await _encryptKey.CypherKeyAsync(key, secretKey);
-            else
-                return key;
-        }
-
-        [Helper]
-        private bool IsValidKey(string key)
-        {
-            return !string.IsNullOrWhiteSpace(key) && _validation.IsBase64String(key) && Regex.IsMatch(key, Validation.EncryptionKey);
-        }
-
-        [Helper]
-        private async Task<KeyStorageModel> GetAndValidateStorage(int storageId, int userId, int code)
-        {
-            try
+            catch (ArgumentNullException ex)
             {
-                var storage = await _storageRepository.GetByFilter(query => query
-                    .Where(s => s.user_id.Equals(userId) && s.storage_id.Equals(storageId)));
-
-                if (storage is null)
-                    throw new ArgumentNullException(Message.NOT_FOUND);
-
-                if (!CheckCode(code, storage.access_code))
-                    throw new UnauthorizedAccessException(Message.INCORRECT);
-
-                return storage;
+                return StatusCode(404, new { message = ex.Message });
             }
-            catch (OperationCanceledException)
+            catch (ArgumentException ex)
             {
-                throw;
-            }
-        }
-
-        [Helper]
-        private bool CheckCode(int input, string correct)
-        {
-            return _passwordManager.CheckPassword(input.ToString(), correct);
-        }
-
-        [Helper]
-        private async Task<IEnumerable<KeyStorageItemModel>> CypherKeys(IEnumerable<KeyStorageItemModel> keys, bool encrypt)
-        {
-            foreach (var key in keys)
-            {
-                try
-                {
-                    if (encrypt)
-                        key.key_value = await _encryptKey.CypherKeyAsync(key.key_value, secretKey);
-                    else
-                        key.key_value = await _decryptKey.CypherKeyAsync(key.key_value, secretKey);
-                }
-                catch (CryptographicException)
-                {
-                    continue;
-                }
-            }
-
-            return keys;
-        }
-
-        [Helper]
-        private async Task DbUpdate(UpdateStorageDTO storageDTO, KeyStorageModel keyStorageModel)
-        {
-            var keys = new List<KeyStorageItemModel>();
-
-            try
-            {
-                if (storageDTO.encrypt is not null)
-                {
-                    bool shouldEncrypt = storageDTO.encrypt.Value;
-                    if (keyStorageModel.encrypt != shouldEncrypt)
-                    {
-                        keys = (List<KeyStorageItemModel>)await CypherKeys(await _storageItemRepository
-                            .GetAll(query => query.Where(s => s.storage_id.Equals(keyStorageModel.storage_id))), shouldEncrypt);
-                    }
-                }
-
-                if (!string.IsNullOrWhiteSpace(storageDTO.storage_name) && !storageDTO.storage_name.Equals(keyStorageModel.storage_name))
-                    keyStorageModel.storage_name = storageDTO.storage_name;
-
-                if (storageDTO.encrypt.HasValue && !storageDTO.encrypt.Equals(keyStorageModel.encrypt))
-                    keyStorageModel.encrypt = storageDTO.encrypt.Value;
-
-                if (storageDTO.access_code.HasValue && _validation.IsSixDigit(storageDTO.access_code.Value))
-                    keyStorageModel.access_code = _passwordManager.HashingPassword(storageDTO.access_code.Value.ToString());
-
-                keyStorageModel.last_time_modified = DateTime.UtcNow;
-
-                await _storageRepository.Update(keyStorageModel);
-            }
-            catch (EntityNotUpdatedException)
-            {
-                throw;
+                return StatusCode(403, new { message = ex.Message });
             }
         }
     }

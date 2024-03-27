@@ -57,7 +57,7 @@ namespace webapi.Services.Account
             }
         }
 
-        public async Task DeleteData(int id)
+        public async Task DeleteData(int id, object? parameter = null)
         {
             await redisCache.DeteteCacheByKeyPattern($"{ImmutableData.NOTIFICATIONS_PREFIX}{id}");
             await redisCache.DeteteCacheByKeyPattern($"{ImmutableData.USER_DATA_PREFIX}{id}");

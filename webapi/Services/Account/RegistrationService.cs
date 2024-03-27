@@ -58,7 +58,7 @@ namespace webapi.Services.Account
             }
         }
 
-        public Task DeleteData(int id) => throw new NotImplementedException();
+        public Task DeleteData(int id, object? parameter = null) => throw new NotImplementedException();
 
         public async Task<object> GetData(string key)
         {

@@ -25,7 +25,6 @@ namespace webapi.DB
         public virtual DbSet<OfferModel> Offers { get; set; }
         public virtual DbSet<FileMimeModel> Mimes { get; set; }
         public virtual DbSet<TokenModel> Tokens { get; set; }
-        public virtual DbSet<ApiModel> API { get; set; }
         public virtual DbSet<LinkModel> Links { get; set; }
         public virtual DbSet<KeyStorageModel> KeyStorages { get; set; }
         public virtual DbSet<KeyStorageItemModel> KeyStorageItems { get; set; }
@@ -82,12 +81,6 @@ namespace webapi.DB
                 .HasForeignKey(n => n.receiver_id)
                 .OnDelete(DeleteBehavior.Cascade);
 
-            modelBuilder.Entity<ApiModel>()
-                .HasOne(a => a.User)
-                .WithMany(a => a.API)
-                .HasForeignKey(a => a.user_id)
-                .OnDelete(DeleteBehavior.Cascade);
-
             modelBuilder.Entity<LinkModel>()
                 .HasOne(l => l.User)
                 .WithMany(l => l.Links)
@@ -116,10 +109,6 @@ namespace webapi.DB
 
             modelBuilder.Entity<TokenModel>()
                 .HasIndex(t => t.refresh_token)
-                .IsUnique();
-
-            modelBuilder.Entity<ApiModel>()
-                .HasIndex(a => a.api_key)
                 .IsUnique();
 
             modelBuilder.Entity<LinkModel>()

@@ -158,7 +158,7 @@ namespace tests.Controllers_Tests.Account.Edit
                 id = 1,
             });
             dataManagementMock.Setup(x => x.GetData(It.IsAny<string>())).ReturnsAsync(1);
-            dataManagementMock.Setup(x => x.DeleteData(1)).Returns(Task.CompletedTask);
+            dataManagementMock.Setup(x => x.DeleteData(1, null)).Returns(Task.CompletedTask);
             transactionMock.Setup(x => x.CreateTransaction(It.IsAny<UserModel>(), true)).Returns(Task.CompletedTask);
             validatorMock.Setup(x => x.IsValid(It.IsAny<int>(), It.IsAny<int>())).Returns(true);
 

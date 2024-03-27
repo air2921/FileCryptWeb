@@ -24,7 +24,7 @@ namespace tests.Controllers_Tests.Account.Edit
             userInfoMock.Setup(x => x.UserId).Returns(1);
             validatorMock.Setup(x => x.IsValid(It.IsAny<string>(), null)).Returns(true);
             transactionMock.Setup(x => x.CreateTransaction(It.IsAny<UserModel>(), It.IsAny<string>())).Returns(Task.CompletedTask);
-            dateManagementMock.Setup(x => x.DeleteData(It.IsAny<int>())).Returns(Task.CompletedTask);
+            dateManagementMock.Setup(x => x.DeleteData(It.IsAny<int>(), null)).Returns(Task.CompletedTask);
             tokenServiceMock.Setup(x => x.UpdateJwtToken()).Returns(Task.CompletedTask);
 
             var usernameController = new UsernameController(transactionMock.Object, dateManagementMock.Object, validatorMock.Object,
@@ -111,7 +111,7 @@ namespace tests.Controllers_Tests.Account.Edit
             validatorMock.Setup(x => x.IsValid(It.IsAny<string>(), null)).Returns(true);
             transactionMock.Setup(x => x.CreateTransaction(It.IsAny<UserModel>(), It.IsAny<string>()))
                 .ThrowsAsync((Exception)Activator.CreateInstance(typeof(EntityNotUpdatedException)));
-            dateManagementMock.Setup(x => x.DeleteData(It.IsAny<int>())).Returns(Task.CompletedTask);
+            dateManagementMock.Setup(x => x.DeleteData(It.IsAny<int>(), null)).Returns(Task.CompletedTask);
             tokenServiceMock.Setup(x => x.UpdateJwtToken()).Returns(Task.CompletedTask);
 
             var usernameController = new UsernameController(transactionMock.Object, dateManagementMock.Object, validatorMock.Object,
@@ -138,7 +138,7 @@ namespace tests.Controllers_Tests.Account.Edit
             userInfoMock.Setup(x => x.UserId).Returns(1);
             validatorMock.Setup(x => x.IsValid(It.IsAny<string>(), null)).Returns(true);
             transactionMock.Setup(x => x.CreateTransaction(It.IsAny<UserModel>(), It.IsAny<string>())).Returns(Task.CompletedTask);
-            dateManagementMock.Setup(x => x.DeleteData(It.IsAny<int>())).Returns(Task.CompletedTask);
+            dateManagementMock.Setup(x => x.DeleteData(It.IsAny<int>(), null)).Returns(Task.CompletedTask);
             tokenServiceMock.Setup(x => x.UpdateJwtToken())
                 .ThrowsAsync((Exception)Activator.CreateInstance(typeof(UnauthorizedAccessException)));
 

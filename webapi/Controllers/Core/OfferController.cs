@@ -1,56 +1,33 @@
 ﻿using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 using Newtonsoft.Json;
-using webapi.Attributes;
 using webapi.DB;
 using webapi.Exceptions;
 using webapi.Helpers;
 using webapi.Interfaces;
+using webapi.Interfaces.Controllers.Services;
 using webapi.Interfaces.Redis;
 using webapi.Interfaces.Services;
 using webapi.Localization;
 using webapi.Models;
+using webapi.Services.Core;
 
 namespace webapi.Controllers.Core
 {
     [Route("api/core/offers")]
     [ApiController]
     [Authorize]
-    public class OfferController : ControllerBase
+    public class OfferController(
+        [FromKeyedServices(ImplementationKey.CORE_OFFER_SERVICE)] IDataManagement dataManagement,
+        [FromKeyedServices(ImplementationKey.CORE_OFFER_SERVICE)] ITransaction<KeyModel> keyTransaction,
+        [FromKeyedServices(ImplementationKey.CORE_OFFER_SERVICE)] ITransaction<Participants> participantsTransaction,
+        IRepository<UserModel> userRepository,
+        IRepository<OfferModel> offerRepository,
+        IRepository<KeyModel> keyRepository,
+        ISorting sorting,
+        IRedisCache redisCache,
+        IUserInfo userInfo) : ControllerBase
     {
-        #region fields and constructor
-
-        private readonly IRepository<UserModel> _userRepository;
-        private readonly IRepository<OfferModel> _offerRepository;
-        private readonly IRepository<NotificationModel> _notificationRepository;
-        private readonly IRepository<KeyModel> _keyRepository;
-        private readonly FileCryptDbContext _dbContext;
-        private readonly ISorting _sorting;
-        private readonly IRedisCache _redisCache;
-        private readonly IUserInfo _userInfo;
-
-        public OfferController(
-            IRepository<UserModel> userRepository,
-            IRepository<OfferModel> offerRepository,
-            IRepository<NotificationModel> notificationRepository,
-            IRepository<KeyModel> keyRepository,
-            FileCryptDbContext dbContext,
-            ISorting sorting,
-            IRedisCache redisCache,
-            IUserInfo userInfo)
-        {
-            _userRepository = userRepository;
-            _offerRepository = offerRepository;
-            _notificationRepository = notificationRepository;
-            _keyRepository = keyRepository;
-            _dbContext = dbContext;
-            _sorting = sorting;
-            _redisCache = redisCache;
-            _userInfo = userInfo;
-        }
-
-        #endregion
-
         [HttpPost("new/{receiverId}")]
         [ValidateAntiForgeryToken]
         [ProducesResponseType(typeof(object), 201)]
@@ -61,22 +38,22 @@ namespace webapi.Controllers.Core
         {
             try
             {
-                if (_userInfo.UserId.Equals(receiverId))
+                if (userInfo.UserId.Equals(receiverId))
                     return StatusCode(409, new { message = Message.CONFLICT });
 
-                var receiver = await _userRepository.GetById(receiverId);
+                var receiver = await userRepository.GetById(receiverId);
                 if (receiver is null)
                     return StatusCode(404, new { message = Message.NOT_FOUND });
 
-                var keys = await _keyRepository.GetByFilter(query => query.Where(k => k.user_id.Equals(_userInfo.UserId)));
+                var keys = await keyRepository.GetByFilter(query => query.Where(k => k.user_id.Equals(userInfo.UserId)));
                 if (keys is null)
                     return StatusCode(404, new { message = Message.NOT_FOUND });
 
                 if (keys.internal_key is null)
                     return StatusCode(404, new { message = "You don't have a internal key for create an offer" });
 
-                await CreateOfferTransaction(_userInfo.UserId, receiverId, keys.internal_key);
-                await ClearData(_userInfo.UserId, receiverId);
+                await participantsTransaction.CreateTransaction(new Participants(userInfo.UserId, receiverId), keys.internal_key);
+                await dataManagement.DeleteData(userInfo.UserId, receiverId);
 
                 return StatusCode(201, new { message = Message.CREATED });
             }
@@ -96,19 +73,19 @@ namespace webapi.Controllers.Core
         {
             try
             {
-                var offer = await _offerRepository.GetByFilter(query => query.Where(o => o.offer_id.Equals(offerId) && o.receiver_id.Equals(_userInfo.UserId)));
+                var offer = await offerRepository.GetByFilter(query => query.Where(o => o.offer_id.Equals(offerId) && o.receiver_id.Equals(userInfo.UserId)));
                 if (offer is null)
                     return StatusCode(404, new { message = Message.NOT_FOUND });
 
                 if (offer.is_accepted)
                     return StatusCode(409, new { message = Message.CONFLICT });
 
-                var receiver = await _keyRepository.GetByFilter(query => query.Where(k => k.user_id.Equals(offer.receiver_id)));
+                var receiver = await keyRepository.GetByFilter(query => query.Where(k => k.user_id.Equals(offer.receiver_id)));
                 if (receiver is null)
                     return StatusCode(404, new { message = Message.NOT_FOUND });
 
-                await AcceptOfferTransaction(receiver, offer);
-                await ClearData(offer.sender_id, _userInfo.UserId);
+                await keyTransaction.CreateTransaction(receiver, offer);
+                await dataManagement.DeleteData(offer.sender_id, userInfo.UserId);
 
                 return StatusCode(200, new { message = Message.UPDATED });
             }
@@ -126,19 +103,19 @@ namespace webapi.Controllers.Core
         {
             try
             {
-                var cacheKey = $"{ImmutableData.OFFERS_PREFIX}{_userInfo.UserId}_{offerId}";
+                var cacheKey = $"{ImmutableData.OFFERS_PREFIX}{userInfo.UserId}_{offerId}";
 
-                var cacheOffer = await _redisCache.GetCachedData(cacheKey);
+                var cacheOffer = await redisCache.GetCachedData(cacheKey);
                 if (cacheOffer is not null)
                     return StatusCode(200, new { offers = JsonConvert.DeserializeObject<OfferModel>(cacheOffer) });
 
-                var offer = await _offerRepository.GetById(offerId);
-                if (offer is null || offer.sender_id != _userInfo.UserId || offer.receiver_id != _userInfo.UserId)
+                var offer = await offerRepository.GetById(offerId);
+                if (offer is null || offer.sender_id != userInfo.UserId || offer.receiver_id != userInfo.UserId)
                     return StatusCode(404, new { message = Message.NOT_FOUND });
 
-                await _redisCache.CacheData(cacheKey, offer, TimeSpan.FromMinutes(10));
+                await redisCache.CacheData(cacheKey, offer, TimeSpan.FromMinutes(10));
 
-                return StatusCode(200, new { offer, userId = _userInfo.UserId });
+                return StatusCode(200, new { offer, userId = userInfo.UserId });
             }
             catch (OperationCanceledException ex)
             {
@@ -155,23 +132,23 @@ namespace webapi.Controllers.Core
         {
             try
             {
-                var cacheKey = $"{ImmutableData.OFFERS_PREFIX}{_userInfo.UserId}_{skip}_{count}_{byDesc}_{sended}_{isAccepted}_{type}";
+                var cacheKey = $"{ImmutableData.OFFERS_PREFIX}{userInfo.UserId}_{skip}_{count}_{byDesc}_{sended}_{isAccepted}_{type}";
 
-                var cacheOffers = await _redisCache.GetCachedData(cacheKey);
+                var cacheOffers = await redisCache.GetCachedData(cacheKey);
                 if (cacheOffers is not null)
-                    return StatusCode(200, new { offers = JsonConvert.DeserializeObject<IEnumerable<OfferModel>>(cacheOffers), user_id = _userInfo.UserId });
+                    return StatusCode(200, new { offers = JsonConvert.DeserializeObject<IEnumerable<OfferModel>>(cacheOffers), user_id = userInfo.UserId });
 
-                var offers = await _offerRepository.GetAll(_sorting
-                    .SortOffers(_userInfo.UserId, skip, count, byDesc, sended, isAccepted, type));
+                var offers = await offerRepository.GetAll(sorting
+                    .SortOffers(userInfo.UserId, skip, count, byDesc, sended, isAccepted, type));
                 foreach (var offer in offers)
                 {
                     offer.offer_body = string.Empty;
                     offer.offer_header = string.Empty;
                 }
 
-                await _redisCache.CacheData(cacheKey, offers, TimeSpan.FromMinutes(3));
+                await redisCache.CacheData(cacheKey, offers, TimeSpan.FromMinutes(3));
 
-                return StatusCode(200, new { offers, user_id = _userInfo.UserId });
+                return StatusCode(200, new { offers, user_id = userInfo.UserId });
             }
             catch (OperationCanceledException ex)
             {
@@ -187,11 +164,11 @@ namespace webapi.Controllers.Core
         {
             try
             {
-                var offer = await _offerRepository.DeleteByFilter(query => query
-                .Where(o => o.offer_id.Equals(offerId) && (o.sender_id.Equals(_userInfo.UserId) || o.receiver_id.Equals(_userInfo.UserId))));
+                var offer = await offerRepository.DeleteByFilter(query => query
+                .Where(o => o.offer_id.Equals(offerId) && (o.sender_id.Equals(userInfo.UserId) || o.receiver_id.Equals(userInfo.UserId))));
 
-                await _redisCache.DeteteCacheByKeyPattern($"{ImmutableData.OFFERS_PREFIX}{offer.sender_id}");
-                await _redisCache.DeteteCacheByKeyPattern($"{ImmutableData.OFFERS_PREFIX}{offer.receiver_id}");
+                await redisCache.DeteteCacheByKeyPattern($"{ImmutableData.OFFERS_PREFIX}{offer.sender_id}");
+                await redisCache.DeteteCacheByKeyPattern($"{ImmutableData.OFFERS_PREFIX}{offer.receiver_id}");
 
                 return StatusCode(204);
             }
@@ -199,74 +176,6 @@ namespace webapi.Controllers.Core
             {
                 return StatusCode(404, new { message = ex.Message });
             }
-        }
-
-        [Helper]
-        private async Task CreateOfferTransaction(int senderId, int receiverId, string internalKey)
-        {
-            using var transaction = await _dbContext.Database.BeginTransactionAsync();
-
-            try
-            {
-                await _offerRepository.Add(new OfferModel
-                {
-                    offer_header = $"Proposal to accept an encryption key from a user: {_userInfo.Username}#{_userInfo.UserId}",
-                    offer_body = internalKey,
-                    offer_type = TradeType.Key.ToString(),
-                    is_accepted = false,
-                    sender_id = senderId,
-                    receiver_id = receiverId,
-                    created_at = DateTime.UtcNow
-                });
-
-                await _notificationRepository.Add(new NotificationModel
-                {
-                    message_header = "New offer",
-                    message = $"You got a new offer from {_userInfo.Username}#{_userInfo.UserId}",
-                    priority = Priority.Trade.ToString(),
-                    send_time = DateTime.UtcNow,
-                    is_checked = false,
-                    user_id = receiverId
-                });
-
-                await transaction.CommitAsync();
-            }
-            catch (EntityNotCreatedException)
-            {
-                await transaction.RollbackAsync();
-                throw;
-            }
-        }
-
-        [Helper]
-        private async Task AcceptOfferTransaction(KeyModel receiverKeys, OfferModel offer)
-        {
-            using var transaction = await _dbContext.Database.BeginTransactionAsync();
-
-            try
-            {
-                receiverKeys.received_key = offer.offer_body;
-                offer.is_accepted = true;
-
-                await _keyRepository.Update(receiverKeys);
-                await _offerRepository.Update(offer);
-
-                await transaction.CommitAsync();
-            }
-            catch (EntityNotUpdatedException)
-            {
-                await transaction.RollbackAsync();
-                throw;
-            }
-        }
-
-        [Helper]
-        private async Task ClearData(int senderId, int receiverId)
-        {
-            await _redisCache.DeteteCacheByKeyPattern($"{ImmutableData.NOTIFICATIONS_PREFIX}{receiverId}");
-            await _redisCache.DeteteCacheByKeyPattern($"{ImmutableData.NOTIFICATIONS_PREFIX}{senderId}");
-            await _redisCache.DeteteCacheByKeyPattern($"{ImmutableData.OFFERS_PREFIX}{receiverId}");
-            await _redisCache.DeteteCacheByKeyPattern($"{ImmutableData.OFFERS_PREFIX}{senderId}");
         }
     }
 }

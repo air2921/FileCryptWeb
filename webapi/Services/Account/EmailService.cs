@@ -62,7 +62,7 @@ namespace webapi.Services.Account
             }
         }
 
-        public async Task DeleteData(int id)
+        public async Task DeleteData(int id, object? parameter = null)
         {
             await redisCache.DeleteCache($"EmailController_Email#{id}");
             await redisCache.DeleteCache($"EmailController_ConfirmationCode_OldEmail#{id}");

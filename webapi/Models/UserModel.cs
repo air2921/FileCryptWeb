@@ -36,9 +36,6 @@ namespace webapi.Models
         public virtual ICollection<TokenModel>? Tokens { get; set; }
 
         [JsonIgnore]
-        public virtual ICollection<ApiModel>? API { get; set; }
-
-        [JsonIgnore]
         public virtual ICollection<LinkModel>? Links { get; set; }
     }
 

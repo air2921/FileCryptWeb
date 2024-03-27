@@ -74,8 +74,15 @@ namespace webapi
             services.AddKeyedScoped<IDataManagement, SessionService>(ImplementationKey.ACCOUNT_SESSION_SERVICE);
             services.AddScoped<ISessionHelpers, SessionService>();
 
-            services.AddKeyedScoped<IValidator, RecoveryService>("");
+            services.AddKeyedScoped<IValidator, RecoveryService>(ImplementationKey.ACCOUNT_RECOVERY_SERVICE);
             services.AddScoped<IRecoveryHelpers, RecoveryService>();
+
+            services.AddKeyedTransient<ITransaction<KeyModel>, OfferService>(ImplementationKey.CORE_OFFER_SERVICE);
+            services.AddKeyedTransient<ITransaction<Participants>, OfferService>(ImplementationKey.CORE_OFFER_SERVICE);
+            services.AddKeyedScoped<IDataManagement, OfferService>(ImplementationKey.CORE_OFFER_SERVICE);
+
+            services.AddKeyedScoped<IValidator, KeyStorageService>(ImplementationKey.CORE_KEY_STORAGE_SERVICE);
+            services.AddScoped<IStorageHelpers, KeyStorageService>();
 
             services.AddScoped<IApiAdminKeysService, AdminKeysService>();
             services.AddScoped<IApiAdminTokenService, AdminTokenService>();

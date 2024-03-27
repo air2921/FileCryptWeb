@@ -87,8 +87,8 @@ namespace webapi.Controllers.Core
         {
             try
             {
-                SetNewKey(ref key, auto);
-                await UpdateKey(key!, FileType.Private);
+                key = SetNewKey(key, auto);
+                await UpdateKey(key, FileType.Private);
 
                 await ClearData(_userInfo.UserId, _redisKeys.PrivateKey);
 
@@ -108,8 +108,8 @@ namespace webapi.Controllers.Core
         {
             try
             {
-                SetNewKey(ref key, auto);
-                await UpdateKey(key!, FileType.Internal);
+                key = SetNewKey(key, auto);
+                await UpdateKey(key, FileType.Internal);
 
                 await ClearData(_userInfo.UserId, _redisKeys.InternalKey);
 
@@ -182,15 +182,17 @@ namespace webapi.Controllers.Core
         }
 
         [Helper]
-        private void SetNewKey(ref string? key, bool auto)
+        private string SetNewKey(string? key, bool auto)
         {
             if (!auto)
             {
                 if (string.IsNullOrWhiteSpace(key) || !_validation.IsBase64String(key) || !Regex.IsMatch(key, Validation.EncryptionKey))
                     throw new ArgumentException(Message.INVALID_FORMAT);
+                else
+                    return key;
             }
             else
-                key = _generate.GenerateKey();
+                return _generate.GenerateKey();
         }
 
         [Helper]
@@ -201,9 +203,9 @@ namespace webapi.Controllers.Core
                 var keys = await _keyRepository.GetByFilter(query => query.Where(k => k.user_id.Equals(_userInfo.UserId)));
 
                 if (type.Equals(FileType.Private))
-                    keys.private_key = await _encryptKey.CypherKeyAsync(key!, secretKey);
+                    keys.private_key = await _encryptKey.CypherKeyAsync(key, secretKey);
                 else if (type.Equals(FileType.Internal))
-                    keys.internal_key = await _encryptKey.CypherKeyAsync(key!, secretKey);
+                    keys.internal_key = await _encryptKey.CypherKeyAsync(key, secretKey);
                 else
                     throw new EntityNotUpdatedException();
 

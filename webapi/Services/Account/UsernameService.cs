@@ -32,7 +32,7 @@ namespace webapi.Services.Account
             }
         }
 
-        public async Task DeleteData(int id)
+        public async Task DeleteData(int id, object? parameter = null)
         {
             tokenService.DeleteUserDataSession();
             await redisCache.DeteteCacheByKeyPattern($"{ImmutableData.USER_DATA_PREFIX}{id}");

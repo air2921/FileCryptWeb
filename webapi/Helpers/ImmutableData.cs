@@ -72,6 +72,8 @@
         public const string ACCOUNT_REGISTRATION_SERVICE = "Account_RegistrationServiceImplementation";
         public const string ACCOUNT_SESSION_SERVICE = "Account_SessionServiceImplementation";
         public const string ACCOUNT_RECOVERY_SERVICE = "Account_RecoveryServiceImplementation";
+        public const string CORE_OFFER_SERVICE = "Core_OfferServiceImplementation";
+        public const string CORE_KEY_STORAGE_SERVICE = "Core_KeyStorageServiceImplementation";
     }
 
     public static class App
