@@ -1,20 +1,20 @@
-﻿using webapi.DB.RedisDb;
+﻿using webapi.Controllers.Admin;
+using webapi.Cryptography;
+using webapi.DB;
+using webapi.DB.RedisDb;
+using webapi.Helpers;
+using webapi.Interfaces;
+using webapi.Interfaces.Controllers.Services;
 using webapi.Interfaces.Cryptography;
 using webapi.Interfaces.Redis;
 using webapi.Interfaces.Services;
-using webapi.Interfaces;
-using webapi.DB;
-using webapi.Cryptography;
-using webapi.Security;
-using webapi.Helpers;
-using webapi.Third_Party_Services;
-using static webapi.Third_Party_Services.EmailSender;
-using webapi.Controllers.Admin;
-using webapi.Interfaces.Controllers.Services;
 using webapi.Models;
+using webapi.Security;
 using webapi.Services.Account;
 using webapi.Services.Core;
 using webapi.Services.Core.Data_Handlers;
+using webapi.Third_Party_Services;
+using static webapi.Third_Party_Services.EmailSender;
 
 namespace webapi
 {
@@ -87,6 +87,10 @@ namespace webapi
             services.AddScoped<IStorageHelpers, KeyStorageService>();
 
             services.AddScoped<IUserHelpers, UserService>();
+
+            services.AddScoped<IKeyHelper, KeyService>();
+            services.AddKeyedScoped<IValidator, KeyService>(ImplementationKey.CORE_KEY_SERVICE);
+            services.AddKeyedScoped<IDataManagement, KeyService>(ImplementationKey.CORE_KEY_SERVICE);
 
             services.AddScoped<IApiAdminKeysService, AdminKeysService>();
             services.AddScoped<IApiAdminTokenService, AdminTokenService>();

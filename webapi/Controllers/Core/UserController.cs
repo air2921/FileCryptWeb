@@ -19,7 +19,6 @@ namespace webapi.Controllers.Core
         IUserHelpers helpers,
         ICacheHandler<UserModel> cache,
         IRepository<UserModel> userRepository,
-        IRedisCache redisCache,
         IUserInfo userInfo,
         ITokenService tokenService) : ControllerBase
     {

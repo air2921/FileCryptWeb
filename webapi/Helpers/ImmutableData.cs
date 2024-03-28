@@ -73,6 +73,7 @@
         public const string ACCOUNT_RECOVERY_SERVICE = "Account_RecoveryServiceImplementation";
         public const string CORE_OFFER_SERVICE = "Core_OfferServiceImplementation";
         public const string CORE_KEY_STORAGE_SERVICE = "Core_KeyStorageServiceImplementation";
+        public const string CORE_KEY_SERVICE = "Core_KeyServiceImplementation";
     }
 
     public static class App
