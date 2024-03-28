@@ -1,7 +1,5 @@
 ﻿using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
-using Newtonsoft.Json;
-using webapi.Attributes;
 using webapi.Exceptions;
 using webapi.Helpers;
 using webapi.Interfaces;
@@ -10,6 +8,7 @@ using webapi.Interfaces.Services;
 using webapi.Localization;
 using webapi.Models;
 using webapi.Services.Core;
+using webapi.Services.Core.Data_Handlers;
 
 namespace webapi.Controllers.Core
 {
@@ -18,6 +17,7 @@ namespace webapi.Controllers.Core
     [Authorize]
     public class UserController(
         IUserHelpers helpers,
+        ICacheHandler<UserModel> cache,
         IRepository<UserModel> userRepository,
         IRedisCache redisCache,
         IUserInfo userInfo,
@@ -71,23 +71,9 @@ namespace webapi.Controllers.Core
                     userId = userInfo.UserId;
 
                 var cacheKey = $"{ImmutableData.USER_DATA_PREFIX}{userId}";
-                var cache = await redisCache.GetCachedData(cacheKey);
-                var user = new UserModel();
-                
-                if (cache is null)
-                {
-                    user = await userRepository.GetById(userId);
-                    if (user is null)
-                        return StatusCode(404, new { message = Message.NOT_FOUND });
-                    user.password = string.Empty;
-
-                    await redisCache.CacheData(cacheKey, user, TimeSpan.FromMinutes(5));
-
-                    return StatusCode(200, new { user });
-                }
-
-                user = JsonConvert.DeserializeObject<UserModel>(cache);
-                user.email = user.id.Equals(userInfo.UserId) ? user.email : string.Empty;
+                var user = await cache.CacheAndGet(new UserObject(cacheKey, userId, own));
+                if (user is null)
+                    return StatusCode(404, new { message = Message.NOT_FOUND });
 
                 return StatusCode(200, new { user });
             }
@@ -95,30 +81,29 @@ namespace webapi.Controllers.Core
             {
                 return StatusCode(500, new { message = ex.Message });
             }
+            catch (FormatException)
+            {
+                return StatusCode(500, new { message = Message.ERROR });
+            }
         }
 
+        [HttpGet("range")]
         public async Task<IActionResult> FindUserRange(string username)
         {
             try
             {
                 var cacheKey = $"User_List_{username}";
-                var cache = await redisCache.GetCachedData(cacheKey);
-                if (cache is not null)
-                    return StatusCode(200, new { users = JsonConvert.DeserializeObject<IEnumerable<UserModel>>(cache) });
+                var users = await cache.CacheAndGetRange(new UserRangeObject(cacheKey, username));
 
-                var users = (List<UserModel>)await userRepository.GetAll(query => query.Where(u => u.username.Equals(username)));
-                foreach (var user in users)
-                {
-                    user.password = string.Empty;
-                    user.email = string.Empty;
-                }
-
-                await redisCache.CacheData(cacheKey, users, TimeSpan.FromMinutes(5));
                 return StatusCode(200, new { users });
             }
             catch (OperationCanceledException ex)
             {
                 return StatusCode(500, new { message = ex.Message });
+            }
+            catch (FormatException)
+            {
+                return StatusCode(500, new { message = Message.ERROR });
             }
         }
     }

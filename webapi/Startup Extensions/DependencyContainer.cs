@@ -14,6 +14,7 @@ using webapi.Interfaces.Controllers.Services;
 using webapi.Models;
 using webapi.Services.Account;
 using webapi.Services.Core;
+using webapi.Services.Core.Data_Handlers;
 
 namespace webapi
 {
@@ -47,6 +48,7 @@ namespace webapi
             services.AddScoped<IAes, AesCreator>();
 
             ControllerServices(services);
+            CacheServices(services);
         }
 
         private static void ControllerServices(IServiceCollection services)
@@ -67,7 +69,7 @@ namespace webapi
             services.AddKeyedScoped<IDataManagement, UsernameService>(ImplementationKey.ACCOUNT_USERNAME_SERVICE);
             services.AddKeyedScoped<IValidator, UsernameService>(ImplementationKey.ACCOUNT_USERNAME_SERVICE);
 
-            services.AddKeyedScoped<ITransaction<UserObject>, RegistrationService>(ImplementationKey.ACCOUNT_REGISTRATION_SERVICE);
+            services.AddKeyedScoped<ITransaction<User>, RegistrationService>(ImplementationKey.ACCOUNT_REGISTRATION_SERVICE);
             services.AddKeyedScoped<IDataManagement, RegistrationService>(ImplementationKey.ACCOUNT_REGISTRATION_SERVICE);
             services.AddKeyedScoped<IValidator, RegistrationService>(ImplementationKey.ACCOUNT_REGISTRATION_SERVICE);
 
@@ -89,6 +91,14 @@ namespace webapi
             services.AddScoped<IApiAdminKeysService, AdminKeysService>();
             services.AddScoped<IApiAdminTokenService, AdminTokenService>();
             services.AddScoped<IApiAdminUserService, AdminUserService>();
+        }
+
+        private static void CacheServices(IServiceCollection services)
+        {
+            services.AddScoped<ICacheHandler<FileModel>, Files>();
+            services.AddScoped<ICacheHandler<NotificationModel>, Notifications>();
+            services.AddScoped<ICacheHandler<OfferModel>, Offers>();
+            services.AddScoped<ICacheHandler<UserModel>, Users>();
         }
 
         public static void Transient(IServiceCollection services)

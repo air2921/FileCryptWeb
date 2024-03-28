@@ -21,11 +21,11 @@ namespace webapi.Services.Account
         IRedisCache redisCache,
         IGenerate generate,
         IPasswordManager passwordManager,
-        [FromKeyedServices("Encrypt")] ICypherKey encrypt) : ITransaction<UserObject>, IDataManagement, IValidator
+        [FromKeyedServices("Encrypt")] ICypherKey encrypt) : ITransaction<User>, IDataManagement, IValidator
     {
         private readonly byte[] secretKey = Convert.FromBase64String(configuration[App.ENCRYPTION_KEY]!);
 
-        public async Task CreateTransaction(UserObject user, object? parameter = null)
+        public async Task CreateTransaction(User user, object? parameter = null)
         {
             try
             {
@@ -64,17 +64,17 @@ namespace webapi.Services.Account
         {
             var userObject = await redisCache.GetCachedData(key);
             if (userObject is not null)
-                return JsonConvert.DeserializeObject<UserObject>(userObject);
+                return JsonConvert.DeserializeObject<User>(userObject);
             else
                 return null;
         }
 
         public async Task SetData(string key, object data)
         {
-            if (data is not UserObject)
+            if (data is not User)
                 throw new ArgumentException();
 
-            var user = data as UserObject;
+            var user = data as User;
             if (user is null)
                 throw new ArgumentException();
 
@@ -101,7 +101,7 @@ namespace webapi.Services.Account
     }
 
     [AuxiliaryObject]
-    public class UserObject
+    public class User
     {
         public string Email { get; set; }
         public string Password { get; set; }

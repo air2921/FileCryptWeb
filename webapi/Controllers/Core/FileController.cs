@@ -1,7 +1,6 @@
 ﻿using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 using Newtonsoft.Json;
-using webapi.Attributes;
 using webapi.DB;
 using webapi.Exceptions;
 using webapi.Helpers;
@@ -10,6 +9,7 @@ using webapi.Interfaces.Redis;
 using webapi.Interfaces.Services;
 using webapi.Localization;
 using webapi.Models;
+using webapi.Services.Core.Data_Handlers;
 
 namespace webapi.Controllers.Core
 {
@@ -18,9 +18,9 @@ namespace webapi.Controllers.Core
     [Authorize]
     public class FileController(
         IRepository<FileModel> fileRepository,
-        ISorting sorting,
         IRedisCache redisCache,
-        IUserInfo userInfo) : ControllerBase
+        IUserInfo userInfo,
+        ICacheHandler<FileModel> cache) : ControllerBase
     {
         [HttpDelete("{fileId}")]
         [ValidateAntiForgeryToken]
@@ -50,22 +50,19 @@ namespace webapi.Controllers.Core
             try
             {
                 var cacheKey = $"{ImmutableData.FILES_PREFIX}{userInfo.UserId}_{fileId}";
-
-                var cache = await redisCache.GetCachedData(cacheKey);
-                if (cache is not null)
-                    return StatusCode(200, new { file = JsonConvert.DeserializeObject<FileModel>(cache) });
-
-                var file = await fileRepository.GetByFilter(query => query.Where(f => f.file_id.Equals(fileId) && f.user_id.Equals(userInfo.UserId)));
+                var file = await cache.CacheAndGet(new FileObject(cacheKey, userInfo.UserId, fileId));
                 if (file is null)
                     return StatusCode(404, new { message = Message.NOT_FOUND });
-
-                await redisCache.CacheData(cacheKey, file, TimeSpan.FromMinutes(5));
 
                 return StatusCode(200, new { file });
             }
             catch (OperationCanceledException ex)
             {
                 return StatusCode(500, new { message = ex.Message });
+            }
+            catch (FormatException)
+            {
+                return StatusCode(500, new { message = Message.ERROR });
             }
         }
 
@@ -78,20 +75,15 @@ namespace webapi.Controllers.Core
             try
             {
                 var cacheKey = $"{ImmutableData.FILES_PREFIX}{userInfo.UserId}_{skip}_{count}_{byDesc}_{type}_{category}_{mime}";
-
-                var cacheFiles = await redisCache.GetCachedData(cacheKey);
-                if (cacheFiles is not null)
-                    return StatusCode(200, new { files = JsonConvert.DeserializeObject<IEnumerable<FileModel>>(cacheFiles) });
-
-                var files = await fileRepository.GetAll(sorting.SortFiles(userInfo.UserId, skip, count, byDesc, type, mime, category));
-
-                await redisCache.CacheData(cacheKey, files, TimeSpan.FromMinutes(3));
-
-                return StatusCode(200, new { files });
+                return StatusCode(200, new { files = await cache.CacheAndGetRange(new FileRangeObject(cacheKey, userInfo.UserId, skip, count, byDesc, type, mime, category)) });
             }
             catch (OperationCanceledException ex)
             {
                 return StatusCode(500, new { message = ex.Message });
+            }
+            catch (FormatException)
+            {
+                return StatusCode(500, new { message = Message.ERROR });
             }
         }
     }

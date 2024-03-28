@@ -25,7 +25,7 @@ namespace tests.Controllers_Tests.Account
             userRepositoryMock.Setup(x => x.GetByFilter(It.IsAny<Func<IQueryable<UserModel>, IQueryable<UserModel>>>(), CancellationToken.None))
                 .ReturnsAsync((UserModel)null);
             emailSenderMock.Setup(x => x.SendMessage(It.IsAny<EmailDto>())).Returns(Task.CompletedTask);
-            dataManagementMock.Setup(x => x.SetData(It.IsAny<string>(), It.IsAny<UserObject>())).Returns(Task.CompletedTask);
+            dataManagementMock.Setup(x => x.SetData(It.IsAny<string>(), It.IsAny<User>())).Returns(Task.CompletedTask);
             validatorMock.Setup(x => x.IsValid(It.IsAny<RegisterDTO>(), null)).Returns(true);
             
 
@@ -161,15 +161,15 @@ namespace tests.Controllers_Tests.Account
         public async Task VerifyAccount_Success()
         {
             var passwordManagerMock = new Mock<IPasswordManager>();
-            var transactionMock = new Mock<ITransaction<UserObject>>();
+            var transactionMock = new Mock<ITransaction<User>>();
             var dataManagementMock = new Mock<IDataManagement>();
 
-            dataManagementMock.Setup(x => x.GetData(It.IsAny<string>())).ReturnsAsync(new UserObject
+            dataManagementMock.Setup(x => x.GetData(It.IsAny<string>())).ReturnsAsync(new User
             {
                 Code = string.Empty
             });
             passwordManagerMock.Setup(x => x.CheckPassword(It.IsAny<string>(), It.IsAny<string>())).Returns(true);
-            transactionMock.Setup(x => x.CreateTransaction(It.IsAny<UserObject>(), null)).Returns(Task.CompletedTask);
+            transactionMock.Setup(x => x.CreateTransaction(It.IsAny<User>(), null)).Returns(Task.CompletedTask);
 
             var registationController = new AuthRegistrationController(transactionMock.Object, dataManagementMock.Object, null,
                 null, null, passwordManagerMock.Object, null);
@@ -184,7 +184,7 @@ namespace tests.Controllers_Tests.Account
         {
             var dataManagementMock = new Mock<IDataManagement>();
 
-            dataManagementMock.Setup(x => x.GetData(It.IsAny<string>())).ReturnsAsync((UserObject)null);
+            dataManagementMock.Setup(x => x.GetData(It.IsAny<string>())).ReturnsAsync((User)null);
 
             var registationController = new AuthRegistrationController(null, dataManagementMock.Object, null,
                 null, null, null, null);
@@ -202,7 +202,7 @@ namespace tests.Controllers_Tests.Account
             var passwordManagerMock = new Mock<IPasswordManager>();
             var dataManagementMock = new Mock<IDataManagement>();
 
-            dataManagementMock.Setup(x => x.GetData(It.IsAny<string>())).ReturnsAsync(new UserObject
+            dataManagementMock.Setup(x => x.GetData(It.IsAny<string>())).ReturnsAsync(new User
             {
                 Code = string.Empty
             });
@@ -222,15 +222,15 @@ namespace tests.Controllers_Tests.Account
         public async Task VerifyAccount_UserNotCreated_ThrowsException()
         {
             var passwordManagerMock = new Mock<IPasswordManager>();
-            var transactionMock = new Mock<ITransaction<UserObject>>();
+            var transactionMock = new Mock<ITransaction<User>>();
             var dataManagementMock = new Mock<IDataManagement>();
 
-            dataManagementMock.Setup(x => x.GetData(It.IsAny<string>())).ReturnsAsync(new UserObject
+            dataManagementMock.Setup(x => x.GetData(It.IsAny<string>())).ReturnsAsync(new User
             {
                 Code = string.Empty
             });
             passwordManagerMock.Setup(x => x.CheckPassword(It.IsAny<string>(), It.IsAny<string>())).Returns(true);
-            transactionMock.Setup(x => x.CreateTransaction(It.IsAny<UserObject>(), null))
+            transactionMock.Setup(x => x.CreateTransaction(It.IsAny<User>(), null))
                 .ThrowsAsync((Exception)Activator.CreateInstance(typeof(EntityNotCreatedException)));
 
             var registationController = new AuthRegistrationController(transactionMock.Object, dataManagementMock.Object, null,

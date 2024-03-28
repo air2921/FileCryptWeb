@@ -66,7 +66,7 @@ namespace tests.Controllers_Tests.Account
                 });
             passwordManagerMock.Setup(x => x.CheckPassword(It.IsAny<string>(), It.IsAny<string>())).Returns(true);
             generateMock.Setup(x => x.GenerateSixDigitCode()).Returns(123);
-            dataManagementMock.Setup(x => x.SetData(It.IsAny<string>(), It.IsAny<UserObject>())).Returns(Task.CompletedTask);
+            dataManagementMock.Setup(x => x.SetData(It.IsAny<string>(), It.IsAny<User>())).Returns(Task.CompletedTask);
             emailSenderMock.Setup(x => x.SendMessage(It.IsAny<EmailDto>())).Returns(Task.CompletedTask);
 
             var sessionController = new AuthSessionController(null, dataManagementMock.Object,

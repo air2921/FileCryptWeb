@@ -65,13 +65,25 @@ namespace webapi.Controllers.Core
         {
             try
             {
-                var keys = await GetKeys();
-                if (keys is null)
-                    return StatusCode(404, new { message = Message.NOT_FOUND });
+                var keys = new KeyModel();
+                var cacheKey = $"{ImmutableData.KEYS_PREFIX}{_userInfo.UserId}";
+                var cache = await _redisCache.GetCachedData(cacheKey);
+                if (cache is null)
+                {
+                    keys = await _keyRepository.GetByFilter(query => query.Where(k => k.user_id.Equals(_userInfo.UserId)));
+                    if (keys is null)
+                        return StatusCode(404, new { message = Message.NOT_FOUND });
 
-                var keyValues = await SetKeys(keys);
+                    await _redisCache.CacheData(cacheKey, keys, TimeSpan.FromMinutes(10));
+                }
+                else
+                    keys = JsonConvert.DeserializeObject<KeyModel>(cache);
 
-                return StatusCode(200, new { keys = new { keyValues.privateKey, keyValues.internalKey, keyValues.receivedKey } });
+                keys!.private_key = await _decryptKey.CypherKeyAsync(keys.private_key, secretKey);
+                keys.internal_key = keys.internal_key is not null ? await _decryptKey.CypherKeyAsync(keys.internal_key, secretKey) : null;
+                keys.received_key = keys.received_key is not null ? "hidden" : null;
+
+                return StatusCode(200, new { keys = new { keys.private_key, keys.internal_key, keys.received_key } });
             }
             catch (OperationCanceledException ex)
             {
@@ -137,7 +149,7 @@ namespace webapi.Controllers.Core
                 keys.received_key = null;
                 await _keyRepository.Update(keys);
 
-                await ClearData(_userInfo.UserId, _redisKeys.InternalKey);
+                await ClearData(_userInfo.UserId, _redisKeys.ReceivedKey);
 
                 return StatusCode(200, new { message = Message.UPDATED });
             }
@@ -145,40 +157,6 @@ namespace webapi.Controllers.Core
             {
                 return StatusCode(404, new { message = ex.Message });
             }
-        }
-
-        [Helper]
-        private async Task<KeyModel> GetKeys()
-        {
-            var cacheKey = $"Keys_{_userInfo.UserId}";
-            var cacheKeys = await _redisCache.GetCachedData(cacheKey);
-
-            if (cacheKeys is null)
-            {
-                var keys = await _keyRepository.GetByFilter(query => query.Where(k => k.user_id.Equals(_userInfo.UserId)));
-                if (keys is null)
-                    return null;
-
-                await _redisCache.CacheData(cacheKey, keys, TimeSpan.FromMinutes(10));
-                return keys;
-            }
-            else
-                return JsonConvert.DeserializeObject<KeyModel>(cacheKeys);
-        }
-
-        [Helper]
-        private async Task<KeyObject> SetKeys(KeyModel keyModel)
-        {
-            string? privateKey = keyModel.private_key is not null ? await _decryptKey.CypherKeyAsync(keyModel.private_key, secretKey) : null;
-            string? internalKey = keyModel.internal_key is not null ? await _decryptKey.CypherKeyAsync(keyModel.internal_key, secretKey) : null;
-            string? receivedKey = keyModel.received_key is not null ? "hidden" : null;
-
-            return new KeyObject
-            {
-                privateKey = privateKey,
-                internalKey = internalKey,
-                receivedKey = receivedKey,
-            };
         }
 
         [Helper]
@@ -222,14 +200,6 @@ namespace webapi.Controllers.Core
         {
             await _redisCache.DeteteCacheByKeyPattern($"{ImmutableData.KEYS_PREFIX}{userId}");
             await _redisCache.DeleteCache(key);
-        }
-
-        [AuxiliaryObject]
-        private class KeyObject
-        {
-            public string? privateKey { get; set; }
-            public string? internalKey { get; set; }
-            public string? receivedKey { get; set; }
         }
     }
 }

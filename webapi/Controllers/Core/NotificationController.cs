@@ -1,8 +1,5 @@
 ﻿using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
-using Newtonsoft.Json;
-using webapi.Attributes;
-using webapi.DB;
 using webapi.Exceptions;
 using webapi.Helpers;
 using webapi.Interfaces;
@@ -10,6 +7,7 @@ using webapi.Interfaces.Redis;
 using webapi.Interfaces.Services;
 using webapi.Localization;
 using webapi.Models;
+using webapi.Services.Core.Data_Handlers;
 
 namespace webapi.Controllers.Core
 {
@@ -18,7 +16,7 @@ namespace webapi.Controllers.Core
     [Authorize]
     public class NotificationController(
         IRepository<NotificationModel> notificationRepository,
-        ISorting sorting,
+        ICacheHandler<NotificationModel> cache,
         IRedisCache redisCache,
         IUserInfo userInfo) : ControllerBase
     {
@@ -31,24 +29,19 @@ namespace webapi.Controllers.Core
             try
             {
                 var cacheKey = $"{ImmutableData.NOTIFICATIONS_PREFIX}{userInfo.UserId}_{notificationId}";
-
-                var cacheNotification = await redisCache.GetCachedData(cacheKey);
-                if (cacheNotification is not null)
-                    return StatusCode(200, new { notification = JsonConvert.DeserializeObject<NotificationModel>(cacheNotification) });
-
-                var notification = await notificationRepository.GetByFilter
-                    (query => query.Where(n => n.notification_id.Equals(notificationId) && n.user_id.Equals(userInfo.UserId)));
-
+                var notification = await cache.CacheAndGet(new NotificationObject(cacheKey, userInfo.UserId, notificationId));
                 if (notification is null)
                     return StatusCode(404, new { message = Message.NOT_FOUND });
-
-                await redisCache.CacheData(cacheKey, notification, TimeSpan.FromMinutes(10));
 
                 return StatusCode(200, new { notification });
             }
             catch (OperationCanceledException ex)
             {
                 return StatusCode(500, new { message = ex.Message });
+            }
+            catch (FormatException)
+            {
+                return StatusCode(500, new { message = Message.ERROR });
             }
         }
 
@@ -62,20 +55,17 @@ namespace webapi.Controllers.Core
             try
             {
                 var cacheKey = $"{ImmutableData.NOTIFICATIONS_PREFIX}{userInfo.UserId}_{skip}_{count}_{byDesc}_{priority}_{isChecked}";
-
-                var cacheNotifications = await redisCache.GetCachedData(cacheKey);
-                if (cacheNotifications is not null)
-                    return StatusCode(200, new { notifications = JsonConvert.DeserializeObject<IEnumerable<NotificationModel>>(cacheNotifications) });
-
-                var notifications = await notificationRepository.GetAll(sorting.SortNotifications(userInfo.UserId, skip, count, byDesc, priority, isChecked));
-
-                await redisCache.CacheData(cacheKey, notifications, TimeSpan.FromMinutes(3));
+                var notifications = await cache.CacheAndGetRange(new NotificationRangeObject(cacheKey, userInfo.UserId, skip, count, byDesc, priority, isChecked));
 
                 return StatusCode(200, new { notifications });
             }
             catch (OperationCanceledException ex)
             {
                 return StatusCode(500, new { message = ex.Message });
+            }
+            catch (FormatException)
+            {
+                return StatusCode(500, new { message = Message.ERROR });
             }
         }
 

@@ -100,7 +100,6 @@ namespace webapi.Controllers.Core
                 storage.access_code = string.Empty;
 
                 var cacheKey = $"{ImmutableData.STORAGES_PREFIX}{userInfo.UserId}_{storageId}_{storage.encrypt}";
-
                 var cache = await redisCache.GetCachedData(cacheKey);
                 if (cache is not null)
                     return StatusCode(200, new { storage, keys = JsonConvert.DeserializeObject<IEnumerable<KeyStorageItemModel>>(cache) });

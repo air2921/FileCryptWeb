@@ -3,9 +3,9 @@ import Font from '../../utils/helpers/icon/Font';
 
 interface UserKeysProps {
     keys: {
-        privateKey: boolean;
-        internalKey: boolean;
-        receivedKey: boolean;
+        private_key: boolean;
+        internal_key: boolean;
+        received_key: boolean;
     };
 }
 
@@ -17,7 +17,7 @@ function UserKeys({ keys }: UserKeysProps) {
                     Private Key
                 </div>
                 <div className="has-key">
-                    {keys.privateKey ? <Font font={'check_small'} /> : <Font font={'close_small'} />}
+                    {keys.private_key ? <Font font={'check_small'} /> : <Font font={'close_small'} />}
                 </div>
             </div>
             <div className="internal-key">
@@ -25,7 +25,7 @@ function UserKeys({ keys }: UserKeysProps) {
                     Internal Key
                 </div>
                 <div className="has-key">
-                    {keys.internalKey ? <Font font={'check_small'} /> : <Font font={'close_small'} />}
+                    {keys.internal_key ? <Font font={'check_small'} /> : <Font font={'close_small'} />}
                 </div>
             </div>
             <div className="received-key">
@@ -33,7 +33,7 @@ function UserKeys({ keys }: UserKeysProps) {
                     Received Key
                 </div>
                 <div className="has-key">
-                    {keys.receivedKey ? <Font font={'check_small'} /> : <Font font={'close_small'} />}
+                    {keys.received_key ? <Font font={'check_small'} /> : <Font font={'close_small'} />}
                 </div>
             </div>
         </div>

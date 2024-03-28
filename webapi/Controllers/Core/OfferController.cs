@@ -1,7 +1,5 @@
 ﻿using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
-using Newtonsoft.Json;
-using webapi.DB;
 using webapi.Exceptions;
 using webapi.Helpers;
 using webapi.Interfaces;
@@ -11,6 +9,7 @@ using webapi.Interfaces.Services;
 using webapi.Localization;
 using webapi.Models;
 using webapi.Services.Core;
+using webapi.Services.Core.Data_Handlers;
 
 namespace webapi.Controllers.Core
 {
@@ -24,7 +23,7 @@ namespace webapi.Controllers.Core
         IRepository<UserModel> userRepository,
         IRepository<OfferModel> offerRepository,
         IRepository<KeyModel> keyRepository,
-        ISorting sorting,
+        ICacheHandler<OfferModel> cache,
         IRedisCache redisCache,
         IUserInfo userInfo) : ControllerBase
     {
@@ -104,22 +103,17 @@ namespace webapi.Controllers.Core
             try
             {
                 var cacheKey = $"{ImmutableData.OFFERS_PREFIX}{userInfo.UserId}_{offerId}";
-
-                var cacheOffer = await redisCache.GetCachedData(cacheKey);
-                if (cacheOffer is not null)
-                    return StatusCode(200, new { offers = JsonConvert.DeserializeObject<OfferModel>(cacheOffer) });
-
-                var offer = await offerRepository.GetById(offerId);
-                if (offer is null || offer.sender_id != userInfo.UserId || offer.receiver_id != userInfo.UserId)
-                    return StatusCode(404, new { message = Message.NOT_FOUND });
-
-                await redisCache.CacheData(cacheKey, offer, TimeSpan.FromMinutes(10));
+                var offer = await cache.CacheAndGetRange(new OfferObject(cacheKey, userInfo.UserId, offerId));
 
                 return StatusCode(200, new { offer, userId = userInfo.UserId });
             }
             catch (OperationCanceledException ex)
             {
                 return StatusCode(500, new { message = ex.Message });
+            }
+            catch (FormatException)
+            {
+                return StatusCode(500, new { message = Message.ERROR });
             }
         }
 
@@ -133,26 +127,17 @@ namespace webapi.Controllers.Core
             try
             {
                 var cacheKey = $"{ImmutableData.OFFERS_PREFIX}{userInfo.UserId}_{skip}_{count}_{byDesc}_{sended}_{isAccepted}_{type}";
-
-                var cacheOffers = await redisCache.GetCachedData(cacheKey);
-                if (cacheOffers is not null)
-                    return StatusCode(200, new { offers = JsonConvert.DeserializeObject<IEnumerable<OfferModel>>(cacheOffers), user_id = userInfo.UserId });
-
-                var offers = await offerRepository.GetAll(sorting
-                    .SortOffers(userInfo.UserId, skip, count, byDesc, sended, isAccepted, type));
-                foreach (var offer in offers)
-                {
-                    offer.offer_body = string.Empty;
-                    offer.offer_header = string.Empty;
-                }
-
-                await redisCache.CacheData(cacheKey, offers, TimeSpan.FromMinutes(3));
+                var offers = await cache.CacheAndGetRange(new OfferRangeObject(cacheKey, userInfo.UserId, skip, count, byDesc, sended, isAccepted, type));
 
                 return StatusCode(200, new { offers, user_id = userInfo.UserId });
             }
             catch (OperationCanceledException ex)
             {
                 return StatusCode(500, new { message = ex.Message });
+            }
+            catch (FormatException)
+            {
+                return StatusCode(500, new { message = Message.ERROR });
             }
         }
 
@@ -165,7 +150,7 @@ namespace webapi.Controllers.Core
             try
             {
                 var offer = await offerRepository.DeleteByFilter(query => query
-                .Where(o => o.offer_id.Equals(offerId) && (o.sender_id.Equals(userInfo.UserId) || o.receiver_id.Equals(userInfo.UserId))));
+                    .Where(o => o.offer_id.Equals(offerId) && (o.sender_id.Equals(userInfo.UserId) || o.receiver_id.Equals(userInfo.UserId))));
 
                 await redisCache.DeteteCacheByKeyPattern($"{ImmutableData.OFFERS_PREFIX}{offer.sender_id}");
                 await redisCache.DeteteCacheByKeyPattern($"{ImmutableData.OFFERS_PREFIX}{offer.receiver_id}");
