@@ -2,6 +2,7 @@
 using webapi.Controllers.Admin;
 using webapi.Exceptions;
 using webapi.Interfaces;
+using webapi.Interfaces.Controllers.Services;
 using webapi.Interfaces.Services;
 using webapi.Models;
 
@@ -15,16 +16,15 @@ namespace tests.Controllers_Tests.Admin
             var userRepositoryMock = new Mock<IRepository<UserModel>>();
             var tokenRepositoryMock = new Mock<IRepository<TokenModel>>();
             var userInfoMock = new Mock<IUserInfo>();
-            var apiTokenServiceMock = new Mock<IApiAdminTokenService>();
+            var transactionMock = new Mock<ITransaction<TokenModel>>();
+            var validatorMock = new Mock<IValidator>();
 
             userRepositoryMock.Setup(x => x.GetById(It.IsAny<int>(), CancellationToken.None)).ReturnsAsync(new UserModel { role = "User"});
-            tokenRepositoryMock.Setup(x => x.GetAll(It.IsAny<Func<IQueryable<TokenModel>, IQueryable<TokenModel>>>(), CancellationToken.None))
-                .ReturnsAsync(new List<TokenModel>());
             userInfoMock.Setup(x => x.Role).Returns("HighestAdmin");
-            apiTokenServiceMock.Setup(x => x.IsAllowed(It.IsAny<UserModel>(), It.IsAny<string>())).Returns(true);
+            validatorMock.Setup(x => x.IsValid(It.IsAny<string>(), It.IsAny<string>())).Returns(true);
 
-            var tokenController = new Admin_TokenController(apiTokenServiceMock.Object, tokenRepositoryMock.Object,
-                userRepositoryMock.Object, userInfoMock.Object);
+            var tokenController = new Admin_TokenController(transactionMock.Object, validatorMock.Object,
+                tokenRepositoryMock.Object, userRepositoryMock.Object, userInfoMock.Object);
             var result = await tokenController.RevokeAllUserTokens(1);
 
             Assert.IsType<ObjectResult>(result);
@@ -38,7 +38,7 @@ namespace tests.Controllers_Tests.Admin
             var userRepositoryMock = new Mock<IRepository<UserModel>>();
             userRepositoryMock.Setup(x => x.GetById(It.IsAny<int>(), CancellationToken.None)).ReturnsAsync((UserModel)null);
 
-            var tokenController = new Admin_TokenController(null, null, userRepositoryMock.Object, null);
+            var tokenController = new Admin_TokenController(null, null, null, userRepositoryMock.Object, null);
             var result = await tokenController.RevokeAllUserTokens(1);
 
             Assert.IsType<ObjectResult>(result);
@@ -53,7 +53,7 @@ namespace tests.Controllers_Tests.Admin
             userRepositoryMock.Setup(x => x.GetById(It.IsAny<int>(), CancellationToken.None))
                 .ThrowsAsync((Exception)Activator.CreateInstance(typeof(OperationCanceledException)));
 
-            var tokenController = new Admin_TokenController(null, null, userRepositoryMock.Object, null);
+            var tokenController = new Admin_TokenController(null, null, null, userRepositoryMock.Object, null);
             var result = await tokenController.RevokeAllUserTokens(1);
 
             Assert.IsType<ObjectResult>(result);
@@ -66,13 +66,14 @@ namespace tests.Controllers_Tests.Admin
         {
             var userRepositoryMock = new Mock<IRepository<UserModel>>();
             var userInfoMock = new Mock<IUserInfo>();
-            var apiTokenServiceMock = new Mock<IApiAdminTokenService>();
+            var validatorMock = new Mock<IValidator>();
 
             userRepositoryMock.Setup(x => x.GetById(It.IsAny<int>(), CancellationToken.None)).ReturnsAsync(new UserModel());
             userInfoMock.Setup(x => x.Role).Returns(string.Empty);
-            apiTokenServiceMock.Setup(x => x.IsAllowed(It.IsAny<UserModel>(), It.IsAny<string>())).Returns(false);
+            validatorMock.Setup(x => x.IsValid(It.IsAny<string>(), It.IsAny<string>())).Returns(false);
 
-            var tokenController = new Admin_TokenController(apiTokenServiceMock.Object, null, userRepositoryMock.Object, userInfoMock.Object);
+            var tokenController = new Admin_TokenController(null, validatorMock.Object,
+                null, userRepositoryMock.Object, userInfoMock.Object);
             var result = await tokenController.RevokeAllUserTokens(1);
 
             Assert.IsType<ObjectResult>(result);
@@ -83,22 +84,24 @@ namespace tests.Controllers_Tests.Admin
         [Theory]
         [InlineData(typeof(EntityNotCreatedException))]
         [InlineData(typeof(EntityNotDeletedException))]
+        [InlineData(typeof(OperationCanceledException))]
         public async Task RevokeAllUserTokens_DbTransactionFailed(Type ex)
         {
             var userRepositoryMock = new Mock<IRepository<UserModel>>();
             var tokenRepositoryMock = new Mock<IRepository<TokenModel>>();
             var userInfoMock = new Mock<IUserInfo>();
-            var apiTokenServiceMock = new Mock<IApiAdminTokenService>();
+            var transactionMock = new Mock<ITransaction<TokenModel>>();
+            var validatorMock = new Mock<IValidator>();
 
             userRepositoryMock.Setup(x => x.GetById(It.IsAny<int>(), CancellationToken.None)).ReturnsAsync(new UserModel { role = "User"});
             tokenRepositoryMock.Setup(x => x.GetAll(It.IsAny<Func<IQueryable<TokenModel>, IQueryable<TokenModel>>>(), CancellationToken.None))
                 .ReturnsAsync(new List<TokenModel>());
             userInfoMock.Setup(x => x.Role).Returns("HighestAdmin");
-            apiTokenServiceMock.Setup(x => x.IsAllowed(It.IsAny<UserModel>(), It.IsAny<string>())).Returns(true);
-            apiTokenServiceMock.Setup(x => x.DbTransaction(It.IsAny<IEnumerable<TokenModel>>(), It.IsAny<int>()))
+            validatorMock.Setup(x => x.IsValid(It.IsAny<string>(), It.IsAny<string>())).Returns(true);
+            transactionMock.Setup(x => x.CreateTransaction(null, It.IsAny<int>()))
                 .ThrowsAsync((Exception)Activator.CreateInstance(ex));
 
-            var tokenController = new Admin_TokenController(apiTokenServiceMock.Object, tokenRepositoryMock.Object,
+            var tokenController = new Admin_TokenController(transactionMock.Object, validatorMock.Object, tokenRepositoryMock.Object,
                 userRepositoryMock.Object, userInfoMock.Object);
             var result = await tokenController.RevokeAllUserTokens(1);
 
@@ -113,13 +116,13 @@ namespace tests.Controllers_Tests.Admin
             var userRepositoryMock = new Mock<IRepository<UserModel>>();
             var tokenRepositoryMock = new Mock<IRepository<TokenModel>>();
             var userInfoMock = new Mock<IUserInfo>();
-            var apiTokenServiceMock = new Mock<IApiAdminTokenService>();
+            var validatorMock = new Mock<IValidator>();
 
             tokenRepositoryMock.Setup(x => x.GetById(It.IsAny<int>(), CancellationToken.None)).ReturnsAsync(new TokenModel { user_id = 1 });
             userRepositoryMock.Setup(x => x.GetById(It.IsAny<int>(), CancellationToken.None)).ReturnsAsync(new UserModel { role  = string.Empty });
-            apiTokenServiceMock.Setup(x => x.IsAllowed(It.IsAny<UserModel>(), It.IsAny<string>())).Returns(true);
+            validatorMock.Setup(x => x.IsValid(It.IsAny<string>(), It.IsAny<string>())).Returns(true);
 
-            var tokenController = new Admin_TokenController(apiTokenServiceMock.Object, tokenRepositoryMock.Object,
+            var tokenController = new Admin_TokenController(null, validatorMock.Object, tokenRepositoryMock.Object,
                 userRepositoryMock.Object, userInfoMock.Object);
             var result = await tokenController.RevokeToken(1);
 
@@ -135,7 +138,8 @@ namespace tests.Controllers_Tests.Admin
             tokenRepositoryMock.Setup(x => x.GetById(It.IsAny<int>(), CancellationToken.None))
                 .ReturnsAsync((TokenModel)null);
 
-            var tokenController = new Admin_TokenController(null, tokenRepositoryMock.Object, null, null);
+            var tokenController = new Admin_TokenController(null, null, tokenRepositoryMock.Object,
+                null, null);
             var result = await tokenController.RevokeToken(1);
 
             Assert.IsType<ObjectResult>(result);
@@ -153,7 +157,7 @@ namespace tests.Controllers_Tests.Admin
             userRepositoryMock.Setup(x => x.GetById(It.IsAny<int>(), CancellationToken.None))
                 .ReturnsAsync((UserModel)null);
 
-            var tokenController = new Admin_TokenController(null, tokenRepositoryMock.Object, userRepositoryMock.Object, null);
+            var tokenController = new Admin_TokenController(null, null, tokenRepositoryMock.Object, userRepositoryMock.Object, null);
             var result = await tokenController.RevokeToken(1);
 
             Assert.IsType<ObjectResult>(result);
@@ -168,7 +172,7 @@ namespace tests.Controllers_Tests.Admin
             tokenRepositoryMock.Setup(x => x.GetById(It.IsAny<int>(), CancellationToken.None))
                 .ThrowsAsync((Exception)Activator.CreateInstance(typeof(OperationCanceledException)));
 
-            var tokenController = new Admin_TokenController(null, tokenRepositoryMock.Object, null, null);
+            var tokenController = new Admin_TokenController(null, null, tokenRepositoryMock.Object, null, null);
             var result = await tokenController.RevokeToken(1);
 
             Assert.IsType<ObjectResult>(result);
@@ -182,13 +186,13 @@ namespace tests.Controllers_Tests.Admin
             var userRepositoryMock = new Mock<IRepository<UserModel>>();
             var tokenRepositoryMock = new Mock<IRepository<TokenModel>>();
             var userInfoMock = new Mock<IUserInfo>();
-            var apiTokenServiceMock = new Mock<IApiAdminTokenService>();
+            var validatorMock = new Mock<IValidator>();
 
             tokenRepositoryMock.Setup(x => x.GetById(It.IsAny<int>(), CancellationToken.None)).ReturnsAsync(new TokenModel { user_id = 1 });
             userRepositoryMock.Setup(x => x.GetById(It.IsAny<int>(), CancellationToken.None)).ReturnsAsync(new UserModel { role = string.Empty });
-            apiTokenServiceMock.Setup(x => x.IsAllowed(It.IsAny<UserModel>(), It.IsAny<string>())).Returns(false);
+            validatorMock.Setup(x => x.IsValid(It.IsAny<string>(), It.IsAny<string>())).Returns(false);
 
-            var tokenController = new Admin_TokenController(apiTokenServiceMock.Object, tokenRepositoryMock.Object,
+            var tokenController = new Admin_TokenController(null, validatorMock.Object, tokenRepositoryMock.Object,
                 userRepositoryMock.Object, userInfoMock.Object);
             var result = await tokenController.RevokeToken(1);
 
@@ -203,15 +207,15 @@ namespace tests.Controllers_Tests.Admin
             var userRepositoryMock = new Mock<IRepository<UserModel>>();
             var tokenRepositoryMock = new Mock<IRepository<TokenModel>>();
             var userInfoMock = new Mock<IUserInfo>();
-            var apiTokenServiceMock = new Mock<IApiAdminTokenService>();
+            var validatorMock = new Mock<IValidator>();
 
             tokenRepositoryMock.Setup(x => x.GetById(It.IsAny<int>(), CancellationToken.None)).ReturnsAsync(new TokenModel { user_id = 1 });
             tokenRepositoryMock.Setup(x => x.Delete(It.IsAny<int>(), CancellationToken.None))
                 .ThrowsAsync((Exception)Activator.CreateInstance(typeof(EntityNotDeletedException)));
             userRepositoryMock.Setup(x => x.GetById(It.IsAny<int>(), CancellationToken.None)).ReturnsAsync(new UserModel { role = string.Empty });
-            apiTokenServiceMock.Setup(x => x.IsAllowed(It.IsAny<UserModel>(), It.IsAny<string>())).Returns(true);
+            validatorMock.Setup(x => x.IsValid(It.IsAny<string>(), It.IsAny<string>())).Returns(true);
 
-            var tokenController = new Admin_TokenController(apiTokenServiceMock.Object, tokenRepositoryMock.Object,
+            var tokenController = new Admin_TokenController(null, validatorMock.Object, tokenRepositoryMock.Object,
                 userRepositoryMock.Object, userInfoMock.Object);
             var result = await tokenController.RevokeToken(1);
 

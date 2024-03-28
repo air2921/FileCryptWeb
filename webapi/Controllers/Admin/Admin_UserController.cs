@@ -1,9 +1,9 @@
 ﻿using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
-using webapi.Attributes;
-using webapi.DB;
 using webapi.Exceptions;
+using webapi.Helpers;
 using webapi.Interfaces;
+using webapi.Interfaces.Controllers.Services;
 using webapi.Localization;
 using webapi.Models;
 
@@ -12,10 +12,9 @@ namespace webapi.Controllers.Admin
     [Route("api/admin/users")]
     [ApiController]
     public class Admin_UserController(
-        IApiAdminUserService userService,
-        IRepository<UserModel> userRepository,
-        IRepository<TokenModel> tokenRepository,
-        FileCryptDbContext dbContext) : ControllerBase
+        [FromKeyedServices(ImplementationKey.ADMIN_USER_SERVICE)] ITransaction<UserModel> transaction,
+        [FromKeyedServices(ImplementationKey.ADMIN_USER_SERVICE)] IValidator validator,
+        IRepository<UserModel> userRepository) : ControllerBase
     {
         [HttpGet("{userId}")]
         [Authorize(Roles = "HighestAdmin,Admin")]
@@ -53,7 +52,7 @@ namespace webapi.Controllers.Admin
                 if (target is null)
                     return StatusCode(404, new { message = Message.NOT_FOUND });
 
-                if (userService.IsHighestAdmin(target.role))
+                if (!validator.IsValid(target.role))
                     return StatusCode(403, new { message = Message.FORBIDDEN });
 
                 await userRepository.Delete(userId);
@@ -84,10 +83,10 @@ namespace webapi.Controllers.Admin
                 if (target is null)
                     return StatusCode(404, new { message = Message.NOT_FOUND });
 
-                if (userService.IsHighestAdmin(target.role))
+                if (!validator.IsValid(target.role))
                     return StatusCode(403, new { message = Message.FORBIDDEN });
 
-                await userService.DbTransaction(target, block);
+                await transaction.CreateTransaction(target, block);
                 return StatusCode(200, new { message = Message.UPDATED });
             }
             catch (EntityNotUpdatedException ex)
@@ -115,14 +114,11 @@ namespace webapi.Controllers.Admin
         {
             try
             {
-                if (userService.IsHighestAdmin(role))
-                    return StatusCode(403, new { message = Message.FORBIDDEN });
-
                 var target = await userRepository.GetById(userId);
                 if (target is null)
                     return StatusCode(404, new { message = Message.NOT_FOUND });
 
-                if (userService.IsHighestAdmin(target.role))
+                if (!validator.IsValid(target.role))
                     return StatusCode(403, new { message = Message.FORBIDDEN });
 
                 target.role = role;
@@ -137,75 +133,6 @@ namespace webapi.Controllers.Admin
             catch (OperationCanceledException ex)
             {
                 return StatusCode(500, new { message = ex.Message });
-            }
-        }
-    }
-
-    public interface IApiAdminUserService
-    {
-        public bool IsHighestAdmin(string role);
-        public Task DbTransaction(UserModel target, bool block);
-    }
-
-    public class AdminUserService : IApiAdminUserService
-    {
-        private readonly FileCryptDbContext _dbContext;
-        private readonly IRepository<UserModel> _userRepository;
-        private readonly IRepository<TokenModel> _tokenRepository;
-
-        public AdminUserService(
-            FileCryptDbContext dbContext,
-            IRepository<UserModel> userRepository,
-            IRepository<TokenModel> tokenRepository)
-        {
-            _dbContext = dbContext;
-            _userRepository = userRepository;
-            _tokenRepository = tokenRepository;
-        }
-
-        [Helper]
-        public bool IsHighestAdmin(string role)
-        {
-            return role.Equals(Role.HighestAdmin.ToString());
-        }
-
-        [Helper]
-        public async Task DbTransaction(UserModel target, bool block)
-        {
-            using var transaction = await _dbContext.Database.BeginTransactionAsync();
-
-            try
-            {
-                target.is_blocked = block;
-                await _userRepository.Update(target);
-
-                if (block)
-                {
-                    var tokens = new List<int>();
-
-                    var tokenModels = await _tokenRepository.GetAll(query => query.Where(t => t.user_id.Equals(target.id)));
-                    foreach (var token in tokenModels)
-                        tokens.Add(token.token_id);
-
-                    await _tokenRepository.DeleteMany(tokens);
-                }
-
-                await transaction.CommitAsync();
-            }
-            catch (EntityNotUpdatedException)
-            {
-                await transaction.RollbackAsync();
-                throw;
-            }
-            catch (EntityNotDeletedException)
-            {
-                await transaction.RollbackAsync();
-                throw;
-            }
-            catch (OperationCanceledException)
-            {
-                await transaction.RollbackAsync();
-                throw new EntityNotUpdatedException("Error when updating data");
             }
         }
     }

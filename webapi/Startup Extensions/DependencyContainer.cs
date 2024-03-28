@@ -11,6 +11,7 @@ using webapi.Interfaces.Services;
 using webapi.Models;
 using webapi.Security;
 using webapi.Services.Account;
+using webapi.Services.Admin;
 using webapi.Services.Core;
 using webapi.Services.Core.Data_Handlers;
 using webapi.Third_Party_Services;
@@ -46,12 +47,47 @@ namespace webapi
             services.AddScoped<IClamSetting, ClamSetting>();
             services.AddScoped<IUserInfo, UserData>();
             services.AddScoped<IAes, AesCreator>();
+        }
 
-            ControllerServices(services);
+        public static void OtherServices(IServiceCollection services)
+        {
+            HelperServices(services);
+            CoreKeyedServices(services);
+            AccountKeyedServices(services);
+            AdminKeyedServices(services);
             CacheServices(services);
         }
 
-        private static void ControllerServices(IServiceCollection services)
+        private static void HelperServices(IServiceCollection services)
+        {
+            services.AddScoped<IStorageHelpers, KeyStorageService>();
+            services.AddScoped<IUserHelpers, UserService>();
+            services.AddTransient<IRecoveryHelpers, RecoveryService>();
+            services.AddScoped<ISessionHelpers, SessionService>();
+            services.AddScoped<IKeyHelper, KeyService>();
+        }
+
+        private static void CoreKeyedServices(IServiceCollection services)
+        {
+            services.AddKeyedTransient<ITransaction<KeyModel>, OfferService>(ImplementationKey.CORE_OFFER_SERVICE);
+            services.AddKeyedTransient<ITransaction<Participants>, OfferService>(ImplementationKey.CORE_OFFER_SERVICE);
+            services.AddKeyedScoped<IDataManagement, OfferService>(ImplementationKey.CORE_OFFER_SERVICE);
+
+            services.AddKeyedScoped<IValidator, KeyStorageService>(ImplementationKey.CORE_KEY_STORAGE_SERVICE);
+            services.AddKeyedScoped<IValidator, KeyService>(ImplementationKey.CORE_KEY_SERVICE);
+            services.AddKeyedScoped<IDataManagement, KeyService>(ImplementationKey.CORE_KEY_SERVICE);
+        }
+
+        private static void AdminKeyedServices(IServiceCollection services)
+        {
+            services.AddKeyedScoped<ITransaction<TokenModel>, AdminTokenService>(ImplementationKey.ADMIN_TOKEN_SERVICE);
+            services.AddKeyedScoped<IValidator, AdminTokenService>(ImplementationKey.ADMIN_TOKEN_SERVICE);
+
+            services.AddKeyedScoped<ITransaction<UserModel>, AdminUserService>(ImplementationKey.ADMIN_USER_SERVICE);
+            services.AddKeyedScoped<IValidator, AdminUserService>(ImplementationKey.ADMIN_USER_SERVICE);
+        }
+
+        private static void AccountKeyedServices(IServiceCollection services)
         {
             services.AddKeyedScoped<ITransaction<UserModel>, _2FaService>(ImplementationKey.ACCOUNT_2FA_SERVICE);
             services.AddKeyedScoped<IDataManagement, _2FaService>(ImplementationKey.ACCOUNT_2FA_SERVICE);
@@ -74,27 +110,7 @@ namespace webapi
             services.AddKeyedScoped<IValidator, RegistrationService>(ImplementationKey.ACCOUNT_REGISTRATION_SERVICE);
 
             services.AddKeyedScoped<IDataManagement, SessionService>(ImplementationKey.ACCOUNT_SESSION_SERVICE);
-            services.AddScoped<ISessionHelpers, SessionService>();
-
             services.AddKeyedScoped<IValidator, RecoveryService>(ImplementationKey.ACCOUNT_RECOVERY_SERVICE);
-            services.AddTransient<IRecoveryHelpers, RecoveryService>();
-
-            services.AddKeyedTransient<ITransaction<KeyModel>, OfferService>(ImplementationKey.CORE_OFFER_SERVICE);
-            services.AddKeyedTransient<ITransaction<Participants>, OfferService>(ImplementationKey.CORE_OFFER_SERVICE);
-            services.AddKeyedScoped<IDataManagement, OfferService>(ImplementationKey.CORE_OFFER_SERVICE);
-
-            services.AddKeyedScoped<IValidator, KeyStorageService>(ImplementationKey.CORE_KEY_STORAGE_SERVICE);
-            services.AddScoped<IStorageHelpers, KeyStorageService>();
-
-            services.AddScoped<IUserHelpers, UserService>();
-
-            services.AddScoped<IKeyHelper, KeyService>();
-            services.AddKeyedScoped<IValidator, KeyService>(ImplementationKey.CORE_KEY_SERVICE);
-            services.AddKeyedScoped<IDataManagement, KeyService>(ImplementationKey.CORE_KEY_SERVICE);
-
-            services.AddScoped<IApiAdminKeysService, AdminKeysService>();
-            services.AddScoped<IApiAdminTokenService, AdminTokenService>();
-            services.AddScoped<IApiAdminUserService, AdminUserService>();
         }
 
         private static void CacheServices(IServiceCollection services)

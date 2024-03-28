@@ -4,9 +4,9 @@ using webapi.Interfaces;
 using webapi.Localization;
 using webapi.Models;
 using webapi.Exceptions;
-using webapi.Attributes;
 using webapi.Interfaces.Services;
-using webapi.DB;
+using webapi.Interfaces.Controllers.Services;
+using webapi.Helpers;
 
 namespace webapi.Controllers.Admin
 {
@@ -14,7 +14,8 @@ namespace webapi.Controllers.Admin
     [ApiController]
     [Authorize(Roles = "HighestAdmin,Admin")]
     public class Admin_TokenController(
-        IApiAdminTokenService adminTokenService,
+        [FromKeyedServices(ImplementationKey.ADMIN_TOKEN_SERVICE)] ITransaction<TokenModel> transaction,
+        [FromKeyedServices(ImplementationKey.ADMIN_TOKEN_SERVICE)] IValidator validator,
         IRepository<TokenModel> tokenRepository,
         IRepository<UserModel> userRepository,
         IUserInfo userInfo) : ControllerBase
@@ -33,11 +34,10 @@ namespace webapi.Controllers.Admin
                 if (target is null)
                     return StatusCode(404, new { message = Message.NOT_FOUND });
 
-                if (!adminTokenService.IsAllowed(target, userInfo.Role))
+                if (!validator.IsValid(target.role, userInfo.Role))
                     return StatusCode(403, new { message = Message.FORBIDDEN });
 
-                await adminTokenService.DbTransaction(await tokenRepository
-                    .GetAll(query => query.Where(t => t.user_id.Equals(userId))),target.id);
+                await transaction.CreateTransaction(null, target.id);
                 return StatusCode(200, new { message = Message.REMOVED });
             }
             catch (EntityNotCreatedException ex)
@@ -68,7 +68,7 @@ namespace webapi.Controllers.Admin
                 if (target is null)
                     return StatusCode(404, new { message = Message.NOT_FOUND });
 
-                if (!adminTokenService.IsAllowed(target, userInfo.Role))
+                if (!validator.IsValid(target.role, userInfo.Role))
                     return StatusCode(403, new { message = Message.FORBIDDEN });
 
                 await tokenRepository.Delete(tokenId);
@@ -82,71 +82,6 @@ namespace webapi.Controllers.Admin
             {
                 return StatusCode(500, new { message = ex.Message });
             }
-        }
-    }
-
-    public interface IApiAdminTokenService
-    {
-        public bool IsAllowed(UserModel user, string role);
-        public Task DbTransaction(IEnumerable<TokenModel> tokenModels, int userId);
-    }
-
-    public class AdminTokenService : IApiAdminTokenService
-    {
-        private readonly FileCryptDbContext _dbContext;
-        private readonly IRepository<TokenModel> _tokenRepository;
-        private readonly IRepository<NotificationModel> _notificationRepository;
-
-        public AdminTokenService(
-            FileCryptDbContext dbContext,
-            IRepository<TokenModel> tokenRepository,
-            IRepository<NotificationModel> notificationRepository)
-        {
-            _dbContext = dbContext;
-            _tokenRepository = tokenRepository;
-            _notificationRepository = notificationRepository;
-        }
-
-        [Helper]
-        public async Task DbTransaction(IEnumerable<TokenModel> tokenModels, int userId)
-        {
-            using var transaction = await _dbContext.Database.BeginTransactionAsync();
-
-            try
-            {
-                var identifiers = new List<int>();
-                foreach (var tokenModel in tokenModels)
-                    identifiers.Add(tokenModel.token_id);
-
-                await _tokenRepository.DeleteMany(identifiers);
-
-                await _notificationRepository.Add(new NotificationModel
-                {
-                    message_header = NotificationMessage.AUTH_TOKENS_REVOKED_HEADER,
-                    message = NotificationMessage.AUTH_TOKENS_REVOKED_BODY,
-                    is_checked = false,
-                    priority = Priority.Security.ToString(),
-                    send_time = DateTime.UtcNow,
-                    user_id = userId
-                });
-
-                await transaction.CommitAsync();
-            }
-            catch (EntityNotDeletedException)
-            {
-                await transaction.RollbackAsync();
-                throw;
-            }
-            catch (EntityNotCreatedException)
-            {
-                await transaction.RollbackAsync();
-                throw;
-            }
-        }
-
-        public bool IsAllowed(UserModel user, string role)
-        {
-            return role.Equals("HighestAdmin") && !user.role.Equals("HighestAdmin");
         }
     }
 }

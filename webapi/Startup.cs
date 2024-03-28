@@ -11,6 +11,7 @@ namespace webapi
             DependencyContainer.Singleton(services);
             DependencyContainer.Scoped(services);
             DependencyContainer.Transient(services);
+            DependencyContainer.OtherServices(services);
 
             AppServices.Register(services);
         }
