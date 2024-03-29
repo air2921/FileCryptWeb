@@ -5,15 +5,8 @@ using webapi.Interfaces.Redis;
 namespace webapi.Middlewares
 {
     // You may need to install the Microsoft.AspNetCore.Http.Abstractions package into your project
-    public class FreezeServiceMiddleware
+    public class FreezeServiceMiddleware(RequestDelegate next)
     {
-        private readonly RequestDelegate _next;
-
-        public FreezeServiceMiddleware(RequestDelegate next)
-        {
-            _next = next;
-        }
-
         public async Task Invoke(HttpContext context, IRedisCache redisCache)
         {
             try
@@ -28,17 +21,17 @@ namespace webapi.Middlewares
                         await context.Response.WriteAsJsonAsync(new { message = "The service was frozen for technical work. We'll finish as quickly as we can" });
                         return;
                     }
-                    await _next(context); return;
+                    await next(context); return;
                 }
-                await _next(context); return;
+                await next(context); return;
             }
             catch (InvalidOperationException)
             {
-                await _next(context); return;
+                await next(context); return;
             }
             catch (FormatException)
             {
-                await _next(context); return;
+                await next(context); return;
             }
         }
 
