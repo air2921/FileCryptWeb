@@ -133,8 +133,8 @@ namespace webapi.Controllers.Account.Edit
                     return StatusCode(404, new { message = Message.NOT_FOUND });
 
                 await transaction.CreateTransaction(user, email);
-                await tokenService.UpdateJwtToken();
                 await dataManagament.DeleteData(userInfo.UserId);
+                await tokenService.UpdateJwtToken();
 
                 return StatusCode(201);
             }

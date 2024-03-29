@@ -2,6 +2,7 @@
 using Microsoft.AspNetCore.Mvc;
 using webapi.Controllers.Admin;
 using webapi.Exceptions;
+using webapi.Helpers;
 using webapi.Interfaces;
 using webapi.Interfaces.Redis;
 using webapi.Interfaces.Services;
@@ -24,6 +25,7 @@ namespace tests.Controllers_Tests.Admin
             Assert.IsType<ObjectResult>(result);
             var objectResult = (ObjectResult)result;
             Assert.Equal(201, objectResult.StatusCode);
+            redisCacheMock.Verify(cache => cache.DeleteCache(ImmutableData.MIME_COLLECTION), Times.Once);
         }
 
         [Fact]
@@ -57,6 +59,7 @@ namespace tests.Controllers_Tests.Admin
             Assert.IsType<ObjectResult>(result);
             var objectResult = (ObjectResult)result;
             Assert.Equal(201, objectResult.StatusCode);
+            redisCacheMock.Verify(cache => cache.DeleteCache(ImmutableData.MIME_COLLECTION), Times.Once);
         }
 
         [Fact]
@@ -197,6 +200,7 @@ namespace tests.Controllers_Tests.Admin
             var result = await mimeController.DeleteMime(1);
 
             Assert.Equal(204, ((StatusCodeResult)result).StatusCode);
+            redisCacheMock.Verify(cache => cache.DeleteCache(ImmutableData.MIME_COLLECTION), Times.Once);
         }
 
         [Fact]
@@ -224,6 +228,7 @@ namespace tests.Controllers_Tests.Admin
             var result = await mimeController.DeleteMimes(new List<int> { 1 });
 
             Assert.Equal(204, ((StatusCodeResult)result).StatusCode);
+            redisCacheMock.Verify(cache => cache.DeleteCache(ImmutableData.MIME_COLLECTION), Times.Once);
         }
 
         [Fact]

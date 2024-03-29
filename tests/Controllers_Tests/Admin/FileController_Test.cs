@@ -105,6 +105,7 @@ namespace tests.Controllers_Tests.Admin
             var result = await fileController.DeleteFile(1);
 
             Assert.Equal(204, ((StatusCodeResult)result).StatusCode);
+            redisCacheMock.Verify(cache => cache.DeteteCacheByKeyPattern(It.IsAny<string>()), Times.Once);
         }
 
         [Fact]
@@ -122,6 +123,7 @@ namespace tests.Controllers_Tests.Admin
             Assert.IsType<ObjectResult>(result);
             var objectResult = (ObjectResult)result;
             Assert.Equal(500, objectResult.StatusCode);
+            redisCacheMock.Verify(cache => cache.DeteteCacheByKeyPattern(It.IsAny<string>()), Times.Never);
         }
 
         [Fact]
@@ -137,6 +139,7 @@ namespace tests.Controllers_Tests.Admin
             var result = await fileController.DeleteRangeFiles(new List<int> { 1 });
 
             Assert.Equal(204, ((StatusCodeResult)result).StatusCode);
+            redisCacheMock.Verify(cache => cache.DeleteRedisCache(It.IsAny<IEnumerable<FileModel>>(), It.IsAny<string>(), It.IsAny<Func<FileModel, int>>()), Times.Once);
         }
 
         [Fact]
@@ -154,6 +157,7 @@ namespace tests.Controllers_Tests.Admin
             Assert.IsType<ObjectResult>(result);
             var objectResult = (ObjectResult)result;
             Assert.Equal(500, objectResult.StatusCode);
+            redisCacheMock.Verify(cache => cache.DeleteRedisCache(It.IsAny<IEnumerable<FileModel>>(), It.IsAny<string>(), It.IsAny<Func<FileModel, int>>()), Times.Never);
         }
     }
 }

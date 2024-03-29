@@ -1,4 +1,5 @@
 ﻿using Microsoft.AspNetCore.Mvc;
+using System.Collections;
 using webapi.Controllers.Account;
 using webapi.DTO;
 using webapi.Exceptions;
@@ -24,11 +25,8 @@ namespace tests.Controllers_Tests.Account
             generateMock.Setup(x => x.GenerateSixDigitCode()).Returns(123456);
             userRepositoryMock.Setup(x => x.GetByFilter(It.IsAny<Func<IQueryable<UserModel>, IQueryable<UserModel>>>(), CancellationToken.None))
                 .ReturnsAsync((UserModel)null);
-            emailSenderMock.Setup(x => x.SendMessage(It.IsAny<EmailDto>())).Returns(Task.CompletedTask);
-            dataManagementMock.Setup(x => x.SetData(It.IsAny<string>(), It.IsAny<User>())).Returns(Task.CompletedTask);
             validatorMock.Setup(x => x.IsValid(It.IsAny<RegisterDTO>(), null)).Returns(true);
             
-
             var registationController = new AuthRegistrationController(null, dataManagementMock.Object, validatorMock.Object,
                 userRepositoryMock.Object, emailSenderMock.Object, null, generateMock.Object);
 
@@ -43,6 +41,9 @@ namespace tests.Controllers_Tests.Account
             Assert.IsType<ObjectResult>(result);
             var objectResult = (ObjectResult)result;
             Assert.Equal(200, objectResult.StatusCode);
+
+            emailSenderMock.Verify(x => x.SendMessage(It.IsAny<EmailDto>()), Times.Once);
+            dataManagementMock.Verify(x => x.SetData(It.IsAny<string>(), It.IsAny<User>()), Times.Once);
         }
 
         [Fact]
@@ -107,7 +108,7 @@ namespace tests.Controllers_Tests.Account
 
             generateMock.Setup(x => x.GenerateSixDigitCode()).Returns(123456);
             userRepositoryMock.Setup(x => x.GetByFilter(It.IsAny<Func<IQueryable<UserModel>, IQueryable<UserModel>>>(), CancellationToken.None))
-                .ThrowsAsync((Exception)Activator.CreateInstance(typeof(OperationCanceledException)));
+                .ThrowsAsync(new OperationCanceledException());
             validatorMock.Setup(x => x.IsValid(It.IsAny<RegisterDTO>(), null)).Returns(true);
 
             var registationController = new AuthRegistrationController(null, null, validatorMock.Object,
@@ -139,7 +140,7 @@ namespace tests.Controllers_Tests.Account
                 .ReturnsAsync((UserModel)null);
             validatorMock.Setup(x => x.IsValid(It.IsAny<RegisterDTO>(), null)).Returns(true);
             emailSenderMock.Setup(x => x.SendMessage(It.IsAny<EmailDto>()))
-                .ThrowsAsync((Exception)Activator.CreateInstance(typeof(SmtpClientException)));
+                .ThrowsAsync(new SmtpClientException());
 
             var registationController = new AuthRegistrationController(null, null, validatorMock.Object,
                 userRepositoryMock.Object, emailSenderMock.Object, null, generateMock.Object);
@@ -169,7 +170,6 @@ namespace tests.Controllers_Tests.Account
                 Code = string.Empty
             });
             passwordManagerMock.Setup(x => x.CheckPassword(It.IsAny<string>(), It.IsAny<string>())).Returns(true);
-            transactionMock.Setup(x => x.CreateTransaction(It.IsAny<User>(), null)).Returns(Task.CompletedTask);
 
             var registationController = new AuthRegistrationController(transactionMock.Object, dataManagementMock.Object, null,
                 null, null, passwordManagerMock.Object, null);
@@ -177,6 +177,8 @@ namespace tests.Controllers_Tests.Account
             var result = await registationController.VerifyAccount(123, string.Empty);
 
             Assert.Equal(201, ((StatusCodeResult)result).StatusCode);
+
+            transactionMock.Verify(x => x.CreateTransaction(It.IsAny<User>(), null), Times.Once);
         }
 
         [Fact]
@@ -231,7 +233,7 @@ namespace tests.Controllers_Tests.Account
             });
             passwordManagerMock.Setup(x => x.CheckPassword(It.IsAny<string>(), It.IsAny<string>())).Returns(true);
             transactionMock.Setup(x => x.CreateTransaction(It.IsAny<User>(), null))
-                .ThrowsAsync((Exception)Activator.CreateInstance(typeof(EntityNotCreatedException)));
+                .ThrowsAsync(new EntityNotCreatedException());
 
             var registationController = new AuthRegistrationController(transactionMock.Object, dataManagementMock.Object, null,
                 null, null, passwordManagerMock.Object, null);

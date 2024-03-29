@@ -43,6 +43,8 @@ namespace tests.Controllers_Tests.Account
             var result = await sessionController.Login(new AuthDTO { email = string.Empty, password = string.Empty });
 
             Assert.Equal(200, ((StatusCodeResult)result).StatusCode);
+
+            sessionServiceMock.Verify(x => x.CreateTokens(It.IsAny<UserModel>(), It.IsAny<HttpContext>()), Times.Once);
         }
 
         [Fact]
@@ -66,8 +68,6 @@ namespace tests.Controllers_Tests.Account
                 });
             passwordManagerMock.Setup(x => x.CheckPassword(It.IsAny<string>(), It.IsAny<string>())).Returns(true);
             generateMock.Setup(x => x.GenerateSixDigitCode()).Returns(123);
-            dataManagementMock.Setup(x => x.SetData(It.IsAny<string>(), It.IsAny<User>())).Returns(Task.CompletedTask);
-            emailSenderMock.Setup(x => x.SendMessage(It.IsAny<EmailDto>())).Returns(Task.CompletedTask);
 
             var sessionController = new AuthSessionController(null, dataManagementMock.Object,
                 userRepositoryMock.Object, emailSenderMock.Object, passwordManagerMock.Object, null, generateMock.Object);
@@ -77,6 +77,9 @@ namespace tests.Controllers_Tests.Account
             Assert.IsType<ObjectResult>(result);
             var objectResult = (ObjectResult)result;
             Assert.Equal(200, objectResult.StatusCode);
+
+            dataManagementMock.Verify(x => x.SetData(It.IsAny<string>(), It.IsAny<UserContextObject>()), Times.Once);
+            emailSenderMock.Verify(x => x.SendMessage(It.IsAny<EmailDto>()), Times.Once);
         }
 
         [Fact]
@@ -102,7 +105,7 @@ namespace tests.Controllers_Tests.Account
             var userRepositoryMock = new Mock<IRepository<UserModel>>();
 
             userRepositoryMock.Setup(x => x.GetByFilter(It.IsAny<Func<IQueryable<UserModel>, IQueryable<UserModel>>>(), CancellationToken.None))
-                .ThrowsAsync((Exception)Activator.CreateInstance(typeof(OperationCanceledException)));
+                .ThrowsAsync(new OperationCanceledException());
 
             var sessionController = new AuthSessionController(null, null, userRepositoryMock.Object, null, null, null, null);
 
@@ -179,7 +182,7 @@ namespace tests.Controllers_Tests.Account
             passwordManagerMock.Setup(x => x.CheckPassword(It.IsAny<string>(), It.IsAny<string>())).Returns(true);
             generateMock.Setup(x => x.GenerateSixDigitCode()).Returns(123);
             emailSenderMock.Setup(x => x.SendMessage(It.IsAny<EmailDto>()))
-                .ThrowsAsync((Exception)Activator.CreateInstance(typeof(SmtpClientException)));
+                .ThrowsAsync(new SmtpClientException());
 
             var sessionController = new AuthSessionController(null, null, userRepositoryMock.Object, emailSenderMock.Object,
                 passwordManagerMock.Object, null, generateMock.Object);
@@ -212,6 +215,8 @@ namespace tests.Controllers_Tests.Account
             var result = await sessionController.VerifyTwoFA(123, string.Empty);
 
             Assert.Equal(200, ((StatusCodeResult)result).StatusCode);
+
+            sessionServiceMock.Verify(x => x.CreateTokens(It.IsAny<UserModel>(), It.IsAny<HttpContext>()), Times.Once);
         }
 
         [Fact]
@@ -283,7 +288,7 @@ namespace tests.Controllers_Tests.Account
                 .ReturnsAsync(new UserContextObject { Code = string.Empty, UserId = 1 });
             passwordManagerMock.Setup(x => x.CheckPassword(It.IsAny<string>(), It.IsAny<string>())).Returns(true);
             userRepositoryMock.Setup(x => x.GetById(It.IsAny<int>(), CancellationToken.None))
-                .ThrowsAsync((Exception)Activator.CreateInstance(typeof(OperationCanceledException)));
+                .ThrowsAsync(new OperationCanceledException());
 
             var sessionController = new AuthSessionController(null, dataManagementMock.Object, userRepositoryMock.Object,
                 null, passwordManagerMock.Object, null, null);
@@ -301,14 +306,15 @@ namespace tests.Controllers_Tests.Account
             var sessionServiceMock = new Mock<ISessionHelpers>();
             var tokenServiceMock = new Mock<ITokenService>();
 
-            sessionServiceMock.Setup(x => x.RevokeToken(It.IsAny<HttpContext>())).Returns(Task.CompletedTask);
-
             var sessionController = new AuthSessionController(sessionServiceMock.Object, null, null,
                 null, null, tokenServiceMock.Object, null);
 
             var result = await sessionController.Logout();
 
             Assert.Equal(200, ((StatusCodeResult)result).StatusCode);
+
+            sessionServiceMock.Verify(x => x.RevokeToken(It.IsAny<HttpContext>()), Times.Once);
+            tokenServiceMock.Verify(x => x.DeleteTokens(), Times.Once);
         }
 
         [Theory]
@@ -329,6 +335,8 @@ namespace tests.Controllers_Tests.Account
             Assert.IsType<ObjectResult>(result);
             var objectResult = (ObjectResult)result;
             Assert.Equal(404, objectResult.StatusCode);
+
+            tokenServiceMock.Verify(x => x.DeleteTokens(), Times.Never);
         }
     }
 }

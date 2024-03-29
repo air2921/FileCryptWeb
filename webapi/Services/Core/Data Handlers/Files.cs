@@ -2,6 +2,7 @@
 using webapi.DB;
 using webapi.Interfaces;
 using webapi.Interfaces.Redis;
+using webapi.Localization;
 using webapi.Models;
 
 namespace webapi.Services.Core.Data_Handlers
@@ -16,7 +17,7 @@ namespace webapi.Services.Core.Data_Handlers
         {
             try
             {
-                var fileObj = dataObject as FileObject ?? throw new FormatException();
+                var fileObj = dataObject as FileObject ?? throw new FormatException(Message.ERROR);
                 var file = new FileModel();
 
                 var cache = await redisCache.GetCachedData(fileObj.CacheKey);
@@ -45,7 +46,7 @@ namespace webapi.Services.Core.Data_Handlers
             catch (JsonException ex)
             {
                 logger.LogCritical(ex.ToString(), nameof(Files));
-                throw new FormatException();
+                throw new FormatException(Message.ERROR);
             }
         }
 
@@ -53,7 +54,7 @@ namespace webapi.Services.Core.Data_Handlers
         {
             try
             {
-                var fileObj = dataObject as FileRangeObject ?? throw new FormatException();
+                var fileObj = dataObject as FileRangeObject ?? throw new FormatException(Message.ERROR);
                 var files = new List<FileModel>();
 
                 var cache = await redisCache.GetCachedData(fileObj.CacheKey);
@@ -70,7 +71,7 @@ namespace webapi.Services.Core.Data_Handlers
                 if (files is not null)
                     return files;
                 else
-                    throw new FormatException();
+                    throw new FormatException(Message.ERROR);
             }
             catch (OperationCanceledException)
             {
@@ -79,7 +80,7 @@ namespace webapi.Services.Core.Data_Handlers
             catch (JsonException ex)
             {
                 logger.LogCritical(ex.ToString(), nameof(Files));
-                throw new FormatException();
+                throw new FormatException(Message.ERROR);
             }
         }
     }

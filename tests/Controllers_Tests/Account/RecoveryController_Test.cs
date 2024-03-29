@@ -19,7 +19,6 @@ namespace tests.Controllers_Tests.Account
         {
             var userRepositoryMock = new Mock<IRepository<UserModel>>();
             var generateMock = new Mock<IGenerate>();
-            var transactionMock = new Mock<ITransaction<UserModel>>();
             var emailSenderMock = new Mock<IEmailSender>();
             var redisCacheMock = new Mock<IRedisCache>();
             var fileManagerMock = new Mock<IFileManager>();
@@ -33,8 +32,6 @@ namespace tests.Controllers_Tests.Account
                 });
             generateMock.Setup(x => x.GenerateKey()).Returns(string.Empty);
             fileManagerMock.Setup(x => x.GetReactAppUrl()).Returns(string.Empty);
-            emailSenderMock.Setup(x => x.SendMessage(It.IsAny<EmailDto>())).Returns(Task.CompletedTask);
-            transactionMock.Setup(x => x.CreateTransaction(It.IsAny<UserModel>(), It.IsAny<string>())).Returns(Task.CompletedTask);
 
             var recoveryController = new RecoveryController(recoveryServiceMock.Object, null, userRepositoryMock.Object,
                 null, emailSenderMock.Object, redisCacheMock.Object, fileManagerMock.Object, generateMock.Object);
@@ -44,6 +41,10 @@ namespace tests.Controllers_Tests.Account
             Assert.IsType<ObjectResult>(result);
             var objectResult = (ObjectResult)result;
             Assert.Equal(201, objectResult.StatusCode);
+
+            recoveryServiceMock.Verify(x => x.CreateTokenTransaction(It.IsAny<UserModel>(), It.IsAny<string>()), Times.Once);
+            emailSenderMock.Verify(x => x.SendMessage(It.IsAny<EmailDto>()), Times.Once);
+            redisCacheMock.Verify(x => x.DeteteCacheByKeyPattern(It.IsAny<string>()), Times.Once);
         }
 
         [Fact]
@@ -69,7 +70,7 @@ namespace tests.Controllers_Tests.Account
             var userRepositoryMock = new Mock<IRepository<UserModel>>();
 
             userRepositoryMock.Setup(x => x.GetByFilter(It.IsAny<Func<IQueryable<UserModel>, IQueryable<UserModel>>>(), CancellationToken.None))
-                .ThrowsAsync((Exception)Activator.CreateInstance(typeof(OperationCanceledException)));
+                .ThrowsAsync(new OperationCanceledException());
 
             var recoveryController = new RecoveryController(null, null, userRepositoryMock.Object, null, null, null, null, null);
 
@@ -95,7 +96,7 @@ namespace tests.Controllers_Tests.Account
                 });
             generateMock.Setup(x => x.GenerateKey()).Returns(string.Empty);
             recoveryServiceMock.Setup(x => x.CreateTokenTransaction(It.IsAny<UserModel>(), It.IsAny<string>()))
-                .ThrowsAsync((Exception)Activator.CreateInstance(typeof(EntityNotCreatedException)));
+                .ThrowsAsync(new EntityNotCreatedException());
 
             var recoveryController = new RecoveryController(recoveryServiceMock.Object, null,
                 userRepositoryMock.Object, null, null, null, null, generateMock.Object);
@@ -125,7 +126,7 @@ namespace tests.Controllers_Tests.Account
             generateMock.Setup(x => x.GenerateKey()).Returns(string.Empty);
             fileManagerMock.Setup(x => x.GetReactAppUrl()).Returns(string.Empty);
             emailSenderMock.Setup(x => x.SendMessage(It.IsAny<EmailDto>()))
-                .ThrowsAsync((Exception)Activator.CreateInstance(typeof(SmtpClientException)));
+                .ThrowsAsync(new SmtpClientException());
 
             var recoveryController = new RecoveryController(recoveryServiceMock.Object, null,
                 userRepositoryMock.Object, null, emailSenderMock.Object, null, fileManagerMock.Object, generateMock.Object);
@@ -155,8 +156,6 @@ namespace tests.Controllers_Tests.Account
                     expiry_date = DateTime.UtcNow.AddDays(1)
                 });
             userRepositoryMock.Setup(x => x.GetById(It.IsAny<int>(), CancellationToken.None)).ReturnsAsync(new UserModel());
-            recoveryServiceMock.Setup(x => x.RecoveryTransaction(It.IsAny<UserModel>(), It.IsAny<string>(), It.IsAny<string>()))
-                .Returns(Task.CompletedTask);
 
             var recoveryController = new RecoveryController(recoveryServiceMock.Object, validatorMock.Object, userRepositoryMock.Object,
                 linkRepositoryMock.Object, null, redisCacheMock.Object, null, null);
@@ -164,6 +163,9 @@ namespace tests.Controllers_Tests.Account
             var result = await recoveryController.RecoveryAccountByToken(new RecoveryDTO { password = string.Empty, token = string.Empty });
 
             Assert.Equal(200, ((StatusCodeResult)result).StatusCode);
+
+            recoveryServiceMock.Verify(x => x.RecoveryTransaction(It.IsAny<UserModel>(), It.IsAny<string>(), It.IsAny<string>()), Times.Once);
+            redisCacheMock.Verify(x => x.DeteteCacheByKeyPattern(It.IsAny<string>()), Times.Exactly(2));
         }
 
         [Fact]
@@ -262,7 +264,7 @@ namespace tests.Controllers_Tests.Account
 
             validatorMock.Setup(x => x.IsValid(It.IsAny<string>(), null)).Returns(true);
             linkRepositoryMock.Setup(x => x.GetByFilter(It.IsAny<Func<IQueryable<LinkModel>, IQueryable<LinkModel>>>(), CancellationToken.None))
-                .ThrowsAsync((Exception)Activator.CreateInstance(typeof(OperationCanceledException)));
+                .ThrowsAsync(new OperationCanceledException());
 
             var recoveryController = new RecoveryController(null, validatorMock.Object, null, linkRepositoryMock.Object,
                 null, null, null, null);
@@ -289,7 +291,7 @@ namespace tests.Controllers_Tests.Account
                     expiry_date = DateTime.UtcNow.AddDays(-1)
                 });
             linkRepositoryMock.Setup(x => x.Delete(It.IsAny<int>(), CancellationToken.None))
-                .ThrowsAsync((Exception)Activator.CreateInstance(typeof(EntityNotDeletedException)));
+                .ThrowsAsync(new EntityNotDeletedException());
 
             var recoveryController = new RecoveryController(null, validatorMock.Object, null, linkRepositoryMock.Object,
                 null, null, null, null);

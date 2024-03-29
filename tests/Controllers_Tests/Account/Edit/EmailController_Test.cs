@@ -29,8 +29,6 @@ namespace tests.Controllers_Tests.Account.Edit
             userInfoMock.Setup(x => x.UserId).Returns(1);
             passwordManagerMock.Setup(x => x.CheckPassword(It.IsAny<string>(), It.IsAny<string>())).Returns(true);
             generateMock.Setup(x => x.GenerateSixDigitCode()).Returns(123456);
-            emailSenderMock.Setup(x => x.SendMessage(It.IsAny<EmailDto>())).Returns(Task.CompletedTask);
-            dataManagementMock.Setup(x => x.SetData(It.IsAny<string>(), It.IsAny<int>()));
 
             var emailController = new EmailController(null, dataManagementMock.Object, null, userRepositoryMock.Object,
                 emailSenderMock.Object, passwordManagerMock.Object, generateMock.Object, null, userInfoMock.Object);
@@ -40,6 +38,8 @@ namespace tests.Controllers_Tests.Account.Edit
             Assert.IsType<ObjectResult>(result);
             var objectResult = (ObjectResult)result;
             Assert.Equal(200, objectResult.StatusCode);
+            emailSenderMock.Verify(es => es.SendMessage(It.IsAny<EmailDto>()), Times.Once);
+            dataManagementMock.Verify(es => es.SetData(It.IsAny<string>(), It.IsAny<int>()), Times.Once);
         }
 
         [Fact]
@@ -68,7 +68,7 @@ namespace tests.Controllers_Tests.Account.Edit
             var userInfoMock = new Mock<IUserInfo>();
 
             userRepositoryMock.Setup(x => x.GetById(It.IsAny<int>(), CancellationToken.None))
-                .ThrowsAsync((Exception)Activator.CreateInstance(typeof(OperationCanceledException)));
+                .ThrowsAsync(new OperationCanceledException());
             userInfoMock.Setup(x => x.UserId).Returns(1);
 
             var emailController = new EmailController(null, null, null, userRepositoryMock.Object,
@@ -124,7 +124,7 @@ namespace tests.Controllers_Tests.Account.Edit
             passwordManagerMock.Setup(x => x.CheckPassword(It.IsAny<string>(), It.IsAny<string>())).Returns(true);
             generateMock.Setup(x => x.GenerateSixDigitCode()).Returns(123456);
             emailSenderMock.Setup(x => x.SendMessage(It.IsAny<EmailDto>()))
-                .ThrowsAsync((Exception)Activator.CreateInstance(typeof(SmtpClientException)));
+                .ThrowsAsync(new SmtpClientException());
 
             var emailController = new EmailController(null, null, null, userRepositoryMock.Object,
                 emailSenderMock.Object, passwordManagerMock.Object, generateMock.Object, null, userInfoMock.Object);
@@ -146,10 +146,7 @@ namespace tests.Controllers_Tests.Account.Edit
             var dataManagementMock = new Mock<IDataManagement>();
             var validatorMock = new Mock<IValidator>();
 
-            emailSenderMock.Setup(x => x.SendMessage(It.IsAny<EmailDto>())).Returns(Task.CompletedTask);
             dataManagementMock.Setup(x => x.GetData(It.IsAny<string>())).ReturnsAsync(1);
-            dataManagementMock.Setup(x => x.SetData(It.IsAny<string>(), It.IsAny<int>())).Returns(Task.CompletedTask);
-            dataManagementMock.Setup(x => x.SetData(It.IsAny<string>(), It.IsAny<string>())).Returns(Task.CompletedTask);
             validatorMock.Setup(x => x.IsValid(It.IsAny<int>(), It.IsAny<int>())).Returns(true);
             generateMock.Setup(x => x.GenerateSixDigitCode()).Returns(It.IsAny<int>());
             userInfoMock.Setup(x => x.Username).Returns("username");
@@ -164,6 +161,8 @@ namespace tests.Controllers_Tests.Account.Edit
             Assert.IsType<ObjectResult>(result);
             var objectResult = (ObjectResult)result;
             Assert.Equal(200, objectResult.StatusCode);
+            dataManagementMock.Verify(dm => dm.SetData(It.IsAny<string>(), It.IsAny<object>()), Times.AtLeast(2));
+            emailSenderMock.Verify(es => es.SendMessage(It.IsAny<EmailDto>()), Times.Once);
         }
 
         [Fact]
@@ -222,7 +221,7 @@ namespace tests.Controllers_Tests.Account.Edit
             dataManagementMock.Setup(x => x.GetData(It.IsAny<string>())).ReturnsAsync(1);
             validatorMock.Setup(x => x.IsValid(It.IsAny<int>(), It.IsAny<int>())).Returns(true);
             userRepositoryMock.Setup(x => x.GetByFilter(It.IsAny<Func<IQueryable<UserModel>, IQueryable<UserModel>>>(), CancellationToken.None))
-                .ThrowsAsync((Exception)Activator.CreateInstance(typeof(OperationCanceledException)));
+                .ThrowsAsync(new OperationCanceledException());
             userInfoMock.Setup(x => x.UserId).Returns(1);
 
             var emailController = new EmailController(null, dataManagementMock.Object, validatorMock.Object,
@@ -247,7 +246,7 @@ namespace tests.Controllers_Tests.Account.Edit
 
             dataManagementMock.Setup(x => x.GetData(It.IsAny<string>())).ReturnsAsync(1);
             emailSenderMock.Setup(x => x.SendMessage(It.IsAny<EmailDto>()))
-                .ThrowsAsync((Exception)Activator.CreateInstance(typeof(SmtpClientException)));
+                .ThrowsAsync(new SmtpClientException());
             validatorMock.Setup(x => x.IsValid(It.IsAny<int>(), It.IsAny<int>())).Returns(true);
             generateMock.Setup(x => x.GenerateSixDigitCode()).Returns(It.IsAny<int>());
             userInfoMock.Setup(x => x.Username).Returns("username");
@@ -277,8 +276,6 @@ namespace tests.Controllers_Tests.Account.Edit
             dataManagementMock.Setup(x => x.GetData("EmailController_Email#1")).ReturnsAsync(string.Empty);
             dataManagementMock.Setup(x => x.GetData("EmailController_ConfirmationCode_NewEmail#1")).ReturnsAsync(1);
             validatorMock.Setup(x => x.IsValid(It.IsAny<int>(), It.IsAny<int>())).Returns(true);
-            transactionMock.Setup(x => x.CreateTransaction(It.IsAny<UserModel>(), It.IsAny<object>())).Returns(Task.CompletedTask);
-            tokenServiceMock.Setup(x => x.UpdateJwtToken()).Returns(Task.CompletedTask);
             userInfoMock.Setup(x => x.UserId).Returns(1);
             userRepositoryMock.Setup(x => x.GetById(It.IsAny<int>(), CancellationToken.None)).ReturnsAsync(new UserModel());
 
@@ -288,6 +285,9 @@ namespace tests.Controllers_Tests.Account.Edit
             var result = await emailController.ConfirmAndUpdateNewEmail(123456);
 
             Assert.Equal(201, ((StatusCodeResult)result).StatusCode);
+            transactionMock.Verify(tr => tr.CreateTransaction(It.IsAny<UserModel>(), It.IsAny<string>()), Times.Once);
+            tokenServiceMock.Verify(ts => ts.UpdateJwtToken(), Times.Once);
+            dataManagementMock.Verify(dm => dm.DeleteData(It.IsAny<int>(), null), Times.Once);
         }
 
         [Fact]
@@ -371,7 +371,7 @@ namespace tests.Controllers_Tests.Account.Edit
             validatorMock.Setup(x => x.IsValid(It.IsAny<int>(), It.IsAny<int>())).Returns(true);
             userInfoMock.Setup(x => x.UserId).Returns(1);
             userRepositoryMock.Setup(x => x.GetById(It.IsAny<int>(), CancellationToken.None))
-                .ThrowsAsync((Exception)Activator.CreateInstance(typeof(OperationCanceledException)));
+                .ThrowsAsync(new OperationCanceledException());
 
             var emailController = new EmailController(null, dataManagementMock.Object, validatorMock.Object, userRepositoryMock.Object,
                 null, null, null, null, userInfoMock.Object);
@@ -401,7 +401,7 @@ namespace tests.Controllers_Tests.Account.Edit
                 .ThrowsAsync((Exception)Activator.CreateInstance(ex));
             userInfoMock.Setup(x => x.UserId).Returns(1);
             userRepositoryMock.Setup(x => x.GetById(It.IsAny<int>(), CancellationToken.None))
-                .ThrowsAsync((Exception)Activator.CreateInstance(typeof(OperationCanceledException)));
+                .ThrowsAsync(new OperationCanceledException());
 
             var emailController = new EmailController(transactionMock.Object, dataManagementMock.Object,
                 validatorMock.Object, userRepositoryMock.Object, null, null, null, null, userInfoMock.Object);
@@ -426,9 +426,8 @@ namespace tests.Controllers_Tests.Account.Edit
             dataManagementMock.Setup(x => x.GetData("EmailController_Email#1")).ReturnsAsync(string.Empty);
             dataManagementMock.Setup(x => x.GetData("EmailController_ConfirmationCode_NewEmail#1")).ReturnsAsync(1);
             validatorMock.Setup(x => x.IsValid(It.IsAny<int>(), It.IsAny<int>())).Returns(true);
-            transactionMock.Setup(x => x.CreateTransaction(It.IsAny<UserModel>(), It.IsAny<object>())).Returns(Task.CompletedTask);
             tokenServiceMock.Setup(x => x.UpdateJwtToken())
-                .ThrowsAsync((Exception)Activator.CreateInstance(typeof(UnauthorizedAccessException)));
+                .ThrowsAsync(new UnauthorizedAccessException());
             userInfoMock.Setup(x => x.UserId).Returns(1);
             userRepositoryMock.Setup(x => x.GetById(It.IsAny<int>(), CancellationToken.None)).ReturnsAsync(new UserModel());
 
@@ -440,6 +439,9 @@ namespace tests.Controllers_Tests.Account.Edit
             Assert.IsType<ObjectResult>(result);
             var objectResult = (ObjectResult)result;
             Assert.Equal(206, objectResult.StatusCode);
+            transactionMock.Verify(tr => tr.CreateTransaction(It.IsAny<UserModel>(), It.IsAny<string>()), Times.Once);
+            dataManagementMock.Verify(dm => dm.DeleteData(It.IsAny<int>(), null), Times.Once);
+            tokenServiceMock.Verify(ts => ts.DeleteTokens(), Times.Once);
         }
     }
 }

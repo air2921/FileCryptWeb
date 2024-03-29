@@ -2,6 +2,7 @@
 using webapi.DB;
 using webapi.Interfaces;
 using webapi.Interfaces.Redis;
+using webapi.Localization;
 using webapi.Models;
 
 namespace webapi.Services.Core.Data_Handlers
@@ -16,7 +17,7 @@ namespace webapi.Services.Core.Data_Handlers
         {
             try
             {
-                var offerObj = dataObject as OfferObject ?? throw new FormatException();
+                var offerObj = dataObject as OfferObject ?? throw new FormatException(Message.ERROR);
                 var offer = new OfferModel();
                 var cache = await redisCache.GetCachedData(offerObj.CacheKey);
                 if (cache is null)
@@ -39,7 +40,7 @@ namespace webapi.Services.Core.Data_Handlers
                 if (offer is not null)
                     return offer;
                 else
-                    throw new FormatException();
+                    return null;
             }
             catch (OperationCanceledException)
             {
@@ -48,7 +49,7 @@ namespace webapi.Services.Core.Data_Handlers
             catch (JsonException ex)
             {
                 logger.LogCritical(ex.ToString(), nameof(Files));
-                throw new FormatException();
+                throw new FormatException(Message.ERROR);
             }
         }
 
@@ -56,7 +57,7 @@ namespace webapi.Services.Core.Data_Handlers
         {
             try
             {
-                var offerObj = dataObject as OfferRangeObject ?? throw new FormatException();
+                var offerObj = dataObject as OfferRangeObject ?? throw new FormatException(Message.ERROR);
                 var offers = new List<OfferModel>();
                 var cache = await redisCache.GetCachedData(offerObj.CacheKey);
                 if (cache is null)
@@ -78,7 +79,7 @@ namespace webapi.Services.Core.Data_Handlers
                 if (offers is not null)
                     return offers;
                 else
-                    throw new FormatException();
+                    throw new FormatException(Message.ERROR);
             }
             catch (OperationCanceledException)
             {
@@ -86,8 +87,8 @@ namespace webapi.Services.Core.Data_Handlers
             }
             catch (JsonException ex)
             {
-                logger.LogCritical(ex.ToString(), nameof(Files));
-                throw new FormatException();
+                logger.LogCritical(ex.ToString(), nameof(Offers));
+                throw new FormatException(Message.ERROR);
             }
         }
     }

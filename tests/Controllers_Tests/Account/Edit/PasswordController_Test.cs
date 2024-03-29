@@ -28,8 +28,6 @@ namespace tests.Controllers_Tests.Account.Edit
             });
             userInfoMock.Setup(x => x.UserId).Returns(1);
             passwordManagerMock.Setup(x => x.CheckPassword(It.IsAny<string>(), It.IsAny<string>())).Returns(true);
-            transactionMock.Setup(x => x.CreateTransaction(It.IsAny<UserModel>(), It.IsAny<string>())).Returns(Task.CompletedTask);
-            dataManagementMock.Setup(x => x.DeleteData(It.IsAny<int>(), null)).Returns(Task.CompletedTask);
             validatorMock.Setup(x => x.IsValid(It.IsAny<string>(), null)).Returns(true);
 
             var passwordController = new PasswordController(transactionMock.Object, dataManagementMock.Object, validatorMock.Object,
@@ -40,6 +38,8 @@ namespace tests.Controllers_Tests.Account.Edit
             Assert.IsType<ObjectResult>(result);
             var objectResult = (ObjectResult)result;
             Assert.Equal(200, objectResult.StatusCode);
+            transactionMock.Verify(tr => tr.CreateTransaction(It.IsAny<UserModel>(), It.IsAny<string>()), Times.Once);
+            dataManagementMock.Verify(dm => dm.DeleteData(It.IsAny<int>(), null), Times.Once);
         }
 
         [Fact]
@@ -85,7 +85,7 @@ namespace tests.Controllers_Tests.Account.Edit
             var validatorMock = new Mock<IValidator>();
 
             userRepositoryMock.Setup(x => x.GetById(It.IsAny<int>(), CancellationToken.None))
-                .ThrowsAsync((Exception)Activator.CreateInstance(typeof(OperationCanceledException)));
+                .ThrowsAsync(new OperationCanceledException());
             userInfoMock.Setup(x => x.UserId).Returns(1);
             validatorMock.Setup(x => x.IsValid(It.IsAny<string>(), null)).Returns(true);
 
@@ -148,7 +148,6 @@ namespace tests.Controllers_Tests.Account.Edit
             passwordManagerMock.Setup(x => x.CheckPassword(It.IsAny<string>(), It.IsAny<string>())).Returns(true);
             transactionMock.Setup(x => x.CreateTransaction(It.IsAny<UserModel>(), It.IsAny<string>()))
                 .ThrowsAsync((Exception)Activator.CreateInstance(ex));
-            dataManagementMock.Setup(x => x.DeleteData(It.IsAny<int>(), null)).Returns(Task.CompletedTask);
             validatorMock.Setup(x => x.IsValid(It.IsAny<string>(), null)).Returns(true);
 
             var passwordController = new PasswordController(transactionMock.Object, dataManagementMock.Object, validatorMock.Object,

@@ -104,6 +104,7 @@ namespace tests.Controllers_Tests.Admin
             var result = await offerController.DeleteOffer(1);
 
             Assert.Equal(204, ((StatusCodeResult)result).StatusCode);
+            redisCacheMock.Verify(cache => cache.DeteteCacheByKeyPattern(It.IsAny<string>()), Times.AtLeast(2));
         }
 
         [Fact]
@@ -135,6 +136,8 @@ namespace tests.Controllers_Tests.Admin
             var result = await offerController.DeleteRangeOffers(new List<int> { 1 });
 
             Assert.Equal(204, ((StatusCodeResult)result).StatusCode);
+            redisCacheMock.Verify(cache => cache.DeleteRedisCache(It.IsAny<IEnumerable<OfferModel>>(),
+                It.IsAny<string>(), It.IsAny<Func<OfferModel, int>>()), Times.AtLeast(2));
         }
 
         [Fact]

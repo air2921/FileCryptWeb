@@ -103,6 +103,7 @@ namespace tests.Controllers_Tests.Admin
             var result = await notificationController.DeleteNotification(1);
 
             Assert.Equal(204, ((StatusCodeResult)result).StatusCode);
+            redisCacheMock.Verify(cache => cache.DeteteCacheByKeyPattern(It.IsAny<string>()), Times.Once);
         }
 
         [Fact]
@@ -147,6 +148,8 @@ namespace tests.Controllers_Tests.Admin
             var result = await notificationController.DeleteRangeNotifications(new List<int> { 1 });
 
             Assert.Equal(204, ((StatusCodeResult)result).StatusCode);
+            redisCacheMock.Verify(cache => cache.DeleteRedisCache(It.IsAny<IEnumerable<NotificationModel>>(),
+                It.IsAny<string>(), It.IsAny<Func<NotificationModel, int>>()), Times.Once);
         }
 
         [Fact]

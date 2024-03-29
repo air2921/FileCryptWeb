@@ -14,7 +14,7 @@ namespace tests.Controllers_Tests.Account.Edit
         [Fact]
         public async Task SendCode_Success()
         {
-            var dataManagement = new Mock<IDataManagement>();
+            var dataManagementMock = new Mock<IDataManagement>();
             var userRepositoryMock = new Mock<IRepository<UserModel>>();
             var passwordManagerMock = new Mock<IPasswordManager>();
             var emailSenderMock = new Mock<IEmailSender>();
@@ -31,16 +31,16 @@ namespace tests.Controllers_Tests.Account.Edit
 
             passwordManagerMock.Setup(x => x.CheckPassword(It.IsAny<string>(), It.IsAny<string>())).Returns(true);
             generateMock.Setup(x => x.GenerateSixDigitCode()).Returns(111111);
-            dataManagement.Setup(x => x.SetData(It.IsAny<string>(), It.IsAny<int>())).Returns(Task.CompletedTask);
-            emailSenderMock.Setup(x => x.SendMessage(It.IsAny<EmailDto>())).Returns(Task.CompletedTask);
             userInfoMock.Setup(x => x.UserId).Returns(1);
 
-            var _2faController = new _2FaController(null, dataManagement.Object, null, emailSenderMock.Object,
+            var _2faController = new _2FaController(null, dataManagementMock.Object, null, emailSenderMock.Object,
                 userRepositoryMock.Object, passwordManagerMock.Object, userInfoMock.Object, generateMock.Object);
 
             var result = await _2faController.SendVerificationCode(string.Empty);
 
             Assert.Equal(200, ((StatusCodeResult)result).StatusCode);
+            dataManagementMock.Verify(dm => dm.SetData(It.IsAny<string>(), It.IsAny<int>()), Times.Once);
+            emailSenderMock.Verify(es => es.SendMessage(It.IsAny<EmailDto>()), Times.Once);
         }
 
         [Fact]
@@ -69,7 +69,7 @@ namespace tests.Controllers_Tests.Account.Edit
             var userInfoMock = new Mock<IUserInfo>();
 
             userRepositoryMock.Setup(x => x.GetById(It.IsAny<int>(), CancellationToken.None))
-                .ThrowsAsync((Exception)Activator.CreateInstance(typeof(OperationCanceledException)));
+                .ThrowsAsync(new OperationCanceledException());
             userInfoMock.Setup(x => x.UserId).Returns(1);
 
             var _2faController = new _2FaController(null, null, null, null,
@@ -128,7 +128,7 @@ namespace tests.Controllers_Tests.Account.Edit
             passwordManagerMock.Setup(x => x.CheckPassword(It.IsAny<string>(), It.IsAny<string>())).Returns(true);
             generateMock.Setup(x => x.GenerateSixDigitCode()).Returns(111111);
             emailSernderMock.Setup(x => x.SendMessage(It.IsAny<EmailDto>()))
-                .ThrowsAsync((Exception)Activator.CreateInstance(typeof(SmtpClientException)));
+                .ThrowsAsync(new SmtpClientException());
 
             dataManagement.Setup(x => x.SetData(It.IsAny<string>(), It.IsAny<int>()));
             userInfoMock.Setup(x => x.UserId).Returns(1);
@@ -158,8 +158,6 @@ namespace tests.Controllers_Tests.Account.Edit
                 id = 1,
             });
             dataManagementMock.Setup(x => x.GetData(It.IsAny<string>())).ReturnsAsync(1);
-            dataManagementMock.Setup(x => x.DeleteData(1, null)).Returns(Task.CompletedTask);
-            transactionMock.Setup(x => x.CreateTransaction(It.IsAny<UserModel>(), true)).Returns(Task.CompletedTask);
             validatorMock.Setup(x => x.IsValid(It.IsAny<int>(), It.IsAny<int>())).Returns(true);
 
             var _2faController = new _2FaController(transactionMock.Object, dataManagementMock.Object, validatorMock.Object,
@@ -168,6 +166,8 @@ namespace tests.Controllers_Tests.Account.Edit
             var result = await _2faController.Update2FaState(123, true);
 
             Assert.Equal(200, ((StatusCodeResult)result).StatusCode);
+            dataManagementMock.Verify(dm => dm.DeleteData(It.IsAny<int>(), null), Times.Once);
+            transactionMock.Verify(tr => tr.CreateTransaction(It.IsAny<UserModel>(), It.IsAny<bool>()), Times.Once);
         }
 
         [Fact]
@@ -223,7 +223,7 @@ namespace tests.Controllers_Tests.Account.Edit
             var validatorMock = new Mock<IValidator>();
 
             userRepositoryMock.Setup(x => x.GetById(It.IsAny<int>(), CancellationToken.None))
-                .ThrowsAsync((Exception)Activator.CreateInstance(typeof(OperationCanceledException)));
+                .ThrowsAsync(new OperationCanceledException());
 
             userInfoMock.Setup(x => x.UserId).Returns(1);
             dataManagementMock.Setup(x => x.GetData(It.IsAny<string>())).ReturnsAsync(1);
