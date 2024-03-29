@@ -19,7 +19,7 @@ namespace webapi.Services.Core
 
     public class KeyService(
         IRepository<KeyModel> keyRepository,
-        ICypherKey cypher,
+        [FromKeyedServices("Encrypt")] ICypherKey cypher,
         IRedisCache redisCache,
         IValidation validation,
         IConfiguration configuration) : IValidator, IDataManagement, IKeyHelper
