@@ -48,7 +48,7 @@ namespace tests.Controllers_Tests.Admin
             var mapperMock = new Mock<IMapper>();
 
             notificationRepositoryMock.Setup(x => x.Add(It.IsAny<NotificationModel>(), null, CancellationToken.None))
-                .ThrowsAsync((Exception)Activator.CreateInstance(typeof(EntityNotCreatedException)));
+                .ThrowsAsync(new EntityNotCreatedException());
             mapperMock.Setup(m => m.Map<NotifyDTO, NotificationModel>(It.IsAny<NotifyDTO>())).Returns(new NotificationModel
             {
                 message = string.Empty,
@@ -79,7 +79,7 @@ namespace tests.Controllers_Tests.Admin
             var mapperMock = new Mock<IMapper>();
 
             emailSenderMock.Setup(x => x.SendMessage(It.IsAny<EmailDto>()))
-                .ThrowsAsync((Exception)Activator.CreateInstance(typeof(SmtpClientException)));
+                .ThrowsAsync(new SmtpClientException());
             mapperMock.Setup(m => m.Map<NotifyDTO, NotificationModel>(It.IsAny<NotifyDTO>())).Returns(new NotificationModel
             {
                 message = string.Empty,

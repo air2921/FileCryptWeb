@@ -51,7 +51,7 @@ namespace tests.Controllers_Tests.Admin
         {
             var userRepositoryMock = new Mock<IRepository<UserModel>>();
             userRepositoryMock.Setup(x => x.GetById(It.IsAny<int>(), CancellationToken.None))
-                .ThrowsAsync((Exception)Activator.CreateInstance(typeof(OperationCanceledException)));
+                .ThrowsAsync(new OperationCanceledException());
 
             var tokenController = new Admin_TokenController(null, null, null, userRepositoryMock.Object, null);
             var result = await tokenController.RevokeAllUserTokens(1);
@@ -170,7 +170,7 @@ namespace tests.Controllers_Tests.Admin
         {
             var tokenRepositoryMock = new Mock<IRepository<TokenModel>>();
             tokenRepositoryMock.Setup(x => x.GetById(It.IsAny<int>(), CancellationToken.None))
-                .ThrowsAsync((Exception)Activator.CreateInstance(typeof(OperationCanceledException)));
+                .ThrowsAsync(new OperationCanceledException());
 
             var tokenController = new Admin_TokenController(null, null, tokenRepositoryMock.Object, null, null);
             var result = await tokenController.RevokeToken(1);
@@ -211,7 +211,7 @@ namespace tests.Controllers_Tests.Admin
 
             tokenRepositoryMock.Setup(x => x.GetById(It.IsAny<int>(), CancellationToken.None)).ReturnsAsync(new TokenModel { user_id = 1 });
             tokenRepositoryMock.Setup(x => x.Delete(It.IsAny<int>(), CancellationToken.None))
-                .ThrowsAsync((Exception)Activator.CreateInstance(typeof(EntityNotDeletedException)));
+                .ThrowsAsync(new EntityNotDeletedException());
             userRepositoryMock.Setup(x => x.GetById(It.IsAny<int>(), CancellationToken.None)).ReturnsAsync(new UserModel { role = string.Empty });
             validatorMock.Setup(x => x.IsValid(It.IsAny<string>(), It.IsAny<string>())).Returns(true);
 

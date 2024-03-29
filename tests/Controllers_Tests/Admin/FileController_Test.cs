@@ -48,7 +48,7 @@ namespace tests.Controllers_Tests.Admin
             var fileRepositoryMock = new Mock<IRepository<FileModel>>();
 
             fileRepositoryMock.Setup(x => x.GetById(It.IsAny<int>(), CancellationToken.None))
-                .ThrowsAsync((Exception)Activator.CreateInstance(typeof(OperationCanceledException)));
+                .ThrowsAsync(new OperationCanceledException());
 
             var fileController = new Admin_FileController(fileRepositoryMock.Object, null, null);
             var result = await fileController.GetFile(1);
@@ -82,7 +82,7 @@ namespace tests.Controllers_Tests.Admin
             var sortMock = new Mock<ISorting>();
 
             fileRepositoryMock.Setup(x => x.GetAll(It.IsAny<Func<IQueryable<FileModel>, IQueryable<FileModel>>>(), CancellationToken.None))
-                .ThrowsAsync((Exception)Activator.CreateInstance(typeof(OperationCanceledException)));
+                .ThrowsAsync(new OperationCanceledException());
 
             var fileController = new Admin_FileController(fileRepositoryMock.Object, sortMock.Object, null);
             var result = await fileController.GetFiles(null, null, null, true, null);
@@ -115,7 +115,7 @@ namespace tests.Controllers_Tests.Admin
             var redisCacheMock = new Mock<IRedisCache>();
 
             fileRepositoryMock.Setup(x => x.Delete(It.IsAny<int>(), CancellationToken.None))
-                .ThrowsAsync((Exception)Activator.CreateInstance(typeof(EntityNotDeletedException)));
+                .ThrowsAsync(new EntityNotDeletedException());
 
             var fileController = new Admin_FileController(fileRepositoryMock.Object, null, redisCacheMock.Object);
             var result = await fileController.DeleteFile(1);
@@ -149,7 +149,7 @@ namespace tests.Controllers_Tests.Admin
             var redisCacheMock = new Mock<IRedisCache>();
 
             fileRepositoryMock.Setup(x => x.DeleteMany(It.IsAny<IEnumerable<int>>(), CancellationToken.None))
-                .ThrowsAsync((Exception)Activator.CreateInstance(typeof(EntityNotDeletedException)));
+                .ThrowsAsync(new EntityNotDeletedException());
 
             var fileController = new Admin_FileController(fileRepositoryMock.Object, null, redisCacheMock.Object);
             var result = await fileController.DeleteRangeFiles(new List<int> { 1 });

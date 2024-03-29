@@ -1,5 +1,4 @@
 ﻿using Microsoft.AspNetCore.Mvc;
-using System.ComponentModel.DataAnnotations;
 using webapi.Controllers.Admin;
 using webapi.DB;
 using webapi.Exceptions;
@@ -47,7 +46,7 @@ namespace tests.Controllers_Tests.Admin
         {
             var offerRepositoryMock = new Mock<IRepository<OfferModel>>();
             offerRepositoryMock.Setup(x => x.GetById(It.IsAny<int>(), CancellationToken.None))
-                .ThrowsAsync((Exception)Activator.CreateInstance(typeof(OperationCanceledException)));
+                .ThrowsAsync(new OperationCanceledException());
 
             var offerController = new Admin_OfferController(offerRepositoryMock.Object, null, null);
             var result = await offerController.GetOffer(1);
@@ -81,7 +80,7 @@ namespace tests.Controllers_Tests.Admin
             var sortMock = new Mock<ISorting>();
 
             offerRepositoryMock.Setup(x => x.GetAll(It.IsAny<Func<IQueryable<OfferModel>, IQueryable<OfferModel>>>(), CancellationToken.None))
-                .ThrowsAsync((Exception)Activator.CreateInstance(typeof(OperationCanceledException)));
+                .ThrowsAsync(new OperationCanceledException());
 
             var offerController = new Admin_OfferController(offerRepositoryMock.Object, null, sortMock.Object);
             var result = await offerController.GetRangeOffers(1, 0, 5, true, null, null, null);
@@ -113,7 +112,7 @@ namespace tests.Controllers_Tests.Admin
             var offerRepositoryMock = new Mock<IRepository<OfferModel>>();
 
             offerRepositoryMock.Setup(x => x.Delete(It.IsAny<int>(), CancellationToken.None))
-                .ThrowsAsync((Exception)Activator.CreateInstance(typeof(EntityNotDeletedException)));
+                .ThrowsAsync(new EntityNotDeletedException());
 
             var offerController = new Admin_OfferController(offerRepositoryMock.Object, null, null);
             var result = await offerController.DeleteOffer(1);
@@ -146,7 +145,7 @@ namespace tests.Controllers_Tests.Admin
             var offerRepositoryMock = new Mock<IRepository<OfferModel>>();
 
             offerRepositoryMock.Setup(x => x.DeleteMany(It.IsAny<IEnumerable<int>>(), CancellationToken.None))
-                .ThrowsAsync((Exception)Activator.CreateInstance(typeof(EntityNotDeletedException)));
+                .ThrowsAsync(new EntityNotDeletedException());
 
             var offerController = new Admin_OfferController(offerRepositoryMock.Object, null, null);
             var result = await offerController.DeleteRangeOffers(new List<int> { 1 });

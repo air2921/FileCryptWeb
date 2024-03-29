@@ -44,7 +44,7 @@ namespace tests.Controllers_Tests.Admin
         {
             var linkRepositoryMock = new Mock<IRepository<LinkModel>>();
             linkRepositoryMock.Setup(x => x.GetByFilter(It.IsAny<Func<IQueryable<LinkModel>, IQueryable<LinkModel>>>(), CancellationToken.None))
-                .ThrowsAsync((Exception)Activator.CreateInstance(typeof(OperationCanceledException)));
+                .ThrowsAsync(new OperationCanceledException());
 
             var linkController = new Admin_LinkController(linkRepositoryMock.Object, null, null);
             var result = await linkController.GetLink(null, "F");
@@ -91,7 +91,7 @@ namespace tests.Controllers_Tests.Admin
             var linkRepositoryMock = new Mock<IRepository<LinkModel>>();
             var sortMock = new Mock<ISorting>();
             linkRepositoryMock.Setup(x => x.GetAll(It.IsAny<Func<IQueryable<LinkModel>, IQueryable<LinkModel>>>(), CancellationToken.None))
-                .ThrowsAsync((Exception)Activator.CreateInstance(typeof(OperationCanceledException)));
+                .ThrowsAsync(new OperationCanceledException());
 
             var linkController = new Admin_LinkController(linkRepositoryMock.Object, sortMock.Object, null);
             var result = await linkController.GetRangeLinks(null, null, null, true, false);
@@ -119,7 +119,7 @@ namespace tests.Controllers_Tests.Admin
         {
             var linkRepositoryMock = new Mock<IRepository<LinkModel>>();
             linkRepositoryMock.Setup(x => x.Delete(It.IsAny<int>(), CancellationToken.None))
-                .ThrowsAsync((Exception)Activator.CreateInstance(typeof(EntityNotDeletedException)));
+                .ThrowsAsync(new EntityNotDeletedException());
 
             var linkController = new Admin_LinkController(linkRepositoryMock.Object, null, null);
             var result = await linkController.DeleteLink(1);
@@ -145,7 +145,7 @@ namespace tests.Controllers_Tests.Admin
         {
             var linkRepositoryMock = new Mock<IRepository<LinkModel>>();
             linkRepositoryMock.Setup(x => x.DeleteMany(It.IsAny<IEnumerable<int>>(), CancellationToken.None))
-                .ThrowsAsync((Exception)Activator.CreateInstance(typeof(EntityNotDeletedException)));
+                .ThrowsAsync(new EntityNotDeletedException());
 
             var linkController = new Admin_LinkController(linkRepositoryMock.Object, null, null);
             var result = await linkController.DeleteRangeLinks(new List<int> { 1 });

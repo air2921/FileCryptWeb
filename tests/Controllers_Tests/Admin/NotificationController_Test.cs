@@ -45,7 +45,7 @@ namespace tests.Controllers_Tests.Admin
         {
             var notificationRepositoryMock = new Mock<IRepository<NotificationModel>>();
             notificationRepositoryMock.Setup(x => x.GetById(It.IsAny<int>(), CancellationToken.None))
-                .ThrowsAsync((Exception)Activator.CreateInstance(typeof(OperationCanceledException)));
+                .ThrowsAsync(new OperationCanceledException());
 
             var notificationController = new Admin_NotificationController(notificationRepositoryMock.Object, null, null);
             var result = await notificationController.GetNotification(1);
@@ -79,7 +79,7 @@ namespace tests.Controllers_Tests.Admin
             var sortMock = new Mock<ISorting>();
             notificationRepositoryMock.Setup(x => x.GetAll(It.IsAny<Func<IQueryable<NotificationModel>, IQueryable<NotificationModel>>>(),
                 CancellationToken.None))
-                .ThrowsAsync((Exception)Activator.CreateInstance(typeof(OperationCanceledException)));
+                .ThrowsAsync(new OperationCanceledException());
 
             var notificationController = new Admin_NotificationController(notificationRepositoryMock.Object, null, sortMock.Object);
             var result = await notificationController.GetRangeNotification(1, null, null, true);
@@ -119,6 +119,7 @@ namespace tests.Controllers_Tests.Admin
             var result = await notificationController.DeleteNotification(1);
 
             Assert.Equal(204, ((StatusCodeResult)result).StatusCode);
+            redisCacheMock.Verify(cache => cache.DeteteCacheByKeyPattern(It.IsAny<string>()), Times.Never);
         }
 
         [Fact]
@@ -126,7 +127,7 @@ namespace tests.Controllers_Tests.Admin
         {
             var notificationRepositoryMock = new Mock<IRepository<NotificationModel>>();
             notificationRepositoryMock.Setup(x => x.Delete(It.IsAny<int>(), CancellationToken.None))
-                .ThrowsAsync((Exception)Activator.CreateInstance(typeof(EntityNotDeletedException)));
+                .ThrowsAsync(new EntityNotDeletedException());
 
             var notificationController = new Admin_NotificationController(notificationRepositoryMock.Object, null, null);
             var result = await notificationController.DeleteNotification(1);
@@ -156,15 +157,19 @@ namespace tests.Controllers_Tests.Admin
         public async Task DeleteRangeNotifications_EntityNotDeleted()
         {
             var notificationRepositoryMock = new Mock<IRepository<NotificationModel>>();
-            notificationRepositoryMock.Setup(x => x.DeleteMany(It.IsAny<IEnumerable<int>>(), CancellationToken.None))
-                .ThrowsAsync((Exception)Activator.CreateInstance(typeof(EntityNotDeletedException)));
+            var redisCacheMock = new Mock<IRedisCache>();
 
-            var notificationController = new Admin_NotificationController(notificationRepositoryMock.Object, null, null);
+            notificationRepositoryMock.Setup(x => x.DeleteMany(It.IsAny<IEnumerable<int>>(), CancellationToken.None))
+                .ThrowsAsync(new EntityNotDeletedException());
+
+            var notificationController = new Admin_NotificationController(notificationRepositoryMock.Object, redisCacheMock.Object, null);
             var result = await notificationController.DeleteRangeNotifications(new List<int> { 1 });
 
             Assert.IsType<ObjectResult>(result);
             var objectResult = (ObjectResult)result;
             Assert.Equal(500, objectResult.StatusCode);
+            redisCacheMock.Verify(cache => cache.DeleteRedisCache(It.IsAny<IEnumerable<NotificationModel>>(),
+                It.IsAny<string>(), It.IsAny<Func<NotificationModel, int>>()), Times.Never);
         }
     }
 }

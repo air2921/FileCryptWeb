@@ -42,7 +42,7 @@ namespace tests.Controllers_Tests.Admin
         {
             var userRepositoryMock = new Mock<IRepository<UserModel>>();
             userRepositoryMock.Setup(x => x.GetById(It.IsAny<int>(), CancellationToken.None))
-                .ThrowsAsync((Exception)Activator.CreateInstance(typeof(OperationCanceledException)));
+                .ThrowsAsync(new OperationCanceledException());
 
             var userController = new Admin_UserController(null, null, userRepositoryMock.Object);
             var result = await userController.GetUser(1);
@@ -86,7 +86,7 @@ namespace tests.Controllers_Tests.Admin
         {
             var userRepositoryMock = new Mock<IRepository<UserModel>>();
             userRepositoryMock.Setup(x => x.GetById(It.IsAny<int>(), CancellationToken.None))
-                .ThrowsAsync((Exception)Activator.CreateInstance(typeof(OperationCanceledException)));
+                .ThrowsAsync(new OperationCanceledException());
 
             var userController = new Admin_UserController(null, null, userRepositoryMock.Object);
             var result = await userController.DeleteUser(1);
@@ -121,7 +121,7 @@ namespace tests.Controllers_Tests.Admin
 
             validatorMock.Setup(x => x.IsValid(It.IsAny<string>(), null)).Returns(true);
             userRepositoryMock.Setup(x => x.Delete(It.IsAny<int>(), CancellationToken.None))
-                .ThrowsAsync((Exception)Activator.CreateInstance(typeof(EntityNotDeletedException)));
+                .ThrowsAsync(new EntityNotDeletedException());
             userRepositoryMock.Setup(x => x.GetById(It.IsAny<int>(), CancellationToken.None)).ReturnsAsync(new UserModel());
 
             var userController = new Admin_UserController(null, validatorMock.Object, userRepositoryMock.Object);
@@ -169,7 +169,7 @@ namespace tests.Controllers_Tests.Admin
         {
             var userRepositoryMock = new Mock<IRepository<UserModel>>();
             userRepositoryMock.Setup(x => x.GetById(It.IsAny<int>(), CancellationToken.None))
-                .ThrowsAsync((Exception)Activator.CreateInstance(typeof(OperationCanceledException)));
+                .ThrowsAsync(new OperationCanceledException());
 
             var userController = new Admin_UserController(null, null, userRepositoryMock.Object);
             var result = await userController.BlockUser(1, true);
@@ -278,7 +278,7 @@ namespace tests.Controllers_Tests.Admin
 
             validatorMock.Setup(x => x.IsValid(It.IsAny<string>(), null)).Returns(true);
             userRepositoryMock.Setup(x => x.GetById(It.IsAny<int>(), CancellationToken.None))
-                .ThrowsAsync((Exception)Activator.CreateInstance(typeof(OperationCanceledException)));
+                .ThrowsAsync(new OperationCanceledException());
 
             var userController = new Admin_UserController(null, validatorMock.Object, userRepositoryMock.Object);
             var result = await userController.UpdateRole(1, string.Empty);
@@ -297,7 +297,7 @@ namespace tests.Controllers_Tests.Admin
             validatorMock.Setup(x => x.IsValid(It.IsAny<string>(), null)).Returns(true);
             userRepositoryMock.Setup(x => x.GetById(It.IsAny<int>(), CancellationToken.None)).ReturnsAsync(new UserModel());
             userRepositoryMock.Setup(x => x.Update(It.IsAny<UserModel>(), CancellationToken.None))
-                .ThrowsAsync((Exception)Activator.CreateInstance(typeof(EntityNotUpdatedException)));
+                .ThrowsAsync(new EntityNotUpdatedException());
 
             var userController = new Admin_UserController(null, validatorMock.Object, userRepositoryMock.Object);
             var result = await userController.UpdateRole(1, string.Empty);
