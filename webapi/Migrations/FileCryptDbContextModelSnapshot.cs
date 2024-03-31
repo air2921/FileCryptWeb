@@ -187,9 +187,6 @@ namespace webapi.Migrations
                         .IsRequired()
                         .HasColumnType("text");
 
-                    b.Property<bool>("encrypt")
-                        .HasColumnType("boolean");
-
                     b.Property<DateTime>("last_time_modified")
                         .HasColumnType("timestamp with time zone");
 
