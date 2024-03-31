@@ -113,7 +113,7 @@ namespace tests.Controllers_Tests.Admin
             var redisCacheMock = new Mock<IRedisCache>();
 
             notificationRepositoryMock.Setup(x => x.Delete(It.IsAny<int>(), CancellationToken.None))
-                .ReturnsAsync(new NotificationModel { user_id = 1 });
+                .ReturnsAsync((NotificationModel)null);
 
             var notificationController = new Admin_NotificationController(notificationRepositoryMock.Object, redisCacheMock.Object, null);
             var result = await notificationController.DeleteNotification(1);

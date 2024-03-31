@@ -119,6 +119,7 @@ namespace webapi
             services.AddScoped<ICacheHandler<NotificationModel>, Notifications>();
             services.AddScoped<ICacheHandler<OfferModel>, Offers>();
             services.AddScoped<ICacheHandler<UserModel>, Users>();
+            services.AddScoped<ICacheHandler<KeyModel>, Keys>();
         }
 
         public static void Transient(IServiceCollection services)
