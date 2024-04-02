@@ -25,6 +25,7 @@ namespace tests.Controllers_Tests.Admin
             Assert.IsType<ObjectResult>(result);
             var objectResult = (ObjectResult)result;
             Assert.Equal(201, objectResult.StatusCode);
+            mimeRepositoryMock.Verify(x => x.Add(It.Is<FileMimeModel>(m => m.mime_name == "hi"), null, CancellationToken.None), Times.Once);
             redisCacheMock.Verify(cache => cache.DeleteCache(ImmutableData.MIME_COLLECTION), Times.Once);
         }
 
@@ -59,6 +60,7 @@ namespace tests.Controllers_Tests.Admin
             Assert.IsType<ObjectResult>(result);
             var objectResult = (ObjectResult)result;
             Assert.Equal(201, objectResult.StatusCode);
+            mimeRepositoryMock.Verify(x => x.AddRange(It.IsAny<IEnumerable<FileMimeModel>>(), CancellationToken.None), Times.Once);
             redisCacheMock.Verify(cache => cache.DeleteCache(ImmutableData.MIME_COLLECTION), Times.Once);
         }
 
@@ -200,6 +202,7 @@ namespace tests.Controllers_Tests.Admin
             var result = await mimeController.DeleteMime(1);
 
             Assert.Equal(204, ((StatusCodeResult)result).StatusCode);
+            mimeRepositoryMock.Verify(x => x.Delete(1, CancellationToken.None), Times.Once);
             redisCacheMock.Verify(cache => cache.DeleteCache(ImmutableData.MIME_COLLECTION), Times.Once);
         }
 
@@ -223,11 +226,13 @@ namespace tests.Controllers_Tests.Admin
         {
             var mimeRepositoryMock = new Mock<IRepository<FileMimeModel>>();
             var redisCacheMock = new Mock<IRedisCache>();
+            var ids = new List<int> { 1, 2, 3 };
 
             var mimeController = new Admin_MimeController(mimeRepositoryMock.Object, null, redisCacheMock.Object, null);
-            var result = await mimeController.DeleteMimes(new List<int> { 1 });
+            var result = await mimeController.DeleteMimes(ids);
 
             Assert.Equal(204, ((StatusCodeResult)result).StatusCode);
+            mimeRepositoryMock.Verify(x => x.DeleteMany(ids, CancellationToken.None), Times.Once);
             redisCacheMock.Verify(cache => cache.DeleteCache(ImmutableData.MIME_COLLECTION), Times.Once);
         }
 

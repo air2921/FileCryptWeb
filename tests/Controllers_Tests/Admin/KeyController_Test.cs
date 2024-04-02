@@ -1,6 +1,7 @@
 ﻿using Microsoft.AspNetCore.Mvc;
 using webapi.Controllers.Admin;
 using webapi.Exceptions;
+using webapi.Helpers;
 using webapi.Interfaces;
 using webapi.Interfaces.Redis;
 using webapi.Models;
@@ -12,6 +13,8 @@ namespace tests.Controllers_Tests.Admin
         [Fact]
         public async Task RevokeReceivedKey_Success()
         {
+            var id = 1;
+
             var keyRepositoryMock = new Mock<IRepository<KeyModel>>();
             var redisCacheMock = new Mock<IRedisCache>();
 
@@ -19,13 +22,13 @@ namespace tests.Controllers_Tests.Admin
                 .ReturnsAsync(new KeyModel());
 
             var keyController = new Admin_KeyController(redisCacheMock.Object, keyRepositoryMock.Object);
-            var result = await keyController.RevokeReceivedKey(1);
+            var result = await keyController.RevokeReceivedKey(id);
 
             Assert.IsType<ObjectResult>(result);
             var objectResult = (ObjectResult)result;
             Assert.Equal(200, objectResult.StatusCode);
-            redisCacheMock.Verify(cache => cache.DeleteCache(It.IsAny<string>()), Times.Once);
-            redisCacheMock.Verify(cache => cache.DeteteCacheByKeyPattern(It.IsAny<string>()), Times.Once);
+            redisCacheMock.Verify(cache => cache.DeleteCache("receivedKey#" + id), Times.Once);
+            redisCacheMock.Verify(cache => cache.DeteteCacheByKeyPattern($"{ImmutableData.KEYS_PREFIX}{id}"), Times.Once);
         }
 
         [Fact]

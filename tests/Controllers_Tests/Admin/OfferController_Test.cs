@@ -2,6 +2,7 @@
 using webapi.Controllers.Admin;
 using webapi.DB;
 using webapi.Exceptions;
+using webapi.Helpers;
 using webapi.Interfaces;
 using webapi.Interfaces.Redis;
 using webapi.Models;
@@ -103,7 +104,8 @@ namespace tests.Controllers_Tests.Admin
             var result = await offerController.DeleteOffer(1);
 
             Assert.Equal(204, ((StatusCodeResult)result).StatusCode);
-            redisCacheMock.Verify(cache => cache.DeteteCacheByKeyPattern(It.IsAny<string>()), Times.AtLeast(2));
+            redisCacheMock.Verify(cache => cache.DeteteCacheByKeyPattern($"{ImmutableData.OFFERS_PREFIX}{1}"), Times.Once);
+            redisCacheMock.Verify(cache => cache.DeteteCacheByKeyPattern($"{ImmutableData.OFFERS_PREFIX}{2}"), Times.Once);
         }
 
         [Fact]
@@ -127,16 +129,17 @@ namespace tests.Controllers_Tests.Admin
         {
             var offerRepositoryMock = new Mock<IRepository<OfferModel>>();
             var redisCacheMock = new Mock<IRedisCache>();
+            var models = new List<OfferModel> { new OfferModel { sender_id = 1, receiver_id = 2 } };
 
             offerRepositoryMock.Setup(x => x.DeleteMany(It.IsAny<IEnumerable<int>>(), CancellationToken.None))
-                .ReturnsAsync(new List<OfferModel> { new OfferModel { sender_id = 1, receiver_id = 2 } });
+                .ReturnsAsync(models);
 
             var offerController = new Admin_OfferController(offerRepositoryMock.Object, redisCacheMock.Object, null);
             var result = await offerController.DeleteRangeOffers(new List<int> { 1 });
 
             Assert.Equal(204, ((StatusCodeResult)result).StatusCode);
-            redisCacheMock.Verify(cache => cache.DeleteRedisCache(It.IsAny<IEnumerable<OfferModel>>(),
-                It.IsAny<string>(), It.IsAny<Func<OfferModel, int>>()), Times.AtLeast(2));
+            redisCacheMock.Verify(cache => cache.DeleteRedisCache(models,
+                ImmutableData.OFFERS_PREFIX, It.IsAny<Func<OfferModel, int>>()), Times.AtLeast(2));
         }
 
         [Fact]

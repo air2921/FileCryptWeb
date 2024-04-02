@@ -1,6 +1,7 @@
 ﻿using Microsoft.AspNetCore.Mvc;
 using webapi.Controllers.Core;
 using webapi.Exceptions;
+using webapi.Helpers;
 using webapi.Interfaces;
 using webapi.Interfaces.Redis;
 using webapi.Interfaces.Services;
@@ -118,7 +119,7 @@ namespace tests.Controllers_Tests.Core
             var result = await ntfController.DeleteNotification(1);
 
             Assert.Equal(204, ((StatusCodeResult)result).StatusCode);
-            redisCacheMock.Verify(x => x.DeteteCacheByKeyPattern(It.IsAny<string>()), Times.Once);
+            redisCacheMock.Verify(x => x.DeteteCacheByKeyPattern($"{ImmutableData.NOTIFICATIONS_PREFIX}{1}"), Times.Once);
         }
 
         [Fact]

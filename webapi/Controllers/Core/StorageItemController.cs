@@ -82,6 +82,7 @@ namespace webapi.Controllers.Core
             }
         }
 
+        [HttpGet("all")]
         public async Task<IActionResult> GetAllKeys(int storageId, int code)
         {
             try

@@ -26,7 +26,7 @@ namespace webapi.Controllers.Admin
             }
 
             await redisCache.DeleteCache(ImmutableData.SERVICE_FREEZE_FLAG);
-            logger.LogCritical($"{userInfo.Username}#{userInfo.UserId} unfreezed service at {DateTime.UtcNow}");
+            logger.LogWarning($"{userInfo.Username}#{userInfo.UserId} unfreezed service at {DateTime.UtcNow}");
 
             return StatusCode(200, new { message = "Service unfreezed" });
         }

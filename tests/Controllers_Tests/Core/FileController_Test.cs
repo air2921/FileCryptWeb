@@ -1,6 +1,7 @@
 ﻿using Microsoft.AspNetCore.Mvc;
 using webapi.Controllers.Core;
 using webapi.Exceptions;
+using webapi.Helpers;
 using webapi.Interfaces;
 using webapi.Interfaces.Redis;
 using webapi.Interfaces.Services;
@@ -29,7 +30,7 @@ namespace tests.Controllers_Tests.Core
 
             fileRepositoryMock.Verify(repo => repo
                 .DeleteByFilter(It.IsAny<Func<IQueryable<FileModel>, IQueryable<FileModel>>>(), CancellationToken.None), Times.Once);
-            redisCacheMock.Verify(cache => cache.DeteteCacheByKeyPattern(It.IsAny<string>()), Times.Once);
+            redisCacheMock.Verify(cache => cache.DeteteCacheByKeyPattern($"{ImmutableData.FILES_PREFIX}{1}"), Times.Once);
             Assert.Equal(204, ((StatusCodeResult)result).StatusCode);
         }
 

@@ -13,20 +13,23 @@ namespace tests.Controllers_Tests.Admin
         [Fact]
         public async Task RevokeAllUserTokens_Success()
         {
+            var id = 1;
+
             var userRepositoryMock = new Mock<IRepository<UserModel>>();
             var tokenRepositoryMock = new Mock<IRepository<TokenModel>>();
             var userInfoMock = new Mock<IUserInfo>();
             var transactionMock = new Mock<ITransaction<TokenModel>>();
             var validatorMock = new Mock<IValidator>();
 
-            userRepositoryMock.Setup(x => x.GetById(It.IsAny<int>(), CancellationToken.None)).ReturnsAsync(new UserModel { role = "User"});
+            userRepositoryMock.Setup(x => x.GetById(id, CancellationToken.None)).ReturnsAsync(new UserModel { role = "User", id = id });
             userInfoMock.Setup(x => x.Role).Returns("HighestAdmin");
-            validatorMock.Setup(x => x.IsValid(It.IsAny<string>(), It.IsAny<string>())).Returns(true);
+            validatorMock.Setup(x => x.IsValid("User", "HighestAdmin")).Returns(true);
 
             var tokenController = new Admin_TokenController(transactionMock.Object, validatorMock.Object,
                 tokenRepositoryMock.Object, userRepositoryMock.Object, userInfoMock.Object);
-            var result = await tokenController.RevokeAllUserTokens(1);
+            var result = await tokenController.RevokeAllUserTokens(id);
 
+            transactionMock.Verify(x => x.CreateTransaction(null, id), Times.Once);
             Assert.IsType<ObjectResult>(result);
             var objectResult = (ObjectResult)result;
             Assert.Equal(200, objectResult.StatusCode);
@@ -113,19 +116,24 @@ namespace tests.Controllers_Tests.Admin
         [Fact]
         public async Task RevokeToken_Success()
         {
+            var id = 1;
+            var userId = 3;
+
             var userRepositoryMock = new Mock<IRepository<UserModel>>();
             var tokenRepositoryMock = new Mock<IRepository<TokenModel>>();
             var userInfoMock = new Mock<IUserInfo>();
             var validatorMock = new Mock<IValidator>();
 
-            tokenRepositoryMock.Setup(x => x.GetById(It.IsAny<int>(), CancellationToken.None)).ReturnsAsync(new TokenModel { user_id = 1 });
-            userRepositoryMock.Setup(x => x.GetById(It.IsAny<int>(), CancellationToken.None)).ReturnsAsync(new UserModel { role  = string.Empty });
-            validatorMock.Setup(x => x.IsValid(It.IsAny<string>(), It.IsAny<string>())).Returns(true);
+            userInfoMock.Setup(x => x.Role).Returns("HighestAdmin");
+            tokenRepositoryMock.Setup(x => x.GetById(id, CancellationToken.None)).ReturnsAsync(new TokenModel { user_id = userId });
+            userRepositoryMock.Setup(x => x.GetById(userId, CancellationToken.None)).ReturnsAsync(new UserModel { role  = "User" });
+            validatorMock.Setup(x => x.IsValid("User", "HighestAdmin")).Returns(true);
 
             var tokenController = new Admin_TokenController(null, validatorMock.Object, tokenRepositoryMock.Object,
                 userRepositoryMock.Object, userInfoMock.Object);
-            var result = await tokenController.RevokeToken(1);
+            var result = await tokenController.RevokeToken(id);
 
+            tokenRepositoryMock.Verify(x => x.Delete(id, CancellationToken.None), Times.Once);
             Assert.IsType<ObjectResult>(result);
             var objectResult = (ObjectResult)result;
             Assert.Equal(200, objectResult.StatusCode);

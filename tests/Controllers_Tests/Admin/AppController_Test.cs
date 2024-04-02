@@ -1,5 +1,6 @@
 ﻿using Microsoft.AspNetCore.Mvc;
 using webapi.Controllers.Admin;
+using webapi.Helpers;
 using webapi.Interfaces.Redis;
 using webapi.Interfaces.Services;
 
@@ -20,6 +21,7 @@ namespace tests.Controllers_Tests.Admin
             var appController = new AppController(userInfoMock.Object, logger, redisCacheMock.Object);
             var result = await appController.FreezeService(true, TimeSpan.FromDays(1));
 
+            redisCacheMock.Verify(x => x.CacheData(ImmutableData.SERVICE_FREEZE_FLAG, true, TimeSpan.FromDays(1)), Times.Once);
             Assert.IsType<ObjectResult>(result);
             var objectResult = (ObjectResult)result;
             Assert.Equal(200, objectResult.StatusCode);
@@ -39,6 +41,7 @@ namespace tests.Controllers_Tests.Admin
             var appController = new AppController(userInfoMock.Object, logger, redisCacheMock.Object);
             var result = await appController.FreezeService(false, null);
 
+            redisCacheMock.Verify(x => x.DeleteCache(ImmutableData.SERVICE_FREEZE_FLAG), Times.Once);
             Assert.IsType<ObjectResult>(result);
             var objectResult = (ObjectResult)result;
             Assert.Equal(200, objectResult.StatusCode);
