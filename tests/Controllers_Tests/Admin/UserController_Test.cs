@@ -12,11 +12,13 @@ namespace tests.Controllers_Tests.Admin
         [Fact]
         public async Task GetUser_Success()
         {
+            var id = 1;
+
             var userRepositoryMock = new Mock<IRepository<UserModel>>();
-            userRepositoryMock.Setup(x => x.GetById(It.IsAny<int>(), CancellationToken.None)).ReturnsAsync(new UserModel());
+            userRepositoryMock.Setup(x => x.GetById(id, CancellationToken.None)).ReturnsAsync(new UserModel());
 
             var userController = new Admin_UserController(null, null, userRepositoryMock.Object);
-            var result = await userController.GetUser(1);
+            var result = await userController.GetUser(id);
 
             Assert.IsType<ObjectResult>(result);
             var objectResult = (ObjectResult)result;
@@ -55,15 +57,18 @@ namespace tests.Controllers_Tests.Admin
         [Fact]
         public async Task DeleteUser_Success()
         {
+            var id = 1;
+
             var userRepositoryMock = new Mock<IRepository<UserModel>>();
             var validatorMock = new Mock<IValidator>();
 
             validatorMock.Setup(x => x.IsValid(It.IsAny<string>(), null)).Returns(true);
-            userRepositoryMock.Setup(x => x.GetById(It.IsAny<int>(), CancellationToken.None)).ReturnsAsync(new UserModel());
+            userRepositoryMock.Setup(x => x.GetById(id, CancellationToken.None)).ReturnsAsync(new UserModel());
 
             var userController = new Admin_UserController(null, validatorMock.Object, userRepositoryMock.Object);
-            var result = await userController.DeleteUser(1);
+            var result = await userController.DeleteUser(id);
 
+            userRepositoryMock.Verify(x => x.Delete(id, CancellationToken.None), Times.Once);
             Assert.Equal(204, ((StatusCodeResult)result).StatusCode);
         }
 
@@ -135,16 +140,21 @@ namespace tests.Controllers_Tests.Admin
         [Fact]
         public async Task BlockUser_Success()
         {
+            var id = 1;
+            var param = true;
+
             var validatorMock = new Mock<IValidator>();
             var transactionMock = new Mock<ITransaction<UserModel>>();
             var userRepositoryMock = new Mock<IRepository<UserModel>>();
+            var user = new UserModel();
 
             validatorMock.Setup(x => x.IsValid(It.IsAny<string>(), null)).Returns(true);
-            userRepositoryMock.Setup(x => x.GetById(It.IsAny<int>(), CancellationToken.None)).ReturnsAsync(new UserModel());
+            userRepositoryMock.Setup(x => x.GetById(id, CancellationToken.None)).ReturnsAsync(user);
 
             var userController = new Admin_UserController(transactionMock.Object, validatorMock.Object, userRepositoryMock.Object);
-            var result = await userController.BlockUser(1, true);
+            var result = await userController.BlockUser(id, param);
 
+            transactionMock.Verify(x => x.CreateTransaction(user, param), Times.Once);
             Assert.IsType<ObjectResult>(result);
             var objectResult = (ObjectResult)result;
             Assert.Equal(200, objectResult.StatusCode);
@@ -221,15 +231,19 @@ namespace tests.Controllers_Tests.Admin
         [Fact]
         public async Task UpdateRole_Success()
         {
+            var id = 1;
+            var user = new UserModel();
+
             var validatorMock = new Mock<IValidator>();
             var userRepositoryMock = new Mock<IRepository<UserModel>>();
 
             validatorMock.Setup(x => x.IsValid(It.IsAny<string>(), null)).Returns(true);
-            userRepositoryMock.Setup(x => x.GetById(It.IsAny<int>(), CancellationToken.None)).ReturnsAsync(new UserModel());
+            userRepositoryMock.Setup(x => x.GetById(id, CancellationToken.None)).ReturnsAsync(user);
 
             var userController = new Admin_UserController(null, validatorMock.Object, userRepositoryMock.Object);
-            var result = await userController.UpdateRole(1, string.Empty);
+            var result = await userController.UpdateRole(id, "Admin");
 
+            userRepositoryMock.Verify(x => x.Update(It.Is<UserModel>(x => x.role == "Admin"), CancellationToken.None), Times.Once);
             Assert.IsType<ObjectResult>(result);
             var objectResult = (ObjectResult)result;
             Assert.Equal(200, objectResult.StatusCode);

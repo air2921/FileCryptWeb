@@ -1,4 +1,5 @@
 ﻿using Microsoft.AspNetCore.Mvc;
+using Microsoft.AspNetCore.Mvc.ModelBinding.Validation;
 using webapi.Controllers.Account.Edit;
 using webapi.DTO;
 using webapi.Exceptions;
@@ -14,6 +15,11 @@ namespace tests.Controllers_Tests.Account.Edit
         [Fact]
         public async Task StartEmailChangeProcess_Success()
         {
+            var id = 1;
+            var code = 123456;
+            var email = "air23663@gmail.com";
+            var name = "air2921";
+
             var userRepositoryMock = new Mock<IRepository<UserModel>>();
             var userInfoMock = new Mock<IUserInfo>();
             var passwordManagerMock = new Mock<IPasswordManager>();
@@ -21,25 +27,27 @@ namespace tests.Controllers_Tests.Account.Edit
             var emailSenderMock = new Mock<IEmailSender>();
             var dataManagementMock = new Mock<IDataManagement>();
 
-            userRepositoryMock.Setup(x => x.GetById(It.IsAny<int>(), CancellationToken.None)).ReturnsAsync(new UserModel
+            userRepositoryMock.Setup(x => x.GetById(id, CancellationToken.None)).ReturnsAsync(new UserModel
             {
-                id = 1,
-                password = It.IsAny<string>(),
+                id = id,
+                password = "password",
+                email = email,
+                username = name
             });
             userInfoMock.Setup(x => x.UserId).Returns(1);
-            passwordManagerMock.Setup(x => x.CheckPassword(It.IsAny<string>(), It.IsAny<string>())).Returns(true);
-            generateMock.Setup(x => x.GenerateSixDigitCode()).Returns(123456);
+            passwordManagerMock.Setup(x => x.CheckPassword("password", "password")).Returns(true);
+            generateMock.Setup(x => x.GenerateSixDigitCode()).Returns(code);
 
             var emailController = new EmailController(null, dataManagementMock.Object, null, userRepositoryMock.Object,
                 emailSenderMock.Object, passwordManagerMock.Object, generateMock.Object, null, userInfoMock.Object);
 
-            var result = await emailController.StartEmailChangeProcess(string.Empty);
+            var result = await emailController.StartEmailChangeProcess("password");
 
             Assert.IsType<ObjectResult>(result);
             var objectResult = (ObjectResult)result;
             Assert.Equal(200, objectResult.StatusCode);
-            emailSenderMock.Verify(es => es.SendMessage(It.IsAny<EmailDto>()), Times.Once);
-            dataManagementMock.Verify(es => es.SetData(It.IsAny<string>(), It.IsAny<int>()), Times.Once);
+            emailSenderMock.Verify(es => es.SendMessage(It.Is<EmailDto>(e => e.email == email && e.username == name)), Times.Once);
+            dataManagementMock.Verify(es => es.SetData($"EmailController_ConfirmationCode_OldEmail#{id}", code), Times.Once);
         }
 
         [Fact]
@@ -139,6 +147,13 @@ namespace tests.Controllers_Tests.Account.Edit
         [Fact]
         public async Task ConfirmOldEmail_Success()
         {
+            var id = 1;
+            var email = "air2921@gmail.com";
+            var name = "air2921";
+            var savedCode = 123456;
+            var inputCode = 123456;
+            var newCode = 654321;
+
             var generateMock = new Mock<IGenerate>();
             var userRepositoryMock = new Mock<IRepository<UserModel>>();
             var userInfoMock = new Mock<IUserInfo>();
@@ -146,23 +161,30 @@ namespace tests.Controllers_Tests.Account.Edit
             var dataManagementMock = new Mock<IDataManagement>();
             var validatorMock = new Mock<IValidator>();
 
-            dataManagementMock.Setup(x => x.GetData(It.IsAny<string>())).ReturnsAsync(1);
-            validatorMock.Setup(x => x.IsValid(It.IsAny<int>(), It.IsAny<int>())).Returns(true);
-            generateMock.Setup(x => x.GenerateSixDigitCode()).Returns(It.IsAny<int>());
-            userInfoMock.Setup(x => x.Username).Returns("username");
+            dataManagementMock.Setup(x => x.GetData($"EmailController_ConfirmationCode_OldEmail#{id}")).ReturnsAsync(savedCode);
+            validatorMock.Setup(x => x.IsValid(savedCode, inputCode)).Returns(true);
+            generateMock.Setup(x => x.GenerateSixDigitCode()).Returns(newCode);
+            userInfoMock.Setup(x => x.Username).Returns(name);
+            userInfoMock.Setup(x => x.UserId).Returns(id);
             userRepositoryMock.Setup(x => x.GetByFilter(It.IsAny<Func<IQueryable<UserModel>, IQueryable<UserModel>>>(), CancellationToken.None))
-                .ReturnsAsync((UserModel)null);
+                .ReturnsAsync((UserModel)null)
+                .Callback<Func<IQueryable<UserModel>, IQueryable<UserModel>>, CancellationToken>((query, token) => {
+                    var testQuery = new List<UserModel>().AsQueryable();
+                    var filteredQuery = query(testQuery);
+                    Assert.True(filteredQuery.Expression.ToString().Contains($".email.Equals("));
+                });
 
             var emailController = new EmailController(null, dataManagementMock.Object, validatorMock.Object,
                 userRepositoryMock.Object, emailSenderMock.Object, null, generateMock.Object, null, userInfoMock.Object);
 
-            var result = await emailController.ConfirmOldEmail("TestEmail134@mail.com", 1);
+            var result = await emailController.ConfirmOldEmail(email, inputCode);
 
             Assert.IsType<ObjectResult>(result);
             var objectResult = (ObjectResult)result;
             Assert.Equal(200, objectResult.StatusCode);
-            dataManagementMock.Verify(dm => dm.SetData(It.IsAny<string>(), It.IsAny<object>()), Times.AtLeast(2));
-            emailSenderMock.Verify(es => es.SendMessage(It.IsAny<EmailDto>()), Times.Once);
+            dataManagementMock.Verify(dm => dm.SetData($"EmailController_ConfirmationCode_NewEmail#{id}", newCode), Times.Once);
+            dataManagementMock.Verify(dm => dm.SetData($"EmailController_Email#{id}", email), Times.Once);
+            emailSenderMock.Verify(es => es.SendMessage(It.Is<EmailDto>(e => e.email == email && e.username == name)), Times.Once);
         }
 
         [Fact]
@@ -266,6 +288,12 @@ namespace tests.Controllers_Tests.Account.Edit
         [Fact]
         public async Task ConfirmAndUpdateNewEmail_Success()
         {
+            var id = 1;
+            var savedCode = 123456;
+            var inputCode = 123456;
+            var email = "email";
+            var user = new UserModel();
+
             var validatorMock = new Mock<IValidator>();
             var dataManagementMock = new Mock<IDataManagement>();
             var transactionMock = new Mock<ITransaction<UserModel>>();
@@ -273,21 +301,21 @@ namespace tests.Controllers_Tests.Account.Edit
             var userInfoMock = new Mock<IUserInfo>();
             var userRepositoryMock = new Mock<IRepository<UserModel>>();
 
-            dataManagementMock.Setup(x => x.GetData("EmailController_Email#1")).ReturnsAsync(string.Empty);
-            dataManagementMock.Setup(x => x.GetData("EmailController_ConfirmationCode_NewEmail#1")).ReturnsAsync(1);
-            validatorMock.Setup(x => x.IsValid(It.IsAny<int>(), It.IsAny<int>())).Returns(true);
-            userInfoMock.Setup(x => x.UserId).Returns(1);
-            userRepositoryMock.Setup(x => x.GetById(It.IsAny<int>(), CancellationToken.None)).ReturnsAsync(new UserModel());
+            dataManagementMock.Setup(x => x.GetData($"EmailController_Email#{id}")).ReturnsAsync(email);
+            dataManagementMock.Setup(x => x.GetData($"EmailController_ConfirmationCode_NewEmail#{id}")).ReturnsAsync(savedCode);
+            validatorMock.Setup(x => x.IsValid(savedCode, inputCode)).Returns(true);
+            userInfoMock.Setup(x => x.UserId).Returns(id);
+            userRepositoryMock.Setup(x => x.GetById(id, CancellationToken.None)).ReturnsAsync(user);
 
             var emailController = new EmailController(transactionMock.Object, dataManagementMock.Object, validatorMock.Object,
                 userRepositoryMock.Object, null, null, null, tokenServiceMock.Object, userInfoMock.Object);
 
-            var result = await emailController.ConfirmAndUpdateNewEmail(123456);
+            var result = await emailController.ConfirmAndUpdateNewEmail(inputCode);
 
             Assert.Equal(201, ((StatusCodeResult)result).StatusCode);
-            transactionMock.Verify(tr => tr.CreateTransaction(It.IsAny<UserModel>(), It.IsAny<string>()), Times.Once);
+            transactionMock.Verify(tr => tr.CreateTransaction(user, email), Times.Once);
             tokenServiceMock.Verify(ts => ts.UpdateJwtToken(), Times.Once);
-            dataManagementMock.Verify(dm => dm.DeleteData(It.IsAny<int>(), null), Times.Once);
+            dataManagementMock.Verify(dm => dm.DeleteData(id, null), Times.Once);
         }
 
         [Fact]

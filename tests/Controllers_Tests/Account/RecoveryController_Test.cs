@@ -1,8 +1,9 @@
-﻿using AutoMapper;
-using Microsoft.AspNetCore.Mvc;
+﻿using Microsoft.AspNetCore.Mvc;
+using System.Diagnostics;
 using webapi.Controllers.Account;
 using webapi.DTO;
 using webapi.Exceptions;
+using webapi.Helpers;
 using webapi.Interfaces;
 using webapi.Interfaces.Controllers.Services;
 using webapi.Interfaces.Redis;
@@ -17,6 +18,16 @@ namespace tests.Controllers_Tests.Account
         [Fact]
         public async Task RecoveryAccount_Success()
         {
+            var id = 1;
+            var email = "air23663@gmail.com";
+            var username = "air2921";
+            var user = new UserModel
+            {
+                id = id,
+                username = username,
+                email = email
+            };
+
             var userRepositoryMock = new Mock<IRepository<UserModel>>();
             var generateMock = new Mock<IGenerate>();
             var emailSenderMock = new Mock<IEmailSender>();
@@ -25,26 +36,27 @@ namespace tests.Controllers_Tests.Account
             var recoveryServiceMock = new Mock<IRecoveryHelpers>();
 
             userRepositoryMock.Setup(x => x.GetByFilter(It.IsAny<Func<IQueryable<UserModel>, IQueryable<UserModel>>>(), CancellationToken.None))
-                .ReturnsAsync(new UserModel
-                {
-                    username = string.Empty,
-                    email = string.Empty
+                .ReturnsAsync(user)
+                .Callback<Func<IQueryable<UserModel>, IQueryable<UserModel>>, CancellationToken>((query, token) => {
+                    var testQuery = new List<UserModel>().AsQueryable();
+                    var filteredQuery = query(testQuery);
+                    Assert.True(filteredQuery.Expression.ToString().Contains($".email.Equals("));
                 });
-            generateMock.Setup(x => x.GenerateKey()).Returns(string.Empty);
+            generateMock.Setup(x => x.GenerateKey()).Returns("8ifrnDa8a9nabJDfjTrfXsgfVIhCYGrZbN5HdtX0dK8=");
             fileManagerMock.Setup(x => x.GetReactAppUrl()).Returns(string.Empty);
 
             var recoveryController = new RecoveryController(recoveryServiceMock.Object, null, userRepositoryMock.Object,
                 null, emailSenderMock.Object, redisCacheMock.Object, fileManagerMock.Object, generateMock.Object);
 
-            var result = await recoveryController.RecoveryAccount(string.Empty);
+            var result = await recoveryController.RecoveryAccount(email);
 
             Assert.IsType<ObjectResult>(result);
             var objectResult = (ObjectResult)result;
             Assert.Equal(201, objectResult.StatusCode);
 
-            recoveryServiceMock.Verify(x => x.CreateTokenTransaction(It.IsAny<UserModel>(), It.IsAny<string>()), Times.Once);
-            emailSenderMock.Verify(x => x.SendMessage(It.IsAny<EmailDto>()), Times.Once);
-            redisCacheMock.Verify(x => x.DeteteCacheByKeyPattern(It.IsAny<string>()), Times.Once);
+            recoveryServiceMock.Verify(x => x.CreateTokenTransaction(user, It.Is<string>(q => q.Length >= 112)), Times.Once);
+            emailSenderMock.Verify(x => x.SendMessage(It.Is<EmailDto>(e => e.username == username && e.email == email)), Times.Once);
+            redisCacheMock.Verify(x => x.DeteteCacheByKeyPattern($"{ImmutableData.NOTIFICATIONS_PREFIX}{id}"), Times.Once);
         }
 
         [Fact]
@@ -141,30 +153,42 @@ namespace tests.Controllers_Tests.Account
         [Fact]
         public async Task RecoveryAccountByToken_Success()
         {
+            var userId = 1;
+            var linkId = 1;
+            var password = "password";
+            var token = "fdjklgjhfdjkghdfjkghbsdfkgjhildfug9opsdfuig90dsf";
+            var user = new UserModel();
+            var link = new LinkModel
+            {
+                link_id = linkId,
+                user_id = userId,
+                expiry_date = DateTime.UtcNow.AddDays(1)
+            };
+
             var validatorMock = new Mock<IValidator>();
             var linkRepositoryMock = new Mock<IRepository<LinkModel>>();
             var userRepositoryMock = new Mock<IRepository<UserModel>>();
             var redisCacheMock = new Mock<IRedisCache>();
             var recoveryServiceMock = new Mock<IRecoveryHelpers>();
 
-            validatorMock.Setup(x => x.IsValid(It.IsAny<string>(), null)).Returns(true);
+            validatorMock.Setup(x => x.IsValid(password, null)).Returns(true);
             linkRepositoryMock.Setup(x => x.GetByFilter(It.IsAny<Func<IQueryable<LinkModel>, IQueryable<LinkModel>>>(), CancellationToken.None))
-                .ReturnsAsync(new LinkModel
-                {
-                    link_id = 1,
-                    user_id = 1,
-                    expiry_date = DateTime.UtcNow.AddDays(1)
+                .ReturnsAsync(link)
+                .Callback<Func<IQueryable<LinkModel>, IQueryable<LinkModel>>, CancellationToken>((query, token) => {
+                    var testQuery = new List<LinkModel>().AsQueryable();
+                    var filteredQuery = query(testQuery);
+                    Assert.True(filteredQuery.Expression.ToString().Contains($".u_token.Equals("));
                 });
-            userRepositoryMock.Setup(x => x.GetById(It.IsAny<int>(), CancellationToken.None)).ReturnsAsync(new UserModel());
+            userRepositoryMock.Setup(x => x.GetById(userId, CancellationToken.None)).ReturnsAsync(user);
 
             var recoveryController = new RecoveryController(recoveryServiceMock.Object, validatorMock.Object, userRepositoryMock.Object,
                 linkRepositoryMock.Object, null, redisCacheMock.Object, null, null);
 
-            var result = await recoveryController.RecoveryAccountByToken(new RecoveryDTO { password = string.Empty, token = string.Empty });
+            var result = await recoveryController.RecoveryAccountByToken(new RecoveryDTO { password = password, token = token });
 
             Assert.Equal(200, ((StatusCodeResult)result).StatusCode);
 
-            recoveryServiceMock.Verify(x => x.RecoveryTransaction(It.IsAny<UserModel>(), It.IsAny<string>(), It.IsAny<string>()), Times.Once);
+            recoveryServiceMock.Verify(x => x.RecoveryTransaction(user, token, password), Times.Once);
             redisCacheMock.Verify(x => x.DeteteCacheByKeyPattern(It.IsAny<string>()), Times.Exactly(2));
         }
 
