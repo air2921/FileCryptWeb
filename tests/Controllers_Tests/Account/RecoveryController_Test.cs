@@ -157,7 +157,7 @@ namespace tests.Controllers_Tests.Account
             var linkId = 1;
             var password = "password";
             var token = "fdjklgjhfdjkghdfjkghbsdfkgjhildfug9opsdfuig90dsf";
-            var user = new UserModel();
+            var user = new UserModel { id = userId };
             var link = new LinkModel
             {
                 link_id = linkId,
@@ -189,7 +189,8 @@ namespace tests.Controllers_Tests.Account
             Assert.Equal(200, ((StatusCodeResult)result).StatusCode);
 
             recoveryServiceMock.Verify(x => x.RecoveryTransaction(user, token, password), Times.Once);
-            redisCacheMock.Verify(x => x.DeteteCacheByKeyPattern(It.IsAny<string>()), Times.Exactly(2));
+            redisCacheMock.Verify(x => x.DeteteCacheByKeyPattern($"{ImmutableData.NOTIFICATIONS_PREFIX}{userId}"), Times.Once);
+            redisCacheMock.Verify(x => x.DeteteCacheByKeyPattern($"{ImmutableData.USER_DATA_PREFIX}{userId}"), Times.Once);
         }
 
         [Fact]
