@@ -1,4 +1,6 @@
-﻿using Microsoft.EntityFrameworkCore;
+﻿using Ardalis.Specification;
+using Ardalis.Specification.EntityFrameworkCore;
+using Microsoft.EntityFrameworkCore;
 using webapi.DB.Abstractions;
 using webapi.Exceptions;
 using webapi.Localization;
@@ -37,7 +39,7 @@ namespace webapi.DB.Ef
 
         #endregion
 
-        public async Task<IEnumerable<T>> GetAll(Func<IQueryable<T>, IQueryable<T>> queryModifier = null, CancellationToken cancellationToken = default)
+        public async Task<IEnumerable<T>> GetAll(ISpecification<T> ? specification = null, CancellationToken cancellationToken = default)
         {
             try
             {
@@ -45,9 +47,8 @@ namespace webapi.DB.Ef
                 cancellationToken = CancellationTokenSource.CreateLinkedTokenSource(cancellationToken, cts.Token).Token;
 
                 IQueryable<T> query = _dbSet;
-
-                if (queryModifier is not null)
-                    query = queryModifier(query);
+                if (specification is not null)
+                    query = SpecificationEvaluator.Default.GetQuery(query, specification);
 
                 return await query.ToListAsync(cancellationToken);
             }
@@ -62,7 +63,7 @@ namespace webapi.DB.Ef
             }
         }
 
-        public async Task<T> GetByFilter(Func<IQueryable<T>, IQueryable<T>>? queryModifier, CancellationToken cancellationToken = default)
+        public async Task<T> GetByFilter(ISpecification<T> specification, CancellationToken cancellationToken = default)
         {
             try
             {
@@ -70,9 +71,7 @@ namespace webapi.DB.Ef
                 cancellationToken = CancellationTokenSource.CreateLinkedTokenSource(cancellationToken, cts.Token).Token;
 
                 IQueryable<T> query = _dbSet;
-
-                if (queryModifier is not null)
-                    query = queryModifier(query);
+                query = SpecificationEvaluator.Default.GetQuery(query, specification);
 
                 return await query.FirstOrDefaultAsync(cancellationToken);
             }
@@ -213,7 +212,7 @@ namespace webapi.DB.Ef
             }
         }
 
-        public async Task<T> DeleteByFilter(Func<IQueryable<T>, IQueryable<T>> queryModifier, CancellationToken cancellationToken = default)
+        public async Task<T> DeleteByFilter(ISpecification<T> specification, CancellationToken cancellationToken = default)
         {
             try
             {
@@ -221,7 +220,7 @@ namespace webapi.DB.Ef
                 cancellationToken = CancellationTokenSource.CreateLinkedTokenSource(cancellationToken, cts.Token).Token;
 
                 IQueryable<T> query = _dbSet;
-                query = queryModifier(query);
+                query = SpecificationEvaluator.Default.GetQuery(query, specification);
 
                 var entity = await query.FirstOrDefaultAsync(cancellationToken);
                 if (entity is not null)
