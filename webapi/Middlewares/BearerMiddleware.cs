@@ -6,19 +6,8 @@ using webapi.Interfaces.Services;
 namespace webapi.Middlewares
 {
     // You may need to install the Microsoft.AspNetCore.Http.Abstractions package into your project
-    public class BearerMiddleware
+    public class BearerMiddleware(RequestDelegate next, ILogger<BearerMiddleware> logger, IWebHostEnvironment env)
     {
-        private readonly RequestDelegate _next;
-        private readonly ILogger<BearerMiddleware> _logger;
-        private readonly IWebHostEnvironment _env;
-
-        public BearerMiddleware(RequestDelegate next, ILogger<BearerMiddleware> logger, IWebHostEnvironment env)
-        {
-            _next = next;
-            _logger = logger;
-            _env = env;
-        }
-
         public async Task Invoke(HttpContext context, FileCryptDbContext dbContext, ITokenService tokenService)
         {
             string? jwt = GetJwt(context);
@@ -27,15 +16,15 @@ namespace webapi.Middlewares
                 context.Request.Headers.Append("Authorization", $"Bearer {jwt}");
                 AddSecurityHeaders(context);
 
-                await _next(context);
+                await next(context);
                 return;
             }
 
             string? refresh = GetRefresh(context);
             if (!string.IsNullOrWhiteSpace(refresh))
             {
-                if (_env.IsDevelopment())
-                    _logger.LogWarning(tokenService.HashingToken(refresh));
+                if (env.IsDevelopment())
+                    logger.LogWarning(tokenService.HashingToken(refresh));
 
                 var userAndToken =
                     await (from token in dbContext.Tokens
@@ -47,7 +36,7 @@ namespace webapi.Middlewares
                 if (userAndToken is null || userAndToken.token.expiry_date < DateTime.UtcNow || userAndToken.user.is_blocked)
                 {
                     tokenService.DeleteTokens();
-                    await _next(context);
+                    await next(context);
                     return;
                 }
 
@@ -57,7 +46,7 @@ namespace webapi.Middlewares
                 AddSecurityHeaders(context);
             }
 
-            await _next(context);
+            await next(context);
             return;
         }
 

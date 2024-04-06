@@ -1,6 +1,7 @@
 ﻿using Newtonsoft.Json;
 using webapi.Interfaces;
 using webapi.Interfaces.Redis;
+using webapi.Localization;
 using webapi.Models;
 
 namespace webapi.Services.Core.Data_Handlers
@@ -14,7 +15,7 @@ namespace webapi.Services.Core.Data_Handlers
         {
             try
             {
-                var userObj = dataObject as UserObject ?? throw new FormatException();
+                var userObj = dataObject as UserObject ?? throw new FormatException(Message.ERROR);
                 var user = new UserModel();
                 var cache = await redisCache.GetCachedData(userObj.CacheKey);
                 if (cache is null)
@@ -32,7 +33,7 @@ namespace webapi.Services.Core.Data_Handlers
 
                 user = JsonConvert.DeserializeObject<UserModel>(cache);
                 if (user is null)
-                    throw new FormatException();
+                    return null;
 
                 user.email = userObj.IsOwner ? user.email : string.Empty;
                 return user;
@@ -44,7 +45,7 @@ namespace webapi.Services.Core.Data_Handlers
             catch (JsonException ex)
             {
                 logger.LogCritical(ex.ToString(), nameof(Files));
-                throw new FormatException();
+                throw new FormatException(Message.ERROR);
             }
         }
 
@@ -52,7 +53,7 @@ namespace webapi.Services.Core.Data_Handlers
         {
             try
             {
-                var userObj = dataObject as UserRangeObject ?? throw new FormatException();
+                var userObj = dataObject as UserRangeObject ?? throw new FormatException(Message.ERROR);
                 var users = new List<UserModel>();
                 var cache = await redisCache.GetCachedData(userObj.CacheKey);
                 if (cache is null)
@@ -72,7 +73,7 @@ namespace webapi.Services.Core.Data_Handlers
                 if (users is not null)
                     return users;
                 else
-                    throw new FormatException();
+                    throw new FormatException(Message.ERROR);
             }
             catch (OperationCanceledException)
             {
@@ -80,8 +81,8 @@ namespace webapi.Services.Core.Data_Handlers
             }
             catch (JsonException ex)
             {
-                logger.LogCritical(ex.ToString(), nameof(Files));
-                throw new FormatException();
+                logger.LogCritical(ex.ToString(), nameof(Users));
+                throw new FormatException(Message.ERROR);
             }
         }
     }

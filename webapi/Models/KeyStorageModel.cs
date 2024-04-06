@@ -16,8 +16,6 @@ namespace webapi.Models
 
         public string access_code { get; set; }
 
-        public bool encrypt { get; set; }
-
         [ForeignKey("user_id")]
         public int user_id { get; set; }
 

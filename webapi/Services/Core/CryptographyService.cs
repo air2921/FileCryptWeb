@@ -103,11 +103,11 @@ namespace webapi.Services.Core
 
             try
             {
-                if (lowerFileType == privateType)
+                if (lowerFileType.Equals(privateType))
                     return new CryptographyParams(await helper.CacheKey(redisKeys.PrivateKey, userInfo.UserId), isValidRoute);
-                else if (lowerFileType == internalType)
+                else if (lowerFileType.Equals(internalType))
                     return new CryptographyParams(await helper.CacheKey(redisKeys.InternalKey, userInfo.UserId), isValidRoute);
-                else if (lowerFileType == receivedType)
+                else if (lowerFileType.Equals(receivedType))
                     return new CryptographyParams(await helper.CacheKey(redisKeys.ReceivedKey, userInfo.UserId), isValidRoute);
                 else
                     throw new InvalidRouteException();
@@ -123,7 +123,7 @@ namespace webapi.Services.Core
         }
     }
 
-    public record CryptographyParams(string EncryptionKey, bool IsValidRoute);
+    public record class CryptographyParams(string EncryptionKey, bool IsValidRoute);
 
     public class CryptographyOperationOptions
     {

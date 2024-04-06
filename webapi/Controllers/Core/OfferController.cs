@@ -103,7 +103,9 @@ namespace webapi.Controllers.Core
             try
             {
                 var cacheKey = $"{ImmutableData.OFFERS_PREFIX}{userInfo.UserId}_{offerId}";
-                var offer = await cache.CacheAndGetRange(new OfferObject(cacheKey, userInfo.UserId, offerId));
+                var offer = await cache.CacheAndGet(new OfferObject(cacheKey, userInfo.UserId, offerId));
+                if (offer is null)
+                    return StatusCode(404, new { message = Message.NOT_FOUND });
 
                 return StatusCode(200, new { offer, userId = userInfo.UserId });
             }

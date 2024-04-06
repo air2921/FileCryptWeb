@@ -106,29 +106,19 @@ namespace webapi.Services.Core
 
         public string GetFileCategory(string contentType)
         {
-            switch (contentType.Split('/')[0])
+            return contentType.Split('/')[0] switch
             {
-                case "application":
-                    return "application";
-                case "audio":
-                    return "audio";
-                case "font":
-                    return "font";
-                case "image":
-                    return "image";
-                case "message":
-                    return "message";
-                case "model":
-                    return "model";
-                case "multipart":
-                    return "multipart";
-                case "text":
-                    return "text";
-                case "video":
-                    return "video";
-                default:
-                    throw new ArgumentException("Invalid MIME type");
-            }
+                "application" => "application",
+                "audio" => "audio",
+                "font" => "font",
+                "image" => "image",
+                "message" => "message",
+                "model" => "model",
+                "multipart" => "multipart",
+                "text" => "text",
+                "video" => "video",
+                _ => throw new ArgumentException("Invalid MIME type"),
+            };
         }
 
         public async Task CreateFile(int userID, string uniqueFileName, string mime, string mimeCategory, string fileType)

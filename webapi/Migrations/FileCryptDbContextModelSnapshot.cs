@@ -22,47 +22,6 @@ namespace webapi.Migrations
 
             NpgsqlModelBuilderExtensions.UseIdentityByDefaultColumns(modelBuilder);
 
-            modelBuilder.Entity("webapi.Models.ApiModel", b =>
-                {
-                    b.Property<int>("api_id")
-                        .ValueGeneratedOnAdd()
-                        .HasColumnType("integer");
-
-                    NpgsqlPropertyBuilderExtensions.UseIdentityByDefaultColumn(b.Property<int>("api_id"));
-
-                    b.Property<string>("api_key")
-                        .IsRequired()
-                        .HasColumnType("text");
-
-                    b.Property<DateTime?>("expiry_date")
-                        .HasColumnType("timestamp with time zone");
-
-                    b.Property<bool>("is_blocked")
-                        .HasColumnType("boolean");
-
-                    b.Property<DateTime>("last_time_activity")
-                        .HasColumnType("timestamp with time zone");
-
-                    b.Property<int>("max_request_of_day")
-                        .HasColumnType("integer");
-
-                    b.Property<string>("type")
-                        .IsRequired()
-                        .HasColumnType("text");
-
-                    b.Property<int>("user_id")
-                        .HasColumnType("integer");
-
-                    b.HasKey("api_id");
-
-                    b.HasIndex("api_key")
-                        .IsUnique();
-
-                    b.HasIndex("user_id");
-
-                    b.ToTable("api");
-                });
-
             modelBuilder.Entity("webapi.Models.FileMimeModel", b =>
                 {
                     b.Property<int>("mime_id")
@@ -186,9 +145,6 @@ namespace webapi.Migrations
                     b.Property<string>("access_code")
                         .IsRequired()
                         .HasColumnType("text");
-
-                    b.Property<bool>("encrypt")
-                        .HasColumnType("boolean");
 
                     b.Property<DateTime>("last_time_modified")
                         .HasColumnType("timestamp with time zone");
@@ -379,17 +335,6 @@ namespace webapi.Migrations
                         .IsUnique();
 
                     b.ToTable("users");
-                });
-
-            modelBuilder.Entity("webapi.Models.ApiModel", b =>
-                {
-                    b.HasOne("webapi.Models.UserModel", "User")
-                        .WithMany("API")
-                        .HasForeignKey("user_id")
-                        .OnDelete(DeleteBehavior.Cascade)
-                        .IsRequired();
-
-                    b.Navigation("User");
                 });
 
             modelBuilder.Entity("webapi.Models.FileModel", b =>

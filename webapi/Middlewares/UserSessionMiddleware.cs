@@ -4,15 +4,8 @@ using webapi.Helpers;
 namespace webapi.Middlewares
 {
     // You may need to install the Microsoft.AspNetCore.Http.Abstractions package into your project
-    public class UserSessionMiddleware
+    public class UserSessionMiddleware(RequestDelegate next)
     {
-        private readonly RequestDelegate _next;
-
-        public UserSessionMiddleware(RequestDelegate next)
-        {
-            _next = next;
-        }
-
         public Task Invoke(HttpContext httpContext)
         {
             var userContext = httpContext.User;
@@ -32,12 +25,12 @@ namespace webapi.Middlewares
             };
 
             if (username is not null && userId is not null && userRole is not null && userAuth is not null)
-                return _next(httpContext);
+                return next(httpContext);
 
             if (!userContext.Identity.IsAuthenticated)
             {
                 httpContext.Response.Cookies.Append(ImmutableData.IS_AUTHORIZED, false.ToString(), cookieOptions);
-                return _next(httpContext);
+                return next(httpContext);
             }
 
             httpContext.Response.Cookies.Append(ImmutableData.IS_AUTHORIZED, true.ToString(), cookieOptions);
@@ -58,7 +51,7 @@ namespace webapi.Middlewares
                 httpContext.Response.Cookies.Append(ImmutableData.ROLE_COOKIE_KEY, claimRole!, cookieOptions);
             }
 
-            return _next(httpContext);
+            return next(httpContext);
         }
     }
 

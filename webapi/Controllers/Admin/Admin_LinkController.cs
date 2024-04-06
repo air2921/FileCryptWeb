@@ -1,6 +1,5 @@
 ﻿using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
-using webapi.Attributes;
 using webapi.DB;
 using webapi.Exceptions;
 using webapi.Interfaces;

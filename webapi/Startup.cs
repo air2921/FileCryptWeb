@@ -35,6 +35,7 @@ namespace webapi
             app.UseCors("AllowSpecificOrigin");
             app.UseFreeze();
             app.UseBearer();
+            app.UseAuthHandler();
             app.UseAuthentication();
             app.UseUserSession();
 

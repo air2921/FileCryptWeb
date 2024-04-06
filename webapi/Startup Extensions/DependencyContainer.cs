@@ -60,7 +60,6 @@ namespace webapi
 
         private static void HelperServices(IServiceCollection services)
         {
-            services.AddScoped<IStorageHelpers, KeyStorageService>();
             services.AddScoped<IUserHelpers, UserService>();
             services.AddTransient<IRecoveryHelpers, RecoveryService>();
             services.AddScoped<ISessionHelpers, SessionService>();
@@ -119,6 +118,7 @@ namespace webapi
             services.AddScoped<ICacheHandler<NotificationModel>, Notifications>();
             services.AddScoped<ICacheHandler<OfferModel>, Offers>();
             services.AddScoped<ICacheHandler<UserModel>, Users>();
+            services.AddScoped<ICacheHandler<KeyModel>, Keys>();
         }
 
         public static void Transient(IServiceCollection services)

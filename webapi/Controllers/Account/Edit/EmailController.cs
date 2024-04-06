@@ -49,8 +49,8 @@ namespace webapi.Controllers.Account.Edit
                 int code = generate.GenerateSixDigitCode();
                 await emailSender.SendMessage(new EmailDto
                 {
-                    username = userInfo.Username,
-                    email = userInfo.Email,
+                    username = user.username,
+                    email = user.email,
                     subject = EmailMessage.ConfirmOldEmailHeader,
                     message = EmailMessage.ConfirmOldEmailBody + code
                 });
@@ -133,8 +133,8 @@ namespace webapi.Controllers.Account.Edit
                     return StatusCode(404, new { message = Message.NOT_FOUND });
 
                 await transaction.CreateTransaction(user, email);
-                await tokenService.UpdateJwtToken();
                 await dataManagament.DeleteData(userInfo.UserId);
+                await tokenService.UpdateJwtToken();
 
                 return StatusCode(201);
             }
