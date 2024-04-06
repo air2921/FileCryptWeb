@@ -171,7 +171,7 @@ namespace webapi.Services.Account
                 return null;
         }
 
-        public Task DeleteData(int id) => throw new NotImplementedException();
+        public Task DeleteData(int id, object? parameter = null) => throw new NotImplementedException();
     }
 
     [AuxiliaryObject]

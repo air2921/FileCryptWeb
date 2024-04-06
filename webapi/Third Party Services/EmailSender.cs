@@ -9,24 +9,13 @@ using webapi.Interfaces.Services;
 
 namespace webapi.Third_Party_Services
 {
-    public class EmailSender : IEmailSender
+    public class EmailSender(EmailSender.ISmtpClient smtpClient, IConfiguration configuration, ILogger<EmailSender> logger) : IEmailSender
     {
-        private readonly ISmtpClient _smtpClient;
-        private readonly IConfiguration _configuration;
-        private readonly ILogger<EmailSender> _logger;
-
-        public EmailSender(ISmtpClient smtpClient, IConfiguration configuration, ILogger<EmailSender> logger)
-        {
-            _smtpClient = smtpClient;
-            _configuration = configuration;
-            _logger = logger;
-        }
-
         public async Task SendMessage(EmailDto dto)
         {
             try
             {
-                string Email = _configuration[App.EMAIL]!;
+                string Email = configuration[App.EMAIL]!;
 
                 var emailMessage = new MimeMessage();
                 emailMessage.From.Add(new MailboxAddress("FileCrypt", Email));
@@ -37,7 +26,7 @@ namespace webapi.Third_Party_Services
                     Text = dto.message
                 };
 
-                await _smtpClient.EmailSendAsync(emailMessage);
+                await smtpClient.EmailSendAsync(emailMessage);
             }
             catch (SmtpClientException)
             {
@@ -45,7 +34,7 @@ namespace webapi.Third_Party_Services
             }
             catch (Exception ex)
             {
-                _logger.LogError(ex.ToString());
+                logger.LogError(ex.ToString());
                 throw new SmtpClientException("Error sending message");
             }
         }

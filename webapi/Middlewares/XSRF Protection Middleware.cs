@@ -4,17 +4,8 @@ using webapi.Helpers;
 namespace webapi.Middlewares
 {
     // You may need to install the Microsoft.AspNetCore.Http.Abstractions package into your project
-    public class XSRFProtectionMiddleware
+    public class XSRFProtectionMiddleware(RequestDelegate next, IAntiforgery antiforgery)
     {
-        private readonly RequestDelegate _next;
-        private readonly IAntiforgery _antiforgery;
-
-        public XSRFProtectionMiddleware(RequestDelegate next, IAntiforgery antiforgery)
-        {
-            _next = next;
-            _antiforgery = antiforgery;
-        }
-
         public async Task Invoke(HttpContext context)
         {
             if (!context.Request.Headers.ContainsKey(ImmutableData.XSRF_HEADER_NAME))
@@ -24,17 +15,21 @@ namespace webapi.Middlewares
                     context.Request.Headers.Append(ImmutableData.XSRF_HEADER_NAME, xsrf);
             }
 
-            context.Response.Cookies.Append(
-            ImmutableData.XSRF_COOKIE_KEY,
-            _antiforgery.GetAndStoreTokens(context).RequestToken,
-            new CookieOptions
+            var requstToken = antiforgery.GetAndStoreTokens(context).RequestToken;
+            if (requstToken is not null)
             {
-                HttpOnly = false,
-                Secure = true,
-                MaxAge = TimeSpan.FromMinutes(60)
-            });
+                context.Response.Cookies.Append(
+                ImmutableData.XSRF_COOKIE_KEY,
+                requstToken,
+                new CookieOptions
+                {
+                    HttpOnly = false,
+                    Secure = true,
+                    MaxAge = TimeSpan.FromMinutes(60)
+                });
+            }
 
-            await _next(context);
+            await next(context);
         }
     }
 

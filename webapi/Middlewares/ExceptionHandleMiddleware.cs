@@ -1,26 +1,17 @@
 ﻿namespace webapi.Middlewares
 {
     // You may need to install the Microsoft.AspNetCore.Http.Abstractions package into your project
-    public class ExceptionHandleMiddleware
+    public class ExceptionHandleMiddleware(RequestDelegate next, ILogger<ExceptionHandleMiddleware> logger)
     {
-        private readonly RequestDelegate _next;
-        private readonly ILogger<ExceptionHandleMiddleware> _logger;
-
-        public ExceptionHandleMiddleware(RequestDelegate next, ILogger<ExceptionHandleMiddleware> logger)
-        {
-            _next = next;
-            _logger = logger;
-        }
-
         public async Task Invoke(HttpContext context)
         {
             try
             {
-                await _next(context);
+                await next(context);
             }
             catch (Exception ex)
             {
-                _logger.LogError(ex.ToString());
+                logger.LogError(ex.ToString());
 
                 context.Response.StatusCode = 500;
                 context.Response.ContentType = "application/json";

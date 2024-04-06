@@ -14,23 +14,8 @@ namespace webapi.Controllers.Admin
     [Route("api/admin/offers")]
     [ApiController]
     [Authorize(Roles = "HighestAdmin,Admin")]
-    public class Admin_OfferController : ControllerBase
+    public class Admin_OfferController(IRepository<OfferModel> offerRepository, IRedisCache redisCache, ISorting sorting) : ControllerBase
     {
-        #region fields and constructor
-
-        private readonly IRepository<OfferModel> _offerRepository;
-        private readonly IRedisCache _redisCache;
-        private readonly ISorting _sorting;
-
-        public Admin_OfferController(IRepository<OfferModel> offerRepository, IRedisCache redisCache, ISorting sorting)
-        {
-            _offerRepository = offerRepository;
-            _redisCache = redisCache;
-            _sorting = sorting;
-        }
-
-        #endregion
-
         [HttpGet("{offerId}")]
         [ProducesResponseType(typeof(OfferModel), 200)]
         [ProducesResponseType(typeof(object), 404)]
@@ -39,7 +24,7 @@ namespace webapi.Controllers.Admin
         {
             try
             {
-                var offer = await _offerRepository.GetById(offerId);
+                var offer = await offerRepository.GetById(offerId);
                 if (offer is null)
                     return StatusCode(404, new { message = Message.NOT_FOUND });
 
@@ -60,8 +45,8 @@ namespace webapi.Controllers.Admin
         {
             try
             {
-                return StatusCode(200, new { offers = await _offerRepository
-                    .GetAll(_sorting.SortOffers(userId, skip, count, byDesc, sended, isAccepted, type)) });
+                return StatusCode(200, new { offers = await offerRepository
+                    .GetAll(sorting.SortOffers(userId, skip, count, byDesc, sended, isAccepted, type)) });
             }
             catch (OperationCanceledException ex)
             {
@@ -77,11 +62,11 @@ namespace webapi.Controllers.Admin
         {
             try
             {
-                var offer = await _offerRepository.Delete(offerId);
+                var offer = await offerRepository.Delete(offerId);
                 if (offer is not null)
                 {
-                    await _redisCache.DeteteCacheByKeyPattern($"{ImmutableData.OFFERS_PREFIX}{offer.sender_id}");
-                    await _redisCache.DeteteCacheByKeyPattern($"{ImmutableData.OFFERS_PREFIX}{offer.receiver_id}");
+                    await redisCache.DeteteCacheByKeyPattern($"{ImmutableData.OFFERS_PREFIX}{offer.sender_id}");
+                    await redisCache.DeteteCacheByKeyPattern($"{ImmutableData.OFFERS_PREFIX}{offer.receiver_id}");
                 }
 
                 return StatusCode(204);
@@ -100,9 +85,9 @@ namespace webapi.Controllers.Admin
         {
             try
             {
-                var offerList = await _offerRepository.DeleteMany(identifiers);
-                await _redisCache.DeleteRedisCache(offerList, ImmutableData.OFFERS_PREFIX, item => item.sender_id);
-                await _redisCache.DeleteRedisCache(offerList, ImmutableData.OFFERS_PREFIX, item => item.receiver_id);
+                var offerList = await offerRepository.DeleteMany(identifiers);
+                await redisCache.DeleteRedisCache(offerList, ImmutableData.OFFERS_PREFIX, item => item.sender_id);
+                await redisCache.DeleteRedisCache(offerList, ImmutableData.OFFERS_PREFIX, item => item.receiver_id);
 
                 return StatusCode(204);
             }

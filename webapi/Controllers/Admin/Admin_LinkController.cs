@@ -1,6 +1,5 @@
 ﻿using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
-using webapi.Attributes;
 using webapi.DB;
 using webapi.Exceptions;
 using webapi.Interfaces;
@@ -12,26 +11,11 @@ namespace webapi.Controllers.Admin
     [Route("api/admin/links")]
     [ApiController]
     [Authorize(Roles = "HighestAdmin,Admin")]
-    public class Admin_LinkController : ControllerBase
+    public class Admin_LinkController(
+        IRepository<LinkModel> linkRepository,
+        ISorting sorting,
+        ILogger<Admin_LinkController> logger) : ControllerBase
     {
-        #region fields and constructor
-
-        private readonly IRepository<LinkModel> _linkRepository;
-        private readonly ISorting _sorting;
-        private readonly ILogger<Admin_LinkController> _logger;
-
-        public Admin_LinkController(
-            IRepository<LinkModel> linkRepository,
-            ISorting sorting,
-            ILogger<Admin_LinkController> logger)
-        {
-            _linkRepository = linkRepository;
-            _sorting = sorting;
-            _logger = logger;
-        }
-
-        #endregion
-
         [HttpGet]
         [ProducesResponseType(typeof(LinkModel), 200)]
         [ProducesResponseType(typeof(object), 404)]
@@ -43,9 +27,9 @@ namespace webapi.Controllers.Admin
                 LinkModel link = null;
 
                 if (linkId.HasValue)
-                    link = await _linkRepository.GetById(linkId.Value);
+                    link = await linkRepository.GetById(linkId.Value);
                 else if (!string.IsNullOrWhiteSpace(token))
-                    link = await _linkRepository.GetByFilter(query => query.Where(l => l.u_token.Equals(token)));
+                    link = await linkRepository.GetByFilter(query => query.Where(l => l.u_token.Equals(token)));
 
                 if (link is null)
                     return StatusCode(404, new { message = Message.NOT_FOUND });
@@ -67,8 +51,8 @@ namespace webapi.Controllers.Admin
         {
             try
             {
-                return StatusCode(200, new { links = await _linkRepository
-                    .GetAll(_sorting.SortLinks(userId, skip, count, byDesc, expired)) });
+                return StatusCode(200, new { links = await linkRepository
+                    .GetAll(sorting.SortLinks(userId, skip, count, byDesc, expired)) });
             }
             catch (OperationCanceledException ex)
             {
@@ -85,7 +69,7 @@ namespace webapi.Controllers.Admin
         {
             try
             {
-                await _linkRepository.Delete(linkId);
+                await linkRepository.Delete(linkId);
                 return StatusCode(204, new { message = Message.NOT_FOUND });
             }
             catch (EntityNotDeletedException ex)
@@ -102,7 +86,7 @@ namespace webapi.Controllers.Admin
         {
             try
             {
-                await _linkRepository.DeleteMany(identifiers);
+                await linkRepository.DeleteMany(identifiers);
                 return StatusCode(204);
             }
             catch (EntityNotDeletedException ex)

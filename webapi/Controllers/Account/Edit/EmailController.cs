@@ -14,50 +14,20 @@ namespace webapi.Controllers.Account.Edit
     [Route("api/account/edit/email")]
     [ApiController]
     [Authorize]
-    public class EmailController : ControllerBase
+    public class EmailController(
+        [FromKeyedServices(ImplementationKey.ACCOUNT_EMAIL_SERVICE)] ITransaction<UserModel> transaction,
+        [FromKeyedServices(ImplementationKey.ACCOUNT_EMAIL_SERVICE)] IDataManagement dataManagament,
+        [FromKeyedServices(ImplementationKey.ACCOUNT_EMAIL_SERVICE)] IValidator validator,
+        IRepository<UserModel> userRepository,
+        IEmailSender emailSender,
+        IPasswordManager passwordManager,
+        IGenerate generate,
+        ITokenService tokenService,
+        IUserInfo userInfo) : ControllerBase
     {
-        #region fields and constuctor
-
-        private readonly string EMAIL;
-        private readonly string OLD_EMAIL_CODE;
-        private readonly string NEW_EMAIL_CODE;
-
-        private readonly ITransaction<UserModel> _transaction;
-        private readonly IDataManagement _dataManagament;
-        private readonly IValidator _validator;
-        private readonly IRepository<UserModel> _userRepository;
-        private readonly IEmailSender _emailSender;
-        private readonly IPasswordManager _passwordManager;
-        private readonly IGenerate _generate;
-        private readonly ITokenService _tokenService;
-        private readonly IUserInfo _userInfo;
-
-        public EmailController(
-            [FromKeyedServices(ImplementationKey.ACCOUNT_EMAIL_SERVICE)] ITransaction<UserModel> transaction,
-            [FromKeyedServices(ImplementationKey.ACCOUNT_EMAIL_SERVICE)] IDataManagement dataManagament,
-            [FromKeyedServices(ImplementationKey.ACCOUNT_EMAIL_SERVICE)] IValidator validator,
-            IRepository<UserModel> userRepository,
-            IEmailSender emailSender,
-            IPasswordManager passwordManager,
-            IGenerate generate,
-            ITokenService tokenService,
-            IUserInfo userInfo)
-        {
-            _transaction = transaction;
-            _dataManagament = dataManagament;
-            _validator = validator;
-            _userRepository = userRepository;
-            _emailSender = emailSender;
-            _passwordManager = passwordManager;
-            _generate = generate;
-            _tokenService = tokenService;
-            _userInfo = userInfo;
-            EMAIL = $"EmailController_Email#{_userInfo.UserId}";
-            OLD_EMAIL_CODE = $"EmailController_ConfirmationCode_OldEmail#{_userInfo.UserId}";
-            NEW_EMAIL_CODE = $"EmailController_ConfirmationCode_NewEmail#{_userInfo.UserId}";
-        }
-
-        #endregion
+        private readonly string EMAIL = $"EmailController_Email#{userInfo.UserId}";
+        private readonly string OLD_EMAIL_CODE = $"EmailController_ConfirmationCode_OldEmail#{userInfo.UserId}";
+        private readonly string NEW_EMAIL_CODE = $"EmailController_ConfirmationCode_NewEmail#{userInfo.UserId}";
 
         [HttpPost("start")]
         [ValidateAntiForgeryToken]
@@ -69,23 +39,23 @@ namespace webapi.Controllers.Account.Edit
         {
             try
             {
-                var user = await _userRepository.GetById(_userInfo.UserId);
+                var user = await userRepository.GetById(userInfo.UserId);
                 if (user is null)
                     return StatusCode(404, new { message = Message.NOT_FOUND });
 
-                if (!_passwordManager.CheckPassword(password, user.password))
+                if (!passwordManager.CheckPassword(password, user.password))
                     return StatusCode(401, new { message = Message.INCORRECT });
 
-                int code = _generate.GenerateSixDigitCode();
-                await _emailSender.SendMessage(new EmailDto
+                int code = generate.GenerateSixDigitCode();
+                await emailSender.SendMessage(new EmailDto
                 {
-                    username = _userInfo.Username,
-                    email = _userInfo.Email,
+                    username = user.username,
+                    email = user.email,
                     subject = EmailMessage.ConfirmOldEmailHeader,
                     message = EmailMessage.ConfirmOldEmailBody + code
                 });
 
-                await _dataManagament.SetData(OLD_EMAIL_CODE, code);
+                await dataManagament.SetData(OLD_EMAIL_CODE, code);
 
                 return StatusCode(200, new { message = Message.EMAIL_SENT });
             }
@@ -111,24 +81,24 @@ namespace webapi.Controllers.Account.Edit
             {
                 email = email.ToLowerInvariant();
 
-                if (!_validator.IsValid(await _dataManagament.GetData(OLD_EMAIL_CODE), code))
+                if (!validator.IsValid(await dataManagament.GetData(OLD_EMAIL_CODE), code))
                     return StatusCode(400, new { message = Message.INCORRECT });
 
-                var user = await _userRepository.GetByFilter(query => query.Where(u => u.email.Equals(email)));
+                var user = await userRepository.GetByFilter(query => query.Where(u => u.email.Equals(email)));
                 if (user is not null)
                     return StatusCode(409, new { message = Message.CONFLICT });
 
-                int confirmationCode = _generate.GenerateSixDigitCode();
-                await _emailSender.SendMessage(new EmailDto()
+                int confirmationCode = generate.GenerateSixDigitCode();
+                await emailSender.SendMessage(new EmailDto()
                 {
-                    username = _userInfo.Username,
+                    username = userInfo.Username,
                     email = email,
                     subject = EmailMessage.ConfirmNewEmailHeader,
                     message = EmailMessage.ConfirmNewEmailBody + confirmationCode
                 });
 
-                await _dataManagament.SetData(NEW_EMAIL_CODE, confirmationCode);
-                await _dataManagament.SetData(EMAIL, email);
+                await dataManagament.SetData(NEW_EMAIL_CODE, confirmationCode);
+                await dataManagament.SetData(EMAIL, email);
 
                 return StatusCode(200, new { message = Message.EMAIL_SENT });
             }
@@ -153,18 +123,18 @@ namespace webapi.Controllers.Account.Edit
         {
             try
             {
-                string? email = (string)await _dataManagament.GetData(EMAIL);
+                string? email = (string)await dataManagament.GetData(EMAIL);
 
-                if (email is null || !_validator.IsValid(await _dataManagament.GetData(NEW_EMAIL_CODE), code))
+                if (email is null || !validator.IsValid(await dataManagament.GetData(NEW_EMAIL_CODE), code))
                     return StatusCode(400, new { message = Message.INCORRECT });
 
-                var user = await _userRepository.GetById(_userInfo.UserId);
+                var user = await userRepository.GetById(userInfo.UserId);
                 if (user is null)
                     return StatusCode(404, new { message = Message.NOT_FOUND });
 
-                await _transaction.CreateTransaction(user, email);
-                await _tokenService.UpdateJwtToken();
-                await _dataManagament.DeleteData(_userInfo.UserId);
+                await transaction.CreateTransaction(user, email);
+                await dataManagament.DeleteData(userInfo.UserId);
+                await tokenService.UpdateJwtToken();
 
                 return StatusCode(201);
             }
@@ -182,7 +152,7 @@ namespace webapi.Controllers.Account.Edit
             }
             catch (UnauthorizedAccessException ex)
             {
-                _tokenService.DeleteTokens();
+                tokenService.DeleteTokens();
                 return StatusCode(206, new { message = ex.Message });
             }
         }

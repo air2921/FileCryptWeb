@@ -14,7 +14,7 @@ namespace webapi.Controllers.Account
     [Route("api/auth")]
     [ApiController]
     public class AuthRegistrationController(
-        [FromKeyedServices(ImplementationKey.ACCOUNT_REGISTRATION_SERVICE)] ITransaction<UserObject> transaction,
+        [FromKeyedServices(ImplementationKey.ACCOUNT_REGISTRATION_SERVICE)] ITransaction<User> transaction,
         [FromKeyedServices(ImplementationKey.ACCOUNT_REGISTRATION_SERVICE)] IDataManagement dataManagament,
         [FromKeyedServices(ImplementationKey.ACCOUNT_REGISTRATION_SERVICE)] IValidator validator,
         IRepository<UserModel> userRepository,
@@ -51,7 +51,7 @@ namespace webapi.Controllers.Account
                     subject = EmailMessage.VerifyEmailHeader,
                     message = EmailMessage.VerifyEmailBody + code
                 });
-                await dataManagament.SetData($"{USER_OBJECT}{userDTO.email}", new UserObject
+                await dataManagament.SetData($"{USER_OBJECT}{userDTO.email}", new User
                 {
                     Email = userDTO.email,
                     Password = userDTO.password,
@@ -82,7 +82,7 @@ namespace webapi.Controllers.Account
         {
             try
             {
-                var user = (UserObject)await dataManagament.GetData($"{USER_OBJECT}{email.ToLowerInvariant()}");
+                var user = (User)await dataManagament.GetData($"{USER_OBJECT}{email.ToLowerInvariant()}");
                 if (user is null)
                     return StatusCode(404, new { message = Message.TASK_TIMED_OUT });
 

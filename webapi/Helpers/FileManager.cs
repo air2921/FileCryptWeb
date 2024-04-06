@@ -3,14 +3,8 @@ using webapi.Models;
 
 namespace webapi.Helpers
 {
-    public class FileManager : IFileManager, IGetSize
+    public class FileManager(ILogger<FileManager> logger) : IFileManager, IGetSize
     {
-        private readonly ILogger<FileManager> _logger;
-
-        public FileManager(ILogger<FileManager> logger)
-        {
-            _logger = logger;
-        }
 
         /// <summary>
         /// Use only in a test environment, if necessary replace with the specific uri of your frontend application
@@ -40,7 +34,7 @@ namespace webapi.Helpers
             }
             catch (IOException ex)
             {
-                _logger.LogCritical(ex.ToString());
+                logger.LogCritical(ex.ToString());
                 throw new ArgumentException("Invalid file");
             }
         }

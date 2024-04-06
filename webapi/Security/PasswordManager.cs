@@ -3,15 +3,8 @@ using BC = BCrypt.Net;
 
 namespace webapi.Security
 {
-    public class PasswordManager : IPasswordManager
+    public class PasswordManager(ILogger<PasswordManager> logger) : IPasswordManager
     {
-        private readonly ILogger<PasswordManager> _logger;
-
-        public PasswordManager(ILogger<PasswordManager> logger)
-        {
-            _logger = logger;
-        }
-
         public string HashingPassword(string password)
         {
             return BC.BCrypt.EnhancedHashPassword(password, BC.HashType.SHA512);
@@ -25,7 +18,7 @@ namespace webapi.Security
             }
             catch (Exception ex)
             {
-                _logger.LogCritical(ex.ToString());
+                logger.LogCritical(ex.ToString());
 
                 return false;
             }

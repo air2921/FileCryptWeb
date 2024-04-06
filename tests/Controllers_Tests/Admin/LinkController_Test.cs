@@ -44,7 +44,7 @@ namespace tests.Controllers_Tests.Admin
         {
             var linkRepositoryMock = new Mock<IRepository<LinkModel>>();
             linkRepositoryMock.Setup(x => x.GetByFilter(It.IsAny<Func<IQueryable<LinkModel>, IQueryable<LinkModel>>>(), CancellationToken.None))
-                .ThrowsAsync((Exception)Activator.CreateInstance(typeof(OperationCanceledException)));
+                .ThrowsAsync(new OperationCanceledException());
 
             var linkController = new Admin_LinkController(linkRepositoryMock.Object, null, null);
             var result = await linkController.GetLink(null, "F");
@@ -91,7 +91,7 @@ namespace tests.Controllers_Tests.Admin
             var linkRepositoryMock = new Mock<IRepository<LinkModel>>();
             var sortMock = new Mock<ISorting>();
             linkRepositoryMock.Setup(x => x.GetAll(It.IsAny<Func<IQueryable<LinkModel>, IQueryable<LinkModel>>>(), CancellationToken.None))
-                .ThrowsAsync((Exception)Activator.CreateInstance(typeof(OperationCanceledException)));
+                .ThrowsAsync(new OperationCanceledException());
 
             var linkController = new Admin_LinkController(linkRepositoryMock.Object, sortMock.Object, null);
             var result = await linkController.GetRangeLinks(null, null, null, true, false);
@@ -104,14 +104,16 @@ namespace tests.Controllers_Tests.Admin
         [Fact]
         public async Task DeleteLink_Success()
         {
+            var id = 1;
             var linkRepositoryMock = new Mock<IRepository<LinkModel>>();
 
             var linkController = new Admin_LinkController(linkRepositoryMock.Object, null, null);
-            var result = await linkController.DeleteLink(1);
+            var result = await linkController.DeleteLink(id);
 
             Assert.IsType<ObjectResult>(result);
             var objectResult = (ObjectResult)result;
             Assert.Equal(204, objectResult.StatusCode);
+            linkRepositoryMock.Verify(x => x.Delete(id, CancellationToken.None), Times.Once);
         }
 
         [Fact]
@@ -119,7 +121,7 @@ namespace tests.Controllers_Tests.Admin
         {
             var linkRepositoryMock = new Mock<IRepository<LinkModel>>();
             linkRepositoryMock.Setup(x => x.Delete(It.IsAny<int>(), CancellationToken.None))
-                .ThrowsAsync((Exception)Activator.CreateInstance(typeof(EntityNotDeletedException)));
+                .ThrowsAsync(new EntityNotDeletedException());
 
             var linkController = new Admin_LinkController(linkRepositoryMock.Object, null, null);
             var result = await linkController.DeleteLink(1);
@@ -133,11 +135,13 @@ namespace tests.Controllers_Tests.Admin
         public async Task DeleteRangeLinks_Success()
         {
             var linkRepositoryMock = new Mock<IRepository<LinkModel>>();
+            var ids = new List<int> { 1, 2, 3 };
 
             var linkController = new Admin_LinkController(linkRepositoryMock.Object, null, null);
-            var result = await linkController.DeleteRangeLinks(new List<int> { 1 });
+            var result = await linkController.DeleteRangeLinks(ids);
 
             Assert.Equal(204, ((StatusCodeResult)result).StatusCode);
+            linkRepositoryMock.Verify(x => x.DeleteMany(ids, CancellationToken.None), Times.Once);
         }
 
         [Fact]
@@ -145,7 +149,7 @@ namespace tests.Controllers_Tests.Admin
         {
             var linkRepositoryMock = new Mock<IRepository<LinkModel>>();
             linkRepositoryMock.Setup(x => x.DeleteMany(It.IsAny<IEnumerable<int>>(), CancellationToken.None))
-                .ThrowsAsync((Exception)Activator.CreateInstance(typeof(EntityNotDeletedException)));
+                .ThrowsAsync(new EntityNotDeletedException());
 
             var linkController = new Admin_LinkController(linkRepositoryMock.Object, null, null);
             var result = await linkController.DeleteRangeLinks(new List<int> { 1 });

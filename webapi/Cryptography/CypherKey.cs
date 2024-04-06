@@ -1,18 +1,11 @@
 ﻿using System.Security.Cryptography;
-using webapi.Attributes;
-using webapi.Helpers;
 using webapi.Interfaces.Cryptography;
 
 namespace webapi.Cryptography
 {
-    public class EncryptKey : ICypherKey
+    public class EncryptKey(IAes aes) : ICypherKey
     {
-        private readonly IAes _aes;
-
-        public EncryptKey(IAes aes)
-        {
-            _aes = aes;
-        }
+        private readonly IAes _aes = aes;
 
         public async Task<string> CypherKeyAsync(string text, byte[] key)
         {

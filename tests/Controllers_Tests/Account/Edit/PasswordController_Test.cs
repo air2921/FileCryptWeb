@@ -14,6 +14,13 @@ namespace tests.Controllers_Tests.Account.Edit
         [Fact]
         public async Task UpdatePassword_Success()
         {
+            var id = 1;
+            var user = new UserModel
+            {
+                id = id,
+                password = "password"
+            };
+
             var userRepositoryMock = new Mock<IRepository<UserModel>>();
             var userInfoMock = new Mock<IUserInfo>();
             var passwordManagerMock = new Mock<IPasswordManager>();
@@ -21,25 +28,21 @@ namespace tests.Controllers_Tests.Account.Edit
             var dataManagementMock = new Mock<IDataManagement>();
             var validatorMock = new Mock<IValidator>();
 
-            userRepositoryMock.Setup(x => x.GetById(It.IsAny<int>(), CancellationToken.None)).ReturnsAsync(new UserModel
-            {
-                id = 1,
-                password = "test"
-            });
-            userInfoMock.Setup(x => x.UserId).Returns(1);
-            passwordManagerMock.Setup(x => x.CheckPassword(It.IsAny<string>(), It.IsAny<string>())).Returns(true);
-            transactionMock.Setup(x => x.CreateTransaction(It.IsAny<UserModel>(), It.IsAny<string>())).Returns(Task.CompletedTask);
-            dataManagementMock.Setup(x => x.DeleteData(It.IsAny<int>())).Returns(Task.CompletedTask);
-            validatorMock.Setup(x => x.IsValid(It.IsAny<string>(), null)).Returns(true);
+            userRepositoryMock.Setup(x => x.GetById(id, CancellationToken.None)).ReturnsAsync(user);
+            userInfoMock.Setup(x => x.UserId).Returns(id);
+            passwordManagerMock.Setup(x => x.CheckPassword("password", "password")).Returns(true);
+            validatorMock.Setup(x => x.IsValid("newPassword", null)).Returns(true);
 
             var passwordController = new PasswordController(transactionMock.Object, dataManagementMock.Object, validatorMock.Object,
                 userRepositoryMock.Object, passwordManagerMock.Object, userInfoMock.Object);
 
-            var result = await passwordController.UpdatePassword(new PasswordDTO { NewPassword = string.Empty, OldPassword = string.Empty });
+            var result = await passwordController.UpdatePassword(new PasswordDTO { NewPassword = "newPassword", OldPassword = "password" });
 
             Assert.IsType<ObjectResult>(result);
             var objectResult = (ObjectResult)result;
             Assert.Equal(200, objectResult.StatusCode);
+            transactionMock.Verify(tr => tr.CreateTransaction(user, "newPassword"), Times.Once);
+            dataManagementMock.Verify(dm => dm.DeleteData(id, null), Times.Once);
         }
 
         [Fact]
@@ -85,7 +88,7 @@ namespace tests.Controllers_Tests.Account.Edit
             var validatorMock = new Mock<IValidator>();
 
             userRepositoryMock.Setup(x => x.GetById(It.IsAny<int>(), CancellationToken.None))
-                .ThrowsAsync((Exception)Activator.CreateInstance(typeof(OperationCanceledException)));
+                .ThrowsAsync(new OperationCanceledException());
             userInfoMock.Setup(x => x.UserId).Returns(1);
             validatorMock.Setup(x => x.IsValid(It.IsAny<string>(), null)).Returns(true);
 
@@ -148,7 +151,6 @@ namespace tests.Controllers_Tests.Account.Edit
             passwordManagerMock.Setup(x => x.CheckPassword(It.IsAny<string>(), It.IsAny<string>())).Returns(true);
             transactionMock.Setup(x => x.CreateTransaction(It.IsAny<UserModel>(), It.IsAny<string>()))
                 .ThrowsAsync((Exception)Activator.CreateInstance(ex));
-            dataManagementMock.Setup(x => x.DeleteData(It.IsAny<int>())).Returns(Task.CompletedTask);
             validatorMock.Setup(x => x.IsValid(It.IsAny<string>(), null)).Returns(true);
 
             var passwordController = new PasswordController(transactionMock.Object, dataManagementMock.Object, validatorMock.Object,

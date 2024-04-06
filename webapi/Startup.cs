@@ -11,6 +11,7 @@ namespace webapi
             DependencyContainer.Singleton(services);
             DependencyContainer.Scoped(services);
             DependencyContainer.Transient(services);
+            DependencyContainer.OtherServices(services);
 
             AppServices.Register(services);
         }
@@ -34,6 +35,7 @@ namespace webapi
             app.UseCors("AllowSpecificOrigin");
             app.UseFreeze();
             app.UseBearer();
+            app.UseAuthHandler();
             app.UseAuthentication();
             app.UseUserSession();
 

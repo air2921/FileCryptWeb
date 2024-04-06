@@ -62,7 +62,7 @@ namespace webapi.Services.Account
         }
 
         [Helper]
-        public async Task DeleteData(int id)
+        public async Task DeleteData(int id, object? parameter = null)
         {
             await redisCache.DeleteCache($"_2FaController_VerificationCode#{id}");
             await redisCache.DeteteCacheByKeyPattern($"{ImmutableData.USER_DATA_PREFIX}{id}");

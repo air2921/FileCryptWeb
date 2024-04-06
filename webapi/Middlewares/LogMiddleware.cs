@@ -3,17 +3,8 @@
 namespace webapi.Middlewares
 {
     // You may need to install the Microsoft.AspNetCore.Http.Abstractions package into your project
-    public class LogMiddleware
+    public class LogMiddleware(RequestDelegate next, ILogger<LogMiddleware> logger)
     {
-        private readonly RequestDelegate _next;
-        private readonly ILogger<LogMiddleware> _logger;
-
-        public LogMiddleware(RequestDelegate next, ILogger<LogMiddleware> logger)
-        {
-            _next = next;
-            _logger = logger;
-        }
-
         public async Task Invoke(HttpContext context)
         {
             var userContext = context.User;
@@ -48,13 +39,13 @@ namespace webapi.Middlewares
                 method,
             };
 
-            _logger.LogInformation($"{user} {request}");
+            logger.LogInformation($"{user} {request}");
 
-            await _next(context);
+            await next(context);
 
             var statusCode = context.Response.StatusCode;
 
-            _logger.LogInformation($"Status Code: {statusCode}");
+            logger.LogInformation($"Status Code: {statusCode}");
         }
     }
 

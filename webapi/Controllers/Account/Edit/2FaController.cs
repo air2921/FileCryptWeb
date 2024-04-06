@@ -14,42 +14,17 @@ namespace webapi.Controllers.Account.Edit
     [Route("api/account/edit/2fa")]
     [ApiController]
     [Authorize]
-    public class _2FaController : ControllerBase
+    public class _2FaController(
+        [FromKeyedServices(ImplementationKey.ACCOUNT_2FA_SERVICE)] ITransaction<UserModel> transaction,
+        [FromKeyedServices(ImplementationKey.ACCOUNT_2FA_SERVICE)] IDataManagement dataManagament,
+        [FromKeyedServices(ImplementationKey.ACCOUNT_2FA_SERVICE)] IValidator validator,
+        IEmailSender emailSender,
+        IRepository<UserModel> userRepository,
+        IPasswordManager passwordManager,
+        IUserInfo userInfo,
+        IGenerate generate) : ControllerBase
     {
-        #region fields and constructor
-
-        private readonly string CODE;
-        private readonly ITransaction<UserModel> _transaction;
-        private readonly IDataManagement _dataManagament;
-        private readonly IValidator _validator;
-        private readonly IEmailSender _emailSender;
-        private readonly IRepository<UserModel> _userRepository;
-        private readonly IPasswordManager _passwordManager;
-        private readonly IUserInfo _userInfo;
-        private readonly IGenerate _generate;
-
-        public _2FaController(
-            [FromKeyedServices(ImplementationKey.ACCOUNT_2FA_SERVICE)] ITransaction<UserModel> transaction,
-            [FromKeyedServices(ImplementationKey.ACCOUNT_2FA_SERVICE)] IDataManagement dataManagament,
-            [FromKeyedServices(ImplementationKey.ACCOUNT_2FA_SERVICE)] IValidator validator,
-            IEmailSender emailSender,
-            IRepository<UserModel> userRepository,
-            IPasswordManager passwordManager,
-            IUserInfo userInfo,
-            IGenerate generate)
-        {
-            _transaction = transaction;
-            _dataManagament = dataManagament;
-            _emailSender = emailSender;
-            _validator = validator;
-            _userRepository = userRepository;
-            _passwordManager = passwordManager;
-            _userInfo = userInfo;
-            _generate = generate;
-            CODE = $"_2FaController_VerificationCode#{_userInfo.UserId}";
-        }
-
-        #endregion
+        private readonly string CODE = $"_2FaController_VerificationCode#{userInfo.UserId}";
 
         [HttpPost("start")]
         [ValidateAntiForgeryToken]
@@ -61,15 +36,15 @@ namespace webapi.Controllers.Account.Edit
         {
             try
             {
-                var user = await _userRepository.GetById(_userInfo.UserId);
+                var user = await userRepository.GetById(userInfo.UserId);
                 if (user is null)
                     return StatusCode(404, new { message = Message.NOT_FOUND });
 
-                if (!_passwordManager.CheckPassword(password, user.password))
+                if (!passwordManager.CheckPassword(password, user.password))
                     return StatusCode(401, new { message = Message.INCORRECT });
 
-                int code = _generate.GenerateSixDigitCode();
-                await _emailSender.SendMessage(new EmailDto
+                int code = generate.GenerateSixDigitCode();
+                await emailSender.SendMessage(new EmailDto
                 {
                     username = user.username,
                     email = user.email,
@@ -77,7 +52,7 @@ namespace webapi.Controllers.Account.Edit
                     message = EmailMessage.Change2FaBody + code
                 });
 
-                await _dataManagament.SetData(CODE, code);
+                await dataManagament.SetData(CODE, code);
 
                 return StatusCode(200);
             }
@@ -101,15 +76,15 @@ namespace webapi.Controllers.Account.Edit
         {
             try
             {
-                if (!_validator.IsValid(await _dataManagament.GetData(CODE), code))
+                if (!validator.IsValid(await dataManagament.GetData(CODE), code))
                     return StatusCode(400, new { message = Message.INCORRECT });
 
-                var user = await _userRepository.GetById(_userInfo.UserId);
+                var user = await userRepository.GetById(userInfo.UserId);
                 if (user is null)
                     return StatusCode(404, new { message = Message.NOT_FOUND });
 
-                await _transaction.CreateTransaction(user, enable);
-                await _dataManagament.DeleteData(_userInfo.UserId);
+                await transaction.CreateTransaction(user, enable);
+                await dataManagament.DeleteData(userInfo.UserId);
 
                 return StatusCode(200);
             }

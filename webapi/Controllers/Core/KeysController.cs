@@ -1,61 +1,36 @@
 ﻿using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
-using Newtonsoft.Json;
-using System.Text.RegularExpressions;
-using webapi.Attributes;
+using System.Security.Cryptography;
 using webapi.Exceptions;
 using webapi.Helpers;
 using webapi.Interfaces;
+using webapi.Interfaces.Controllers.Services;
 using webapi.Interfaces.Cryptography;
 using webapi.Interfaces.Redis;
 using webapi.Interfaces.Services;
 using webapi.Localization;
 using webapi.Models;
+using webapi.Services.Core;
+using webapi.Services.Core.Data_Handlers;
 
 namespace webapi.Controllers.Core
 {
     [Route("api/core/keys")]
     [ApiController]
     [Authorize]
-    public class KeysController : ControllerBase
+    public class KeysController(
+        IRepository<KeyModel> keyRepository,
+        ICacheHandler<KeyModel> cacheHandler,
+        IConfiguration configuration,
+        IGenerate generate,
+        IRedisKeys redisKeys,
+        IUserInfo userInfo,
+        [FromKeyedServices("Decrypt")] ICypherKey decrypt,
+        [FromKeyedServices(ImplementationKey.CORE_KEY_SERVICE)] IValidator validator,
+        [FromKeyedServices(ImplementationKey.CORE_KEY_SERVICE)] IDataManagement dataManagement,
+        IKeyHelper helper) : ControllerBase
     {
-        #region fields and constructor
-
-        private readonly IRepository<KeyModel> _keyRepository;
-        private readonly IConfiguration _configuration;
-        private readonly IGenerate _generate;
-        private readonly IRedisCache _redisCache;
-        private readonly IRedisKeys _redisKeys;
-        private readonly IUserInfo _userInfo;
-        private readonly IValidation _validation;
-        private readonly ICypherKey _decryptKey;
-        private readonly ICypherKey _encryptKey;
-        private readonly byte[] secretKey;
-
-        public KeysController(
-            IRepository<KeyModel> keyRepository,
-            IConfiguration configuration,
-            IGenerate generate,
-            IRedisCache redisCache,
-            IRedisKeys redisKeys,
-            IUserInfo userInfo,
-            IValidation validation,
-            [FromKeyedServices("Encrypt")] ICypherKey encrypt,
-            [FromKeyedServices("Decrypt")] ICypherKey decrypt)
-        {
-            _keyRepository = keyRepository;
-            _configuration = configuration;
-            _generate = generate;
-            _redisCache = redisCache;
-            _redisKeys = redisKeys;
-            _userInfo = userInfo;
-            _validation = validation;
-            _decryptKey = decrypt;
-            _encryptKey = encrypt;
-            secretKey = Convert.FromBase64String(_configuration[App.ENCRYPTION_KEY]!);
-        }
-
-        #endregion
+        private readonly byte[] secretKey = Convert.FromBase64String(configuration[App.ENCRYPTION_KEY]!);
 
         [HttpGet("all")]
         [ProducesResponseType(typeof(object), 200)]
@@ -65,15 +40,23 @@ namespace webapi.Controllers.Core
         {
             try
             {
-                var keys = await GetKeys();
+                var keys = await cacheHandler.CacheAndGet(new KeyObject($"{ImmutableData.KEYS_PREFIX}{userInfo.UserId}", userInfo.UserId));
                 if (keys is null)
                     return StatusCode(404, new { message = Message.NOT_FOUND });
 
-                var keyValues = await SetKeys(keys);
-
-                return StatusCode(200, new { keys = new { keyValues.privateKey, keyValues.internalKey, keyValues.receivedKey } });
+                return StatusCode(200, new {
+                    keys = new {
+                        private_key = await decrypt.CypherKeyAsync(keys.private_key, secretKey),
+                        internal_key = keys.internal_key is not null ? await decrypt.CypherKeyAsync(keys.internal_key, secretKey) : null,
+                        received_key = keys.received_key is not null ? "hidden" : null
+                    }, 
+                });
             }
             catch (OperationCanceledException ex)
+            {
+                return StatusCode(500, new { message = ex.Message });
+            }
+            catch (FormatException ex)
             {
                 return StatusCode(500, new { message = ex.Message });
             }
@@ -83,20 +66,25 @@ namespace webapi.Controllers.Core
         [ValidateAntiForgeryToken]
         [ProducesResponseType(typeof(object), 200)]
         [ProducesResponseType(typeof(object), 404)]
-        public async Task<IActionResult> UpdatePrivateKey([FromQuery] string? key, [FromQuery] bool auto)
+        [ProducesResponseType(typeof(object), 500)]
+        public async Task<IActionResult> UpdatePrivateKey([FromQuery] string? key)
         {
             try
             {
-                SetNewKey(ref key, auto);
-                await UpdateKey(key!, FileType.Private);
+                key = validator.IsValid(key) ? key : generate.GenerateKey();
+                await helper.UpdateKey(key, userInfo.UserId, FileType.Private);
 
-                await ClearData(_userInfo.UserId, _redisKeys.PrivateKey);
+                await dataManagement.DeleteData(userInfo.UserId, redisKeys.PrivateKey);
 
                 return StatusCode(200, new { message = Message.UPDATED });
             }
             catch (EntityNotUpdatedException ex)
             {
-                return StatusCode(404, new { message = ex.Message });
+                return StatusCode(500, new { message = ex.Message });
+            }
+            catch (CryptographicException)
+            {
+                return StatusCode(500, new { message = Message.ERROR });
             }
         }
 
@@ -104,20 +92,25 @@ namespace webapi.Controllers.Core
         [ValidateAntiForgeryToken]
         [ProducesResponseType(typeof(object), 200)]
         [ProducesResponseType(typeof(object), 404)]
-        public async Task<IActionResult> UpdatePersonalInternalKey([FromQuery] string? key, [FromQuery] bool auto)
+        [ProducesResponseType(typeof(object), 500)]
+        public async Task<IActionResult> UpdatePersonalInternalKey([FromQuery] string? key)
         {
             try
             {
-                SetNewKey(ref key, auto);
-                await UpdateKey(key!, FileType.Internal);
+                key = validator.IsValid(key) ? key : generate.GenerateKey();
+                await helper.UpdateKey(key, userInfo.UserId, FileType.Internal);
 
-                await ClearData(_userInfo.UserId, _redisKeys.InternalKey);
+                await dataManagement.DeleteData(userInfo.UserId, redisKeys.InternalKey);
 
                 return StatusCode(200, new { message = Message.UPDATED });
             }
             catch (EntityNotUpdatedException ex)
             {
-                return StatusCode(404, new { message = ex.Message });
+                return StatusCode(500, new { message = ex.Message });
+            }
+            catch (CryptographicException)
+            {
+                return StatusCode(500, new { message = Message.ERROR });
             }
         }
 
@@ -130,104 +123,31 @@ namespace webapi.Controllers.Core
         {
             try
             {
-                var keys = await _keyRepository.GetByFilter(query => query.Where(k => k.user_id.Equals(_userInfo.UserId)));
+                var keys = await cacheHandler.CacheAndGet(new KeyObject($"{ImmutableData.KEYS_PREFIX}{userInfo.UserId}", userInfo.UserId));
+                if (keys is null)
+                    return StatusCode(404, new { message = Message.NOT_FOUND });
+
                 if (keys.received_key is null)
                     return StatusCode(409, new { message = Message.CONFLICT });
 
                 keys.received_key = null;
-                await _keyRepository.Update(keys);
-
-                await ClearData(_userInfo.UserId, _redisKeys.InternalKey);
+                await keyRepository.Update(keys);
+                await dataManagement.DeleteData(userInfo.UserId, redisKeys.ReceivedKey);
 
                 return StatusCode(200, new { message = Message.UPDATED });
             }
+            catch (OperationCanceledException ex)
+            {
+                return StatusCode(500, new { message = ex.Message });
+            }
             catch (EntityNotUpdatedException ex)
             {
-                return StatusCode(404, new { message = ex.Message });
+                return StatusCode(500, new { message = ex.Message });
             }
-        }
-
-        [Helper]
-        private async Task<KeyModel> GetKeys()
-        {
-            var cacheKey = $"Keys_{_userInfo.UserId}";
-            var cacheKeys = await _redisCache.GetCachedData(cacheKey);
-
-            if (cacheKeys is null)
+            catch (FormatException ex)
             {
-                var keys = await _keyRepository.GetByFilter(query => query.Where(k => k.user_id.Equals(_userInfo.UserId)));
-                if (keys is null)
-                    return null;
-
-                await _redisCache.CacheData(cacheKey, keys, TimeSpan.FromMinutes(10));
-                return keys;
+                return StatusCode(500, new { message = ex.Message });
             }
-            else
-                return JsonConvert.DeserializeObject<KeyModel>(cacheKeys);
-        }
-
-        [Helper]
-        private async Task<KeyObject> SetKeys(KeyModel keyModel)
-        {
-            string? privateKey = keyModel.private_key is not null ? await _decryptKey.CypherKeyAsync(keyModel.private_key, secretKey) : null;
-            string? internalKey = keyModel.internal_key is not null ? await _decryptKey.CypherKeyAsync(keyModel.internal_key, secretKey) : null;
-            string? receivedKey = keyModel.received_key is not null ? "hidden" : null;
-
-            return new KeyObject
-            {
-                privateKey = privateKey,
-                internalKey = internalKey,
-                receivedKey = receivedKey,
-            };
-        }
-
-        [Helper]
-        private void SetNewKey(ref string? key, bool auto)
-        {
-            if (!auto)
-            {
-                if (string.IsNullOrWhiteSpace(key) || !_validation.IsBase64String(key) || !Regex.IsMatch(key, Validation.EncryptionKey))
-                    throw new ArgumentException(Message.INVALID_FORMAT);
-            }
-            else
-                key = _generate.GenerateKey();
-        }
-
-        [Helper]
-        private async Task UpdateKey(string key, FileType type)
-        {
-            try
-            {
-                var keys = await _keyRepository.GetByFilter(query => query.Where(k => k.user_id.Equals(_userInfo.UserId)));
-
-                if (type.Equals(FileType.Private))
-                    keys.private_key = await _encryptKey.CypherKeyAsync(key!, secretKey);
-                else if (type.Equals(FileType.Internal))
-                    keys.internal_key = await _encryptKey.CypherKeyAsync(key!, secretKey);
-                else
-                    throw new EntityNotUpdatedException();
-
-                await _keyRepository.Update(keys);
-            }
-            catch (EntityNotUpdatedException)
-            {
-                throw;
-            }
-        }
-
-        [Helper]
-        private async Task ClearData(int userId, string key)
-        {
-            await _redisCache.DeteteCacheByKeyPattern($"{ImmutableData.KEYS_PREFIX}{userId}");
-            await _redisCache.DeleteCache(key);
-        }
-
-        [AuxiliaryObject]
-        private class KeyObject
-        {
-            public string? privateKey { get; set; }
-            public string? internalKey { get; set; }
-            public string? receivedKey { get; set; }
         }
     }
 }

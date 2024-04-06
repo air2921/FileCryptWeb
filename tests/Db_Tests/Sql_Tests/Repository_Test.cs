@@ -21,11 +21,11 @@ namespace tests.Db_Tests.Sql_Tests
             var entities = new List<KeyStorageModel>
             {
                 new KeyStorageModel { storage_name = "Air_Storage", last_time_modified = DateTime.UtcNow,
-                    access_code = "access_code_1", encrypt = false, user_id = 1 },
+                    access_code = "access_code_1", user_id = 1 },
                 new KeyStorageModel { storage_name = "Zanfery_Storage", last_time_modified = DateTime.UtcNow.AddDays(-1),
-                    access_code = "access_code_2", encrypt = true, user_id = 2 },
+                    access_code = "access_code_2", user_id = 2 },
                 new KeyStorageModel { storage_name = "baby_mary_Storage", last_time_modified = DateTime.UtcNow.AddDays(-2),
-                    access_code = "access_code_3", encrypt = true, user_id = 3 }
+                    access_code = "access_code_3", user_id = 3 }
             };
 
             await repository.AddRange(entities);
@@ -40,7 +40,6 @@ namespace tests.Db_Tests.Sql_Tests
                     e.storage_name == entity.storage_name &&
                     e.last_time_modified == entity.last_time_modified &&
                     e.access_code == entity.access_code &&
-                    e.encrypt == entity.encrypt &&
                     e.user_id == entity.user_id
                 );
             }
@@ -59,23 +58,25 @@ namespace tests.Db_Tests.Sql_Tests
             var entities = new List<KeyStorageModel>
             {
                 new KeyStorageModel { storage_name = "Air_Storage", last_time_modified = DateTime.UtcNow,
-                    access_code = "access_code_1", encrypt = false, user_id = 1 },
+                    access_code = "access_code_1", user_id = 1 },
+                new KeyStorageModel { storage_name = "Air_Storage", last_time_modified = DateTime.UtcNow,
+                    access_code = "access_code_2", user_id = 1 },
                 new KeyStorageModel { storage_name = "Zanfery_Storage", last_time_modified = DateTime.UtcNow.AddDays(-1),
-                    access_code = "access_code_2", encrypt = true, user_id = 2 },
+                    access_code = "access_code_3", user_id = 2 },
                 new KeyStorageModel { storage_name = "baby_mary_Storage", last_time_modified = DateTime.UtcNow.AddDays(-2),
-                    access_code = "access_code_3", encrypt = true, user_id = 3 }
+                    access_code = "access_code_4", user_id = 3 }
             };
 
             await repository.AddRange(entities);
 
-            var result = await repository.GetAll(query => query.Where(e => e.encrypt.Equals(true)));
+            var result = await repository.GetAll(query => query.Where(e => e.storage_name.Equals("Air_Storage")));
 
-            var entityCount = entities.Count(e => e.encrypt.Equals(true));
+            var entityCount = entities.Count(e => e.storage_name.Equals("Air_Storage"));
             var resultCount = result.Count();
 
             Assert.Equal(entityCount, resultCount);
             foreach (var entity in result)
-                Assert.Contains(result, e => e.encrypt.Equals(entity.encrypt));
+                Assert.Contains(result, e => e.storage_name.Equals(entity.storage_name));
         }
 
         [Fact]
@@ -91,11 +92,11 @@ namespace tests.Db_Tests.Sql_Tests
             var entities = new List<KeyStorageModel>
             {
                 new KeyStorageModel { storage_name = "Air_Storage", last_time_modified = DateTime.UtcNow,
-                    access_code = "access_code_1", encrypt = false, user_id = 1 },
+                    access_code = "access_code_1", user_id = 1 },
                 new KeyStorageModel { storage_name = "Zanfery_Storage", last_time_modified = DateTime.UtcNow.AddDays(-1),
-                    access_code = "access_code_2", encrypt = true, user_id = 2 },
+                    access_code = "access_code_2", user_id = 2 },
                 new KeyStorageModel { storage_name = "baby_mary_Storage", last_time_modified = DateTime.UtcNow.AddDays(-2),
-                    access_code = "access_code_3", encrypt = true, user_id = 3 }
+                    access_code = "access_code_3", user_id = 3 }
             };
 
             await repository.AddRange(entities);
@@ -158,7 +159,6 @@ namespace tests.Db_Tests.Sql_Tests
                 storage_name = "Air_Storage",
                 last_time_modified = DateTime.UtcNow,
                 access_code = "access_code_1",
-                encrypt = false,
                 user_id = 1
             };
 
@@ -186,7 +186,6 @@ namespace tests.Db_Tests.Sql_Tests
                 storage_name = "Air_Storage",
                 last_time_modified = DateTime.UtcNow,
                 access_code = "access_code_1",
-                encrypt = false,
                 user_id = 1
             };
 
@@ -246,7 +245,6 @@ namespace tests.Db_Tests.Sql_Tests
                 storage_name = "Air_Storage",
                 last_time_modified = DateTime.UtcNow,
                 access_code = "access_code_1",
-                encrypt = false,
                 user_id = 1
             };
 
@@ -274,7 +272,6 @@ namespace tests.Db_Tests.Sql_Tests
                 storage_name = "Air_Storage",
                 last_time_modified = DateTime.UtcNow,
                 access_code = "access_code_1",
-                encrypt = false,
                 user_id = 1
             };
 
@@ -334,7 +331,6 @@ namespace tests.Db_Tests.Sql_Tests
                 storage_name = "Air_Storage",
                 last_time_modified = DateTime.UtcNow,
                 access_code = "access_code_1",
-                encrypt = false,
                 user_id = 1
             };
 
@@ -365,7 +361,6 @@ namespace tests.Db_Tests.Sql_Tests
                 storage_name = "Air_Storage",
                 last_time_modified = DateTime.UtcNow,
                 access_code = "access_code_1",
-                encrypt = false,
                 user_id = 1
             };
 
@@ -392,7 +387,6 @@ namespace tests.Db_Tests.Sql_Tests
                 storage_name = "Air_Storage",
                 last_time_modified = DateTime.UtcNow,
                 access_code = "access_code_1",
-                encrypt = false,
                 user_id = 1
             };
 
@@ -412,11 +406,11 @@ namespace tests.Db_Tests.Sql_Tests
             var entities = new List<KeyStorageModel>
             {
                 new KeyStorageModel { storage_name = "Air_Storage", last_time_modified = DateTime.UtcNow,
-                    access_code = "access_code_1", encrypt = false, user_id = 1 },
+                    access_code = "access_code_1", user_id = 1 },
                 new KeyStorageModel { storage_name = "Zanfery_Storage", last_time_modified = DateTime.UtcNow.AddDays(-1),
-                    access_code = "access_code_2", encrypt = true, user_id = 2 },
+                    access_code = "access_code_2", user_id = 2 },
                 new KeyStorageModel { storage_name = "baby_mary_Storage", last_time_modified = DateTime.UtcNow.AddDays(-2),
-                    access_code = "access_code_3", encrypt = true, user_id = 3 }
+                    access_code = "access_code_3", user_id = 3 }
             };
 
             await repository.AddRange(entities);
@@ -431,7 +425,6 @@ namespace tests.Db_Tests.Sql_Tests
                     e.storage_name == entity.storage_name &&
                     e.last_time_modified == entity.last_time_modified &&
                     e.access_code == entity.access_code &&
-                    e.encrypt == entity.encrypt &&
                     e.user_id == entity.user_id
                 );
             }
@@ -453,11 +446,11 @@ namespace tests.Db_Tests.Sql_Tests
             var entities = new List<KeyStorageModel>
             {
                 new KeyStorageModel { storage_id = 1, storage_name = "Air_Storage", last_time_modified = DateTime.UtcNow,
-                    access_code = "access_code_1", encrypt = false, user_id = 1 },
+                    access_code = "access_code_1", user_id = 1 },
                 new KeyStorageModel { storage_id = 2, storage_name = "Zanfery_Storage", last_time_modified = DateTime.UtcNow.AddDays(-1),
-                    access_code = "access_code_2", encrypt = true, user_id = 2 },
+                    access_code = "access_code_2", user_id = 2 },
                 new KeyStorageModel { storage_id = 3,  storage_name = "baby_mary_Storage", last_time_modified = DateTime.UtcNow.AddDays(-2),
-                    access_code = "access_code_3", encrypt = true, user_id = 3 }
+                    access_code = "access_code_3", user_id = 3 }
             };
 
             await Assert.ThrowsAsync<EntityNotCreatedException>(() => repository.AddRange(entities, cancellationToken));
@@ -480,11 +473,11 @@ namespace tests.Db_Tests.Sql_Tests
             var entities = new List<KeyStorageModel>
             {
                 new KeyStorageModel { storage_id = 1, storage_name = "Air_Storage", last_time_modified = DateTime.UtcNow,
-                    access_code = "access_code_1", encrypt = false, user_id = 1 },
+                    access_code = "access_code_1", user_id = 1 },
                 new KeyStorageModel { storage_id = 2, storage_name = "Zanfery_Storage", last_time_modified = DateTime.UtcNow.AddDays(-1),
-                    access_code = "access_code_2", encrypt = true, user_id = 2 },
+                    access_code = "access_code_2", user_id = 2 },
                 new KeyStorageModel { storage_id = 3,  storage_name = "baby_mary_Storage", last_time_modified = DateTime.UtcNow.AddDays(-2),
-                    access_code = "access_code_3", encrypt = true, user_id = 3 }
+                    access_code = "access_code_3", user_id = 3 }
             };
 
             await Assert.ThrowsAsync<EntityNotCreatedException>(() => repository.AddRange(entities, cancellationTokenSource.Token));
@@ -506,7 +499,6 @@ namespace tests.Db_Tests.Sql_Tests
                 storage_name = "Air_Storage",
                 last_time_modified = DateTime.UtcNow,
                 access_code = "access_code_1",
-                encrypt = false,
                 user_id = 1
             };
 
@@ -540,7 +532,6 @@ namespace tests.Db_Tests.Sql_Tests
                 storage_name = "Air_Storage",
                 last_time_modified = DateTime.UtcNow,
                 access_code = "access_code_1",
-                encrypt = false,
                 user_id = 1
             };
 
@@ -569,7 +560,6 @@ namespace tests.Db_Tests.Sql_Tests
                 storage_name = "Air_Storage",
                 last_time_modified = DateTime.UtcNow,
                 access_code = "access_code_1",
-                encrypt = false,
                 user_id = 1
             };
 
@@ -591,11 +581,11 @@ namespace tests.Db_Tests.Sql_Tests
             var entities = new List<KeyStorageModel>
             {
                 new KeyStorageModel { storage_id = 1, storage_name = "Air_Storage", last_time_modified = DateTime.UtcNow,
-                    access_code = "access_code_1", encrypt = false, user_id = 1 },
+                    access_code = "access_code_1", user_id = 1 },
                 new KeyStorageModel { storage_id = 2, storage_name = "Zanfery_Storage", last_time_modified = DateTime.UtcNow.AddDays(-1),
-                    access_code = "access_code_2", encrypt = true, user_id = 2 },
+                    access_code = "access_code_2", user_id = 2 },
                 new KeyStorageModel { storage_id = 3,  storage_name = "baby_mary_Storage", last_time_modified = DateTime.UtcNow.AddDays(-2),
-                    access_code = "access_code_3", encrypt = true, user_id = 3 }
+                    access_code = "access_code_3", user_id = 3 }
             };
 
             await repository.AddRange(entities);
@@ -610,7 +600,6 @@ namespace tests.Db_Tests.Sql_Tests
                     e.storage_name == entity.storage_name &&
                     e.last_time_modified == entity.last_time_modified &&
                     e.access_code == entity.access_code &&
-                    e.encrypt == entity.encrypt &&
                     e.user_id == entity.user_id
                 );
             }
@@ -642,11 +631,11 @@ namespace tests.Db_Tests.Sql_Tests
             var entities = new List<KeyStorageModel>
             {
                 new KeyStorageModel { storage_id = 1, storage_name = "Air_Storage", last_time_modified = DateTime.UtcNow,
-                    access_code = "access_code_1", encrypt = false, user_id = 1 },
+                    access_code = "access_code_1", user_id = 1 },
                 new KeyStorageModel { storage_id = 2, storage_name = "Zanfery_Storage", last_time_modified = DateTime.UtcNow.AddDays(-1),
-                    access_code = "access_code_2", encrypt = true, user_id = 2 },
+                    access_code = "access_code_2", user_id = 2 },
                 new KeyStorageModel { storage_id = 3,  storage_name = "baby_mary_Storage", last_time_modified = DateTime.UtcNow.AddDays(-2),
-                    access_code = "access_code_3", encrypt = true, user_id = 3 }
+                    access_code = "access_code_3", user_id = 3 }
             };
 
             await repository.AddRange(entities);
@@ -671,11 +660,11 @@ namespace tests.Db_Tests.Sql_Tests
             var entities = new List<KeyStorageModel>
             {
                 new KeyStorageModel { storage_id = 1, storage_name = "Air_Storage", last_time_modified = DateTime.UtcNow,
-                    access_code = "access_code_1", encrypt = false, user_id = 1 },
+                    access_code = "access_code_1", user_id = 1 },
                 new KeyStorageModel { storage_id = 2, storage_name = "Zanfery_Storage", last_time_modified = DateTime.UtcNow.AddDays(-1),
-                    access_code = "access_code_2", encrypt = true, user_id = 2 },
+                    access_code = "access_code_2", user_id = 2 },
                 new KeyStorageModel { storage_id = 3,  storage_name = "baby_mary_Storage", last_time_modified = DateTime.UtcNow.AddDays(-2),
-                    access_code = "access_code_3", encrypt = true, user_id = 3 }
+                    access_code = "access_code_3", user_id = 3 }
             };
 
             await repository.AddRange(entities);
@@ -699,7 +688,6 @@ namespace tests.Db_Tests.Sql_Tests
                 storage_name = "Air_Storage",
                 last_time_modified = DateTime.UtcNow,
                 access_code = "access_code_1",
-                encrypt = false,
                 user_id = 1
             };
 
@@ -733,7 +721,6 @@ namespace tests.Db_Tests.Sql_Tests
                 storage_name = "Air_Storage",
                 last_time_modified = DateTime.UtcNow,
                 access_code = "access_code_1",
-                encrypt = false,
                 user_id = 1
             };
 
@@ -765,7 +752,6 @@ namespace tests.Db_Tests.Sql_Tests
                 storage_name = "Air_Storage",
                 last_time_modified = DateTime.UtcNow,
                 access_code = "access_code_1",
-                encrypt = false,
                 user_id = 1
             };
 
@@ -793,7 +779,6 @@ namespace tests.Db_Tests.Sql_Tests
                 storage_name = "Air_Storage",
                 last_time_modified = DateTime.UtcNow,
                 access_code = "access_code_1",
-                encrypt = false,
                 user_id = 1
             };
 
@@ -833,7 +818,6 @@ namespace tests.Db_Tests.Sql_Tests
                 storage_name = "Air_Storage",
                 last_time_modified = DateTime.UtcNow,
                 access_code = "access_code_1",
-                encrypt = false,
                 user_id = 1
             };
 
@@ -865,7 +849,6 @@ namespace tests.Db_Tests.Sql_Tests
                 storage_name = "Air_Storage",
                 last_time_modified = DateTime.UtcNow,
                 access_code = "access_code_1",
-                encrypt = false,
                 user_id = 1
             };
 

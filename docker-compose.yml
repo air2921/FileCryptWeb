@@ -59,7 +59,6 @@ services:
     networks:
       - "webapi"
 
-
   elasticsearch:
     container_name: elasticsearch
     image: elasticsearch:8.12.2

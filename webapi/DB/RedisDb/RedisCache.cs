@@ -4,14 +4,9 @@ using webapi.Interfaces.Redis;
 
 namespace webapi.DB.RedisDb
 {
-    public class RedisCache : IRedisCache
+    public class RedisCache(IRedisDbContext context) : IRedisCache
     {
-        private readonly IDatabase _db;
-
-        public RedisCache(IRedisDbContext context)
-        {
-            _db = context.GetDatabase();
-        }
+        private readonly IDatabase _db = context.GetDatabase();
 
         public async Task CacheData(string key, object value, TimeSpan expire)
         {
@@ -51,10 +46,21 @@ namespace webapi.DB.RedisDb
             if (result is null)
                 return;
 
-            var keysContainsPattern = result.Where(str => str.Contains(key));
+            var keysContainsPattern = result.Where(str => str.Contains(key)).ToArray();
+            var partsKeyPattern = key.Split('_');
 
-            foreach(var redisKey in keysContainsPattern)
-                await _db.KeyDeleteAsync(redisKey);
+            foreach (var redisKey in keysContainsPattern)
+            {
+                try
+                {
+                    if (redisKey.Split('_')[0] == partsKeyPattern[0] && redisKey.Split('_')[1] == partsKeyPattern[1])
+                        await _db.KeyDeleteAsync(redisKey);
+                }
+                catch (IndexOutOfRangeException)
+                {
+                    continue;
+                }
+            }
         }
 
         public async Task DeleteRedisCache<T>(IEnumerable<T> data, string prefix, Func<T, int> getUserId) where T : class

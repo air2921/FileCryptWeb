@@ -14,23 +14,8 @@ namespace webapi.Controllers.Admin
     [Route("api/admin/files")]
     [ApiController]
     [Authorize(Roles = "HighestAdmin,Admin")]
-    public class Admin_FileController : ControllerBase
+    public class Admin_FileController(IRepository<FileModel> fileRepository, ISorting sorting, IRedisCache redisCache) : ControllerBase
     {
-        #region fields and constructor
-
-        private readonly IRepository<FileModel> _fileRepository;
-        private readonly ISorting _sorting;
-        private readonly IRedisCache _redisCache;
-
-        public Admin_FileController(IRepository<FileModel> fileRepository, ISorting sorting, IRedisCache redisCache)
-        {
-            _fileRepository = fileRepository;
-            _sorting = sorting;
-            _redisCache = redisCache;
-        }
-
-        #endregion
-
         [HttpGet("{fileId}")]
         [ProducesResponseType(typeof(FileModel), 200)]
         [ProducesResponseType(typeof(object), 404)]
@@ -39,7 +24,7 @@ namespace webapi.Controllers.Admin
         {
             try
             {
-                var file = await _fileRepository.GetById(fileId);
+                var file = await fileRepository.GetById(fileId);
                 if (file is null)
                     return StatusCode(404, new { message = Message.NOT_FOUND });
 
@@ -59,8 +44,8 @@ namespace webapi.Controllers.Admin
         {
             try
             {
-                return StatusCode(200, new { files = await _fileRepository
-                    .GetAll(_sorting.SortFiles(userId, skip, count, byDesc, null, null, category)) });
+                return StatusCode(200, new { files = await fileRepository
+                    .GetAll(sorting.SortFiles(userId, skip, count, byDesc, null, null, category)) });
             }
             catch (OperationCanceledException ex)
             {
@@ -76,9 +61,9 @@ namespace webapi.Controllers.Admin
         {
             try
             {
-                var deletedFile = await _fileRepository.Delete(fileId);
+                var deletedFile = await fileRepository.Delete(fileId);
                 if(deletedFile is not null)
-                    await _redisCache.DeteteCacheByKeyPattern($"{ImmutableData.FILES_PREFIX}{deletedFile.user_id}");
+                    await redisCache.DeteteCacheByKeyPattern($"{ImmutableData.FILES_PREFIX}{deletedFile.user_id}");
 
                 return StatusCode(204);
             }
@@ -96,8 +81,8 @@ namespace webapi.Controllers.Admin
         {
             try
             {
-                var fileList = await _fileRepository.DeleteMany(identifiers);
-                await _redisCache.DeleteRedisCache(fileList, ImmutableData.FILES_PREFIX, item => item.user_id);
+                var fileList = await fileRepository.DeleteMany(identifiers);
+                await redisCache.DeleteRedisCache(fileList, ImmutableData.FILES_PREFIX, item => item.user_id);
                 return StatusCode(204);
             }
             catch (EntityNotDeletedException ex)
