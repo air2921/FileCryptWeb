@@ -1,9 +1,9 @@
 ﻿using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 using webapi.Attributes;
+using webapi.DB.Abstractions;
 using webapi.Helpers;
-using webapi.Interfaces.Redis;
-using webapi.Interfaces.Services;
+using webapi.Helpers.Abstractions;
 
 namespace webapi.Controllers.Admin
 {

@@ -5,7 +5,7 @@ using System.Net.Sockets;
 using webapi.DTO;
 using webapi.Exceptions;
 using webapi.Helpers;
-using webapi.Interfaces.Services;
+using webapi.Third_Party_Services.Abstractions;
 
 namespace webapi.Third_Party_Services
 {

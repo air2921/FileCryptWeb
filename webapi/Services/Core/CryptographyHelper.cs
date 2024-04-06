@@ -2,14 +2,13 @@
 using System.Security.Cryptography;
 using System.Text.RegularExpressions;
 using webapi.Cryptography;
+using webapi.Cryptography.Abstractions;
+using webapi.DB.Abstractions;
 using webapi.Helpers;
-using webapi.Interfaces;
-using webapi.Interfaces.Controllers.Services;
-using webapi.Interfaces.Cryptography;
-using webapi.Interfaces.Redis;
-using webapi.Interfaces.Services;
+using webapi.Helpers.Abstractions;
 using webapi.Localization;
 using webapi.Models;
+using webapi.Services.Abstractions;
 
 namespace webapi.Services.Core
 {

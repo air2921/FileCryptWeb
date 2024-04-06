@@ -1,5 +1,5 @@
 ﻿using Microsoft.Extensions.Logging;
-using webapi.Security;
+using webapi.Helpers.Security;
 
 namespace tests.Security_Tests
 {

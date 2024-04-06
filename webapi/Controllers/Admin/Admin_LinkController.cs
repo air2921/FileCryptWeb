@@ -1,8 +1,8 @@
 ﻿using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
-using webapi.DB;
+using webapi.DB.Abstractions;
+using webapi.DB.Ef;
 using webapi.Exceptions;
-using webapi.Interfaces;
 using webapi.Localization;
 using webapi.Models;
 

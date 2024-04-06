@@ -1,5 +1,5 @@
-﻿using webapi.Interfaces.Redis;
-using webapi.Interfaces.Services;
+﻿using webapi.DB.Abstractions;
+using webapi.Helpers.Abstractions;
 
 namespace webapi.DB.RedisDb
 {

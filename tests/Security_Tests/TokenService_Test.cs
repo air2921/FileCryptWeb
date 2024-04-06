@@ -1,10 +1,10 @@
 ﻿using Microsoft.AspNetCore.Http;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Configuration;
-using webapi.DB;
-using webapi.Interfaces.Services;
+using webapi.DB.Ef;
+using webapi.Helpers.Abstractions;
+using webapi.Helpers.Security;
 using webapi.Models;
-using webapi.Security;
 
 namespace tests.Security_Tests
 {

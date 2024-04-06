@@ -1,10 +1,10 @@
 ﻿using Microsoft.AspNetCore.Mvc;
 using webapi.Controllers.Admin;
+using webapi.DB.Abstractions;
 using webapi.Exceptions;
-using webapi.Interfaces;
-using webapi.Interfaces.Controllers.Services;
-using webapi.Interfaces.Services;
+using webapi.Helpers.Abstractions;
 using webapi.Models;
+using webapi.Services.Abstractions;
 
 namespace tests.Controllers_Tests.Admin
 {

@@ -3,7 +3,7 @@ using Microsoft.AspNetCore.Server.Kestrel.Core;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.IdentityModel.Tokens;
 using System.Text;
-using webapi.DB;
+using webapi.DB.Ef;
 using webapi.Helpers;
 
 namespace webapi

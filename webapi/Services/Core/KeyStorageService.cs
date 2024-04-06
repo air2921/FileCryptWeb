@@ -1,7 +1,7 @@
 ﻿using System.Text.RegularExpressions;
 using webapi.Helpers;
-using webapi.Interfaces.Controllers.Services;
-using webapi.Interfaces.Services;
+using webapi.Helpers.Abstractions;
+using webapi.Services.Abstractions;
 
 namespace webapi.Services.Core
 {

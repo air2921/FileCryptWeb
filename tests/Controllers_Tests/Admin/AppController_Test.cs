@@ -1,8 +1,8 @@
 ﻿using Microsoft.AspNetCore.Mvc;
 using webapi.Controllers.Admin;
+using webapi.DB.Abstractions;
 using webapi.Helpers;
-using webapi.Interfaces.Redis;
-using webapi.Interfaces.Services;
+using webapi.Helpers.Abstractions;
 
 namespace tests.Controllers_Tests.Admin
 {

@@ -1,8 +1,8 @@
 ﻿using Microsoft.AspNetCore.Mvc;
 using webapi.Controllers.Admin;
-using webapi.DB;
+using webapi.DB.Abstractions;
+using webapi.DB.Ef;
 using webapi.Exceptions;
-using webapi.Interfaces;
 using webapi.Models;
 
 namespace tests.Controllers_Tests.Admin

@@ -1,7 +1,6 @@
 ﻿using Newtonsoft.Json;
-using webapi.DB;
-using webapi.Interfaces;
-using webapi.Interfaces.Redis;
+using webapi.DB.Abstractions;
+using webapi.DB.Ef;
 using webapi.Localization;
 using webapi.Models;
 

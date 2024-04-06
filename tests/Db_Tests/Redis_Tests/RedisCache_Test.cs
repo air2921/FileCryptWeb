@@ -1,7 +1,6 @@
 ﻿using Newtonsoft.Json;
 using StackExchange.Redis;
 using webapi.DB.RedisDb;
-using webapi.Interfaces.Redis;
 
 namespace tests.Db_Tests.Redis_Tests
 {

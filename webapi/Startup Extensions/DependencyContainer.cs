@@ -1,20 +1,19 @@
-﻿using webapi.Controllers.Admin;
-using webapi.Cryptography;
-using webapi.DB;
+﻿using webapi.Cryptography;
+using webapi.Cryptography.Abstractions;
+using webapi.DB.Abstractions;
+using webapi.DB.Ef;
 using webapi.DB.RedisDb;
 using webapi.Helpers;
-using webapi.Interfaces;
-using webapi.Interfaces.Controllers.Services;
-using webapi.Interfaces.Cryptography;
-using webapi.Interfaces.Redis;
-using webapi.Interfaces.Services;
+using webapi.Helpers.Abstractions;
+using webapi.Helpers.Security;
 using webapi.Models;
-using webapi.Security;
+using webapi.Services.Abstractions;
 using webapi.Services.Account;
 using webapi.Services.Admin;
 using webapi.Services.Core;
 using webapi.Services.Core.Data_Handlers;
 using webapi.Third_Party_Services;
+using webapi.Third_Party_Services.Abstractions;
 using static webapi.Third_Party_Services.EmailSender;
 
 namespace webapi
@@ -123,7 +122,6 @@ namespace webapi
 
         public static void Transient(IServiceCollection services)
         {
-            services.AddTransient<IImplementationFinder, ImplementationFinder>();
             services.AddTransient<IRedisDbContext, RedisDbContext>();
             services.AddTransient<ICypher, Cypher>();
             services.AddTransient<ITokenService, TokenService>();

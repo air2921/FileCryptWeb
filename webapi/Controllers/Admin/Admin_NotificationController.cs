@@ -1,11 +1,10 @@
 ﻿using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 using webapi.Attributes;
-using webapi.DB;
+using webapi.DB.Abstractions;
+using webapi.DB.Ef;
 using webapi.Exceptions;
 using webapi.Helpers;
-using webapi.Interfaces;
-using webapi.Interfaces.Redis;
 using webapi.Localization;
 using webapi.Models;
 

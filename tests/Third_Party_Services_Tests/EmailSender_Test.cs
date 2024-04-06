@@ -5,7 +5,7 @@ using MimeKit;
 using System.Net.Sockets;
 using webapi.DTO;
 using webapi.Exceptions;
-using webapi.Interfaces.Services;
+using webapi.Third_Party_Services.Abstractions;
 using webapi.Third_Party_Services;
 using static webapi.Third_Party_Services.EmailSender;
 

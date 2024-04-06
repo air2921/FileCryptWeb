@@ -1,11 +1,10 @@
 ﻿using Microsoft.AspNetCore.DataProtection;
 using Microsoft.AspNetCore.Mvc;
 using webapi.Controllers.Admin;
+using webapi.DB.Abstractions;
 using webapi.Exceptions;
 using webapi.Helpers;
-using webapi.Interfaces;
-using webapi.Interfaces.Redis;
-using webapi.Interfaces.Services;
+using webapi.Helpers.Abstractions;
 using webapi.Models;
 
 namespace tests.Controllers_Tests.Admin

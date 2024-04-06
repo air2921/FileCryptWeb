@@ -1,5 +1,5 @@
 ﻿using Microsoft.AspNetCore.Http;
-using webapi.Interfaces.Redis;
+using webapi.DB.Abstractions;
 using webapi.Middlewares;
 
 namespace tests.Middlewares_Tests

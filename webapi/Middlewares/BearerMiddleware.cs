@@ -1,7 +1,7 @@
 ﻿using Microsoft.EntityFrameworkCore;
-using webapi.DB;
+using webapi.DB.Ef;
 using webapi.Helpers;
-using webapi.Interfaces.Services;
+using webapi.Helpers.Abstractions;
 
 namespace webapi.Middlewares
 {

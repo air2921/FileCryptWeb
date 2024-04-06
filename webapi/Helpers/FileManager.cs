@@ -1,4 +1,4 @@
-﻿using webapi.Interfaces.Services;
+﻿using webapi.Helpers.Abstractions;
 using webapi.Models;
 
 namespace webapi.Helpers

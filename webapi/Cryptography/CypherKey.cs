@@ -1,5 +1,5 @@
 ﻿using System.Security.Cryptography;
-using webapi.Interfaces.Cryptography;
+using webapi.Cryptography.Abstractions;
 
 namespace webapi.Cryptography
 {

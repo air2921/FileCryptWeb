@@ -1,6 +1,6 @@
 ﻿using System.Security.Cryptography;
 using webapi.Cryptography;
-using webapi.Interfaces.Cryptography;
+using webapi.Cryptography.Abstractions;
 
 namespace tests.Cryptography_Tests
 {

@@ -1,15 +1,14 @@
 ﻿using Newtonsoft.Json;
 using System.Text.RegularExpressions;
 using webapi.Attributes;
+using webapi.Cryptography.Abstractions;
+using webapi.DB.Abstractions;
 using webapi.DTO;
 using webapi.Exceptions;
 using webapi.Helpers;
-using webapi.Interfaces;
-using webapi.Interfaces.Controllers.Services;
-using webapi.Interfaces.Cryptography;
-using webapi.Interfaces.Redis;
-using webapi.Interfaces.Services;
+using webapi.Helpers.Abstractions;
 using webapi.Models;
+using webapi.Services.Abstractions;
 
 namespace webapi.Services.Account
 {

@@ -1,12 +1,11 @@
 ﻿using Microsoft.AspNetCore.Mvc;
 using webapi.Exceptions;
-using webapi.Interfaces.Redis;
-using webapi.Interfaces.Services;
-using webapi.Interfaces;
 using webapi.Localization;
 using webapi.Models;
 using Microsoft.AspNetCore.Authorization;
 using webapi.Helpers;
+using webapi.DB.Abstractions;
+using webapi.Helpers.Abstractions;
 
 namespace webapi.Controllers.Admin
 {

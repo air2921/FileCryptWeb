@@ -1,12 +1,13 @@
 ﻿using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Mvc;
 using webapi.Controllers.Account;
+using webapi.DB.Abstractions;
 using webapi.DTO;
 using webapi.Exceptions;
-using webapi.Interfaces;
-using webapi.Interfaces.Controllers.Services;
-using webapi.Interfaces.Services;
+using webapi.Helpers.Abstractions;
+using webapi.Third_Party_Services.Abstractions;
 using webapi.Models;
+using webapi.Services.Abstractions;
 using webapi.Services.Account;
 
 namespace tests.Controllers_Tests.Account

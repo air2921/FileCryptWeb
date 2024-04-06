@@ -1,6 +1,6 @@
 ﻿using Newtonsoft.Json;
 using StackExchange.Redis;
-using webapi.Interfaces.Redis;
+using webapi.DB.Abstractions;
 
 namespace webapi.DB.RedisDb
 {

@@ -1,10 +1,10 @@
 ﻿using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
+using webapi.DB.Abstractions;
 using webapi.Exceptions;
 using webapi.Helpers;
-using webapi.Interfaces.Controllers.Services;
-using webapi.Interfaces.Redis;
-using webapi.Interfaces.Services;
+using webapi.Helpers.Abstractions;
+using webapi.Services.Abstractions;
 using webapi.Services.Core;
 
 namespace webapi.Controllers.Core

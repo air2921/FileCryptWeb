@@ -1,10 +1,9 @@
 ﻿using Microsoft.EntityFrameworkCore;
 using Newtonsoft.Json;
 using webapi.Attributes;
-using webapi.DB;
-using webapi.Interfaces;
-using webapi.Interfaces.Redis;
-using webapi.Interfaces.Services;
+using webapi.DB.Abstractions;
+using webapi.DB.Ef;
+using webapi.Helpers.Abstractions;
 using webapi.Localization;
 using webapi.Models;
 

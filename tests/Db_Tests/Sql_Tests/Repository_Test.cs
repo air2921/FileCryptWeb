@@ -1,6 +1,6 @@
 ﻿using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Logging;
-using webapi.DB;
+using webapi.DB.Ef;
 using webapi.Exceptions;
 using webapi.Models;
 

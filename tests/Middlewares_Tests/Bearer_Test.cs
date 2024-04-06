@@ -2,15 +2,15 @@
 using Microsoft.AspNetCore.Mvc.Testing;
 using Microsoft.AspNetCore.TestHost;
 using Microsoft.Extensions.DependencyInjection;
-using webapi.Interfaces.Services;
 using Microsoft.AspNetCore.Hosting;
 using webapi.Middlewares;
-using webapi.DB;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.AspNetCore.Builder;
 using Microsoft.AspNetCore.Http;
 using webapi.Models;
 using webapi.Helpers;
+using webapi.DB.Ef;
+using webapi.Helpers.Abstractions;
 
 namespace tests.Middlewares_Tests
 {

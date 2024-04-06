@@ -1,5 +1,5 @@
 ﻿using System.Security.Claims;
-using webapi.Interfaces.Services;
+using webapi.Helpers.Abstractions;
 
 namespace webapi.Helpers
 {

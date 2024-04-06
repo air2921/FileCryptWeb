@@ -1,10 +1,10 @@
 ﻿using AutoMapper;
 using Microsoft.AspNetCore.Mvc;
 using webapi.Controllers.Admin;
+using webapi.DB.Abstractions;
 using webapi.DTO;
 using webapi.Exceptions;
-using webapi.Interfaces;
-using webapi.Interfaces.Services;
+using webapi.Third_Party_Services.Abstractions;
 using webapi.Models;
 
 namespace tests.Controllers_Tests.Admin

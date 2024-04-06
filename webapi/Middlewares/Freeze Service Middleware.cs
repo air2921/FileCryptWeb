@@ -1,6 +1,6 @@
 ﻿using Newtonsoft.Json;
+using webapi.DB.Abstractions;
 using webapi.Helpers;
-using webapi.Interfaces.Redis;
 
 namespace webapi.Middlewares
 {

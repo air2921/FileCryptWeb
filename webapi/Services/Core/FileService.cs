@@ -1,11 +1,11 @@
 ﻿using Newtonsoft.Json;
 using webapi.Exceptions;
 using webapi.Helpers;
-using webapi.Interfaces.Controllers.Services;
-using webapi.Interfaces.Redis;
-using webapi.Interfaces.Services;
-using webapi.Interfaces;
 using webapi.Models;
+using webapi.DB.Abstractions;
+using webapi.Services.Abstractions;
+using webapi.Helpers.Abstractions;
+using webapi.Third_Party_Services.Abstractions;
 
 namespace webapi.Services.Core
 {

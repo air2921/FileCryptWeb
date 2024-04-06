@@ -1,12 +1,12 @@
 ﻿using AutoMapper;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
+using webapi.DB.Abstractions;
 using webapi.DTO;
 using webapi.Exceptions;
-using webapi.Interfaces;
-using webapi.Interfaces.Services;
 using webapi.Localization;
 using webapi.Models;
+using webapi.Third_Party_Services.Abstractions;
 
 namespace webapi.Controllers.Admin
 {
