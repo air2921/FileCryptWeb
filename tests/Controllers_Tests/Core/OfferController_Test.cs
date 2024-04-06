@@ -299,13 +299,13 @@ namespace tests.Controllers_Tests.Core
             Assert.Equal(500, objectResult.StatusCode);
         }
 
-        [Fact]
-        public async Task GetOneOffer_Success()
-        {
-            var userInfoMock = new Mock<IUserInfo>();
-            var cache = new Mock<ICacheHandler<OfferModel>>();
+        //[Fact]
+        //public async Task GetOneOffer_Success()
+        //{
+        //    var userInfoMock = new Mock<IUserInfo>();
+        //    var cache = new Mock<ICacheHandler<OfferModel>>();
 
             
-        }
+        //}
     }
 }
