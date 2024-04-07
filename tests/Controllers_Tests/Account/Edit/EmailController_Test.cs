@@ -1,5 +1,4 @@
 ﻿using Microsoft.AspNetCore.Mvc;
-using Microsoft.AspNetCore.Mvc.ModelBinding.Validation;
 using webapi.Controllers.Account.Edit;
 using webapi.DB.Abstractions;
 using webapi.DTO;
@@ -8,6 +7,7 @@ using webapi.Helpers.Abstractions;
 using webapi.Third_Party_Services.Abstractions;
 using webapi.Models;
 using webapi.Services.Abstractions;
+using webapi.DB.Ef.Specifications;
 
 namespace tests.Controllers_Tests.Account.Edit
 {
@@ -167,13 +167,8 @@ namespace tests.Controllers_Tests.Account.Edit
             generateMock.Setup(x => x.GenerateSixDigitCode()).Returns(newCode);
             userInfoMock.Setup(x => x.Username).Returns(name);
             userInfoMock.Setup(x => x.UserId).Returns(id);
-            userRepositoryMock.Setup(x => x.GetByFilter(It.IsAny<Func<IQueryable<UserModel>, IQueryable<UserModel>>>(), CancellationToken.None))
-                .ReturnsAsync((UserModel)null)
-                .Callback<Func<IQueryable<UserModel>, IQueryable<UserModel>>, CancellationToken>((query, token) => {
-                    var testQuery = new List<UserModel>().AsQueryable();
-                    var filteredQuery = query(testQuery);
-                    Assert.True(filteredQuery.Expression.ToString().Contains($".email.Equals("));
-                });
+            userRepositoryMock.Setup(x => x.GetByFilter(new UserByEmailSpec(email), CancellationToken.None))
+                .ReturnsAsync((UserModel)null);
 
             var emailController = new EmailController(null, dataManagementMock.Object, validatorMock.Object,
                 userRepositoryMock.Object, emailSenderMock.Object, null, generateMock.Object, null, userInfoMock.Object);
@@ -219,7 +214,7 @@ namespace tests.Controllers_Tests.Account.Edit
 
             dataManagementMock.Setup(x => x.GetData(It.IsAny<string>())).ReturnsAsync(1);
             validatorMock.Setup(x => x.IsValid(It.IsAny<int>(), It.IsAny<int>())).Returns(true);
-            userRepositoryMock.Setup(x => x.GetByFilter(It.IsAny<Func<IQueryable<UserModel>, IQueryable<UserModel>>>(), CancellationToken.None))
+            userRepositoryMock.Setup(x => x.GetByFilter(It.IsAny<UserByEmailSpec>(), CancellationToken.None))
                 .ReturnsAsync(new UserModel());
             userInfoMock.Setup(x => x.UserId).Returns(1);
 
@@ -243,7 +238,7 @@ namespace tests.Controllers_Tests.Account.Edit
 
             dataManagementMock.Setup(x => x.GetData(It.IsAny<string>())).ReturnsAsync(1);
             validatorMock.Setup(x => x.IsValid(It.IsAny<int>(), It.IsAny<int>())).Returns(true);
-            userRepositoryMock.Setup(x => x.GetByFilter(It.IsAny<Func<IQueryable<UserModel>, IQueryable<UserModel>>>(), CancellationToken.None))
+            userRepositoryMock.Setup(x => x.GetByFilter(It.IsAny<UserByEmailSpec>(), CancellationToken.None))
                 .ThrowsAsync(new OperationCanceledException());
             userInfoMock.Setup(x => x.UserId).Returns(1);
 
@@ -273,7 +268,7 @@ namespace tests.Controllers_Tests.Account.Edit
             validatorMock.Setup(x => x.IsValid(It.IsAny<int>(), It.IsAny<int>())).Returns(true);
             generateMock.Setup(x => x.GenerateSixDigitCode()).Returns(It.IsAny<int>());
             userInfoMock.Setup(x => x.Username).Returns("username");
-            userRepositoryMock.Setup(x => x.GetByFilter(It.IsAny<Func<IQueryable<UserModel>, IQueryable<UserModel>>>(), CancellationToken.None))
+            userRepositoryMock.Setup(x => x.GetByFilter(It.IsAny<UserByEmailSpec>(), CancellationToken.None))
                 .ReturnsAsync((UserModel)null);
 
             var emailController = new EmailController(null, dataManagementMock.Object, validatorMock.Object,

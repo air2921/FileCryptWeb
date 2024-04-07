@@ -32,7 +32,6 @@ namespace webapi
 
             services.AddScoped(typeof(IRepository<>), typeof(Repository<>));
             services.AddScoped<IDatabaseTransaction, DatabaseTransaction>();
-            services.AddScoped<ISorting, Sorting>();
 
             services.AddScoped<ICryptographyHelper, CryptographyHelper>();
             services.AddScoped<ICryptographyProvider, CryptographyService>();
