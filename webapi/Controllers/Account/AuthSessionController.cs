@@ -38,7 +38,7 @@ namespace webapi.Controllers.Account
         {
             try
             {
-                var user = await userRepository.GetByFilter(new UserByEmailSpecification(userDTO.email.ToLowerInvariant()));
+                var user = await userRepository.GetByFilter(new UserByEmailSpec(userDTO.email.ToLowerInvariant()));
                 if (user is null)
                     return StatusCode(404, new { message = Message.NOT_FOUND });
 

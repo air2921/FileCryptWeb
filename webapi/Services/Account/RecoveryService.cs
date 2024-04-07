@@ -1,6 +1,8 @@
 ﻿using System.Text.RegularExpressions;
 using webapi.Attributes;
 using webapi.DB.Abstractions;
+using webapi.DB.Ef.Specifications;
+using webapi.DB.Ef.Specifications.By_Relation_Specifications;
 using webapi.Exceptions;
 using webapi.Helpers;
 using webapi.Helpers.Abstractions;
@@ -44,13 +46,9 @@ namespace webapi.Services.Account
                     user_id = user.id
                 });
 
-                await linkRepository.DeleteByFilter(query => query.Where(l => l.u_token.Equals(token)));
-                var tokens = new List<int>();
+                await linkRepository.DeleteByFilter(new RecoveryTokenByTokenSpec(token));
 
-                var tokenModels = await tokenRepository.GetAll(query => query.Where(t => t.user_id.Equals(user.id)));
-                foreach (var tokenModel in tokenModels)
-                    tokens.Add(tokenModel.token_id);
-
+                var tokens = (await tokenRepository.GetAll(new RefreshTokensByRelationSpec(user.id))).Select(x => x.token_id);
                 await tokenRepository.DeleteMany(tokens);
 
                 await transaction.CommitAsync();

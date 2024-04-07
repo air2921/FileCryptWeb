@@ -30,7 +30,7 @@ namespace webapi.Controllers.Admin
                 if (linkId.HasValue)
                     link = await linkRepository.GetById(linkId.Value);
                 else if (!string.IsNullOrWhiteSpace(token))
-                    link = await linkRepository.GetByFilter(new RecoveryTokenByTokenSpecification(token));
+                    link = await linkRepository.GetByFilter(new RecoveryTokenByTokenSpec(token));
 
                 if (link is null)
                     return StatusCode(404, new { message = Message.NOT_FOUND });

@@ -42,7 +42,7 @@ namespace webapi.Controllers.Account
                 if (!validator.IsValid(userDTO))
                     return StatusCode(400, new { message = Message.INVALID_FORMAT });
 
-                var user = await userRepository.GetByFilter(new UserByEmailSpecification(userDTO.email));
+                var user = await userRepository.GetByFilter(new UserByEmailSpec(userDTO.email));
                 if (user is not null)
                     return StatusCode(409, new { message = Message.USER_EXISTS });
 

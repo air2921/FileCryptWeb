@@ -3,9 +3,9 @@ using webapi.Models;
 
 namespace webapi.DB.Ef.Specifications
 {
-    public class RecoveryTokenByTokenSpecification : Specification<LinkModel>
+    public class RecoveryTokenByTokenSpec : Specification<LinkModel>
     {
-        public RecoveryTokenByTokenSpecification(string token)
+        public RecoveryTokenByTokenSpec(string token)
         {
             Query.Where(x => x.u_token.Equals(token));
         }

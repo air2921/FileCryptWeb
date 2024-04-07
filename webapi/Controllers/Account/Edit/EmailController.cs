@@ -86,7 +86,7 @@ namespace webapi.Controllers.Account.Edit
                 if (!validator.IsValid(await dataManagament.GetData(OLD_EMAIL_CODE), code))
                     return StatusCode(400, new { message = Message.INCORRECT });
 
-                var user = await userRepository.GetByFilter(new UserByEmailSpecification(email));
+                var user = await userRepository.GetByFilter(new UserByEmailSpec(email));
                 if (user is not null)
                     return StatusCode(409, new { message = Message.CONFLICT });
 

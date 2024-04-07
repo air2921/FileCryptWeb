@@ -1,4 +1,5 @@
 ﻿using webapi.DB.Abstractions;
+using webapi.DB.Ef.Specifications.By_Relation_Specifications;
 using webapi.Exceptions;
 using webapi.Localization;
 using webapi.Models;
@@ -15,7 +16,10 @@ namespace webapi.Services.Admin
         {
             try
             {
-                var tokenIdentifiers = (await tokenRepository.GetAll(query => query.Where(t => t.user_id.Equals((int)parameter!))))
+                if (!int.TryParse(parameter?.ToString(), out int userId))
+                    throw new EntityNotDeletedException("Error when deleting data");
+
+                var tokenIdentifiers = (await tokenRepository.GetAll(new RefreshTokensByRelationSpec(userId)))
                     .Select(t => t.token_id);
 
                 await tokenRepository.DeleteMany(tokenIdentifiers);

@@ -1,4 +1,5 @@
 ﻿using webapi.DB.Abstractions;
+using webapi.DB.Ef.Specifications.By_Relation_Specifications;
 using webapi.Exceptions;
 using webapi.Models;
 using webapi.Services.Abstractions;
@@ -14,14 +15,15 @@ namespace webapi.Services.Admin
         {
             try
             {
-                bool block = (bool)parameter!;
+                if (!bool.TryParse(parameter?.ToString(), out bool block))
+                    throw new EntityNotUpdatedException("Error when updating data");
 
                 target.is_blocked = block;
                 await userRepository.Update(target);
 
                 if (block)
                 {
-                    var tokenIdentifiers = (await tokenRepository.GetAll(query => query.Where(t => t.user_id.Equals(target.id))))
+                    var tokenIdentifiers = (await tokenRepository.GetAll(new RefreshTokensByRelationSpec(target.id)))
                         .Select(t => t.token_id);
                     await tokenRepository.DeleteMany(tokenIdentifiers);
                 }

@@ -2,6 +2,8 @@
 using Newtonsoft.Json;
 using webapi.Attributes;
 using webapi.DB.Abstractions;
+using webapi.DB.Ef.Specifications;
+using webapi.DB.Ef.Specifications.By_Relation_Specifications;
 using webapi.Exceptions;
 using webapi.Helpers;
 using webapi.Helpers.Abstractions;
@@ -94,12 +96,10 @@ namespace webapi.Services.Account
         {
             try
             {
-                var tokens = await tokenRepository.GetAll(query => query.Where(t => t.user_id.Equals(id) && t.expiry_date < DateTime.UtcNow));
-                var expiredTokens = new List<int>();
-                foreach (var token in tokens)
-                    expiredTokens.Add(token.token_id);
+                var tokens = (await tokenRepository.GetAll(new RefreshTokenByTokenAndExpiresSpec(id, DateTime.UtcNow)))
+                    .Select(x => x.token_id);
 
-                await tokenRepository.DeleteMany(expiredTokens);
+                await tokenRepository.DeleteMany(tokens);
             }
             catch (OperationCanceledException)
             {
@@ -148,8 +148,7 @@ namespace webapi.Services.Account
                 if (refresh is null)
                     return;
 
-                var token = await tokenRepository.DeleteByFilter(query => query
-                    .Where(t => t.refresh_token.Equals(tokenService.HashingToken(refresh))));
+                var token = await tokenRepository.DeleteByFilter(new RefreshTokenByTokenSpec(tokenService.HashingToken(refresh)));
             }
             catch (EntityNotDeletedException)
             {
