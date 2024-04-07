@@ -142,13 +142,14 @@ namespace tests.Controllers_Tests.Admin
         {
             var id = 1;
             var param = true;
+            var role = "User";
 
             var validatorMock = new Mock<IValidator>();
             var transactionMock = new Mock<ITransaction<UserModel>>();
             var userRepositoryMock = new Mock<IRepository<UserModel>>();
-            var user = new UserModel();
+            var user = new UserModel { role = role };
 
-            validatorMock.Setup(x => x.IsValid(It.IsAny<string>(), null)).Returns(true);
+            validatorMock.Setup(x => x.IsValid(role, null)).Returns(true);
             userRepositoryMock.Setup(x => x.GetById(id, CancellationToken.None)).ReturnsAsync(user);
 
             var userController = new Admin_UserController(transactionMock.Object, validatorMock.Object, userRepositoryMock.Object);
@@ -232,12 +233,13 @@ namespace tests.Controllers_Tests.Admin
         public async Task UpdateRole_Success()
         {
             var id = 1;
-            var user = new UserModel();
+            var role = "User";
+            var user = new UserModel { role = role };   
 
             var validatorMock = new Mock<IValidator>();
             var userRepositoryMock = new Mock<IRepository<UserModel>>();
 
-            validatorMock.Setup(x => x.IsValid(It.IsAny<string>(), null)).Returns(true);
+            validatorMock.Setup(x => x.IsValid(role, null)).Returns(true);
             userRepositoryMock.Setup(x => x.GetById(id, CancellationToken.None)).ReturnsAsync(user);
 
             var userController = new Admin_UserController(null, validatorMock.Object, userRepositoryMock.Object);

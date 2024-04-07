@@ -1,6 +1,7 @@
 ﻿using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Logging;
 using webapi.DB.Ef;
+using webapi.DB.Ef.Specifications.By_Relation_Specifications;
 using webapi.Exceptions;
 using webapi.Models;
 
@@ -69,14 +70,14 @@ namespace tests.Db_Tests.Sql_Tests
 
             await repository.AddRange(entities);
 
-            var result = await repository.GetAll(query => query.Where(e => e.storage_name.Equals("Air_Storage")));
+            var result = await repository.GetAll(new StoragesByRelationSpec(1));
 
-            var entityCount = entities.Count(e => e.storage_name.Equals("Air_Storage"));
+            var entityCount = entities.Count(e => e.user_id.Equals(1));
             var resultCount = result.Count();
 
             Assert.Equal(entityCount, resultCount);
             foreach (var entity in result)
-                Assert.Contains(result, e => e.storage_name.Equals(entity.storage_name));
+                Assert.Contains(result, e => e.user_id.Equals(1));
         }
 
         [Fact]
@@ -94,16 +95,16 @@ namespace tests.Db_Tests.Sql_Tests
                 new KeyStorageModel { storage_name = "Air_Storage", last_time_modified = DateTime.UtcNow,
                     access_code = "access_code_1", user_id = 1 },
                 new KeyStorageModel { storage_name = "Zanfery_Storage", last_time_modified = DateTime.UtcNow.AddDays(-1),
-                    access_code = "access_code_2", user_id = 2 },
+                    access_code = "access_code_3", user_id = 2 },
                 new KeyStorageModel { storage_name = "baby_mary_Storage", last_time_modified = DateTime.UtcNow.AddDays(-2),
-                    access_code = "access_code_3", user_id = 3 }
+                    access_code = "access_code_4", user_id = 3 }
             };
 
             await repository.AddRange(entities);
 
-            var result = await repository.GetAll(query => query.Where(e => e.storage_name.Equals("Test_Storage")));
+            var result = await repository.GetAll(new StoragesByRelationSpec(4));
 
-            var entityCount = entities.Count(e => e.storage_name.Equals("Test_Storage"));
+            var entityCount = entities.Count(e => e.user_id.Equals(4));
             var resultCount = result.Count();
 
             Assert.Equal(entityCount, resultCount);
@@ -159,15 +160,16 @@ namespace tests.Db_Tests.Sql_Tests
                 storage_name = "Air_Storage",
                 last_time_modified = DateTime.UtcNow,
                 access_code = "access_code_1",
-                user_id = 1
+                user_id = 5
             };
 
             await repository.Add(entity);
 
-            var result = await repository.GetByFilter(query => query.Where(e => e.storage_name.Equals("Air_Storage")));
+            var result = await repository.GetByFilter(new StorageByIdAndRelationSpec(1, 5));
 
             Assert.NotNull(result);
-            Assert.Equal("Air_Storage", result.storage_name);
+            Assert.Equal(1, result.storage_id);
+            Assert.Equal(5, result.user_id);
         }
 
         [Fact]
@@ -191,7 +193,7 @@ namespace tests.Db_Tests.Sql_Tests
 
             await repository.Add(entity);
 
-            var result = await repository.GetByFilter(query => query.Where(e => e.storage_name.Equals("Test_Storage")));
+            var result = await repository.GetByFilter(new StorageByIdAndRelationSpec(5, 10));
 
             Assert.Null(result);
         }
@@ -688,7 +690,7 @@ namespace tests.Db_Tests.Sql_Tests
                 storage_name = "Air_Storage",
                 last_time_modified = DateTime.UtcNow,
                 access_code = "access_code_1",
-                user_id = 1
+                user_id = 5
             };
 
             await repository.Add(storageModel);
@@ -696,7 +698,7 @@ namespace tests.Db_Tests.Sql_Tests
 
             Assert.NotNull(entity);
 
-            await repository.DeleteByFilter(query => query.Where(e => e.storage_id.Equals(1) && e.storage_name.Equals("Air_Storage")));
+            await repository.DeleteByFilter(new StorageByIdAndRelationSpec(1, 5));
             var deletedEntity = await repository.GetById(1);
 
             Assert.Null(deletedEntity);

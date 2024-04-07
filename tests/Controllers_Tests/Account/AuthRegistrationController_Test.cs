@@ -89,7 +89,7 @@ namespace tests.Controllers_Tests.Account
             var validatorMock = new Mock<IValidator>();
 
             generateMock.Setup(x => x.GenerateSixDigitCode()).Returns(123456);
-            userRepositoryMock.Setup(x => x.GetByFilter(It.IsAny<Func<IQueryable<UserModel>, IQueryable<UserModel>>>(), CancellationToken.None))
+            userRepositoryMock.Setup(x => x.GetByFilter(It.IsAny<UserByEmailSpec>(), CancellationToken.None))
                 .ReturnsAsync(new UserModel());
             validatorMock.Setup(x => x.IsValid(It.IsAny<RegisterDTO>(), null)).Returns(true);
 
@@ -117,7 +117,7 @@ namespace tests.Controllers_Tests.Account
             var validatorMock = new Mock<IValidator>();
 
             generateMock.Setup(x => x.GenerateSixDigitCode()).Returns(123456);
-            userRepositoryMock.Setup(x => x.GetByFilter(It.IsAny<Func<IQueryable<UserModel>, IQueryable<UserModel>>>(), CancellationToken.None))
+            userRepositoryMock.Setup(x => x.GetByFilter(It.IsAny<UserByEmailSpec>(), CancellationToken.None))
                 .ThrowsAsync(new OperationCanceledException());
             validatorMock.Setup(x => x.IsValid(It.IsAny<RegisterDTO>(), null)).Returns(true);
 
@@ -146,7 +146,7 @@ namespace tests.Controllers_Tests.Account
             var emailSenderMock = new Mock<IEmailSender>();
 
             generateMock.Setup(x => x.GenerateSixDigitCode()).Returns(123456);
-            userRepositoryMock.Setup(x => x.GetByFilter(It.IsAny<Func<IQueryable<UserModel>, IQueryable<UserModel>>>(), CancellationToken.None))
+            userRepositoryMock.Setup(x => x.GetByFilter(It.IsAny<UserByEmailSpec>(), CancellationToken.None))
                 .ReturnsAsync((UserModel)null);
             validatorMock.Setup(x => x.IsValid(It.IsAny<RegisterDTO>(), null)).Returns(true);
             emailSenderMock.Setup(x => x.SendMessage(It.IsAny<EmailDto>()))

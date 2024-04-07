@@ -1,6 +1,7 @@
 ﻿using Microsoft.AspNetCore.Mvc;
 using webapi.Controllers.Core;
 using webapi.DB.Abstractions;
+using webapi.DB.Ef.Specifications.By_Relation_Specifications;
 using webapi.Exceptions;
 using webapi.Helpers;
 using webapi.Helpers.Abstractions;
@@ -106,20 +107,24 @@ namespace tests.Controllers_Tests.Core
         [Fact]
         public async Task DeleteNotification_Success()
         {
+            var userId = 1;
+            var notificationId = 3;
+
             var userInfoMock = new Mock<IUserInfo>();
             var ntfRepositoryMock = new Mock<IRepository<NotificationModel>>();
             var redisCacheMock = new Mock<IRedisCache>();
 
-            userInfoMock.Setup(x => x.UserId).Returns(1);
+            userInfoMock.Setup(x => x.UserId).Returns(userId);
             ntfRepositoryMock
-                .Setup(x => x.DeleteByFilter(It.IsAny<Func<IQueryable<NotificationModel>, IQueryable<NotificationModel>>>(), CancellationToken.None))
+                .Setup(x => x.DeleteByFilter(new NotificationByIdAndByRelationSpec(notificationId, userId), CancellationToken.None))
                     .ReturnsAsync(new NotificationModel());
 
             var ntfController = new NotificationController(ntfRepositoryMock.Object, null, redisCacheMock.Object, userInfoMock.Object);
-            var result = await ntfController.DeleteNotification(1);
+            var result = await ntfController.DeleteNotification(notificationId);
 
             Assert.Equal(204, ((StatusCodeResult)result).StatusCode);
-            redisCacheMock.Verify(x => x.DeteteCacheByKeyPattern($"{ImmutableData.NOTIFICATIONS_PREFIX}{1}"), Times.Once);
+            ntfRepositoryMock.Verify(x => x.DeleteByFilter(new NotificationByIdAndByRelationSpec(notificationId, userId), CancellationToken.None), Times.Once);
+            redisCacheMock.Verify(x => x.DeteteCacheByKeyPattern($"{ImmutableData.NOTIFICATIONS_PREFIX}{userId}"), Times.Once);
         }
 
         [Fact]
@@ -131,7 +136,7 @@ namespace tests.Controllers_Tests.Core
 
             userInfoMock.Setup(x => x.UserId).Returns(1);
             ntfRepositoryMock
-                .Setup(x => x.DeleteByFilter(It.IsAny<Func<IQueryable<NotificationModel>, IQueryable<NotificationModel>>>(), CancellationToken.None))
+                .Setup(x => x.DeleteByFilter(It.IsAny<NotificationByIdAndByRelationSpec>(), CancellationToken.None))
                     .ReturnsAsync((NotificationModel)null);
 
             var ntfController = new NotificationController(ntfRepositoryMock.Object, null, redisCacheMock.Object, userInfoMock.Object);
@@ -150,7 +155,7 @@ namespace tests.Controllers_Tests.Core
 
             userInfoMock.Setup(x => x.UserId).Returns(1);
             ntfRepositoryMock
-                .Setup(x => x.DeleteByFilter(It.IsAny<Func<IQueryable<NotificationModel>, IQueryable<NotificationModel>>>(), CancellationToken.None))
+                .Setup(x => x.DeleteByFilter(It.IsAny<NotificationByIdAndByRelationSpec>(), CancellationToken.None))
                     .ThrowsAsync(new EntityNotDeletedException());
 
             var ntfController = new NotificationController(ntfRepositoryMock.Object, null, redisCacheMock.Object, userInfoMock.Object);

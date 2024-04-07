@@ -97,8 +97,6 @@ namespace tests.Controllers_Tests.Admin
             var validatorMock = new Mock<IValidator>();
 
             userRepositoryMock.Setup(x => x.GetById(It.IsAny<int>(), CancellationToken.None)).ReturnsAsync(new UserModel { role = "User"});
-            tokenRepositoryMock.Setup(x => x.GetAll(It.IsAny<Func<IQueryable<TokenModel>, IQueryable<TokenModel>>>(), CancellationToken.None))
-                .ReturnsAsync(new List<TokenModel>());
             userInfoMock.Setup(x => x.Role).Returns("HighestAdmin");
             validatorMock.Setup(x => x.IsValid(It.IsAny<string>(), It.IsAny<string>())).Returns(true);
             transactionMock.Setup(x => x.CreateTransaction(null, It.IsAny<int>()))
