@@ -1,5 +1,6 @@
 ﻿using Microsoft.AspNetCore.Mvc;
 using webapi.DB.Abstractions;
+using webapi.DB.Ef.Specifications;
 using webapi.DTO;
 using webapi.Exceptions;
 using webapi.Helpers;
@@ -41,7 +42,7 @@ namespace webapi.Controllers.Account
                 if (!validator.IsValid(userDTO))
                     return StatusCode(400, new { message = Message.INVALID_FORMAT });
 
-                var user = await userRepository.GetByFilter(query => query.Where(u => u.email.Equals(userDTO.email)));
+                var user = await userRepository.GetByFilter(new UserByEmailSpecification(userDTO.email));
                 if (user is not null)
                     return StatusCode(409, new { message = Message.USER_EXISTS });
 

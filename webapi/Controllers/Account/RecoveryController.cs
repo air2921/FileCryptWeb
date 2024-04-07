@@ -1,5 +1,6 @@
 ﻿using Microsoft.AspNetCore.Mvc;
 using webapi.DB.Abstractions;
+using webapi.DB.Ef.Specifications;
 using webapi.DTO;
 using webapi.Exceptions;
 using webapi.Helpers;
@@ -33,7 +34,7 @@ namespace webapi.Controllers.Account
         {
             try
             {
-                var user = await userRepository.GetByFilter(query => query.Where(u => u.email.Equals(email.ToLowerInvariant())));
+                var user = await userRepository.GetByFilter(new UserByEmailSpecification(email.ToLowerInvariant()));
                 if (user is null)
                     return StatusCode(404, new { message = Message.NOT_FOUND });
 
@@ -79,7 +80,7 @@ namespace webapi.Controllers.Account
                 if (!validator.IsValid(recovery.password))
                     return StatusCode(400, new { message = Message.INVALID_FORMAT });
 
-                var link = await linkRepository.GetByFilter(query => query.Where(l => l.u_token.Equals(recovery.token)));
+                var link = await linkRepository.GetByFilter(new RecoveryTokenByTokenSpecification(recovery.token));
                 if (link is null)
                     return StatusCode(404, new { message = Message.NOT_FOUND });
 

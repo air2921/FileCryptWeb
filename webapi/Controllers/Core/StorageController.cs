@@ -2,6 +2,7 @@
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 using webapi.DB.Abstractions;
+using webapi.DB.Ef.Specifications.By_Relation_Specifications;
 using webapi.DTO;
 using webapi.Exceptions;
 using webapi.Helpers;
@@ -54,7 +55,7 @@ namespace webapi.Controllers.Core
             try
             {
                 var storage = await storageRepository
-                    .GetByFilter(query => query.Where(s => s.storage_id.Equals(storageId) && s.user_id.Equals(userInfo.UserId)));
+                    .GetByFilter(new StorageByIdAndRelationSpec(storageId, userInfo.UserId));
 
                 if (storage is null)
                     return StatusCode(404, new { message = Message.NOT_FOUND });
@@ -85,7 +86,7 @@ namespace webapi.Controllers.Core
             try
             {
                 return StatusCode(200, new {
-                    storages = await storageRepository.GetAll(query => query.Where(s => s.user_id.Equals(userInfo.UserId)))});
+                    storages = await storageRepository.GetAll(new StoragesByRelationSpec(userInfo.UserId))});
             }
             catch (OperationCanceledException ex)
             {
@@ -99,7 +100,7 @@ namespace webapi.Controllers.Core
             try
             {
                 var storage = await storageRepository
-                    .GetByFilter(query => query.Where(s => s.storage_id.Equals(storageId) && s.user_id.Equals(userInfo.UserId)));
+                    .GetByFilter(new StorageByIdAndRelationSpec(storageId, userInfo.UserId));
                 if (storage is null)
                     return StatusCode(404, new { message = Message.NOT_FOUND });
 

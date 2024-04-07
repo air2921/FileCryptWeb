@@ -1,6 +1,7 @@
 ﻿using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 using webapi.DB.Abstractions;
+using webapi.DB.Ef.Specifications.By_Relation_Specifications;
 using webapi.Exceptions;
 using webapi.Helpers;
 using webapi.Helpers.Abstractions;
@@ -43,7 +44,7 @@ namespace webapi.Controllers.Core
                 if (receiver is null)
                     return StatusCode(404, new { message = Message.NOT_FOUND });
 
-                var keys = await keyRepository.GetByFilter(query => query.Where(k => k.user_id.Equals(userInfo.UserId)));
+                var keys = await keyRepository.GetByFilter(new KeysByRelationSpec(userInfo.UserId));
                 if (keys is null)
                     return StatusCode(404, new { message = Message.NOT_FOUND });
 
@@ -71,14 +72,14 @@ namespace webapi.Controllers.Core
         {
             try
             {
-                var offer = await offerRepository.GetByFilter(query => query.Where(o => o.offer_id.Equals(offerId) && o.receiver_id.Equals(userInfo.UserId)));
+                var offer = await offerRepository.GetByFilter(new OfferByIdAndRelationSpec(offerId, userInfo.UserId, false));
                 if (offer is null)
                     return StatusCode(404, new { message = Message.NOT_FOUND });
 
                 if (offer.is_accepted)
                     return StatusCode(409, new { message = Message.CONFLICT });
 
-                var receiver = await keyRepository.GetByFilter(query => query.Where(k => k.user_id.Equals(offer.receiver_id)));
+                var receiver = await keyRepository.GetByFilter(new KeysByRelationSpec(offer.receiver_id));
                 if (receiver is null)
                     return StatusCode(404, new { message = Message.NOT_FOUND });
 
@@ -150,8 +151,7 @@ namespace webapi.Controllers.Core
         {
             try
             {
-                var offer = await offerRepository.DeleteByFilter(query => query
-                    .Where(o => o.offer_id.Equals(offerId) && (o.sender_id.Equals(userInfo.UserId) || o.receiver_id.Equals(userInfo.UserId))));
+                var offer = await offerRepository.DeleteByFilter(new OfferByIdAndRelationSpec(offerId, userInfo.UserId, null));
 
                 await redisCache.DeteteCacheByKeyPattern($"{ImmutableData.OFFERS_PREFIX}{offer.sender_id}");
                 await redisCache.DeteteCacheByKeyPattern($"{ImmutableData.OFFERS_PREFIX}{offer.receiver_id}");

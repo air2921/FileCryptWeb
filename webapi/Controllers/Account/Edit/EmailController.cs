@@ -1,6 +1,7 @@
 ﻿using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 using webapi.DB.Abstractions;
+using webapi.DB.Ef.Specifications;
 using webapi.DTO;
 using webapi.Exceptions;
 using webapi.Helpers;
@@ -85,7 +86,7 @@ namespace webapi.Controllers.Account.Edit
                 if (!validator.IsValid(await dataManagament.GetData(OLD_EMAIL_CODE), code))
                     return StatusCode(400, new { message = Message.INCORRECT });
 
-                var user = await userRepository.GetByFilter(query => query.Where(u => u.email.Equals(email)));
+                var user = await userRepository.GetByFilter(new UserByEmailSpecification(email));
                 if (user is not null)
                     return StatusCode(409, new { message = Message.CONFLICT });
 

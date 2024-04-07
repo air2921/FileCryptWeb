@@ -1,8 +1,7 @@
 ﻿using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
-using webapi.Attributes;
 using webapi.DB.Abstractions;
-using webapi.DB.Ef;
+using webapi.DB.Ef.Specifications.Sorting_Specifications;
 using webapi.Exceptions;
 using webapi.Helpers;
 using webapi.Localization;
@@ -38,12 +37,12 @@ namespace webapi.Controllers.Admin
         [HttpGet("range")]
         [ProducesResponseType(typeof(IEnumerable<NotificationModel>), 200)]
         [ProducesResponseType(typeof(object), 500)]
-        public async Task<IActionResult> GetRangeNotification([FromQuery] int? userId, [FromQuery] int? skip, [FromQuery] int? count, bool byDesc)
+        public async Task<IActionResult> GetRangeNotification([FromQuery] int? userId, [FromQuery] int skip, [FromQuery] int count, bool byDesc)
         {
             try
             {
                 return StatusCode(200, new { notification = await notificationRepository
-                    .GetAll(sorting.SortNotifications(userId, skip, count, byDesc, null, null)) });
+                    .GetAll(new NotificationsSortSpecification(userId, skip, count, byDesc, null, null)) });
             }
             catch (OperationCanceledException ex)
             {

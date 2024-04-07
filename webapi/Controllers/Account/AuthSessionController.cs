@@ -1,6 +1,7 @@
 ﻿using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 using webapi.DB.Abstractions;
+using webapi.DB.Ef.Specifications;
 using webapi.DTO;
 using webapi.Exceptions;
 using webapi.Helpers;
@@ -37,7 +38,7 @@ namespace webapi.Controllers.Account
         {
             try
             {
-                var user = await userRepository.GetByFilter(query => query.Where(u => u.email.Equals(userDTO.email.ToLowerInvariant())));
+                var user = await userRepository.GetByFilter(new UserByEmailSpecification(userDTO.email.ToLowerInvariant()));
                 if (user is null)
                     return StatusCode(404, new { message = Message.NOT_FOUND });
 

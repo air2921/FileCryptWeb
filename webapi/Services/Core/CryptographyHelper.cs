@@ -4,6 +4,7 @@ using System.Text.RegularExpressions;
 using webapi.Cryptography;
 using webapi.Cryptography.Abstractions;
 using webapi.DB.Abstractions;
+using webapi.DB.Ef.Specifications.By_Relation_Specifications;
 using webapi.Helpers;
 using webapi.Helpers.Abstractions;
 using webapi.Localization;
@@ -89,7 +90,7 @@ namespace webapi.Services.Core
                 if (value is not null)
                     return JsonConvert.DeserializeObject<string>(value);
 
-                var keys = await keyRepository.GetByFilter(query => query.Where(k => k.user_id.Equals(userId)));
+                var keys = await keyRepository.GetByFilter(new KeysByRelationSpec(userId));
                 if (keys is null)
                     throw new ArgumentNullException(Message.NOT_FOUND);
 

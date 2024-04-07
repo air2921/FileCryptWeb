@@ -1,6 +1,7 @@
 ﻿using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 using webapi.DB.Abstractions;
+using webapi.DB.Ef.Specifications.By_Relation_Specifications;
 using webapi.Exceptions;
 using webapi.Helpers;
 using webapi.Localization;
@@ -24,7 +25,7 @@ namespace webapi.Controllers.Admin
         {
             try
             {
-                var keys = await keyRepository.GetByFilter(query => query.Where(k => k.user_id.Equals(userId)));
+                var keys = await keyRepository.GetByFilter(new KeysByRelationSpec(userId));
                 if (keys is null)
                     return StatusCode(404, new { message = Message.NOT_FOUND });
 

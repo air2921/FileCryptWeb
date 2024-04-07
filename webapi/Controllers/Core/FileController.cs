@@ -1,6 +1,7 @@
 ﻿using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 using webapi.DB.Abstractions;
+using webapi.DB.Ef.Specifications.By_Relation_Specifications;
 using webapi.Exceptions;
 using webapi.Helpers;
 using webapi.Helpers.Abstractions;
@@ -27,7 +28,7 @@ namespace webapi.Controllers.Core
         {
             try
             {
-                var file = await fileRepository.DeleteByFilter(query => query.Where(f => f.file_id.Equals(fileId) && f.user_id.Equals(userInfo.UserId)));
+                var file = await fileRepository.DeleteByFilter(new FileByIdAndRelationSpec(fileId, userInfo.UserId));
                 if (file is not null)
                     await redisCache.DeteteCacheByKeyPattern($"{ImmutableData.FILES_PREFIX}{userInfo.UserId}");
 

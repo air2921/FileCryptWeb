@@ -2,6 +2,7 @@
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 using webapi.DB.Abstractions;
+using webapi.DB.Ef.Specifications.By_Relation_Specifications;
 using webapi.DTO;
 using webapi.Exceptions;
 using webapi.Helpers;
@@ -36,7 +37,7 @@ namespace webapi.Controllers.Core
                 if (!validator.IsValid(keyDTO.key_value))
                     return StatusCode(422, new { message = Message.INVALID_FORMAT });
 
-                if (await IsValidStorage(storageId, userInfo.UserId, code))
+                if (!await IsValidStorage(storageId, userInfo.UserId, code))
                     return StatusCode(400);
 
                 var keyItemModel = mapper.Map<KeyDTO, KeyStorageItemModel>(keyDTO);
@@ -66,7 +67,7 @@ namespace webapi.Controllers.Core
         {
             try
             {
-                if (await IsValidStorage(storageId, userInfo.UserId, code))
+                if (!await IsValidStorage(storageId, userInfo.UserId, code))
                     return StatusCode(400);
 
                 var key = await storageItemRepository.GetById(keyId);
@@ -86,12 +87,12 @@ namespace webapi.Controllers.Core
         {
             try
             {
-                if (await IsValidStorage(storageId, userInfo.UserId, code))
+                if (!await IsValidStorage(storageId, userInfo.UserId, code))
                     return StatusCode(400);
 
                 return StatusCode(200, new {
                     keys = await storageItemRepository
-                    .GetAll(query => query.Where(s => s.storage_id.Equals(storageId)))});
+                    .GetAll(new StorageKeysByRelationSpec(storageId))});
             }
             catch (OperationCanceledException ex)
             {
@@ -107,11 +108,10 @@ namespace webapi.Controllers.Core
         {
             try
             {
-                if (await IsValidStorage(storageId, userInfo.UserId, code))
+                if (!await IsValidStorage(storageId, userInfo.UserId, code))
                     return StatusCode(400);
 
-                await storageItemRepository.DeleteByFilter(query => query
-                    .Where(s => s.key_id.Equals(keyId) && s.storage_id.Equals(storageId)));
+                await storageItemRepository.DeleteByFilter(new StorageKeyByIdAndRelationSpec(keyId, storageId));
 
                 await redisCache.DeteteCacheByKeyPattern($"{ImmutableData.STORAGES_PREFIX}{userInfo.UserId}");
                 return StatusCode(204);
@@ -125,7 +125,7 @@ namespace webapi.Controllers.Core
         private async Task<bool> IsValidStorage(int storageId, int userId, int code)
         {
             var storage = await storageRepository
-                .GetByFilter(query => query.Where(s => s.storage_id.Equals(storageId) && s.user_id.Equals(userId)));
+                .GetByFilter(new StorageByIdAndRelationSpec(storageId, userId));
 
             if (storage is null)
                 return false;

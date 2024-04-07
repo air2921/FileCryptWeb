@@ -1,7 +1,8 @@
 ﻿using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 using webapi.DB.Abstractions;
-using webapi.DB.Ef;
+using webapi.DB.Ef.Specifications;
+using webapi.DB.Ef.Specifications.Sorting_Specifications;
 using webapi.Exceptions;
 using webapi.Localization;
 using webapi.Models;
@@ -29,7 +30,7 @@ namespace webapi.Controllers.Admin
                 if (linkId.HasValue)
                     link = await linkRepository.GetById(linkId.Value);
                 else if (!string.IsNullOrWhiteSpace(token))
-                    link = await linkRepository.GetByFilter(query => query.Where(l => l.u_token.Equals(token)));
+                    link = await linkRepository.GetByFilter(new RecoveryTokenByTokenSpecification(token));
 
                 if (link is null)
                     return StatusCode(404, new { message = Message.NOT_FOUND });
@@ -46,13 +47,13 @@ namespace webapi.Controllers.Admin
         [ProducesResponseType(typeof(IEnumerable<LinkModel>), 200)]
         [ProducesResponseType(typeof(object), 500)]
         public async Task<IActionResult> GetRangeLinks([FromQuery] int? userId,
-            [FromQuery] int? skip, [FromQuery] int? count,
+            [FromQuery] int skip, [FromQuery] int count,
             [FromQuery] bool byDesc, [FromQuery] bool? expired)
         {
             try
             {
                 return StatusCode(200, new { links = await linkRepository
-                    .GetAll(sorting.SortLinks(userId, skip, count, byDesc, expired)) });
+                    .GetAll(new LinksSortSpecification(userId, skip, count, byDesc, expired)) });
             }
             catch (OperationCanceledException ex)
             {

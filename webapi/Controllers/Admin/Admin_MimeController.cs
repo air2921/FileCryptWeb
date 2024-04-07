@@ -6,6 +6,7 @@ using Microsoft.AspNetCore.Authorization;
 using webapi.Helpers;
 using webapi.DB.Abstractions;
 using webapi.Helpers.Abstractions;
+using webapi.DB.Ef.Specifications.Sorting_Specifications;
 
 namespace webapi.Controllers.Admin
 {
@@ -95,18 +96,13 @@ namespace webapi.Controllers.Admin
         [ProducesResponseType(typeof(IEnumerable<FileMimeModel>), 200)]
         [ProducesResponseType(typeof(object), 400)]
         [ProducesResponseType(typeof(object), 500)]
-        public async Task<IActionResult> GetMimes([FromQuery] int? skip, [FromQuery] int? count)
+        public async Task<IActionResult> GetMimes([FromQuery] int skip, [FromQuery] int count)
         {
             try
             {
-                if ((!skip.HasValue && count.HasValue) || (skip.HasValue && !count.HasValue))
-                    return StatusCode(400);
-
-                if (skip.HasValue && count.HasValue)
-                    return StatusCode(200, new { mimes = await mimeRepository
-                        .GetAll(query => query.Skip(skip.Value).Take(count.Value))});
-                else
-                    return StatusCode(200, new { mimes = await mimeRepository.GetAll() });
+                return StatusCode(200, new {
+                    mimes = await mimeRepository
+                        .GetAll(new MimesSortSpecification(skip, count))});
             }
             catch (OperationCanceledException ex)
             {

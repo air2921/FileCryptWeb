@@ -1,6 +1,7 @@
 ﻿using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 using webapi.DB.Abstractions;
+using webapi.DB.Ef.Specifications.By_Relation_Specifications;
 using webapi.Exceptions;
 using webapi.Helpers;
 using webapi.Helpers.Abstractions;
@@ -77,7 +78,7 @@ namespace webapi.Controllers.Core
             try
             {
                 var notification = await notificationRepository
-                    .DeleteByFilter(query => query.Where(n => n.notification_id.Equals(notificationId) && n.user_id.Equals(userInfo.UserId)));
+                    .DeleteByFilter(new NotificationByIdAndByRelationSpec(notificationId, userInfo.UserId));
                 
                 if (notification is not null)
                     await redisCache.DeteteCacheByKeyPattern($"{ImmutableData.NOTIFICATIONS_PREFIX}{userInfo.UserId}");

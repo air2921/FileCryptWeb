@@ -1,8 +1,7 @@
 ﻿using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
-using webapi.Attributes;
 using webapi.DB.Abstractions;
-using webapi.DB.Ef;
+using webapi.DB.Ef.Specifications.Sorting_Specifications;
 using webapi.Exceptions;
 using webapi.Helpers;
 using webapi.Localization;
@@ -38,13 +37,13 @@ namespace webapi.Controllers.Admin
         [HttpGet("range")]
         [ProducesResponseType(typeof(IEnumerable<FileModel>), 200)]
         [ProducesResponseType(typeof(object), 500)]
-        public async Task<IActionResult> GetFiles([FromQuery] int? userId, [FromQuery] int? skip, [FromQuery] int? count,
+        public async Task<IActionResult> GetFiles([FromQuery] int? userId, [FromQuery] int skip, [FromQuery] int count,
             [FromQuery] bool byDesc, [FromQuery] string? category)
         {
             try
             {
                 return StatusCode(200, new { files = await fileRepository
-                    .GetAll(sorting.SortFiles(userId, skip, count, byDesc, null, null, category)) });
+                    .GetAll(new FilesSortSpecification(userId, skip, count, byDesc, null, null, category)) });
             }
             catch (OperationCanceledException ex)
             {

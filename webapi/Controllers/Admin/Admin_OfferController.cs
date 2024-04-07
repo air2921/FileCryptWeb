@@ -1,8 +1,7 @@
 ﻿using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
-using webapi.Attributes;
 using webapi.DB.Abstractions;
-using webapi.DB.Ef;
+using webapi.DB.Ef.Specifications.Sorting_Specifications;
 using webapi.Exceptions;
 using webapi.Helpers;
 using webapi.Localization;
@@ -45,7 +44,7 @@ namespace webapi.Controllers.Admin
             try
             {
                 return StatusCode(200, new { offers = await offerRepository
-                    .GetAll(sorting.SortOffers(userId, skip, count, byDesc, sended, isAccepted, type)) });
+                    .GetAll(new OffersSortSpecification(userId, skip, count, byDesc, sended, isAccepted, type)) });
             }
             catch (OperationCanceledException ex)
             {
