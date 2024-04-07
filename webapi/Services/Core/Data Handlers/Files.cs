@@ -11,7 +11,6 @@ namespace webapi.Services.Core.Data_Handlers
 {
     public class Files(
         IRepository<FileModel> fileRepository,
-        ISorting sorting,
         IRedisCache redisCache,
         ILogger<Files> logger) : ICacheHandler<FileModel>
     {

@@ -1,7 +1,8 @@
 ﻿using Microsoft.AspNetCore.Mvc;
 using webapi.Controllers.Admin;
 using webapi.DB.Abstractions;
-using webapi.DB.Ef;
+using webapi.DB.Ef.Specifications;
+using webapi.DB.Ef.Specifications.Sorting_Specifications;
 using webapi.Exceptions;
 using webapi.Models;
 
@@ -12,12 +13,14 @@ namespace tests.Controllers_Tests.Admin
         [Fact]
         public async Task GetLink_ById_Success()
         {
+            var id = 1;
+
             var linkRepositoryMock = new Mock<IRepository<LinkModel>>();
-            linkRepositoryMock.Setup(x => x.GetById(It.IsAny<int>(), CancellationToken.None))
+            linkRepositoryMock.Setup(x => x.GetById(id, CancellationToken.None))
                 .ReturnsAsync(new LinkModel());
 
-            var linkController = new Admin_LinkController(linkRepositoryMock.Object, null, null);
-            var result = await linkController.GetLink(1, null);
+            var linkController = new Admin_LinkController(linkRepositoryMock.Object, null);
+            var result = await linkController.GetLink(id, null);
 
             Assert.IsType<ObjectResult>(result);
             var objectResult = (ObjectResult)result;
@@ -27,12 +30,14 @@ namespace tests.Controllers_Tests.Admin
         [Fact]
         public async Task GetLink_ByToken_Success()
         {
+            var token = "jfdghjdhfgjhdgjhdjgkhy3485y3jkhbjk";
+
             var linkRepositoryMock = new Mock<IRepository<LinkModel>>();
-            linkRepositoryMock.Setup(x => x.GetByFilter(It.IsAny<Func<IQueryable<LinkModel>, IQueryable<LinkModel>>>(), CancellationToken.None))
+            linkRepositoryMock.Setup(x => x.GetByFilter(new RecoveryTokenByTokenSpec(token), CancellationToken.None))
                 .ReturnsAsync(new LinkModel());
 
-            var linkController = new Admin_LinkController(linkRepositoryMock.Object, null, null);
-            var result = await linkController.GetLink(null, "F");
+            var linkController = new Admin_LinkController(linkRepositoryMock.Object, null);
+            var result = await linkController.GetLink(null, token);
 
             Assert.IsType<ObjectResult>(result);
             var objectResult = (ObjectResult)result;
@@ -43,10 +48,10 @@ namespace tests.Controllers_Tests.Admin
         public async Task GetLink_DbConnectionFailed()
         {
             var linkRepositoryMock = new Mock<IRepository<LinkModel>>();
-            linkRepositoryMock.Setup(x => x.GetByFilter(It.IsAny<Func<IQueryable<LinkModel>, IQueryable<LinkModel>>>(), CancellationToken.None))
+            linkRepositoryMock.Setup(x => x.GetByFilter(It.IsAny<RecoveryTokenByTokenSpec>(), CancellationToken.None))
                 .ThrowsAsync(new OperationCanceledException());
 
-            var linkController = new Admin_LinkController(linkRepositoryMock.Object, null, null);
+            var linkController = new Admin_LinkController(linkRepositoryMock.Object, null);
             var result = await linkController.GetLink(null, "F");
 
             Assert.IsType<ObjectResult>(result);
@@ -58,10 +63,10 @@ namespace tests.Controllers_Tests.Admin
         public async Task GetLink_LinkIsNull()
         {
             var linkRepositoryMock = new Mock<IRepository<LinkModel>>();
-            linkRepositoryMock.Setup(x => x.GetByFilter(It.IsAny<Func<IQueryable<LinkModel>, IQueryable<LinkModel>>>(), CancellationToken.None))
+            linkRepositoryMock.Setup(x => x.GetByFilter(It.IsAny<RecoveryTokenByTokenSpec>(), CancellationToken.None))
                 .ReturnsAsync((LinkModel)null);
 
-            var linkController = new Admin_LinkController(linkRepositoryMock.Object, null, null);
+            var linkController = new Admin_LinkController(linkRepositoryMock.Object, null);
             var result = await linkController.GetLink(null, "F");
 
             Assert.IsType<ObjectResult>(result);
@@ -72,13 +77,18 @@ namespace tests.Controllers_Tests.Admin
         [Fact]
         public async Task GetRangeLinks_Success()
         {
+            var id = 1;
+            var skip = 0;
+            var count = 5;
+            var byDesc = true;
+            var expired = false;
+
             var linkRepositoryMock = new Mock<IRepository<LinkModel>>();
-            var sortMock = new Mock<ISorting>();
-            linkRepositoryMock.Setup(x => x.GetAll(It.IsAny<Func<IQueryable<LinkModel>, IQueryable<LinkModel>>>(), CancellationToken.None))
+            linkRepositoryMock.Setup(x => x.GetAll(new LinksSortSpec(id, skip, count, byDesc, expired), CancellationToken.None))
                 .ReturnsAsync(new List<LinkModel>());
 
-            var linkController = new Admin_LinkController(linkRepositoryMock.Object, sortMock.Object, null);
-            var result = await linkController.GetRangeLinks(null, null, null, true, false);
+            var linkController = new Admin_LinkController(linkRepositoryMock.Object, null);
+            var result = await linkController.GetRangeLinks(id, skip, count, byDesc, expired);
 
             Assert.IsType<ObjectResult>(result);
             var objectResult = (ObjectResult)result;
@@ -89,12 +99,11 @@ namespace tests.Controllers_Tests.Admin
         public async Task GetRangeLinks_DbConnectionFailed()
         {
             var linkRepositoryMock = new Mock<IRepository<LinkModel>>();
-            var sortMock = new Mock<ISorting>();
-            linkRepositoryMock.Setup(x => x.GetAll(It.IsAny<Func<IQueryable<LinkModel>, IQueryable<LinkModel>>>(), CancellationToken.None))
+            linkRepositoryMock.Setup(x => x.GetAll(It.IsAny<LinksSortSpec>(), CancellationToken.None))
                 .ThrowsAsync(new OperationCanceledException());
 
-            var linkController = new Admin_LinkController(linkRepositoryMock.Object, sortMock.Object, null);
-            var result = await linkController.GetRangeLinks(null, null, null, true, false);
+            var linkController = new Admin_LinkController(linkRepositoryMock.Object, null);
+            var result = await linkController.GetRangeLinks(null, 0, 5, true, false);
 
             Assert.IsType<ObjectResult>(result);
             var objectResult = (ObjectResult)result;
@@ -105,9 +114,10 @@ namespace tests.Controllers_Tests.Admin
         public async Task DeleteLink_Success()
         {
             var id = 1;
+
             var linkRepositoryMock = new Mock<IRepository<LinkModel>>();
 
-            var linkController = new Admin_LinkController(linkRepositoryMock.Object, null, null);
+            var linkController = new Admin_LinkController(linkRepositoryMock.Object, null);
             var result = await linkController.DeleteLink(id);
 
             Assert.IsType<ObjectResult>(result);
@@ -123,7 +133,7 @@ namespace tests.Controllers_Tests.Admin
             linkRepositoryMock.Setup(x => x.Delete(It.IsAny<int>(), CancellationToken.None))
                 .ThrowsAsync(new EntityNotDeletedException());
 
-            var linkController = new Admin_LinkController(linkRepositoryMock.Object, null, null);
+            var linkController = new Admin_LinkController(linkRepositoryMock.Object, null);
             var result = await linkController.DeleteLink(1);
 
             Assert.IsType<ObjectResult>(result);
@@ -137,7 +147,7 @@ namespace tests.Controllers_Tests.Admin
             var linkRepositoryMock = new Mock<IRepository<LinkModel>>();
             var ids = new List<int> { 1, 2, 3 };
 
-            var linkController = new Admin_LinkController(linkRepositoryMock.Object, null, null);
+            var linkController = new Admin_LinkController(linkRepositoryMock.Object, null);
             var result = await linkController.DeleteRangeLinks(ids);
 
             Assert.Equal(204, ((StatusCodeResult)result).StatusCode);
@@ -151,7 +161,7 @@ namespace tests.Controllers_Tests.Admin
             linkRepositoryMock.Setup(x => x.DeleteMany(It.IsAny<IEnumerable<int>>(), CancellationToken.None))
                 .ThrowsAsync(new EntityNotDeletedException());
 
-            var linkController = new Admin_LinkController(linkRepositoryMock.Object, null, null);
+            var linkController = new Admin_LinkController(linkRepositoryMock.Object, null);
             var result = await linkController.DeleteRangeLinks(new List<int> { 1 });
 
             Assert.IsType<ObjectResult>(result);

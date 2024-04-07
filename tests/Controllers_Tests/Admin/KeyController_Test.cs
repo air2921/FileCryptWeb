@@ -1,6 +1,7 @@
 ﻿using Microsoft.AspNetCore.Mvc;
 using webapi.Controllers.Admin;
 using webapi.DB.Abstractions;
+using webapi.DB.Ef.Specifications.By_Relation_Specifications;
 using webapi.Exceptions;
 using webapi.Helpers;
 using webapi.Models;
@@ -17,7 +18,7 @@ namespace tests.Controllers_Tests.Admin
             var keyRepositoryMock = new Mock<IRepository<KeyModel>>();
             var redisCacheMock = new Mock<IRedisCache>();
 
-            keyRepositoryMock.Setup(x => x.GetByFilter(It.IsAny<Func<IQueryable<KeyModel>, IQueryable<KeyModel>>>(), CancellationToken.None))
+            keyRepositoryMock.Setup(x => x.GetByFilter(new KeysByRelationSpec(id), CancellationToken.None))
                 .ReturnsAsync(new KeyModel());
 
             var keyController = new Admin_KeyController(redisCacheMock.Object, keyRepositoryMock.Object);
@@ -34,7 +35,7 @@ namespace tests.Controllers_Tests.Admin
         public async Task RevokeReceivedKey_KeysInNull()
         {
             var keyRepositoryMock = new Mock<IRepository<KeyModel>>();
-            keyRepositoryMock.Setup(x => x.GetByFilter(It.IsAny<Func<IQueryable<KeyModel>, IQueryable<KeyModel>>>(), CancellationToken.None))
+            keyRepositoryMock.Setup(x => x.GetByFilter(It.IsAny<KeysByRelationSpec>(), CancellationToken.None))
                 .ReturnsAsync((KeyModel)null);
 
             var keyController = new Admin_KeyController(null, keyRepositoryMock.Object);
@@ -51,7 +52,7 @@ namespace tests.Controllers_Tests.Admin
             var keyRepositoryMock = new Mock<IRepository<KeyModel>>();
             var redisCacheMock = new Mock<IRedisCache>();
 
-            keyRepositoryMock.Setup(x => x.GetByFilter(It.IsAny<Func<IQueryable<KeyModel>, IQueryable<KeyModel>>>(), CancellationToken.None))
+            keyRepositoryMock.Setup(x => x.GetByFilter(It.IsAny<KeysByRelationSpec>(), CancellationToken.None))
                 .ReturnsAsync(new KeyModel());
             keyRepositoryMock.Setup(x => x.Update(It.IsAny<KeyModel>(), CancellationToken.None))
                 .ThrowsAsync(new EntityNotUpdatedException());

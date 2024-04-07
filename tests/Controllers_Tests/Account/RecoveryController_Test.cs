@@ -9,6 +9,7 @@ using webapi.Third_Party_Services.Abstractions;
 using webapi.Models;
 using webapi.Services.Abstractions;
 using webapi.Services.Account;
+using webapi.DB.Ef.Specifications;
 
 namespace tests.Controllers_Tests.Account
 {
@@ -34,13 +35,8 @@ namespace tests.Controllers_Tests.Account
             var fileManagerMock = new Mock<IFileManager>();
             var recoveryServiceMock = new Mock<IRecoveryHelpers>();
 
-            userRepositoryMock.Setup(x => x.GetByFilter(It.IsAny<Func<IQueryable<UserModel>, IQueryable<UserModel>>>(), CancellationToken.None))
-                .ReturnsAsync(user)
-                .Callback<Func<IQueryable<UserModel>, IQueryable<UserModel>>, CancellationToken>((query, token) => {
-                    var testQuery = new List<UserModel>().AsQueryable();
-                    var filteredQuery = query(testQuery);
-                    Assert.True(filteredQuery.Expression.ToString().Contains($".email.Equals("));
-                });
+            userRepositoryMock.Setup(x => x.GetByFilter(new UserByEmailSpec(email.ToLowerInvariant()), CancellationToken.None))
+                .ReturnsAsync(user);
             generateMock.Setup(x => x.GenerateKey()).Returns("8ifrnDa8a9nabJDfjTrfXsgfVIhCYGrZbN5HdtX0dK8=");
             fileManagerMock.Setup(x => x.GetReactAppUrl()).Returns(string.Empty);
 
@@ -63,7 +59,7 @@ namespace tests.Controllers_Tests.Account
         {
             var userRepositoryMock = new Mock<IRepository<UserModel>>();
 
-            userRepositoryMock.Setup(x => x.GetByFilter(It.IsAny<Func<IQueryable<UserModel>, IQueryable<UserModel>>>(), CancellationToken.None))
+            userRepositoryMock.Setup(x => x.GetByFilter(It.IsAny<UserByEmailSpec>(), CancellationToken.None))
                 .ReturnsAsync((UserModel)null);
 
             var recoveryController = new RecoveryController(null, null, userRepositoryMock.Object, null, null, null, null, null);
@@ -80,7 +76,7 @@ namespace tests.Controllers_Tests.Account
         {
             var userRepositoryMock = new Mock<IRepository<UserModel>>();
 
-            userRepositoryMock.Setup(x => x.GetByFilter(It.IsAny<Func<IQueryable<UserModel>, IQueryable<UserModel>>>(), CancellationToken.None))
+            userRepositoryMock.Setup(x => x.GetByFilter(It.IsAny<UserByEmailSpec>(), CancellationToken.None))
                 .ThrowsAsync(new OperationCanceledException());
 
             var recoveryController = new RecoveryController(null, null, userRepositoryMock.Object, null, null, null, null, null);
@@ -99,7 +95,7 @@ namespace tests.Controllers_Tests.Account
             var generateMock = new Mock<IGenerate>();
             var recoveryServiceMock = new Mock<IRecoveryHelpers>();
 
-            userRepositoryMock.Setup(x => x.GetByFilter(It.IsAny<Func<IQueryable<UserModel>, IQueryable<UserModel>>>(), CancellationToken.None))
+            userRepositoryMock.Setup(x => x.GetByFilter(It.IsAny<UserByEmailSpec>(), CancellationToken.None))
                 .ReturnsAsync(new UserModel
                 {
                     username = string.Empty,
@@ -128,7 +124,7 @@ namespace tests.Controllers_Tests.Account
             var fileManagerMock = new Mock<IFileManager>();
             var recoveryServiceMock = new Mock<IRecoveryHelpers>();
 
-            userRepositoryMock.Setup(x => x.GetByFilter(It.IsAny<Func<IQueryable<UserModel>, IQueryable<UserModel>>>(), CancellationToken.None))
+            userRepositoryMock.Setup(x => x.GetByFilter(It.IsAny<UserByEmailSpec>(), CancellationToken.None))
                 .ReturnsAsync(new UserModel
                 {
                     username = string.Empty,
@@ -171,13 +167,8 @@ namespace tests.Controllers_Tests.Account
             var recoveryServiceMock = new Mock<IRecoveryHelpers>();
 
             validatorMock.Setup(x => x.IsValid(password, null)).Returns(true);
-            linkRepositoryMock.Setup(x => x.GetByFilter(It.IsAny<Func<IQueryable<LinkModel>, IQueryable<LinkModel>>>(), CancellationToken.None))
-                .ReturnsAsync(link)
-                .Callback<Func<IQueryable<LinkModel>, IQueryable<LinkModel>>, CancellationToken>((query, token) => {
-                    var testQuery = new List<LinkModel>().AsQueryable();
-                    var filteredQuery = query(testQuery);
-                    Assert.True(filteredQuery.Expression.ToString().Contains($".u_token.Equals("));
-                });
+            linkRepositoryMock.Setup(x => x.GetByFilter(new RecoveryTokenByTokenSpec(token), CancellationToken.None))
+                .ReturnsAsync(link); ;
             userRepositoryMock.Setup(x => x.GetById(userId, CancellationToken.None)).ReturnsAsync(user);
 
             var recoveryController = new RecoveryController(recoveryServiceMock.Object, validatorMock.Object, userRepositoryMock.Object,
@@ -215,7 +206,7 @@ namespace tests.Controllers_Tests.Account
             var linkRepositoryMock = new Mock<IRepository<LinkModel>>();
 
             validatorMock.Setup(x => x.IsValid(It.IsAny<string>(), null)).Returns(true);
-            linkRepositoryMock.Setup(x => x.GetByFilter(It.IsAny<Func<IQueryable<LinkModel>, IQueryable<LinkModel>>>(), CancellationToken.None))
+            linkRepositoryMock.Setup(x => x.GetByFilter(It.IsAny<RecoveryTokenByTokenSpec>(), CancellationToken.None))
                 .ReturnsAsync((LinkModel)null);
 
             var recoveryController = new RecoveryController(null, validatorMock.Object, null, linkRepositoryMock.Object,
@@ -235,7 +226,7 @@ namespace tests.Controllers_Tests.Account
             var linkRepositoryMock = new Mock<IRepository<LinkModel>>();
 
             validatorMock.Setup(x => x.IsValid(It.IsAny<string>(), null)).Returns(true);
-            linkRepositoryMock.Setup(x => x.GetByFilter(It.IsAny<Func<IQueryable<LinkModel>, IQueryable<LinkModel>>>(), CancellationToken.None))
+            linkRepositoryMock.Setup(x => x.GetByFilter(It.IsAny<RecoveryTokenByTokenSpec>(), CancellationToken.None))
                 .ReturnsAsync(new LinkModel
                 {
                     link_id = 1,
@@ -261,7 +252,7 @@ namespace tests.Controllers_Tests.Account
             var userRepositoryMock = new Mock<IRepository<UserModel>>();
 
             validatorMock.Setup(x => x.IsValid(It.IsAny<string>(), null)).Returns(true);
-            linkRepositoryMock.Setup(x => x.GetByFilter(It.IsAny<Func<IQueryable<LinkModel>, IQueryable<LinkModel>>>(), CancellationToken.None))
+            linkRepositoryMock.Setup(x => x.GetByFilter(It.IsAny<RecoveryTokenByTokenSpec>(), CancellationToken.None))
                 .ReturnsAsync(new LinkModel
                 {
                     link_id = 1,
@@ -287,7 +278,7 @@ namespace tests.Controllers_Tests.Account
             var linkRepositoryMock = new Mock<IRepository<LinkModel>>();
 
             validatorMock.Setup(x => x.IsValid(It.IsAny<string>(), null)).Returns(true);
-            linkRepositoryMock.Setup(x => x.GetByFilter(It.IsAny<Func<IQueryable<LinkModel>, IQueryable<LinkModel>>>(), CancellationToken.None))
+            linkRepositoryMock.Setup(x => x.GetByFilter(It.IsAny<RecoveryTokenByTokenSpec>(), CancellationToken.None))
                 .ThrowsAsync(new OperationCanceledException());
 
             var recoveryController = new RecoveryController(null, validatorMock.Object, null, linkRepositoryMock.Object,
@@ -307,7 +298,7 @@ namespace tests.Controllers_Tests.Account
             var linkRepositoryMock = new Mock<IRepository<LinkModel>>();
 
             validatorMock.Setup(x => x.IsValid(It.IsAny<string>(), null)).Returns(true);
-            linkRepositoryMock.Setup(x => x.GetByFilter(It.IsAny<Func<IQueryable<LinkModel>, IQueryable<LinkModel>>>(), CancellationToken.None))
+            linkRepositoryMock.Setup(x => x.GetByFilter(It.IsAny<RecoveryTokenByTokenSpec>(), CancellationToken.None))
                 .ReturnsAsync(new LinkModel
                 {
                     link_id = 1,
@@ -341,7 +332,7 @@ namespace tests.Controllers_Tests.Account
             validatorMock.Setup(x => x.IsValid(It.IsAny<string>(), null)).Returns(true);
             recoveryServiceMock.Setup(x => x.RecoveryTransaction(It.IsAny<UserModel>(), It.IsAny<string>(), It.IsAny<string>()))
                 .ThrowsAsync((Exception)Activator.CreateInstance(ex));
-            linkRepositoryMock.Setup(x => x.GetByFilter(It.IsAny<Func<IQueryable<LinkModel>, IQueryable<LinkModel>>>(), CancellationToken.None))
+            linkRepositoryMock.Setup(x => x.GetByFilter(It.IsAny<RecoveryTokenByTokenSpec>(), CancellationToken.None))
                 .ReturnsAsync(new LinkModel
                 {
                     link_id = 1,

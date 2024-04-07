@@ -11,7 +11,6 @@ namespace webapi.Services.Core.Data_Handlers
 {
     public class Notifications(
         IRepository<NotificationModel> notificationRepository,
-        ISorting sorting,
         IRedisCache redisCache,
         ILogger<Notifications> logger) : ICacheHandler<NotificationModel>
     {

@@ -12,7 +12,7 @@ namespace webapi.Controllers.Admin
     [Route("api/admin/notifications")]
     [ApiController]
     [Authorize(Roles = "HighestAdmin,Admin")]
-    public class Admin_NotificationController(IRepository<NotificationModel> notificationRepository, IRedisCache redisCache, ISorting sorting) : ControllerBase
+    public class Admin_NotificationController(IRepository<NotificationModel> notificationRepository, IRedisCache redisCache) : ControllerBase
     {
         [HttpGet("{notificationId}")]
         [ProducesResponseType(typeof(NotificationModel), 200)]

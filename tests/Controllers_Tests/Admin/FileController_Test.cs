@@ -1,7 +1,7 @@
 ﻿using Microsoft.AspNetCore.Mvc;
 using webapi.Controllers.Admin;
 using webapi.DB.Abstractions;
-using webapi.DB.Ef;
+using webapi.DB.Ef.Specifications.Sorting_Specifications;
 using webapi.Exceptions;
 using webapi.Helpers;
 using webapi.Models;
@@ -20,7 +20,7 @@ namespace tests.Controllers_Tests.Admin
             fileRepositoryMock.Setup(x => x.GetById(id, CancellationToken.None))
                 .ReturnsAsync(new FileModel());
 
-            var fileController = new Admin_FileController(fileRepositoryMock.Object, null, null);
+            var fileController = new Admin_FileController(fileRepositoryMock.Object, null);
             var result = await fileController.GetFile(id);
 
             Assert.IsType<ObjectResult>(result);
@@ -36,7 +36,7 @@ namespace tests.Controllers_Tests.Admin
             fileRepositoryMock.Setup(x => x.GetById(It.IsAny<int>(), CancellationToken.None))
                 .ReturnsAsync((FileModel)null);
 
-            var fileController = new Admin_FileController(fileRepositoryMock.Object, null, null);
+            var fileController = new Admin_FileController(fileRepositoryMock.Object, null);
             var result = await fileController.GetFile(1);
 
             Assert.IsType<ObjectResult>(result);
@@ -52,7 +52,7 @@ namespace tests.Controllers_Tests.Admin
             fileRepositoryMock.Setup(x => x.GetById(It.IsAny<int>(), CancellationToken.None))
                 .ThrowsAsync(new OperationCanceledException());
 
-            var fileController = new Admin_FileController(fileRepositoryMock.Object, null, null);
+            var fileController = new Admin_FileController(fileRepositoryMock.Object, null);
             var result = await fileController.GetFile(1);
 
             Assert.IsType<ObjectResult>(result);
@@ -63,14 +63,19 @@ namespace tests.Controllers_Tests.Admin
         [Fact]
         public async Task GetFiles_Success()
         {
-            var fileRepositoryMock = new Mock<IRepository<FileModel>>();
-            var sortMock = new Mock<ISorting>();
+            var id = 1;
+            var skip = 0;
+            var count = 5;
+            var byDesc = true;
+            var category = "something";
 
-            fileRepositoryMock.Setup(x => x.GetAll(It.IsAny<Func<IQueryable<FileModel>, IQueryable<FileModel>>>(), CancellationToken.None))
+            var fileRepositoryMock = new Mock<IRepository<FileModel>>();
+
+            fileRepositoryMock.Setup(x => x.GetAll(new FilesSortSpec(id, skip, count, byDesc, null, null, category), CancellationToken.None))
                 .ReturnsAsync(new List<FileModel>());
 
-            var fileController = new Admin_FileController(fileRepositoryMock.Object, sortMock.Object, null);
-            var result = await fileController.GetFiles(null, null, null, true, null);
+            var fileController = new Admin_FileController(fileRepositoryMock.Object, null);
+            var result = await fileController.GetFiles(id, skip, count, byDesc, category);
 
             Assert.IsType<ObjectResult>(result);
             var objectResult = (ObjectResult)result;
@@ -81,13 +86,12 @@ namespace tests.Controllers_Tests.Admin
         public async Task GetFiles_DbConnectionFailed()
         {
             var fileRepositoryMock = new Mock<IRepository<FileModel>>();
-            var sortMock = new Mock<ISorting>();
 
-            fileRepositoryMock.Setup(x => x.GetAll(It.IsAny<Func<IQueryable<FileModel>, IQueryable<FileModel>>>(), CancellationToken.None))
+            fileRepositoryMock.Setup(x => x.GetAll(It.IsAny<FilesSortSpec>(), CancellationToken.None))
                 .ThrowsAsync(new OperationCanceledException());
 
-            var fileController = new Admin_FileController(fileRepositoryMock.Object, sortMock.Object, null);
-            var result = await fileController.GetFiles(null, null, null, true, null);
+            var fileController = new Admin_FileController(fileRepositoryMock.Object, null);
+            var result = await fileController.GetFiles(1, 0, 5, true, null);
 
             Assert.IsType<ObjectResult>(result);
             var objectResult = (ObjectResult)result;
@@ -105,7 +109,7 @@ namespace tests.Controllers_Tests.Admin
             fileRepositoryMock.Setup(x => x.Delete(It.IsAny<int>(), CancellationToken.None))
                 .ReturnsAsync(new FileModel { user_id = id });
 
-            var fileController = new Admin_FileController(fileRepositoryMock.Object, null, redisCacheMock.Object);
+            var fileController = new Admin_FileController(fileRepositoryMock.Object, redisCacheMock.Object);
             var result = await fileController.DeleteFile(1);
 
             Assert.Equal(204, ((StatusCodeResult)result).StatusCode);
@@ -121,7 +125,7 @@ namespace tests.Controllers_Tests.Admin
             fileRepositoryMock.Setup(x => x.Delete(It.IsAny<int>(), CancellationToken.None))
                 .ThrowsAsync(new EntityNotDeletedException());
 
-            var fileController = new Admin_FileController(fileRepositoryMock.Object, null, redisCacheMock.Object);
+            var fileController = new Admin_FileController(fileRepositoryMock.Object, redisCacheMock.Object);
             var result = await fileController.DeleteFile(1);
 
             Assert.IsType<ObjectResult>(result);
@@ -141,7 +145,7 @@ namespace tests.Controllers_Tests.Admin
             fileRepositoryMock.Setup(x => x.DeleteMany(It.IsAny<IEnumerable<int>>(), CancellationToken.None))
                 .ReturnsAsync(new List<FileModel> { new FileModel { user_id = id } });
 
-            var fileController = new Admin_FileController(fileRepositoryMock.Object, null, redisCacheMock.Object);
+            var fileController = new Admin_FileController(fileRepositoryMock.Object, redisCacheMock.Object);
             var result = await fileController.DeleteRangeFiles(new List<int> { 1 });
 
             Assert.Equal(204, ((StatusCodeResult)result).StatusCode);
@@ -157,7 +161,7 @@ namespace tests.Controllers_Tests.Admin
             fileRepositoryMock.Setup(x => x.DeleteMany(It.IsAny<IEnumerable<int>>(), CancellationToken.None))
                 .ThrowsAsync(new EntityNotDeletedException());
 
-            var fileController = new Admin_FileController(fileRepositoryMock.Object, null, redisCacheMock.Object);
+            var fileController = new Admin_FileController(fileRepositoryMock.Object, redisCacheMock.Object);
             var result = await fileController.DeleteRangeFiles(new List<int> { 1 });
 
             Assert.IsType<ObjectResult>(result);

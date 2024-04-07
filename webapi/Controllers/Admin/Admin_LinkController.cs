@@ -14,7 +14,6 @@ namespace webapi.Controllers.Admin
     [Authorize(Roles = "HighestAdmin,Admin")]
     public class Admin_LinkController(
         IRepository<LinkModel> linkRepository,
-        ISorting sorting,
         ILogger<Admin_LinkController> logger) : ControllerBase
     {
         [HttpGet]

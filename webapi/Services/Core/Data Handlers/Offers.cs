@@ -11,7 +11,6 @@ namespace webapi.Services.Core.Data_Handlers
 {
     public class Offers(
         IRepository<OfferModel> offerRepository,
-        ISorting sorting,
         IRedisCache redisCache,
         ILogger<Offers> logger) : ICacheHandler<OfferModel>
     {

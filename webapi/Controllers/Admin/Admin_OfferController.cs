@@ -12,7 +12,7 @@ namespace webapi.Controllers.Admin
     [Route("api/admin/offers")]
     [ApiController]
     [Authorize(Roles = "HighestAdmin,Admin")]
-    public class Admin_OfferController(IRepository<OfferModel> offerRepository, IRedisCache redisCache, ISorting sorting) : ControllerBase
+    public class Admin_OfferController(IRepository<OfferModel> offerRepository, IRedisCache redisCache) : ControllerBase
     {
         [HttpGet("{offerId}")]
         [ProducesResponseType(typeof(OfferModel), 200)]

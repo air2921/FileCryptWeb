@@ -1,7 +1,7 @@
-﻿using Microsoft.AspNetCore.DataProtection;
-using Microsoft.AspNetCore.Mvc;
+﻿using Microsoft.AspNetCore.Mvc;
 using webapi.Controllers.Admin;
 using webapi.DB.Abstractions;
+using webapi.DB.Ef.Specifications.Sorting_Specifications;
 using webapi.Exceptions;
 using webapi.Helpers;
 using webapi.Helpers.Abstractions;
@@ -14,17 +14,19 @@ namespace tests.Controllers_Tests.Admin
         [Fact]
         public async Task CreateNewMime_Success()
         {
+            var mime = "hi";
+
             var mimeRepositoryMock = new Mock<IRepository<FileMimeModel>>();
             var redisCacheMock = new Mock<IRedisCache>();
             var loggerMock = new FakeLogger<Admin_MimeController>();
 
             var mimeController = new Admin_MimeController(mimeRepositoryMock.Object, loggerMock, redisCacheMock.Object, null);
-            var result = await mimeController.CreateNewMime("hi");
+            var result = await mimeController.CreateNewMime(mime);
 
             Assert.IsType<ObjectResult>(result);
             var objectResult = (ObjectResult)result;
             Assert.Equal(201, objectResult.StatusCode);
-            mimeRepositoryMock.Verify(x => x.Add(It.Is<FileMimeModel>(m => m.mime_name == "hi"), null, CancellationToken.None), Times.Once);
+            mimeRepositoryMock.Verify(x => x.Add(It.Is<FileMimeModel>(m => m.mime_name == mime), null, CancellationToken.None), Times.Once);
             redisCacheMock.Verify(cache => cache.DeleteCache(ImmutableData.MIME_COLLECTION), Times.Once);
         }
 
@@ -53,6 +55,8 @@ namespace tests.Controllers_Tests.Admin
             var fileManagerMock = new Mock<IFileManager>();
             var redisCacheMock = new Mock<IRedisCache>();
 
+            mimeRepositoryMock.Setup(x => x.GetAll(null, CancellationToken.None)).ReturnsAsync(new List<FileMimeModel>());
+
             var mimeController = new Admin_MimeController(mimeRepositoryMock.Object, null, redisCacheMock.Object, fileManagerMock.Object);
             var result = await mimeController.CreateMIMICollection();
 
@@ -70,7 +74,7 @@ namespace tests.Controllers_Tests.Admin
             var fileManagerMock = new Mock<IFileManager>();
             var redisCacheMock = new Mock<IRedisCache>();
 
-            mimeRepositoryMock.Setup(x => x.GetAll(It.IsAny<Func<IQueryable<FileMimeModel>, IQueryable<FileMimeModel>>>(), CancellationToken.None))
+            mimeRepositoryMock.Setup(x => x.GetAll(null, CancellationToken.None))
                 .ThrowsAsync(new OperationCanceledException());
 
             var mimeController = new Admin_MimeController(mimeRepositoryMock.Object, null, redisCacheMock.Object, fileManagerMock.Object);
@@ -88,6 +92,7 @@ namespace tests.Controllers_Tests.Admin
             var fileManagerMock = new Mock<IFileManager>();
             var redisCacheMock = new Mock<IRedisCache>();
 
+            mimeRepositoryMock.Setup(x => x.GetAll(null, CancellationToken.None)).ReturnsAsync(new List<FileMimeModel>());
             mimeRepositoryMock.Setup(x => x.AddRange(It.IsAny<IEnumerable<FileMimeModel>>(), CancellationToken.None))
                 .ThrowsAsync(new EntityNotCreatedException());
 
@@ -102,12 +107,14 @@ namespace tests.Controllers_Tests.Admin
         [Fact]
         public async Task GetMime_Success()
         {
+            var id = 1;
+
             var mimeRepositoryMock = new Mock<IRepository<FileMimeModel>>();
-            mimeRepositoryMock.Setup(x => x.GetById(It.IsAny<int>(), CancellationToken.None))
+            mimeRepositoryMock.Setup(x => x.GetById(id, CancellationToken.None))
                 .ReturnsAsync(new FileMimeModel());
 
             var mimeController = new Admin_MimeController(mimeRepositoryMock.Object, null, null, null);
-            var result = await mimeController.GetMime(1);
+            var result = await mimeController.GetMime(id);
 
             Assert.IsType<ObjectResult>(result);
             var objectResult = (ObjectResult)result;
@@ -144,13 +151,14 @@ namespace tests.Controllers_Tests.Admin
             Assert.Equal(500, objectResult.StatusCode);
         }
 
-        [Theory]
-        [InlineData(null, null)]
-        [InlineData(0, 100)]
-        public async Task GetMimes_Success(int? skip, int? take)
+        [Fact]
+        public async Task GetMimes_Success()
         {
+            var skip = 0;
+            var take = 100;
+
             var mimeRepositoryMock = new Mock<IRepository<FileMimeModel>>();
-            mimeRepositoryMock.Setup(x => x.GetAll(It.IsAny<Func<IQueryable<FileMimeModel>, IQueryable<FileMimeModel>>>(), CancellationToken.None))
+            mimeRepositoryMock.Setup(x => x.GetAll(new MimesSortSpec(skip, take), CancellationToken.None))
                 .ReturnsAsync(new List<FileMimeModel>());
 
             var mimeController = new Admin_MimeController(mimeRepositoryMock.Object, null, null, null);
@@ -161,26 +169,11 @@ namespace tests.Controllers_Tests.Admin
             Assert.Equal(200, objectResult.StatusCode);
         }
 
-        [Theory]
-        [InlineData(1, null)]
-        [InlineData(null, 1)]
-        public async Task GetMimes_InvalidParameters(int? skip, int? take)
-        {
-            var mimeRepositoryMock = new Mock<IRepository<FileMimeModel>>();
-            mimeRepositoryMock.Setup(x => x.GetAll(It.IsAny<Func<IQueryable<FileMimeModel>, IQueryable<FileMimeModel>>>(), CancellationToken.None))
-                .ReturnsAsync(new List<FileMimeModel>());
-
-            var mimeController = new Admin_MimeController(mimeRepositoryMock.Object, null, null, null);
-            var result = await mimeController.GetMimes(skip, take);
-
-            Assert.Equal(400, ((StatusCodeResult)result).StatusCode);
-        }
-
         [Fact]
         public async Task GetMimes_DbConnectionFailed()
         {
             var mimeRepositoryMock = new Mock<IRepository<FileMimeModel>>();
-            mimeRepositoryMock.Setup(x => x.GetAll(It.IsAny<Func<IQueryable<FileMimeModel>, IQueryable<FileMimeModel>>>(), CancellationToken.None))
+            mimeRepositoryMock.Setup(x => x.GetAll(It.IsAny<MimesSortSpec>(), CancellationToken.None))
                 .ThrowsAsync(new OperationCanceledException());
 
             var mimeController = new Admin_MimeController(mimeRepositoryMock.Object, null, null, null);
@@ -194,14 +187,16 @@ namespace tests.Controllers_Tests.Admin
         [Fact]
         public async Task DeleteMime_Success()
         {
+            var id = 1;
+
             var mimeRepositoryMock = new Mock<IRepository<FileMimeModel>>();
             var redisCacheMock = new Mock<IRedisCache>();
 
             var mimeController = new Admin_MimeController(mimeRepositoryMock.Object, null, redisCacheMock.Object, null);
-            var result = await mimeController.DeleteMime(1);
+            var result = await mimeController.DeleteMime(id);
 
             Assert.Equal(204, ((StatusCodeResult)result).StatusCode);
-            mimeRepositoryMock.Verify(x => x.Delete(1, CancellationToken.None), Times.Once);
+            mimeRepositoryMock.Verify(x => x.Delete(id, CancellationToken.None), Times.Once);
             redisCacheMock.Verify(cache => cache.DeleteCache(ImmutableData.MIME_COLLECTION), Times.Once);
         }
 

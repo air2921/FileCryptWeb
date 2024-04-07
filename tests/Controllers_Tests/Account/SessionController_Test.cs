@@ -9,6 +9,8 @@ using webapi.Third_Party_Services.Abstractions;
 using webapi.Models;
 using webapi.Services.Abstractions;
 using webapi.Services.Account;
+using webapi.DB.Ef.Specifications;
+using webapi.Helpers;
 
 namespace tests.Controllers_Tests.Account
 {
@@ -36,7 +38,7 @@ namespace tests.Controllers_Tests.Account
             var sessionServiceMock = new Mock<ISessionHelpers>();
             var dataManagementMock = new Mock<IDataManagement>();
 
-            userRepositoryMock.Setup(x => x.GetByFilter(It.IsAny<Func<IQueryable<UserModel>, IQueryable<UserModel>>>(), CancellationToken.None))
+            userRepositoryMock.Setup(x => x.GetByFilter(new UserByEmailSpec(email.ToLowerInvariant()), CancellationToken.None))
                 .ReturnsAsync(user)
                 .Callback<Func<IQueryable<UserModel>, IQueryable<UserModel>>, CancellationToken>((query, token) => {
                     var testQuery = new List<UserModel>().AsQueryable();
@@ -84,7 +86,7 @@ namespace tests.Controllers_Tests.Account
             var dataManagementMock = new Mock<IDataManagement>();
             var emailSenderMock = new Mock<IEmailSender>();
 
-            userRepositoryMock.Setup(x => x.GetByFilter(It.IsAny<Func<IQueryable<UserModel>, IQueryable<UserModel>>>(), CancellationToken.None))
+            userRepositoryMock.Setup(x => x.GetByFilter(new UserByEmailSpec(email.ToLowerInvariant()), CancellationToken.None))
                 .ReturnsAsync(user)
                 .Callback<Func<IQueryable<UserModel>, IQueryable<UserModel>>, CancellationToken>((query, token) => {
                     var testQuery = new List<UserModel>().AsQueryable();
@@ -114,7 +116,7 @@ namespace tests.Controllers_Tests.Account
         {
             var userRepositoryMock = new Mock<IRepository<UserModel>>();
 
-            userRepositoryMock.Setup(x => x.GetByFilter(It.IsAny<Func<IQueryable<UserModel>, IQueryable<UserModel>>>(), CancellationToken.None))
+            userRepositoryMock.Setup(x => x.GetByFilter(It.IsAny<UserByEmailSpec>(), CancellationToken.None))
                 .ReturnsAsync((UserModel)null);
 
             var sessionController = new AuthSessionController(null, null, userRepositoryMock.Object, null, null, null, null);
@@ -131,7 +133,7 @@ namespace tests.Controllers_Tests.Account
         {
             var userRepositoryMock = new Mock<IRepository<UserModel>>();
 
-            userRepositoryMock.Setup(x => x.GetByFilter(It.IsAny<Func<IQueryable<UserModel>, IQueryable<UserModel>>>(), CancellationToken.None))
+            userRepositoryMock.Setup(x => x.GetByFilter(It.IsAny<UserByEmailSpec>(), CancellationToken.None))
                 .ThrowsAsync(new OperationCanceledException());
 
             var sessionController = new AuthSessionController(null, null, userRepositoryMock.Object, null, null, null, null);
@@ -148,7 +150,7 @@ namespace tests.Controllers_Tests.Account
         {
             var userRepositoryMock = new Mock<IRepository<UserModel>>();
 
-            userRepositoryMock.Setup(x => x.GetByFilter(It.IsAny<Func<IQueryable<UserModel>, IQueryable<UserModel>>>(), CancellationToken.None))
+            userRepositoryMock.Setup(x => x.GetByFilter(It.IsAny<UserByEmailSpec>(), CancellationToken.None))
                 .ReturnsAsync(new UserModel
                 {
                     id = 1,
@@ -171,7 +173,7 @@ namespace tests.Controllers_Tests.Account
             var userRepositoryMock = new Mock<IRepository<UserModel>>();
 
             passwordManagerMock.Setup(x => x.CheckPassword(It.IsAny<string>(), It.IsAny<string>())).Returns(false);
-            userRepositoryMock.Setup(x => x.GetByFilter(It.IsAny<Func<IQueryable<UserModel>, IQueryable<UserModel>>>(), CancellationToken.None))
+            userRepositoryMock.Setup(x => x.GetByFilter(It.IsAny<UserByEmailSpec>(), CancellationToken.None))
                 .ReturnsAsync(new UserModel
                 {
                     id = 1,
@@ -196,7 +198,7 @@ namespace tests.Controllers_Tests.Account
             var generateMock = new Mock<IGenerate>();
             var emailSenderMock = new Mock<IEmailSender>();
 
-            userRepositoryMock.Setup(x => x.GetByFilter(It.IsAny<Func<IQueryable<UserModel>, IQueryable<UserModel>>>(), CancellationToken.None))
+            userRepositoryMock.Setup(x => x.GetByFilter(It.IsAny<UserByEmailSpec>(), CancellationToken.None))
                 .ReturnsAsync(new UserModel
                 {
                     id = 1,

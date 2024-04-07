@@ -8,6 +8,7 @@ using webapi.Third_Party_Services.Abstractions;
 using webapi.Models;
 using webapi.Services.Abstractions;
 using webapi.Services.Account;
+using webapi.DB.Ef.Specifications;
 
 namespace tests.Controllers_Tests.Account
 {
@@ -37,13 +38,8 @@ namespace tests.Controllers_Tests.Account
             var validatorMock = new Mock<IValidator>();
 
             generateMock.Setup(x => x.GenerateSixDigitCode()).Returns(code);
-            userRepositoryMock.Setup(x => x.GetByFilter(It.IsAny<Func<IQueryable<UserModel>, IQueryable<UserModel>>>(), CancellationToken.None))
-                .ReturnsAsync((UserModel)null)
-                .Callback<Func<IQueryable<UserModel>, IQueryable<UserModel>>, CancellationToken>((query, token) => {
-                    var testQuery = new List<UserModel>().AsQueryable();
-                    var filteredQuery = query(testQuery);
-                    Assert.True(filteredQuery.Expression.ToString().Contains($".email.Equals("));
-                });
+            userRepositoryMock.Setup(x => x.GetByFilter(new UserByEmailSpec(email), CancellationToken.None))
+                .ReturnsAsync((UserModel)null);
             validatorMock.Setup(x => x.IsValid(dto, null)).Returns(true);
             
             var registationController = new AuthRegistrationController(null, dataManagementMock.Object, validatorMock.Object,

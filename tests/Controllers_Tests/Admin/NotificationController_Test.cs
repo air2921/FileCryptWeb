@@ -1,11 +1,10 @@
 ﻿using Microsoft.AspNetCore.Mvc;
 using webapi.Controllers.Admin;
 using webapi.DB.Abstractions;
-using webapi.DB.Ef;
+using webapi.DB.Ef.Specifications.Sorting_Specifications;
 using webapi.Exceptions;
 using webapi.Helpers;
 using webapi.Models;
-using webapi.Services.Core.Data_Handlers;
 
 namespace tests.Controllers_Tests.Admin
 {
@@ -20,7 +19,7 @@ namespace tests.Controllers_Tests.Admin
             notificationRepositoryMock.Setup(x => x.GetById(id, CancellationToken.None))
                 .ReturnsAsync(new NotificationModel());
 
-            var notificationController = new Admin_NotificationController(notificationRepositoryMock.Object, null, null);
+            var notificationController = new Admin_NotificationController(notificationRepositoryMock.Object, null);
             var result = await notificationController.GetNotification(id);
 
             Assert.IsType<ObjectResult>(result);
@@ -35,7 +34,7 @@ namespace tests.Controllers_Tests.Admin
             notificationRepositoryMock.Setup(x => x.GetById(It.IsAny<int>(), CancellationToken.None))
                 .ReturnsAsync((NotificationModel)null);
 
-            var notificationController = new Admin_NotificationController(notificationRepositoryMock.Object, null, null);
+            var notificationController = new Admin_NotificationController(notificationRepositoryMock.Object, null);
             var result = await notificationController.GetNotification(1);
 
             Assert.IsType<ObjectResult>(result);
@@ -50,7 +49,7 @@ namespace tests.Controllers_Tests.Admin
             notificationRepositoryMock.Setup(x => x.GetById(It.IsAny<int>(), CancellationToken.None))
                 .ThrowsAsync(new OperationCanceledException());
 
-            var notificationController = new Admin_NotificationController(notificationRepositoryMock.Object, null, null);
+            var notificationController = new Admin_NotificationController(notificationRepositoryMock.Object, null);
             var result = await notificationController.GetNotification(1);
 
             Assert.IsType<ObjectResult>(result);
@@ -61,14 +60,19 @@ namespace tests.Controllers_Tests.Admin
         [Fact]
         public async Task GetRangeNotification_Success()
         {
+            var id = 1;
+            var skip = 0;
+            var count = 5;
+            var byDesc = true;
+
             var notificationRepositoryMock = new Mock<IRepository<NotificationModel>>();
-            var sortMock = new Mock<ISorting>();
-            notificationRepositoryMock.Setup(x => x.GetAll(It.IsAny<Func<IQueryable<NotificationModel>, IQueryable<NotificationModel>>>(),
+
+            notificationRepositoryMock.Setup(x => x.GetAll(new NotificationsSortSpec(id, skip, count, byDesc, null, null),
                 CancellationToken.None))
                 .ReturnsAsync(new List<NotificationModel>());
 
-            var notificationController = new Admin_NotificationController(notificationRepositoryMock.Object, null, sortMock.Object);
-            var result = await notificationController.GetRangeNotification(1, null, null, true);
+            var notificationController = new Admin_NotificationController(notificationRepositoryMock.Object, null);
+            var result = await notificationController.GetRangeNotification(id, skip, count, byDesc);
 
             Assert.IsType<ObjectResult>(result);
             var objectResult = (ObjectResult)result;
@@ -79,13 +83,11 @@ namespace tests.Controllers_Tests.Admin
         public async Task GetRangeNotification_DbConnectionFailed()
         {
             var notificationRepositoryMock = new Mock<IRepository<NotificationModel>>();
-            var sortMock = new Mock<ISorting>();
-            notificationRepositoryMock.Setup(x => x.GetAll(It.IsAny<Func<IQueryable<NotificationModel>, IQueryable<NotificationModel>>>(),
-                CancellationToken.None))
+            notificationRepositoryMock.Setup(x => x.GetAll(It.IsAny<NotificationsSortSpec>(), CancellationToken.None))
                 .ThrowsAsync(new OperationCanceledException());
 
-            var notificationController = new Admin_NotificationController(notificationRepositoryMock.Object, null, sortMock.Object);
-            var result = await notificationController.GetRangeNotification(1, null, null, true);
+            var notificationController = new Admin_NotificationController(notificationRepositoryMock.Object, null);
+            var result = await notificationController.GetRangeNotification(1, 0, 5, true);
 
             Assert.IsType<ObjectResult>(result);
             var objectResult = (ObjectResult)result;
@@ -102,12 +104,12 @@ namespace tests.Controllers_Tests.Admin
 
             notificationRepositoryMock.Setup(x => x.Delete(It.IsAny<int>(), CancellationToken.None))
                 .ReturnsAsync(new NotificationModel { user_id = id });
-            redisCacheMock.Setup(x => x.DeteteCacheByKeyPattern(It.IsAny<string>())).Returns(Task.CompletedTask);
 
-            var notificationController = new Admin_NotificationController(notificationRepositoryMock.Object, redisCacheMock.Object, null);
-            var result = await notificationController.DeleteNotification(2);
+            var notificationController = new Admin_NotificationController(notificationRepositoryMock.Object, redisCacheMock.Object);
+            var result = await notificationController.DeleteNotification(id);
 
             Assert.Equal(204, ((StatusCodeResult)result).StatusCode);
+            notificationRepositoryMock.Verify(x => x.Delete(id, CancellationToken.None), Times.Once);
             redisCacheMock.Verify(cache => cache.DeteteCacheByKeyPattern($"{ImmutableData.NOTIFICATIONS_PREFIX}{id}"), Times.Once);
         }
 
@@ -120,7 +122,7 @@ namespace tests.Controllers_Tests.Admin
             notificationRepositoryMock.Setup(x => x.Delete(It.IsAny<int>(), CancellationToken.None))
                 .ReturnsAsync((NotificationModel)null);
 
-            var notificationController = new Admin_NotificationController(notificationRepositoryMock.Object, redisCacheMock.Object, null);
+            var notificationController = new Admin_NotificationController(notificationRepositoryMock.Object, redisCacheMock.Object);
             var result = await notificationController.DeleteNotification(1);
 
             Assert.Equal(204, ((StatusCodeResult)result).StatusCode);
@@ -134,7 +136,7 @@ namespace tests.Controllers_Tests.Admin
             notificationRepositoryMock.Setup(x => x.Delete(It.IsAny<int>(), CancellationToken.None))
                 .ThrowsAsync(new EntityNotDeletedException());
 
-            var notificationController = new Admin_NotificationController(notificationRepositoryMock.Object, null, null);
+            var notificationController = new Admin_NotificationController(notificationRepositoryMock.Object, null);
             var result = await notificationController.DeleteNotification(1);
 
             Assert.IsType<ObjectResult>(result);
@@ -146,18 +148,20 @@ namespace tests.Controllers_Tests.Admin
         public async Task DeleteRangeNotifications_Success()
         {
             var ids = new List<int> { 1, 2, 3 };
+            var returnedList = new List<NotificationModel>();
 
             var notificationRepositoryMock = new Mock<IRepository<NotificationModel>>();
             var redisCacheMock = new Mock<IRedisCache>();
             notificationRepositoryMock.Setup(x => x.DeleteMany(ids, CancellationToken.None))
-                .ReturnsAsync(new List<NotificationModel>());
+                .ReturnsAsync(returnedList);
 
-            var notificationController = new Admin_NotificationController(notificationRepositoryMock.Object, redisCacheMock.Object, null);
+            var notificationController = new Admin_NotificationController(notificationRepositoryMock.Object, redisCacheMock.Object);
             var result = await notificationController.DeleteRangeNotifications(ids);
 
             Assert.Equal(204, ((StatusCodeResult)result).StatusCode);
-            redisCacheMock.Verify(cache => cache.DeleteRedisCache(It.IsAny<IEnumerable<NotificationModel>>(),
-                It.IsAny<string>(), It.IsAny<Func<NotificationModel, int>>()), Times.Once);
+            notificationRepositoryMock.Verify(x => x.DeleteMany(ids, CancellationToken.None), Times.Once);
+            redisCacheMock.Verify(cache => cache.DeleteRedisCache(returnedList,
+                ImmutableData.NOTIFICATIONS_PREFIX, It.IsAny<Func<NotificationModel, int>>()), Times.Once);
         }
 
         [Fact]
@@ -169,7 +173,7 @@ namespace tests.Controllers_Tests.Admin
             notificationRepositoryMock.Setup(x => x.DeleteMany(It.IsAny<IEnumerable<int>>(), CancellationToken.None))
                 .ThrowsAsync(new EntityNotDeletedException());
 
-            var notificationController = new Admin_NotificationController(notificationRepositoryMock.Object, redisCacheMock.Object, null);
+            var notificationController = new Admin_NotificationController(notificationRepositoryMock.Object, redisCacheMock.Object);
             var result = await notificationController.DeleteRangeNotifications(new List<int> { 1 });
 
             Assert.IsType<ObjectResult>(result);

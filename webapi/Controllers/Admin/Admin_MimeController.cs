@@ -49,8 +49,7 @@ namespace webapi.Controllers.Admin
             try
             {
                 var mimeModels = new HashSet<FileMimeModel>();
-                var existingMimes = await mimeRepository.GetAll();
-                var mimes = existingMimes.Select(m => m.mime_name).ToHashSet();
+                var mimes = (await mimeRepository.GetAll()).Select(m => m.mime_name).ToHashSet();
 
                 fileManager.AddMimeCollection(ref mimeModels, mimes);
                 await mimeRepository.AddRange(mimeModels);

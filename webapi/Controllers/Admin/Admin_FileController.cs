@@ -12,7 +12,7 @@ namespace webapi.Controllers.Admin
     [Route("api/admin/files")]
     [ApiController]
     [Authorize(Roles = "HighestAdmin,Admin")]
-    public class Admin_FileController(IRepository<FileModel> fileRepository, ISorting sorting, IRedisCache redisCache) : ControllerBase
+    public class Admin_FileController(IRepository<FileModel> fileRepository, IRedisCache redisCache) : ControllerBase
     {
         [HttpGet("{fileId}")]
         [ProducesResponseType(typeof(FileModel), 200)]
