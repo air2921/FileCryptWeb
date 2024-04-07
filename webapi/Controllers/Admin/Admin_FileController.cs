@@ -43,7 +43,7 @@ namespace webapi.Controllers.Admin
             try
             {
                 return StatusCode(200, new { files = await fileRepository
-                    .GetAll(new FilesSortSpecification(userId, skip, count, byDesc, null, null, category)) });
+                    .GetAll(new FilesSortSpec(userId, skip, count, byDesc, null, null, category)) });
             }
             catch (OperationCanceledException ex)
             {

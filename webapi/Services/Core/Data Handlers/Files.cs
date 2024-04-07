@@ -1,8 +1,11 @@
 ﻿using Newtonsoft.Json;
 using webapi.DB.Abstractions;
 using webapi.DB.Ef;
+using webapi.DB.Ef.Specifications.By_Relation_Specifications;
+using webapi.DB.Ef.Specifications.Sorting_Specifications;
 using webapi.Localization;
 using webapi.Models;
+using webapi.Services.Abstractions;
 
 namespace webapi.Services.Core.Data_Handlers
 {
@@ -22,8 +25,7 @@ namespace webapi.Services.Core.Data_Handlers
                 var cache = await redisCache.GetCachedData(fileObj.CacheKey);
                 if (cache is null)
                 {
-                    file = await fileRepository.GetByFilter(query => query
-                        .Where(f => f.user_id.Equals(fileObj.UserId) && f.file_id.Equals(fileObj.FileId)));
+                    file = await fileRepository.GetByFilter(new FileByIdAndRelationSpec(fileObj.FileId, fileObj.UserId));
 
                     if (file is null)
                         return null;
@@ -60,7 +62,7 @@ namespace webapi.Services.Core.Data_Handlers
                 if (cache is null)
                 {
                     files = (List<FileModel>)await fileRepository
-                        .GetAll(sorting.SortFiles(fileObj.UserId, fileObj.Skip, fileObj.Count, fileObj.ByDesc, fileObj.Type, fileObj.Mime, fileObj.Category));
+                        .GetAll(new FilesSortSpec(fileObj.UserId, fileObj.Skip, fileObj.Count, fileObj.ByDesc, fileObj.Type, fileObj.Mime, fileObj.Category));
 
                     await redisCache.CacheData(fileObj.CacheKey, files, TimeSpan.FromMinutes(5));
                     return files;

@@ -1,7 +1,9 @@
 ﻿using Newtonsoft.Json;
 using webapi.DB.Abstractions;
+using webapi.DB.Ef.Specifications.By_Relation_Specifications;
 using webapi.Localization;
 using webapi.Models;
+using webapi.Services.Abstractions;
 
 namespace webapi.Services.Core.Data_Handlers
 {
@@ -19,7 +21,7 @@ namespace webapi.Services.Core.Data_Handlers
                 var cache = await redisCache.GetCachedData(keyObj.CacheKey);
                 if (cache is null)
                 {
-                    keys = await keyRepository.GetByFilter(query => query.Where(k => k.user_id.Equals(keyObj.UserId)));
+                    keys = await keyRepository.GetByFilter(new KeysByRelationSpec(keyObj.UserId));
 
                     if (keys is null)
                         return null;

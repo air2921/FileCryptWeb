@@ -3,9 +3,9 @@ using webapi.Models;
 
 namespace webapi.DB.Ef.Specifications.Sorting_Specifications
 {
-    public class MimesSortSpecification : Specification<FileMimeModel>
+    public class MimesSortSpec : Specification<FileMimeModel>
     {
-        public MimesSortSpecification(int skip, int take)
+        public MimesSortSpec(int skip, int take)
         {
             Query.Skip(skip).Take(take);
         }

@@ -44,7 +44,7 @@ namespace webapi.Controllers.Admin
             try
             {
                 return StatusCode(200, new { offers = await offerRepository
-                    .GetAll(new OffersSortSpecification(userId, skip, count, byDesc, sended, isAccepted, type)) });
+                    .GetAll(new OffersSortSpec(userId, skip, count, byDesc, sended, isAccepted, type)) });
             }
             catch (OperationCanceledException ex)
             {

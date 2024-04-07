@@ -1,8 +1,11 @@
 ﻿using Newtonsoft.Json;
 using webapi.DB.Abstractions;
 using webapi.DB.Ef;
+using webapi.DB.Ef.Specifications.By_Relation_Specifications;
+using webapi.DB.Ef.Specifications.Sorting_Specifications;
 using webapi.Localization;
 using webapi.Models;
+using webapi.Services.Abstractions;
 
 namespace webapi.Services.Core.Data_Handlers
 {
@@ -23,7 +26,7 @@ namespace webapi.Services.Core.Data_Handlers
                 if (cache is null)
                 {
                     notification = await notificationRepository.GetByFilter
-                        (query => query.Where(n => n.notification_id.Equals(ntfObj.NotificationId) && n.user_id.Equals(ntfObj.UserId)));
+                        (new NotificationByIdAndByRelationSpec(ntfObj.NotificationId, ntfObj.UserId));
 
                     if (notification is null)
                         return null;
@@ -59,7 +62,7 @@ namespace webapi.Services.Core.Data_Handlers
                 if (cache is null)
                 {
                     notifications = (List<NotificationModel>)await notificationRepository
-                        .GetAll(sorting.SortNotifications(ntfObj.UserId, ntfObj.Skip, ntfObj.Count, ntfObj.ByDesc, ntfObj.Priority, ntfObj.IsChecked));
+                        .GetAll(new NotificationsSortSpec(ntfObj.UserId, ntfObj.Skip, ntfObj.Count, ntfObj.ByDesc, ntfObj.Priority, ntfObj.IsChecked));
 
                     await redisCache.CacheData(ntfObj.CacheKey, notifications, TimeSpan.FromMinutes(10));
                     return notifications;

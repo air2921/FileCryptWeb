@@ -1,7 +1,9 @@
 ﻿using Newtonsoft.Json;
 using webapi.DB.Abstractions;
+using webapi.DB.Ef.Specifications;
 using webapi.Localization;
 using webapi.Models;
+using webapi.Services.Abstractions;
 
 namespace webapi.Services.Core.Data_Handlers
 {
@@ -57,7 +59,7 @@ namespace webapi.Services.Core.Data_Handlers
                 var cache = await redisCache.GetCachedData(userObj.CacheKey);
                 if (cache is null)
                 {
-                    users = (List<UserModel>)await userRepository.GetAll(query => query.Where(u => u.username.Equals(userObj.Username)));
+                    users = (List<UserModel>)await userRepository.GetAll(new UsersByUsernameSpec(userObj.Username));
                     foreach (var user in users)
                     {
                         user.password = string.Empty;

@@ -1,4 +1,4 @@
-﻿namespace webapi.Services.Core.Data_Handlers
+﻿namespace webapi.Services.Abstractions
 {
     public interface ICacheHandler<T>
     {

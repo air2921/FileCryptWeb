@@ -3,9 +3,9 @@ using webapi.Models;
 
 namespace webapi.DB.Ef.Specifications.Sorting_Specifications
 {
-    public class FilesSortSpecification : Specification<FileModel>
+    public class FilesSortSpec : Specification<FileModel>
     {
-        public FilesSortSpecification(int? userId, int skip, int count, bool byDesc, string? type, string? mime, string? category)
+        public FilesSortSpec(int? userId, int skip, int count, bool byDesc, string? type, string? mime, string? category)
         {
             if (byDesc)
                 Query.OrderByDescending(f => f.operation_date);

@@ -102,7 +102,7 @@ namespace webapi.Controllers.Admin
             {
                 return StatusCode(200, new {
                     mimes = await mimeRepository
-                        .GetAll(new MimesSortSpecification(skip, count))});
+                        .GetAll(new MimesSortSpec(skip, count))});
             }
             catch (OperationCanceledException ex)
             {

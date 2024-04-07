@@ -42,7 +42,7 @@ namespace webapi.Controllers.Admin
             try
             {
                 return StatusCode(200, new { notification = await notificationRepository
-                    .GetAll(new NotificationsSortSpecification(userId, skip, count, byDesc, null, null)) });
+                    .GetAll(new NotificationsSortSpec(userId, skip, count, byDesc, null, null)) });
             }
             catch (OperationCanceledException ex)
             {

@@ -3,6 +3,7 @@ using System.Text.RegularExpressions;
 using webapi.Attributes;
 using webapi.Cryptography.Abstractions;
 using webapi.DB.Abstractions;
+using webapi.DB.Ef.Specifications.By_Relation_Specifications;
 using webapi.Exceptions;
 using webapi.Helpers;
 using webapi.Helpers.Abstractions;
@@ -44,7 +45,7 @@ namespace webapi.Services.Core
         {
             try
             {
-                var keys = await keyRepository.GetByFilter(query => query.Where(k => k.user_id.Equals(id)));
+                var keys = await keyRepository.GetByFilter(new KeysByRelationSpec(id));
 
                 if (type.Equals(FileType.Private))
                     keys.private_key = await cypher.CypherKeyAsync(key, secretKey);

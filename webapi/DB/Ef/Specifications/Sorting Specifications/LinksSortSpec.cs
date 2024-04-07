@@ -3,9 +3,9 @@ using webapi.Models;
 
 namespace webapi.DB.Ef.Specifications.Sorting_Specifications
 {
-    public class LinksSortSpecification : Specification<LinkModel>
+    public class LinksSortSpec : Specification<LinkModel>
     {
-        public LinksSortSpecification(int? userId, int skip, int count, bool byDesc, bool? expired)
+        public LinksSortSpec(int? userId, int skip, int count, bool byDesc, bool? expired)
         {
             if (byDesc)
                 Query.OrderByDescending(l => l.created_at);

@@ -1,8 +1,11 @@
 ﻿using Newtonsoft.Json;
 using webapi.DB.Abstractions;
 using webapi.DB.Ef;
+using webapi.DB.Ef.Specifications.By_Relation_Specifications;
+using webapi.DB.Ef.Specifications.Sorting_Specifications;
 using webapi.Localization;
 using webapi.Models;
+using webapi.Services.Abstractions;
 
 namespace webapi.Services.Core.Data_Handlers
 {
@@ -21,9 +24,8 @@ namespace webapi.Services.Core.Data_Handlers
                 var cache = await redisCache.GetCachedData(offerObj.CacheKey);
                 if (cache is null)
                 {
-                    offer = await offerRepository.GetByFilter(query => query
-                        .Where(o => o.offer_id.Equals(offerObj.OfferId) &&
-                        (o.sender_id.Equals(offerObj.UserId) || o.receiver_id.Equals(offerObj.OfferId))));
+                    offer = await offerRepository.GetByFilter(
+                        new OfferByIdAndRelationSpec(offerObj.OfferId, offerObj.UserId, null));
 
                     if (offer is null)
                         return null;
@@ -61,8 +63,8 @@ namespace webapi.Services.Core.Data_Handlers
                 var cache = await redisCache.GetCachedData(offerObj.CacheKey);
                 if (cache is null)
                 {
-                    offers = (List<OfferModel>)await offerRepository.GetAll(sorting
-                        .SortOffers(offerObj.UserId, offerObj.Skip, offerObj.Count, offerObj.ByDesc, offerObj.Sended, offerObj.IsAccepted, offerObj.Type));
+                    offers = (List<OfferModel>)await offerRepository.GetAll(
+                        new OffersSortSpec(offerObj.UserId, offerObj.Skip, offerObj.Count, offerObj.ByDesc, offerObj.Sended, offerObj.IsAccepted, offerObj.Type));
 
                     foreach (var offer in offers)
                     {

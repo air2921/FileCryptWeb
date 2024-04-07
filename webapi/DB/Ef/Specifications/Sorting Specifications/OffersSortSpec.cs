@@ -4,9 +4,9 @@ using static Microsoft.EntityFrameworkCore.DbLoggerCategory;
 
 namespace webapi.DB.Ef.Specifications.Sorting_Specifications
 {
-    public class OffersSortSpecification : Specification<OfferModel>
+    public class OffersSortSpec : Specification<OfferModel>
     {
-        public OffersSortSpecification(int? userId, int skip, int count, bool byDesc, bool? sended, bool? isAccepted, string? type)
+        public OffersSortSpec(int? userId, int skip, int count, bool byDesc, bool? sended, bool? isAccepted, string? type)
         {
             if (byDesc)
                 Query.OrderByDescending(o => o.created_at);

@@ -3,6 +3,7 @@ using Newtonsoft.Json;
 using webapi.Attributes;
 using webapi.DB.Abstractions;
 using webapi.DB.Ef;
+using webapi.DB.Ef.Specifications.Sorting_Specifications;
 using webapi.Helpers.Abstractions;
 using webapi.Localization;
 using webapi.Models;
@@ -32,7 +33,7 @@ namespace webapi.Services.Core
             if (cacheFiles is null)
             {
                 var filesDb = await fileRepository.GetAll
-                    (query => query.Where(f => f.user_id.Equals(userId)).OrderByDescending(f => f.operation_date).Skip(0).Take(5));
+                    (new FilesSortSpec(userId, 0, 5, true, null, null, null));
 
                 await redisCache.CacheData(cacheKeyFiles, filesDb, TimeSpan.FromMinutes(1));
 
@@ -52,8 +53,7 @@ namespace webapi.Services.Core
             if (cacheOffers is null)
             {
                 var offersDb = await offerRepository.GetAll
-                    (query => query.Where(o => o.receiver_id.Equals(userId) || o.sender_id.Equals(userId))
-                    .OrderByDescending(o => o.created_at).Skip(0).Take(5));
+                    (new OffersSortSpec(userId, 0, 5, true, null, null, null));
 
                 await redisCache.CacheData(cacheKeyOffers, offersDb, TimeSpan.FromMinutes(1));
 

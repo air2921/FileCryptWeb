@@ -3,9 +3,9 @@ using webapi.Models;
 
 namespace webapi.DB.Ef.Specifications.Sorting_Specifications
 {
-    public class NotificationsSortSpecification : Specification<NotificationModel>
+    public class NotificationsSortSpec : Specification<NotificationModel>
     {
-        public NotificationsSortSpecification(int? userId, int skip, int count, bool byDesc, string? priority, bool? isChecked)
+        public NotificationsSortSpec(int? userId, int skip, int count, bool byDesc, string? priority, bool? isChecked)
         {
             if (byDesc)
                 Query.OrderByDescending(n => n.send_time);

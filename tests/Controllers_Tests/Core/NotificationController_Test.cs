@@ -5,6 +5,7 @@ using webapi.Exceptions;
 using webapi.Helpers;
 using webapi.Helpers.Abstractions;
 using webapi.Models;
+using webapi.Services.Abstractions;
 using webapi.Services.Core.Data_Handlers;
 
 namespace tests.Controllers_Tests.Core
