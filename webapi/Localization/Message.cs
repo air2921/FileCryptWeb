@@ -18,5 +18,6 @@
         public const string INVALID_FILE = "Invalid file";
         public const string BAD_CRYTOGRAPHY_DATA = "Incorrect cryptography data provided for the operation";
         public const string TASK_TIMED_OUT = "Task timed out";
+        public const string INVALID_ROUTE = "Route request incorrect";
     }
 }

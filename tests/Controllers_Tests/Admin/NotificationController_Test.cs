@@ -67,7 +67,8 @@ namespace tests.Controllers_Tests.Admin
 
             var notificationRepositoryMock = new Mock<IRepository<NotificationModel>>();
 
-            notificationRepositoryMock.Setup(x => x.GetAll(new NotificationsSortSpec(id, skip, count, byDesc, null, null),
+            notificationRepositoryMock.Setup(x => x.GetAll(It.Is<NotificationsSortSpec>
+            (x => x.UserId == id && x.SkipCount == skip && x.Take == count && x.ByDesc == byDesc),
                 CancellationToken.None))
                 .ReturnsAsync(new List<NotificationModel>());
 
@@ -98,19 +99,20 @@ namespace tests.Controllers_Tests.Admin
         public async Task DeleteNotification_Success()
         {
             var id = 1;
+            var userId = 3;
 
             var notificationRepositoryMock = new Mock<IRepository<NotificationModel>>();
             var redisCacheMock = new Mock<IRedisCache>();
 
-            notificationRepositoryMock.Setup(x => x.Delete(It.IsAny<int>(), CancellationToken.None))
-                .ReturnsAsync(new NotificationModel { user_id = id });
+            notificationRepositoryMock.Setup(x => x.Delete(id, CancellationToken.None))
+                .ReturnsAsync(new NotificationModel { user_id = userId });
 
             var notificationController = new Admin_NotificationController(notificationRepositoryMock.Object, redisCacheMock.Object);
             var result = await notificationController.DeleteNotification(id);
 
             Assert.Equal(204, ((StatusCodeResult)result).StatusCode);
             notificationRepositoryMock.Verify(x => x.Delete(id, CancellationToken.None), Times.Once);
-            redisCacheMock.Verify(cache => cache.DeteteCacheByKeyPattern($"{ImmutableData.NOTIFICATIONS_PREFIX}{id}"), Times.Once);
+            redisCacheMock.Verify(cache => cache.DeteteCacheByKeyPattern($"{ImmutableData.NOTIFICATIONS_PREFIX}{userId}"), Times.Once);
         }
 
         [Fact]

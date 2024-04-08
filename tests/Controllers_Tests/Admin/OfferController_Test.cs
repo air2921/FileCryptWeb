@@ -66,17 +66,19 @@ namespace tests.Controllers_Tests.Admin
             var skip = 0;
             var count = 5;
             var byDesc = true;
-            bool? sended = null;
+            bool? sent = null;
             bool? isAccepted = null;
             string? type = null;
 
             var offerRepositoryMock = new Mock<IRepository<OfferModel>>();
 
-            offerRepositoryMock.Setup(x => x.GetAll(new OffersSortSpec(id, skip, count, byDesc, sended, isAccepted, type), CancellationToken.None))
+            offerRepositoryMock.Setup(x => x.GetAll(It.Is<OffersSortSpec>
+            (x => x.UserId == id && x.SkipCount == skip && x.Count == count && x.ByDesc == byDesc &&
+            x.Sent == sent && x.IsAccepted == isAccepted && x.Type == type), CancellationToken.None))
                 .ReturnsAsync(new List<OfferModel>());
 
             var offerController = new Admin_OfferController(offerRepositoryMock.Object, null);
-            var result = await offerController.GetRangeOffers(id, skip, count, byDesc, sended, isAccepted, type);
+            var result = await offerController.GetRangeOffers(id, skip, count, byDesc, sent, isAccepted, type);
 
             Assert.IsType<ObjectResult>(result);
             var objectResult = (ObjectResult)result;

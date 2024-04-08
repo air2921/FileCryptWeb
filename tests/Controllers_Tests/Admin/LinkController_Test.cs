@@ -33,7 +33,7 @@ namespace tests.Controllers_Tests.Admin
             var token = "jfdghjdhfgjhdgjhdjgkhy3485y3jkhbjk";
 
             var linkRepositoryMock = new Mock<IRepository<LinkModel>>();
-            linkRepositoryMock.Setup(x => x.GetByFilter(new RecoveryTokenByTokenSpec(token), CancellationToken.None))
+            linkRepositoryMock.Setup(x => x.GetByFilter(It.Is<RecoveryTokenByTokenSpec>(x => x.Token.Equals(token)), CancellationToken.None))
                 .ReturnsAsync(new LinkModel());
 
             var linkController = new Admin_LinkController(linkRepositoryMock.Object, null);
@@ -84,7 +84,9 @@ namespace tests.Controllers_Tests.Admin
             var expired = false;
 
             var linkRepositoryMock = new Mock<IRepository<LinkModel>>();
-            linkRepositoryMock.Setup(x => x.GetAll(new LinksSortSpec(id, skip, count, byDesc, expired), CancellationToken.None))
+            linkRepositoryMock.Setup(x => x.GetAll(It.Is<LinksSortSpec>
+            (x => x.UserId == id && x.SkipCount == skip && x.Count == count && x.ByDesc == byDesc && x.Expired == expired),
+            CancellationToken.None))
                 .ReturnsAsync(new List<LinkModel>());
 
             var linkController = new Admin_LinkController(linkRepositoryMock.Object, null);

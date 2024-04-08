@@ -71,7 +71,9 @@ namespace tests.Controllers_Tests.Admin
 
             var fileRepositoryMock = new Mock<IRepository<FileModel>>();
 
-            fileRepositoryMock.Setup(x => x.GetAll(new FilesSortSpec(id, skip, count, byDesc, null, null, category), CancellationToken.None))
+            fileRepositoryMock.Setup(x => x.GetAll(It.Is<FilesSortSpec>
+            (x => x.UserId == id && x.SkipCount == skip && x.Count == count && x.ByDesc == byDesc && x.Category == category),
+            CancellationToken.None))
                 .ReturnsAsync(new List<FileModel>());
 
             var fileController = new Admin_FileController(fileRepositoryMock.Object, null);
@@ -102,18 +104,19 @@ namespace tests.Controllers_Tests.Admin
         public async Task DeleteFile_Success()
         {
             var id = 1;
+            var userId = 3;
 
             var fileRepositoryMock = new Mock<IRepository<FileModel>>();
             var redisCacheMock = new Mock<IRedisCache>();
 
-            fileRepositoryMock.Setup(x => x.Delete(It.IsAny<int>(), CancellationToken.None))
-                .ReturnsAsync(new FileModel { user_id = id });
+            fileRepositoryMock.Setup(x => x.Delete(id, CancellationToken.None))
+                .ReturnsAsync(new FileModel { user_id = userId });
 
             var fileController = new Admin_FileController(fileRepositoryMock.Object, redisCacheMock.Object);
-            var result = await fileController.DeleteFile(1);
+            var result = await fileController.DeleteFile(id);
 
             Assert.Equal(204, ((StatusCodeResult)result).StatusCode);
-            redisCacheMock.Verify(cache => cache.DeteteCacheByKeyPattern($"{ImmutableData.FILES_PREFIX}{id}"), Times.Once);
+            redisCacheMock.Verify(cache => cache.DeteteCacheByKeyPattern($"{ImmutableData.FILES_PREFIX}{userId}"), Times.Once);
         }
 
         [Fact]
@@ -138,18 +141,19 @@ namespace tests.Controllers_Tests.Admin
         public async Task DeleteFiles_Success()
         {
             var id = 1;
+            var deletedFiles = new List<FileModel> { new FileModel { user_id = id } };
 
             var fileRepositoryMock = new Mock<IRepository<FileModel>>();
             var redisCacheMock = new Mock<IRedisCache>();
 
             fileRepositoryMock.Setup(x => x.DeleteMany(It.IsAny<IEnumerable<int>>(), CancellationToken.None))
-                .ReturnsAsync(new List<FileModel> { new FileModel { user_id = id } });
+                .ReturnsAsync(deletedFiles);
 
             var fileController = new Admin_FileController(fileRepositoryMock.Object, redisCacheMock.Object);
             var result = await fileController.DeleteRangeFiles(new List<int> { 1 });
 
             Assert.Equal(204, ((StatusCodeResult)result).StatusCode);
-            redisCacheMock.Verify(cache => cache.DeleteRedisCache(It.IsAny<IEnumerable<FileModel>>(), ImmutableData.FILES_PREFIX, It.IsAny<Func<FileModel, int>>()), Times.Once);
+            redisCacheMock.Verify(cache => cache.DeleteRedisCache(deletedFiles, ImmutableData.FILES_PREFIX, It.IsAny<Func<FileModel, int>>()), Times.Once);
         }
 
         [Fact]

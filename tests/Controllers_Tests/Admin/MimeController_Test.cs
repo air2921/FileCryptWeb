@@ -158,7 +158,8 @@ namespace tests.Controllers_Tests.Admin
             var take = 100;
 
             var mimeRepositoryMock = new Mock<IRepository<FileMimeModel>>();
-            mimeRepositoryMock.Setup(x => x.GetAll(new MimesSortSpec(skip, take), CancellationToken.None))
+            mimeRepositoryMock.Setup(x => x.GetAll(It.Is<MimesSortSpec>(x => x.SkipCount == skip && x.Count == take),
+                CancellationToken.None))
                 .ReturnsAsync(new List<FileMimeModel>());
 
             var mimeController = new Admin_MimeController(mimeRepositoryMock.Object, null, null, null);

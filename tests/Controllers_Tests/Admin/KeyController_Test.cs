@@ -18,7 +18,7 @@ namespace tests.Controllers_Tests.Admin
             var keyRepositoryMock = new Mock<IRepository<KeyModel>>();
             var redisCacheMock = new Mock<IRedisCache>();
 
-            keyRepositoryMock.Setup(x => x.GetByFilter(new KeysByRelationSpec(id), CancellationToken.None))
+            keyRepositoryMock.Setup(x => x.GetByFilter(It.Is<KeysByRelationSpec>(x => x.UserId == id), CancellationToken.None))
                 .ReturnsAsync(new KeyModel());
 
             var keyController = new Admin_KeyController(redisCacheMock.Object, keyRepositoryMock.Object);
