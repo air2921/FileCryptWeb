@@ -9,5 +9,8 @@ namespace webapi.DB.Ef.Specifications.Sorting_Specifications
         {
             Query.Skip(skip).Take(take);
         }
+
+        public int SkipCount { get; private set; }
+        public int Count { get; private set; }
     }
 }

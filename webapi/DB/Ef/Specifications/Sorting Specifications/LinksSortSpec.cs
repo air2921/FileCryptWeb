@@ -7,6 +7,12 @@ namespace webapi.DB.Ef.Specifications.Sorting_Specifications
     {
         public LinksSortSpec(int? userId, int skip, int count, bool byDesc, bool? expired)
         {
+            UserId = userId;
+            SkipCount = skip;
+            Count = count;
+            ByDesc = byDesc;
+            Expired = expired;
+
             if (byDesc)
                 Query.OrderByDescending(l => l.created_at);
             else
@@ -25,5 +31,11 @@ namespace webapi.DB.Ef.Specifications.Sorting_Specifications
 
             Query.Skip(skip).Take(count);
         }
+
+        public int? UserId { get; private set; }
+        public int SkipCount { get; private set; }
+        public int Count { get; private set; }
+        public bool ByDesc { get; private set; }
+        public bool? Expired { get; private set; }
     }
 }

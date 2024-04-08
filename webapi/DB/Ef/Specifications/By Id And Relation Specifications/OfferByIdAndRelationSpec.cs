@@ -7,6 +7,10 @@ namespace webapi.DB.Ef.Specifications.By_Relation_Specifications
     {
         public OfferByIdAndRelationSpec(int offerId, int userId, bool? sent)
         {
+            OfferId = offerId;
+            UserId = userId;
+            Sent = sent;
+
             if (sent.HasValue)
             {
                 if (sent.Equals(true))
@@ -17,5 +21,9 @@ namespace webapi.DB.Ef.Specifications.By_Relation_Specifications
             else
                 Query.Where(x => x.offer_id.Equals(offerId) && (x.receiver_id.Equals(userId) || x.sender_id.Equals(userId)));
         }
+
+        public int OfferId { get; private set; }
+        public int UserId { get; private set; }
+        public bool? Sent { get; private set; }
     }
 }

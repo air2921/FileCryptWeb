@@ -7,7 +7,11 @@ namespace webapi.DB.Ef.Specifications
     {
         public UsersByUsernameSpec(string username)
         {
+            Username = username;
+
             Query.Where(x => x.username.Equals(username));
         }
+
+        public string Username { get; private set; }
     }
 }

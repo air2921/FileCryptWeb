@@ -7,6 +7,13 @@ namespace webapi.DB.Ef.Specifications.Sorting_Specifications
     {
         public NotificationsSortSpec(int? userId, int skip, int count, bool byDesc, string? priority, bool? isChecked)
         {
+            UserId = userId;
+            SkipCount = skip;
+            Count = count;
+            ByDesc = byDesc;
+            Priority = priority;
+            IsChecked = isChecked;
+
             if (byDesc)
                 Query.OrderByDescending(n => n.send_time);
             else
@@ -23,5 +30,12 @@ namespace webapi.DB.Ef.Specifications.Sorting_Specifications
 
             Query.Skip(skip).Take(count);
         }
+
+        public int? UserId { get; private set; }
+        public int SkipCount { get; private set; }
+        public int Count { get; private set; }
+        public bool ByDesc { get; private set; }
+        public string? Priority { get; private set; }
+        public bool? IsChecked { get; private set;}
     }
 }

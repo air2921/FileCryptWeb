@@ -1,13 +1,20 @@
 ﻿using Ardalis.Specification;
 using webapi.Models;
-using static Microsoft.EntityFrameworkCore.DbLoggerCategory;
 
 namespace webapi.DB.Ef.Specifications.Sorting_Specifications
 {
     public class OffersSortSpec : Specification<OfferModel>
     {
-        public OffersSortSpec(int? userId, int skip, int count, bool byDesc, bool? sended, bool? isAccepted, string? type)
+        public OffersSortSpec(int? userId, int skip, int count, bool byDesc, bool? sent, bool? isAccepted, string? type)
         {
+            UserId = userId;
+            SkipCount = skip;
+            Count = count;
+            ByDesc = byDesc;
+            Sent = sent;
+            IsAccepted = isAccepted;
+            Type = type;
+
             if (byDesc)
                 Query.OrderByDescending(o => o.created_at);
             else
@@ -15,9 +22,9 @@ namespace webapi.DB.Ef.Specifications.Sorting_Specifications
 
             if (userId.HasValue)
             {
-                if (sended.HasValue)
+                if (sent.HasValue)
                 {
-                    if (sended.Equals(true))
+                    if (sent.Equals(true))
                         Query.Where(o => o.sender_id.Equals(userId.Value));
                     else
                         Query.Where(o => o.receiver_id.Equals(userId.Value));
@@ -34,5 +41,13 @@ namespace webapi.DB.Ef.Specifications.Sorting_Specifications
 
             Query.Skip(skip).Take(count);
         }
+
+        public int? UserId { get; private set; }
+        public int SkipCount { get; private set; }
+        public int Count { get; private set; }
+        public bool ByDesc { get; private set; }
+        public bool? Sent { get; private set; }
+        public bool? IsAccepted { get; private set; }
+        public string? Type { get; private set; }
     }
 }
