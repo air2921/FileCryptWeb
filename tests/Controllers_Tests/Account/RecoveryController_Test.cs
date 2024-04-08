@@ -35,7 +35,7 @@ namespace tests.Controllers_Tests.Account
             var fileManagerMock = new Mock<IFileManager>();
             var recoveryServiceMock = new Mock<IRecoveryHelpers>();
 
-            userRepositoryMock.Setup(x => x.GetByFilter(new UserByEmailSpec(email.ToLowerInvariant()), CancellationToken.None))
+            userRepositoryMock.Setup(x => x.GetByFilter(It.Is<UserByEmailSpec>(x => x.Email == email), CancellationToken.None))
                 .ReturnsAsync(user);
             generateMock.Setup(x => x.GenerateKey()).Returns("8ifrnDa8a9nabJDfjTrfXsgfVIhCYGrZbN5HdtX0dK8=");
             fileManagerMock.Setup(x => x.GetReactAppUrl()).Returns(string.Empty);
@@ -167,8 +167,8 @@ namespace tests.Controllers_Tests.Account
             var recoveryServiceMock = new Mock<IRecoveryHelpers>();
 
             validatorMock.Setup(x => x.IsValid(password, null)).Returns(true);
-            linkRepositoryMock.Setup(x => x.GetByFilter(new RecoveryTokenByTokenSpec(token), CancellationToken.None))
-                .ReturnsAsync(link); ;
+            linkRepositoryMock.Setup(x => x.GetByFilter(It.Is<RecoveryTokenByTokenSpec>(x => x.Token == token), CancellationToken.None))
+                .ReturnsAsync(link);
             userRepositoryMock.Setup(x => x.GetById(userId, CancellationToken.None)).ReturnsAsync(user);
 
             var recoveryController = new RecoveryController(recoveryServiceMock.Object, validatorMock.Object, userRepositoryMock.Object,

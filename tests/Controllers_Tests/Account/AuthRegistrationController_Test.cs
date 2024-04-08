@@ -38,7 +38,7 @@ namespace tests.Controllers_Tests.Account
             var validatorMock = new Mock<IValidator>();
 
             generateMock.Setup(x => x.GenerateSixDigitCode()).Returns(code);
-            userRepositoryMock.Setup(x => x.GetByFilter(new UserByEmailSpec(email), CancellationToken.None))
+            userRepositoryMock.Setup(x => x.GetByFilter(It.Is<UserByEmailSpec>(x => x.Email == email), CancellationToken.None))
                 .ReturnsAsync((UserModel)null);
             validatorMock.Setup(x => x.IsValid(dto, null)).Returns(true);
             

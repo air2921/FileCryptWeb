@@ -8,6 +8,10 @@ namespace webapi.DB.Ef.Specifications
         public UserByEmailSpec(string email)
         {
             Query.Where(x => x.email.Equals(email));
+
+            Email = email;
         }
+
+        public string Email { get; private set; }
     }
 }

@@ -10,7 +10,6 @@ using webapi.Models;
 using webapi.Services.Abstractions;
 using webapi.Services.Account;
 using webapi.DB.Ef.Specifications;
-using webapi.Helpers;
 
 namespace tests.Controllers_Tests.Account
 {
@@ -38,13 +37,8 @@ namespace tests.Controllers_Tests.Account
             var sessionServiceMock = new Mock<ISessionHelpers>();
             var dataManagementMock = new Mock<IDataManagement>();
 
-            userRepositoryMock.Setup(x => x.GetByFilter(new UserByEmailSpec(email.ToLowerInvariant()), CancellationToken.None))
-                .ReturnsAsync(user)
-                .Callback<Func<IQueryable<UserModel>, IQueryable<UserModel>>, CancellationToken>((query, token) => {
-                    var testQuery = new List<UserModel>().AsQueryable();
-                    var filteredQuery = query(testQuery);
-                    Assert.True(filteredQuery.Expression.ToString().Contains($".email.Equals("));
-                });
+            userRepositoryMock.Setup(x => x.GetByFilter(It.Is<UserByEmailSpec>(x => x.Email == inputEmail), CancellationToken.None))
+                .ReturnsAsync(user);
             passwordManagerMock.Setup(x => x.CheckPassword(inputPassword, password)).Returns(true);
             sessionServiceMock.Setup(x => x.CreateTokens(user, It.IsAny<HttpContext>()))
                 .Returns(Task.FromResult<IActionResult>(new StatusCodeResult(200)));
@@ -86,13 +80,8 @@ namespace tests.Controllers_Tests.Account
             var dataManagementMock = new Mock<IDataManagement>();
             var emailSenderMock = new Mock<IEmailSender>();
 
-            userRepositoryMock.Setup(x => x.GetByFilter(new UserByEmailSpec(email.ToLowerInvariant()), CancellationToken.None))
-                .ReturnsAsync(user)
-                .Callback<Func<IQueryable<UserModel>, IQueryable<UserModel>>, CancellationToken>((query, token) => {
-                    var testQuery = new List<UserModel>().AsQueryable();
-                    var filteredQuery = query(testQuery);
-                    Assert.True(filteredQuery.Expression.ToString().Contains($".email.Equals("));
-                });
+            userRepositoryMock.Setup(x => x.GetByFilter(It.Is<UserByEmailSpec>(x => x.Email == inputEmail), CancellationToken.None))
+                .ReturnsAsync(user);
             passwordManagerMock.Setup(x => x.CheckPassword(inputPassword, password)).Returns(true);
             passwordManagerMock.Setup(x => x.HashingPassword(code.ToString())).Returns(hashCode);
             generateMock.Setup(x => x.GenerateSixDigitCode()).Returns(code);

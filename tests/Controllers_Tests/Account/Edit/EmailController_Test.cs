@@ -167,7 +167,7 @@ namespace tests.Controllers_Tests.Account.Edit
             generateMock.Setup(x => x.GenerateSixDigitCode()).Returns(newCode);
             userInfoMock.Setup(x => x.Username).Returns(name);
             userInfoMock.Setup(x => x.UserId).Returns(id);
-            userRepositoryMock.Setup(x => x.GetByFilter(new UserByEmailSpec(email), CancellationToken.None))
+            userRepositoryMock.Setup(x => x.GetByFilter(It.Is<UserByEmailSpec>(x => x.Email == email), CancellationToken.None))
                 .ReturnsAsync((UserModel)null);
 
             var emailController = new EmailController(null, dataManagementMock.Object, validatorMock.Object,
