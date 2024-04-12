@@ -19,33 +19,31 @@ namespace webapi.Controllers.Core
     {
         [HttpPost("{operation}")]
         [ValidateAntiForgeryToken]
-        [RequestSizeLimit(75 * 1024 * 1024)]
+        [RequestSizeLimit(50 * 1024 * 1024)]
         [ProducesResponseType(typeof(FileStreamResult), 200)]
-        [ProducesResponseType(typeof(object), 400)]
-        [ProducesResponseType(typeof(object), 422)]
-        [ProducesResponseType(typeof(object), 500)]
+        [ProducesResponseType(typeof(object), 404)]
         public async Task<IActionResult> EncryptFile(
             [FromRoute] string type, [FromRoute] string operation,
-            [FromQuery] bool validate, IFormFile file)
+            [FromQuery] bool sign, IFormFile file)
         {
             try
             {
-                var param = await provider.GetCryptographyParams(type, operation);
+                var key = await provider.GetCryptographyParams(type, operation);
                 var encryptedFile = await provider.EncryptFile(new CryptographyOperationOptions
                 {
-                    Key = param.EncryptionKey,
+                    Key = key,
                     Type = type,
                     Operation = operation,
                     File = file,
                     UserID = userInfo.UserId,
-                    Username = validate ? userInfo.Username : null
+                    Username = sign ? userInfo.Username : null
                 });
 
                 await redisCache.DeteteCacheByKeyPattern($"{ImmutableData.FILES_PREFIX}{userInfo.UserId}");
 
                 return encryptedFile;
             }
-            catch (ArgumentNullException)
+            catch (ArgumentException)
             {
                 return StatusCode(404, new { message = "Encryption key not found" });
             }

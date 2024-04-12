@@ -5,6 +5,7 @@ using webapi.Cryptography;
 using webapi.Cryptography.Abstractions;
 using webapi.DB.Abstractions;
 using webapi.DB.Ef.Specifications.By_Relation_Specifications;
+using webapi.Exceptions;
 using webapi.Helpers;
 using webapi.Helpers.Abstractions;
 using webapi.Localization;
@@ -90,10 +91,7 @@ namespace webapi.Services.Core
                 if (value is not null)
                     return JsonConvert.DeserializeObject<string>(value);
 
-                var keys = await keyRepository.GetByFilter(new KeysByRelationSpec(userId));
-                if (keys is null)
-                    throw new ArgumentNullException(Message.NOT_FOUND);
-
+                var keys = await keyRepository.GetByFilter(new KeysByRelationSpec(userId)) ?? throw new ArgumentException(Message.NOT_FOUND);
                 string? encryptionKey = null;
 
                 if (key == redisKeys.PrivateKey)
@@ -103,10 +101,10 @@ namespace webapi.Services.Core
                 else if (key == redisKeys.ReceivedKey)
                     encryptionKey = keys.received_key;
                 else
-                    throw new ArgumentException(Message.NOT_FOUND);
+                    throw new InvalidRouteException();
 
                 if (string.IsNullOrEmpty(encryptionKey))
-                    throw new ArgumentNullException(Message.NOT_FOUND);
+                    throw new ArgumentException(Message.NOT_FOUND);
 
                 var decryptedKey = await decryptKey.CypherKeyAsync(encryptionKey, secretKey);
                 await redisCache.CacheData(key, decryptedKey, TimeSpan.FromMinutes(10));
@@ -115,7 +113,7 @@ namespace webapi.Services.Core
             }
             catch (OperationCanceledException ex)
             {
-                throw new ArgumentNullException(ex.Message);
+                throw new ArgumentException(ex.Message);
             }
         }
     }

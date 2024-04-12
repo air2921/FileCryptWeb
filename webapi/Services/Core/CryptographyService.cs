@@ -89,41 +89,34 @@ namespace webapi.Services.Core
             }
         }
 
-        public async Task<CryptographyParams> GetCryptographyParams(string fileType, string operation)
+        public async Task<string> GetCryptographyParams(string fileType, string operation)
         {
             string lowerFileType = fileType.ToLowerInvariant();
-            bool isValidRoute = false;
 
-            if (operation == "encrypt")
-                isValidRoute = true;
-            else if (operation == "decrypt")
-                isValidRoute = true;
-            else
+            if (operation != "encrypt" || operation != "decrypt")
                 throw new InvalidRouteException();
 
             try
             {
                 if (lowerFileType.Equals(privateType))
-                    return new CryptographyParams(await helper.CacheKey(redisKeys.PrivateKey, userInfo.UserId), isValidRoute);
+                    return await helper.CacheKey(redisKeys.PrivateKey, userInfo.UserId);
                 else if (lowerFileType.Equals(internalType))
-                    return new CryptographyParams(await helper.CacheKey(redisKeys.InternalKey, userInfo.UserId), isValidRoute);
+                    return await helper.CacheKey(redisKeys.InternalKey, userInfo.UserId);
                 else if (lowerFileType.Equals(receivedType))
-                    return new CryptographyParams(await helper.CacheKey(redisKeys.ReceivedKey, userInfo.UserId), isValidRoute);
+                    return await helper.CacheKey(redisKeys.ReceivedKey, userInfo.UserId);
                 else
                     throw new InvalidRouteException();
             }
-            catch (ArgumentNullException)
+            catch (ArgumentException)
             {
                 throw;
             }
-            catch (ArgumentException)
+            catch (InvalidRouteException)
             {
-                throw new InvalidRouteException();
+                throw;
             }
         }
     }
-
-    public record class CryptographyParams(string EncryptionKey, bool IsValidRoute);
 
     public class CryptographyOperationOptions
     {

@@ -31,8 +31,4 @@
     <ProjectReference Include="..\webapi\webapi.csproj" />
   </ItemGroup>
 
-  <ItemGroup>
-    <Folder Include="Controllers_Tests\Core\" />
-  </ItemGroup>
-
 </Project>

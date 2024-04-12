@@ -70,7 +70,7 @@ namespace webapi.Controllers.Admin
             try
             {
                 await linkRepository.Delete(linkId);
-                return StatusCode(204, new { message = Message.NOT_FOUND });
+                return StatusCode(204);
             }
             catch (EntityNotDeletedException ex)
             {
