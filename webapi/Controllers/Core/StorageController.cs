@@ -1,10 +1,10 @@
 ﻿using AutoMapper;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
+using webapi.Attributes;
 using webapi.DB.Abstractions;
 using webapi.DB.Ef.Specifications.By_Relation_Specifications;
 using webapi.DTO;
-using webapi.Exceptions;
 using webapi.Helpers;
 using webapi.Helpers.Abstractions;
 using webapi.Localization;
@@ -15,6 +15,7 @@ namespace webapi.Controllers.Core
     [Route("api/core/storage")]
     [ApiController]
     [Authorize]
+    [EntityExceptionFilter]
     public class StorageController(
         IMapper mapper,
         IUserInfo userInfo,
@@ -28,21 +29,14 @@ namespace webapi.Controllers.Core
         [ProducesResponseType(typeof(object), 500)]
         public async Task<IActionResult> AddStorage([FromBody] StorageDTO storageDTO)
         {
-            try
-            {
-                var keyStorageModel = mapper.Map<StorageDTO, KeyStorageModel>(storageDTO);
-                keyStorageModel.user_id = userInfo.UserId;
-                keyStorageModel.last_time_modified = DateTime.UtcNow;
-                keyStorageModel.access_code = passwordManager.HashingPassword(storageDTO.access_code.ToString());
-                await storageRepository.Add(keyStorageModel);
+            var keyStorageModel = mapper.Map<StorageDTO, KeyStorageModel>(storageDTO);
+            keyStorageModel.user_id = userInfo.UserId;
+            keyStorageModel.last_time_modified = DateTime.UtcNow;
+            keyStorageModel.access_code = passwordManager.HashingPassword(storageDTO.access_code.ToString());
+            await storageRepository.Add(keyStorageModel);
 
-                await redisCache.DeteteCacheByKeyPattern($"{ImmutableData.STORAGES_PREFIX}{userInfo.UserId}");
-                return StatusCode(201);
-            }
-            catch (EntityNotCreatedException ex)
-            {
-                return StatusCode(500, new { message = ex.Message });
-            }
+            await redisCache.DeteteCacheByKeyPattern($"{ImmutableData.STORAGES_PREFIX}{userInfo.UserId}");
+            return StatusCode(201);
         }
 
         [HttpDelete("{storageId}")]
@@ -52,30 +46,19 @@ namespace webapi.Controllers.Core
         [ProducesResponseType(typeof(object), 500)]
         public async Task<IActionResult> DeleteStorage([FromRoute] int storageId, [FromQuery] int code)
         {
-            try
-            {
-                var storage = await storageRepository
-                    .GetByFilter(new StorageByIdAndRelationSpec(storageId, userInfo.UserId));
+            var storage = await storageRepository
+                .GetByFilter(new StorageByIdAndRelationSpec(storageId, userInfo.UserId));
 
-                if (storage is null)
-                    return StatusCode(404, new { message = Message.NOT_FOUND });
+            if (storage is null)
+                return StatusCode(404, new { message = Message.NOT_FOUND });
 
-                if (!passwordManager.CheckPassword(code.ToString(), storage.access_code))
-                    return StatusCode(403, new { message = Message.INCORRECT });
+            if (!passwordManager.CheckPassword(code.ToString(), storage.access_code))
+                return StatusCode(403, new { message = Message.INCORRECT });
 
-                await storageRepository.Delete(storageId);
+            await storageRepository.Delete(storageId);
 
-                await redisCache.DeteteCacheByKeyPattern($"{ImmutableData.STORAGES_PREFIX}{userInfo.UserId}");
-                return StatusCode(204);
-            }
-            catch (EntityNotDeletedException ex)
-            {
-                return StatusCode(500, new { message = ex.Message });
-            }
-            catch (OperationCanceledException ex)
-            {
-                return StatusCode(500, new { message = ex.Message });
-            }
+            await redisCache.DeteteCacheByKeyPattern($"{ImmutableData.STORAGES_PREFIX}{userInfo.UserId}");
+            return StatusCode(204);
         }
 
         [HttpGet("all")]
@@ -83,37 +66,23 @@ namespace webapi.Controllers.Core
         [ProducesResponseType(typeof(object), 500)]
         public async Task<IActionResult> GetStorages()
         {
-            try
-            {
-                return StatusCode(200, new {
-                    storages = await storageRepository.GetAll(new StoragesByRelationSpec(userInfo.UserId))});
-            }
-            catch (OperationCanceledException ex)
-            {
-                return StatusCode(500, new { message = ex.Message });
-            }
+            return StatusCode(200, new {
+                storages = await storageRepository.GetAll(new StoragesByRelationSpec(userInfo.UserId))});
         }
 
         [HttpGet("{storageId}")]
         public async Task<IActionResult> GetStorage([FromRoute] int storageId, [FromQuery] int code)
         {
-            try
-            {
-                var storage = await storageRepository
-                    .GetByFilter(new StorageByIdAndRelationSpec(storageId, userInfo.UserId));
-                if (storage is null)
-                    return StatusCode(404, new { message = Message.NOT_FOUND });
+            var storage = await storageRepository
+                .GetByFilter(new StorageByIdAndRelationSpec(storageId, userInfo.UserId));
+            if (storage is null)
+                return StatusCode(404, new { message = Message.NOT_FOUND });
 
-                if (!passwordManager.CheckPassword(code.ToString(), storage.access_code))
-                    return StatusCode(403, new { message = Message.INCORRECT });
-                storage.access_code = string.Empty;
+            if (!passwordManager.CheckPassword(code.ToString(), storage.access_code))
+                return StatusCode(403, new { message = Message.INCORRECT });
+            storage.access_code = string.Empty;
 
-                return StatusCode(200, new { storage });
-            }
-            catch (OperationCanceledException ex)
-            {
-                return StatusCode(500, new { message = ex.Message });
-            }
+            return StatusCode(200, new { storage });
         }
     }
 }

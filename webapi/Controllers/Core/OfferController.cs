@@ -1,8 +1,8 @@
 ﻿using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
+using webapi.Attributes;
 using webapi.DB.Abstractions;
 using webapi.DB.Ef.Specifications.By_Relation_Specifications;
-using webapi.Exceptions;
 using webapi.Helpers;
 using webapi.Helpers.Abstractions;
 using webapi.Localization;
@@ -16,6 +16,7 @@ namespace webapi.Controllers.Core
     [Route("api/core/offers")]
     [ApiController]
     [Authorize]
+    [EntityExceptionFilter]
     public class OfferController(
         [FromKeyedServices(ImplementationKey.CORE_OFFER_SERVICE)] IDataManagement dataManagement,
         [FromKeyedServices(ImplementationKey.CORE_OFFER_SERVICE)] ITransaction<KeyModel> keyTransaction,
@@ -35,31 +36,21 @@ namespace webapi.Controllers.Core
         [ProducesResponseType(typeof(object), 500)]
         public async Task<IActionResult> CreateOneOffer([FromRoute] int receiverId)
         {
-            try
-            {
-                if (userInfo.UserId.Equals(receiverId))
-                    return StatusCode(409, new { message = Message.CONFLICT });
+            if (userInfo.UserId.Equals(receiverId))
+                return StatusCode(409, new { message = Message.CONFLICT });
 
-                var receiver = await userRepository.GetById(receiverId);
-                if (receiver is null)
-                    return StatusCode(404, new { message = Message.NOT_FOUND });
+            var receiver = await userRepository.GetById(receiverId);
+            if (receiver is null)
+                return StatusCode(404, new { message = Message.NOT_FOUND });
 
-                var keys = await keyRepository.GetByFilter(new KeysByRelationSpec(userInfo.UserId));
-                if (keys is null)
-                    return StatusCode(404, new { message = Message.NOT_FOUND });
+            var keys = await keyRepository.GetByFilter(new KeysByRelationSpec(userInfo.UserId));
+            if (keys is null || keys.internal_key is null)
+                return StatusCode(404, new { message = "You don't have a internal key for create an offer" });
 
-                if (keys.internal_key is null)
-                    return StatusCode(404, new { message = "You don't have a internal key for create an offer" });
+            await participantsTransaction.CreateTransaction(new Participants(userInfo.UserId, receiverId), keys.internal_key);
+            await dataManagement.DeleteData(userInfo.UserId, receiverId);
 
-                await participantsTransaction.CreateTransaction(new Participants(userInfo.UserId, receiverId), keys.internal_key);
-                await dataManagement.DeleteData(userInfo.UserId, receiverId);
-
-                return StatusCode(201, new { message = Message.CREATED });
-            }
-            catch (EntityNotCreatedException ex)
-            {
-                return StatusCode(500, new { message = ex.Message });
-            }
+            return StatusCode(201, new { message = Message.CREATED });
         }
 
         [HttpPut("accept/{offerId}")]
@@ -70,28 +61,21 @@ namespace webapi.Controllers.Core
         [ProducesResponseType(typeof(object), 500)]
         public async Task<IActionResult> AcceptOffer([FromRoute] int offerId)
         {
-            try
-            {
-                var offer = await offerRepository.GetByFilter(new OfferByIdAndRelationSpec(offerId, userInfo.UserId, false));
-                if (offer is null)
-                    return StatusCode(404, new { message = Message.NOT_FOUND });
+            var offer = await offerRepository.GetByFilter(new OfferByIdAndRelationSpec(offerId, userInfo.UserId, false));
+            if (offer is null)
+                return StatusCode(404, new { message = Message.NOT_FOUND });
 
-                if (offer.is_accepted)
-                    return StatusCode(409, new { message = Message.CONFLICT });
+            if (offer.is_accepted)
+                return StatusCode(409, new { message = Message.CONFLICT });
 
-                var receiver = await keyRepository.GetByFilter(new KeysByRelationSpec(offer.receiver_id));
-                if (receiver is null)
-                    return StatusCode(404, new { message = Message.NOT_FOUND });
+            var receiver = await keyRepository.GetByFilter(new KeysByRelationSpec(offer.receiver_id));
+            if (receiver is null)
+                return StatusCode(404, new { message = Message.NOT_FOUND });
 
-                await keyTransaction.CreateTransaction(receiver, offer);
-                await dataManagement.DeleteData(offer.sender_id, userInfo.UserId);
+            await keyTransaction.CreateTransaction(receiver, offer);
+            await dataManagement.DeleteData(offer.sender_id, userInfo.UserId);
 
-                return StatusCode(200, new { message = Message.UPDATED });
-            }
-            catch (EntityNotUpdatedException ex)
-            {
-                return StatusCode(500, new { message = ex.Message });
-            }
+            return StatusCode(200, new { message = Message.UPDATED });
         }
 
         [HttpGet("{offerId}")]
@@ -108,10 +92,6 @@ namespace webapi.Controllers.Core
                     return StatusCode(404, new { message = Message.NOT_FOUND });
 
                 return StatusCode(200, new { offer, userId = userInfo.UserId });
-            }
-            catch (OperationCanceledException ex)
-            {
-                return StatusCode(500, new { message = ex.Message });
             }
             catch (FormatException)
             {
@@ -133,10 +113,6 @@ namespace webapi.Controllers.Core
 
                 return StatusCode(200, new { offers, user_id = userInfo.UserId });
             }
-            catch (OperationCanceledException ex)
-            {
-                return StatusCode(500, new { message = ex.Message });
-            }
             catch (FormatException)
             {
                 return StatusCode(500, new { message = Message.ERROR });
@@ -149,19 +125,12 @@ namespace webapi.Controllers.Core
         [ProducesResponseType(typeof(object), 404)]
         public async Task<IActionResult> DeleteOneOffer([FromRoute] int offerId)
         {
-            try
-            {
-                var offer = await offerRepository.DeleteByFilter(new OfferByIdAndRelationSpec(offerId, userInfo.UserId, null));
+            var offer = await offerRepository.DeleteByFilter(new OfferByIdAndRelationSpec(offerId, userInfo.UserId, null));
 
-                await redisCache.DeteteCacheByKeyPattern($"{ImmutableData.OFFERS_PREFIX}{offer.sender_id}");
-                await redisCache.DeteteCacheByKeyPattern($"{ImmutableData.OFFERS_PREFIX}{offer.receiver_id}");
+            await redisCache.DeteteCacheByKeyPattern($"{ImmutableData.OFFERS_PREFIX}{offer.sender_id}");
+            await redisCache.DeteteCacheByKeyPattern($"{ImmutableData.OFFERS_PREFIX}{offer.receiver_id}");
 
-                return StatusCode(204);
-            }
-            catch (EntityNotDeletedException ex)
-            {
-                return StatusCode(404, new { message = ex.Message });
-            }
+            return StatusCode(204);
         }
     }
 }

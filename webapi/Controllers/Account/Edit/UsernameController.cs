@@ -1,5 +1,6 @@
 ﻿using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
+using webapi.Attributes;
 using webapi.DB.Abstractions;
 using webapi.Exceptions;
 using webapi.Helpers;
@@ -13,6 +14,7 @@ namespace webapi.Controllers.Account.Edit
     [Route("api/account/edit/username")]
     [ApiController]
     [Authorize]
+    [EntityExceptionFilter]
     public class UsernameController(
         [FromKeyedServices(ImplementationKey.ACCOUNT_USERNAME_SERVICE)] ITransaction<UserModel> transaction,
         [FromKeyedServices(ImplementationKey.ACCOUNT_USERNAME_SERVICE)] IDataManagement dataManagament,
@@ -44,14 +46,6 @@ namespace webapi.Controllers.Account.Edit
                 await dataManagament.DeleteData(userInfo.UserId);
 
                 return StatusCode(200, new { message = Message.UPDATED });
-            }
-            catch (EntityNotUpdatedException ex)
-            {
-                return StatusCode(500, new { message = ex.Message });
-            }
-            catch (OperationCanceledException ex)
-            {
-                return StatusCode(500, new { message = ex.Message });
             }
             catch (UnauthorizedAccessException ex)
             {

@@ -1,5 +1,6 @@
 ﻿using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
+using webapi.Attributes;
 using webapi.DB.Abstractions;
 using webapi.DB.Ef.Specifications.By_Relation_Specifications;
 using webapi.Exceptions;
@@ -15,6 +16,7 @@ namespace webapi.Controllers.Core
     [Route("api/core/notifications")]
     [ApiController]
     [Authorize]
+    [EntityExceptionFilter]
     public class NotificationController(
         IRepository<NotificationModel> notificationRepository,
         ICacheHandler<NotificationModel> cache,
@@ -36,10 +38,6 @@ namespace webapi.Controllers.Core
 
                 return StatusCode(200, new { notification });
             }
-            catch (OperationCanceledException ex)
-            {
-                return StatusCode(500, new { message = ex.Message });
-            }
             catch (FormatException)
             {
                 return StatusCode(500, new { message = Message.ERROR });
@@ -60,10 +58,6 @@ namespace webapi.Controllers.Core
 
                 return StatusCode(200, new { notifications });
             }
-            catch (OperationCanceledException ex)
-            {
-                return StatusCode(500, new { message = ex.Message });
-            }
             catch (FormatException)
             {
                 return StatusCode(500, new { message = Message.ERROR });
@@ -76,20 +70,13 @@ namespace webapi.Controllers.Core
         [ProducesResponseType(typeof(object), 500)]
         public async Task<IActionResult> DeleteNotification([FromRoute] int notificationId)
         {
-            try
-            {
-                var notification = await notificationRepository
-                    .DeleteByFilter(new NotificationByIdAndByRelationSpec(notificationId, userInfo.UserId));
-                
-                if (notification is not null)
-                    await redisCache.DeteteCacheByKeyPattern($"{ImmutableData.NOTIFICATIONS_PREFIX}{userInfo.UserId}");
+            var notification = await notificationRepository
+                .DeleteByFilter(new NotificationByIdAndByRelationSpec(notificationId, userInfo.UserId));
 
-                return StatusCode(204);
-            }
-            catch (EntityNotDeletedException ex)
-            {
-                return StatusCode(500, new { message = ex.Message });
-            }
+            if (notification is not null)
+                await redisCache.DeteteCacheByKeyPattern($"{ImmutableData.NOTIFICATIONS_PREFIX}{userInfo.UserId}");
+
+            return StatusCode(204);
         }
     }
 }

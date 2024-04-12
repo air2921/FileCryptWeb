@@ -1,7 +1,7 @@
 ﻿using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
+using webapi.Attributes;
 using webapi.DB.Abstractions;
-using webapi.Exceptions;
 using webapi.Helpers;
 using webapi.Helpers.Abstractions;
 using webapi.Localization;
@@ -15,6 +15,7 @@ namespace webapi.Controllers.Core
     [Route("api/core/users")]
     [ApiController]
     [Authorize]
+    [EntityExceptionFilter]
     public class UserController(
         IUserHelpers helpers,
         ICacheHandler<UserModel> cache,
@@ -33,10 +34,6 @@ namespace webapi.Controllers.Core
 
                 return StatusCode(200, new { user = user.user, isOwner = user.isOwner, keys = user.keys, files, offers });
             }
-            catch (OperationCanceledException ex)
-            {
-                return StatusCode(500, new { message = ex.Message });
-            }
             catch (ArgumentNullException ex)
             {
                 return StatusCode(404, new { message = ex.Message });
@@ -47,18 +44,11 @@ namespace webapi.Controllers.Core
         [ValidateAntiForgeryToken]
         public async Task<IActionResult> DeleteUser()
         {
-            try
-            {
-                await userRepository.Delete(userInfo.UserId);
-                tokenService.DeleteTokens();
-                HttpContext.Session.Clear();
+            await userRepository.Delete(userInfo.UserId);
+            tokenService.DeleteTokens();
+            HttpContext.Session.Clear();
 
-                return StatusCode(204);
-            }
-            catch (EntityNotDeletedException ex)
-            {
-                return StatusCode(500, new { message = ex.Message });
-            }
+            return StatusCode(204);
         }
 
         [HttpGet("find")]
@@ -76,10 +66,6 @@ namespace webapi.Controllers.Core
 
                 return StatusCode(200, new { user });
             }
-            catch (OperationCanceledException ex)
-            {
-                return StatusCode(500, new { message = ex.Message });
-            }
             catch (FormatException)
             {
                 return StatusCode(500, new { message = Message.ERROR });
@@ -95,10 +81,6 @@ namespace webapi.Controllers.Core
                 var users = await cache.CacheAndGetRange(new UserRangeObject(cacheKey, username));
 
                 return StatusCode(200, new { users });
-            }
-            catch (OperationCanceledException ex)
-            {
-                return StatusCode(500, new { message = ex.Message });
             }
             catch (FormatException)
             {

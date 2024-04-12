@@ -1,8 +1,8 @@
 ﻿using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
+using webapi.Attributes;
 using webapi.DB.Abstractions;
 using webapi.DB.Ef.Specifications.Sorting_Specifications;
-using webapi.Exceptions;
 using webapi.Helpers;
 using webapi.Localization;
 using webapi.Models;
@@ -12,6 +12,7 @@ namespace webapi.Controllers.Admin
     [Route("api/admin/files")]
     [ApiController]
     [Authorize(Roles = "HighestAdmin,Admin")]
+    [EntityExceptionFilter]
     public class Admin_FileController(IRepository<FileModel> fileRepository, IRedisCache redisCache) : ControllerBase
     {
         [HttpGet("{fileId}")]
@@ -20,18 +21,11 @@ namespace webapi.Controllers.Admin
         [ProducesResponseType(typeof(object), 500)]
         public async Task<IActionResult> GetFile([FromRoute] int fileId)
         {
-            try
-            {
-                var file = await fileRepository.GetById(fileId);
-                if (file is null)
-                    return StatusCode(404, new { message = Message.NOT_FOUND });
+            var file = await fileRepository.GetById(fileId);
+            if (file is null)
+                return StatusCode(404, new { message = Message.NOT_FOUND });
 
-                return StatusCode(200, new { file });
-            }
-            catch (OperationCanceledException ex)
-            {
-                return StatusCode(500, new { message = ex.Message });
-            }
+            return StatusCode(200, new { file });
         }
 
         [HttpGet("range")]
@@ -40,15 +34,8 @@ namespace webapi.Controllers.Admin
         public async Task<IActionResult> GetFiles([FromQuery] int? userId, [FromQuery] int skip, [FromQuery] int count,
             [FromQuery] bool byDesc, [FromQuery] string? category)
         {
-            try
-            {
-                return StatusCode(200, new { files = await fileRepository
-                    .GetAll(new FilesSortSpec(userId, skip, count, byDesc, null, null, category)) });
-            }
-            catch (OperationCanceledException ex)
-            {
-                return StatusCode(500, new { message = ex.Message });
-            }
+            return StatusCode(200, new { files = await fileRepository
+                    .GetAll(new FilesSortSpec(userId, skip, count, byDesc, null, null, category))});
         }
 
         [HttpDelete("{fileId}")]
@@ -57,18 +44,11 @@ namespace webapi.Controllers.Admin
         [ProducesResponseType(typeof(object), 500)]
         public async Task<IActionResult> DeleteFile([FromRoute] int fileId)
         {
-            try
-            {
-                var deletedFile = await fileRepository.Delete(fileId);
-                if(deletedFile is not null)
-                    await redisCache.DeteteCacheByKeyPattern($"{ImmutableData.FILES_PREFIX}{deletedFile.user_id}");
+            var deletedFile = await fileRepository.Delete(fileId);
+            if (deletedFile is not null)
+                await redisCache.DeteteCacheByKeyPattern($"{ImmutableData.FILES_PREFIX}{deletedFile.user_id}");
 
-                return StatusCode(204);
-            }
-            catch (EntityNotDeletedException ex)
-            {
-                return StatusCode(500, new { message = ex.Message });
-            }
+            return StatusCode(204);
         }
 
         [HttpDelete("range")]
@@ -77,16 +57,9 @@ namespace webapi.Controllers.Admin
         [ProducesResponseType(typeof(object), 200)]
         public async Task<IActionResult> DeleteRangeFiles([FromBody] IEnumerable<int> identifiers)
         {
-            try
-            {
-                var fileList = await fileRepository.DeleteMany(identifiers);
-                await redisCache.DeleteRedisCache(fileList, ImmutableData.FILES_PREFIX, item => item.user_id);
-                return StatusCode(204);
-            }
-            catch (EntityNotDeletedException ex)
-            {
-                return StatusCode(500, new { message = ex.Message });
-            }
+            var fileList = await fileRepository.DeleteMany(identifiers);
+            await redisCache.DeleteRedisCache(fileList, ImmutableData.FILES_PREFIX, item => item.user_id);
+            return StatusCode(204);
         }
     }
 }

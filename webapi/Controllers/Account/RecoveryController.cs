@@ -1,4 +1,5 @@
 ﻿using Microsoft.AspNetCore.Mvc;
+using webapi.Attributes;
 using webapi.DB.Abstractions;
 using webapi.DB.Ef.Specifications;
 using webapi.DTO;
@@ -15,6 +16,7 @@ namespace webapi.Controllers.Account
 {
     [Route("api/auth/recovery")]
     [ApiController]
+    [EntityExceptionFilter]
     public class RecoveryController(
         IRecoveryHelpers recoveryHelper,
         [FromKeyedServices(ImplementationKey.ACCOUNT_RECOVERY_SERVICE)] IValidator validator,
@@ -52,15 +54,7 @@ namespace webapi.Controllers.Account
 
                 return StatusCode(201, new { message = Message.EMAIL_SENT });
             }
-            catch (EntityNotCreatedException ex)
-            {
-                return StatusCode(500, new { message = ex.Message });
-            }
             catch (SmtpClientException ex)
-            {
-                return StatusCode(500, new { message = ex.Message });
-            }
-            catch (OperationCanceledException ex)
             {
                 return StatusCode(500, new { message = ex.Message });
             }
@@ -75,47 +69,28 @@ namespace webapi.Controllers.Account
         [ProducesResponseType(typeof(object), 500)]
         public async Task<IActionResult> RecoveryAccountByToken([FromBody] RecoveryDTO recovery)
         {
-            try
-            {
-                if (!validator.IsValid(recovery.password))
-                    return StatusCode(400, new { message = Message.INVALID_FORMAT });
+            if (!validator.IsValid(recovery.password))
+                return StatusCode(400, new { message = Message.INVALID_FORMAT });
 
-                var link = await linkRepository.GetByFilter(new RecoveryTokenByTokenSpec(recovery.token));
-                if (link is null)
-                    return StatusCode(404, new { message = Message.NOT_FOUND });
+            var link = await linkRepository.GetByFilter(new RecoveryTokenByTokenSpec(recovery.token));
+            if (link is null)
+                return StatusCode(404, new { message = Message.NOT_FOUND });
 
-                if (link.expiry_date < DateTime.UtcNow)
-                {
-                    await linkRepository.Delete(link.link_id);
-                    return StatusCode(422, new { message = Message.FORBIDDEN });
-                }
+            if (link.expiry_date < DateTime.UtcNow)
+            {
+                await linkRepository.Delete(link.link_id);
+                return StatusCode(422, new { message = Message.FORBIDDEN });
+            }
 
-                var user = await userRepository.GetById(link.user_id);
-                if (user is null)
-                    return StatusCode(404, new { message = Message.NOT_FOUND });
-                await recoveryHelper.RecoveryTransaction(user, recovery.token, recovery.password);
+            var user = await userRepository.GetById(link.user_id);
+            if (user is null)
+                return StatusCode(404, new { message = Message.NOT_FOUND });
+            await recoveryHelper.RecoveryTransaction(user, recovery.token, recovery.password);
 
-                await redisCache.DeteteCacheByKeyPattern($"{ImmutableData.NOTIFICATIONS_PREFIX}{user.id}");
-                await redisCache.DeteteCacheByKeyPattern($"{ImmutableData.USER_DATA_PREFIX}{user.id}");
+            await redisCache.DeteteCacheByKeyPattern($"{ImmutableData.NOTIFICATIONS_PREFIX}{user.id}");
+            await redisCache.DeteteCacheByKeyPattern($"{ImmutableData.USER_DATA_PREFIX}{user.id}");
 
-                return StatusCode(200);
-            }
-            catch (EntityNotDeletedException ex)
-            {
-                return StatusCode(500, new { message = ex.Message });
-            }
-            catch (EntityNotUpdatedException ex)
-            {
-                return StatusCode(500, new { message = ex.Message });
-            }
-            catch (EntityNotCreatedException ex)
-            {
-                return StatusCode(500, new { message = ex.Message });
-            }
-            catch (OperationCanceledException ex)
-            {
-                return StatusCode(500, new { message = ex.Message });
-            }
+            return StatusCode(200);
         }
     }
 }

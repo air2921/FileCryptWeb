@@ -1,5 +1,6 @@
 ﻿using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
+using webapi.Attributes;
 using webapi.DB.Abstractions;
 using webapi.DB.Ef.Specifications.By_Relation_Specifications;
 using webapi.Exceptions;
@@ -15,6 +16,7 @@ namespace webapi.Controllers.Core
     [Route("api/core/files")]
     [ApiController]
     [Authorize]
+    [EntityExceptionFilter]
     public class FileController(
         IRepository<FileModel> fileRepository,
         IRedisCache redisCache,
@@ -27,18 +29,11 @@ namespace webapi.Controllers.Core
         [ProducesResponseType(typeof(object), 500)]
         public async Task<IActionResult> DeleteFileFromHistory([FromRoute] int fileId)
         {
-            try
-            {
-                var file = await fileRepository.DeleteByFilter(new FileByIdAndRelationSpec(fileId, userInfo.UserId));
-                if (file is not null)
-                    await redisCache.DeteteCacheByKeyPattern($"{ImmutableData.FILES_PREFIX}{userInfo.UserId}");
+            var file = await fileRepository.DeleteByFilter(new FileByIdAndRelationSpec(fileId, userInfo.UserId));
+            if (file is not null)
+                await redisCache.DeteteCacheByKeyPattern($"{ImmutableData.FILES_PREFIX}{userInfo.UserId}");
 
-                return StatusCode(204);
-            }
-            catch (EntityNotDeletedException ex)
-            {
-                return StatusCode(500, new { message = ex.Message });
-            }
+            return StatusCode(204);
         }
 
         [HttpGet("{fileId}")]
@@ -56,10 +51,6 @@ namespace webapi.Controllers.Core
 
                 return StatusCode(200, new { file });
             }
-            catch (OperationCanceledException ex)
-            {
-                return StatusCode(500, new { message = ex.Message });
-            }
             catch (FormatException)
             {
                 return StatusCode(500, new { message = Message.ERROR });
@@ -76,10 +67,6 @@ namespace webapi.Controllers.Core
             {
                 var cacheKey = $"{ImmutableData.FILES_PREFIX}{userInfo.UserId}_{skip}_{count}_{byDesc}_{type}_{category}_{mime}";
                 return StatusCode(200, new { files = await cache.CacheAndGetRange(new FileRangeObject(cacheKey, userInfo.UserId, skip, count, byDesc, type, mime, category)) });
-            }
-            catch (OperationCanceledException ex)
-            {
-                return StatusCode(500, new { message = ex.Message });
             }
             catch (FormatException)
             {

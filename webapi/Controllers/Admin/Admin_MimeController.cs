@@ -7,11 +7,13 @@ using webapi.Helpers;
 using webapi.DB.Abstractions;
 using webapi.Helpers.Abstractions;
 using webapi.DB.Ef.Specifications.Sorting_Specifications;
+using webapi.Attributes;
 
 namespace webapi.Controllers.Admin
 {
     [Route("api/admin/mime")]
     [ApiController]
+    [EntityExceptionFilter]
     public class Admin_MimeController(
         IRepository<FileMimeModel> mimeRepository,
         ILogger<Admin_MimeController> logger,
@@ -25,18 +27,10 @@ namespace webapi.Controllers.Admin
         [ProducesResponseType(typeof(object), 500)]
         public async Task<IActionResult> CreateNewMime([FromQuery] string mime)
         {
-            try
-            {
-                await mimeRepository.Add(new FileMimeModel { mime_name = mime });
-                await redisCache.DeleteCache(ImmutableData.MIME_COLLECTION);
-                logger.LogWarning($"new MIME type: {mime}. Added in db");
+            await mimeRepository.Add(new FileMimeModel { mime_name = mime });
+            await redisCache.DeleteCache(ImmutableData.MIME_COLLECTION);
 
-                return StatusCode(201, new { message = Message.CREATED });
-            }
-            catch (EntityNotCreatedException ex)
-            {
-                return StatusCode(500, new { message = ex.Message });
-            }
+            return StatusCode(201, new { message = Message.CREATED });
         }
 
         [HttpPost("range")]
@@ -46,27 +40,14 @@ namespace webapi.Controllers.Admin
         [ProducesResponseType(typeof(object), 500)]
         public async Task<IActionResult> CreateMIMICollection()
         {
-            try
-            {
-                var mimeModels = new HashSet<FileMimeModel>();
-                var mimes = (await mimeRepository.GetAll()).Select(m => m.mime_name).ToHashSet();
+            var mimeModels = new HashSet<FileMimeModel>();
+            var mimes = (await mimeRepository.GetAll()).Select(m => m.mime_name).ToHashSet();
 
-                fileManager.AddMimeCollection(ref mimeModels, mimes);
-                await mimeRepository.AddRange(mimeModels);
-                return StatusCode(201, new { message = Message.CREATED });
-            }
-            catch (EntityNotCreatedException ex)
-            {
-                return StatusCode(500, new { message = ex.Message });
-            }
-            catch (OperationCanceledException ex)
-            {
-                return StatusCode(500, new { message = ex.Message });
-            }
-            finally
-            {
-                await redisCache.DeleteCache(ImmutableData.MIME_COLLECTION);
-            }
+            fileManager.AddMimeCollection(ref mimeModels, mimes);
+            await mimeRepository.AddRange(mimeModels);
+            await redisCache.DeleteCache(ImmutableData.MIME_COLLECTION);
+
+            return StatusCode(201, new { message = Message.CREATED });
         }
 
         [HttpGet("{mimeId}")]
@@ -76,18 +57,11 @@ namespace webapi.Controllers.Admin
         [ProducesResponseType(typeof(object), 500)]
         public async Task<IActionResult> GetMime([FromRoute] int mimeId)
         {
-            try
-            {
-                var mime = await mimeRepository.GetById(mimeId);
-                if (mime is null)
-                    return StatusCode(404, new { message = Message.NOT_FOUND });
+            var mime = await mimeRepository.GetById(mimeId);
+            if (mime is null)
+                return StatusCode(404, new { message = Message.NOT_FOUND });
 
-                return StatusCode(200, new { mime });
-            }
-            catch (OperationCanceledException ex)
-            {
-                return StatusCode(500, new { message = ex.Message });
-            }
+            return StatusCode(200, new { mime });
         }
 
         [HttpGet("range")]
@@ -97,16 +71,8 @@ namespace webapi.Controllers.Admin
         [ProducesResponseType(typeof(object), 500)]
         public async Task<IActionResult> GetMimes([FromQuery] int skip, [FromQuery] int count)
         {
-            try
-            {
-                return StatusCode(200, new {
-                    mimes = await mimeRepository
-                        .GetAll(new MimesSortSpec(skip, count))});
-            }
-            catch (OperationCanceledException ex)
-            {
-                return StatusCode(500, new { message = ex.Message });
-            }
+            return StatusCode(200, new { mimes = await mimeRepository
+                .GetAll(new MimesSortSpec(skip, count))});
         }
 
         [HttpDelete("{mimeId}")]
@@ -116,16 +82,11 @@ namespace webapi.Controllers.Admin
         [ProducesResponseType(typeof(object), 500)]
         public async Task<IActionResult> DeleteMime([FromRoute] int mimeId)
         {
-            try
-            {
-                await mimeRepository.Delete(mimeId);
+            var mime = await mimeRepository.Delete(mimeId);
+            if (mime is not null)
                 await redisCache.DeleteCache(ImmutableData.MIME_COLLECTION);
-                return StatusCode(204);
-            }
-            catch (EntityNotDeletedException ex)
-            {
-                return StatusCode(500, new { message = ex.Message });
-            }
+
+            return StatusCode(204);
         }
 
         [HttpDelete("range")]
@@ -135,16 +96,9 @@ namespace webapi.Controllers.Admin
         [ProducesResponseType(typeof(object), 500)]
         public async Task<IActionResult> DeleteMimes([FromBody] IEnumerable<int> identifiers)
         {
-            try
-            {
-                await mimeRepository.DeleteMany(identifiers);
-                await redisCache.DeleteCache(ImmutableData.MIME_COLLECTION);
-                return StatusCode(204);
-            }
-            catch (EntityNotDeletedException ex)
-            {
-                return StatusCode(500, new { message = ex.Message });
-            }
+            await mimeRepository.DeleteMany(identifiers);
+            await redisCache.DeleteCache(ImmutableData.MIME_COLLECTION);
+            return StatusCode(204);
         }
     }
 }

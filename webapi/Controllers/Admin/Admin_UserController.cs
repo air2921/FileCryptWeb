@@ -1,5 +1,6 @@
 ﻿using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
+using webapi.Attributes;
 using webapi.DB.Abstractions;
 using webapi.Exceptions;
 using webapi.Helpers;
@@ -11,6 +12,7 @@ namespace webapi.Controllers.Admin
 {
     [Route("api/admin/users")]
     [ApiController]
+    [EntityExceptionFilter]
     public class Admin_UserController(
         [FromKeyedServices(ImplementationKey.ADMIN_USER_SERVICE)] ITransaction<UserModel> transaction,
         [FromKeyedServices(ImplementationKey.ADMIN_USER_SERVICE)] IValidator validator,
@@ -23,18 +25,11 @@ namespace webapi.Controllers.Admin
         [ProducesResponseType(typeof(object), 500)]
         public async Task<IActionResult> GetUser([FromRoute] int userId)
         {
-            try
-            {
-                var user = await userRepository.GetById(userId);
-                if (user is null)
-                    return StatusCode(404, new { message = Message.NOT_FOUND });
+            var user = await userRepository.GetById(userId);
+            if (user is null)
+                return StatusCode(404, new { message = Message.NOT_FOUND });
 
-                return StatusCode(200, new { user });
-            }
-            catch (OperationCanceledException ex)
-            {
-                return StatusCode(500, new { message = ex.Message });
-            }
+            return StatusCode(200, new { user });
         }
 
         [HttpDelete("{userId}")]
@@ -46,26 +41,15 @@ namespace webapi.Controllers.Admin
         [ProducesResponseType(typeof(object), 500)]
         public async Task<IActionResult> DeleteUser([FromRoute] int userId)
         {
-            try
-            {
-                var target = await userRepository.GetById(userId);
-                if (target is null)
-                    return StatusCode(404, new { message = Message.NOT_FOUND });
+            var target = await userRepository.GetById(userId);
+            if (target is null)
+                return StatusCode(404, new { message = Message.NOT_FOUND });
 
-                if (!validator.IsValid(target.role))
-                    return StatusCode(403, new { message = Message.FORBIDDEN });
+            if (!validator.IsValid(target.role))
+                return StatusCode(403, new { message = Message.FORBIDDEN });
 
-                await userRepository.Delete(userId);
-                return StatusCode(204);
-            }
-            catch (EntityNotDeletedException ex)
-            {
-                return StatusCode(500, new { message = ex.Message });
-            }
-            catch (OperationCanceledException ex)
-            {
-                return StatusCode(500, new { message = ex.Message });
-            }
+            await userRepository.Delete(userId);
+            return StatusCode(204);
         }
 
         [HttpPut("block/{userId}")]
@@ -77,30 +61,15 @@ namespace webapi.Controllers.Admin
         [ProducesResponseType(typeof(object), 500)]
         public async Task<IActionResult> BlockUser([FromRoute] int userId, [FromQuery] bool block)
         {
-            try
-            {
-                var target = await userRepository.GetById(userId);
-                if (target is null)
-                    return StatusCode(404, new { message = Message.NOT_FOUND });
+            var target = await userRepository.GetById(userId);
+            if (target is null)
+                return StatusCode(404, new { message = Message.NOT_FOUND });
 
-                if (!validator.IsValid(target.role))
-                    return StatusCode(403, new { message = Message.FORBIDDEN });
+            if (!validator.IsValid(target.role))
+                return StatusCode(403, new { message = Message.FORBIDDEN });
 
-                await transaction.CreateTransaction(target, block);
-                return StatusCode(200, new { message = Message.UPDATED });
-            }
-            catch (EntityNotUpdatedException ex)
-            {
-                return StatusCode(500, new { message = ex.Message });
-            }
-            catch (EntityNotDeletedException ex)
-            {
-                return StatusCode(500, new { message = ex.Message });
-            }
-            catch (OperationCanceledException ex)
-            {
-                return StatusCode(500, new { message = ex.Message });
-            }
+            await transaction.CreateTransaction(target, block);
+            return StatusCode(200, new { message = Message.UPDATED });
         }
 
         [HttpPut("role/{userId}")]
@@ -112,28 +81,17 @@ namespace webapi.Controllers.Admin
         [ProducesResponseType(typeof(object), 500)]
         public async Task<IActionResult> UpdateRole([FromRoute] int userId, [FromQuery] string role)
         {
-            try
-            {
-                var target = await userRepository.GetById(userId);
-                if (target is null)
-                    return StatusCode(404, new { message = Message.NOT_FOUND });
+            var target = await userRepository.GetById(userId);
+            if (target is null)
+                return StatusCode(404, new { message = Message.NOT_FOUND });
 
-                if (!validator.IsValid(target.role))
-                    return StatusCode(403, new { message = Message.FORBIDDEN });
+            if (!validator.IsValid(target.role))
+                return StatusCode(403, new { message = Message.FORBIDDEN });
 
-                target.role = role;
-                await userRepository.Update(target);
+            target.role = role;
+            await userRepository.Update(target);
 
-                return StatusCode(200, new { message = Message.UPDATED });
-            }
-            catch (EntityNotUpdatedException ex)
-            {
-                return StatusCode(500, new { message = ex.Message });
-            }
-            catch (OperationCanceledException ex)
-            {
-                return StatusCode(500, new { message = ex.Message });
-            }
+            return StatusCode(200, new { message = Message.UPDATED });
         }
     }
 }

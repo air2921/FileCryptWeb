@@ -1,8 +1,8 @@
 ﻿using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
+using webapi.Attributes;
 using webapi.DB.Abstractions;
 using webapi.DTO;
-using webapi.Exceptions;
 using webapi.Helpers;
 using webapi.Helpers.Abstractions;
 using webapi.Localization;
@@ -14,6 +14,7 @@ namespace webapi.Controllers.Account.Edit
     [Route("api/account/edit/password")]
     [ApiController]
     [Authorize]
+    [EntityExceptionFilter]
     public class PasswordController(
         [FromKeyedServices(ImplementationKey.ACCOUNT_PASSWORD_SERVICE)] ITransaction<UserModel> transaction,
         [FromKeyedServices(ImplementationKey.ACCOUNT_PASSWORD_SERVICE)] IDataManagement dataManagament,
@@ -32,35 +33,20 @@ namespace webapi.Controllers.Account.Edit
         [ProducesResponseType(typeof(object), 500)]
         public async Task<IActionResult> UpdatePassword([FromBody] PasswordDTO passwordDto)
         {
-            try
-            {
-                if (!validator.IsValid(passwordDto.NewPassword))
-                    return StatusCode(422, new { message = Message.INVALID_FORMAT });
+            if (!validator.IsValid(passwordDto.NewPassword))
+                return StatusCode(422, new { message = Message.INVALID_FORMAT });
 
-                var user = await userRepository.GetById(userInfo.UserId);
-                if (user is null)
-                    return StatusCode(404, new { message = Message.NOT_FOUND });
+            var user = await userRepository.GetById(userInfo.UserId);
+            if (user is null)
+                return StatusCode(404, new { message = Message.NOT_FOUND });
 
-                if (!passwordManager.CheckPassword(passwordDto.OldPassword, user.password))
-                    return StatusCode(401, new { message = Message.INCORRECT });
+            if (!passwordManager.CheckPassword(passwordDto.OldPassword, user.password))
+                return StatusCode(401, new { message = Message.INCORRECT });
 
-                await transaction.CreateTransaction(user, passwordDto.NewPassword);
-                await dataManagament.DeleteData(userInfo.UserId);
+            await transaction.CreateTransaction(user, passwordDto.NewPassword);
+            await dataManagament.DeleteData(userInfo.UserId);
 
-                return StatusCode(200, new { message = Message.UPDATED });
-            }
-            catch (EntityNotCreatedException ex)
-            {
-                return StatusCode(500, new { message = ex.Message });
-            }
-            catch (EntityNotUpdatedException ex)
-            {
-                return StatusCode(500, new { message = ex.Message });
-            }
-            catch (OperationCanceledException ex)
-            {
-                return StatusCode(500, new { message = ex.Message });
-            }
+            return StatusCode(200, new { message = Message.UPDATED });
         }
     }
 }

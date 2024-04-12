@@ -1,5 +1,6 @@
 ﻿using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
+using webapi.Attributes;
 using webapi.DB.Abstractions;
 using webapi.DTO;
 using webapi.Exceptions;
@@ -15,6 +16,7 @@ namespace webapi.Controllers.Account.Edit
     [Route("api/account/edit/2fa")]
     [ApiController]
     [Authorize]
+    [EntityExceptionFilter]
     public class _2FaController(
         [FromKeyedServices(ImplementationKey.ACCOUNT_2FA_SERVICE)] ITransaction<UserModel> transaction,
         [FromKeyedServices(ImplementationKey.ACCOUNT_2FA_SERVICE)] IDataManagement dataManagament,
@@ -61,10 +63,6 @@ namespace webapi.Controllers.Account.Edit
             {
                 return StatusCode(500, new { message = ex.Message });
             }
-            catch (OperationCanceledException ex)
-            {
-                return StatusCode(500, new { message = ex.Message });
-            }
         }
 
         [HttpPut("confirm/{enable}")]
@@ -75,32 +73,17 @@ namespace webapi.Controllers.Account.Edit
         [ProducesResponseType(typeof(object), 500)]
         public async Task<IActionResult> Update2FaState([FromQuery] int code, [FromRoute] bool enable)
         {
-            try
-            {
-                if (!validator.IsValid(await dataManagament.GetData(CODE), code))
-                    return StatusCode(400, new { message = Message.INCORRECT });
+            if (!validator.IsValid(await dataManagament.GetData(CODE), code))
+                return StatusCode(400, new { message = Message.INCORRECT });
 
-                var user = await userRepository.GetById(userInfo.UserId);
-                if (user is null)
-                    return StatusCode(404, new { message = Message.NOT_FOUND });
+            var user = await userRepository.GetById(userInfo.UserId);
+            if (user is null)
+                return StatusCode(404, new { message = Message.NOT_FOUND });
 
-                await transaction.CreateTransaction(user, enable);
-                await dataManagament.DeleteData(userInfo.UserId);
+            await transaction.CreateTransaction(user, enable);
+            await dataManagament.DeleteData(userInfo.UserId);
 
-                return StatusCode(200);
-            }
-            catch (EntityNotCreatedException ex)
-            {
-                return StatusCode(500, new { message = ex.Message });
-            }
-            catch (EntityNotUpdatedException ex)
-            {
-                return StatusCode(500, new { message = ex.Message });
-            }
-            catch (OperationCanceledException ex)
-            {
-                return StatusCode(500, new { message = ex.Message });
-            }
+            return StatusCode(200);
         }
     }
 }

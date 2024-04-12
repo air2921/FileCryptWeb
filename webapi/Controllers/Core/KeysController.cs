@@ -1,6 +1,7 @@
 ﻿using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 using System.Security.Cryptography;
+using webapi.Attributes;
 using webapi.Cryptography.Abstractions;
 using webapi.DB.Abstractions;
 using webapi.Exceptions;
@@ -17,6 +18,7 @@ namespace webapi.Controllers.Core
     [Route("api/core/keys")]
     [ApiController]
     [Authorize]
+    [EntityExceptionFilter]
     public class KeysController(
         IRepository<KeyModel> keyRepository,
         ICacheHandler<KeyModel> cacheHandler,
@@ -51,10 +53,6 @@ namespace webapi.Controllers.Core
                     }, 
                 });
             }
-            catch (OperationCanceledException ex)
-            {
-                return StatusCode(500, new { message = ex.Message });
-            }
             catch (FormatException ex)
             {
                 return StatusCode(500, new { message = ex.Message });
@@ -77,10 +75,6 @@ namespace webapi.Controllers.Core
 
                 return StatusCode(200, new { message = Message.UPDATED });
             }
-            catch (EntityNotUpdatedException ex)
-            {
-                return StatusCode(500, new { message = ex.Message });
-            }
             catch (CryptographicException)
             {
                 return StatusCode(500, new { message = Message.ERROR });
@@ -102,10 +96,6 @@ namespace webapi.Controllers.Core
                 await dataManagement.DeleteData(userInfo.UserId, redisKeys.InternalKey);
 
                 return StatusCode(200, new { message = Message.UPDATED });
-            }
-            catch (EntityNotUpdatedException ex)
-            {
-                return StatusCode(500, new { message = ex.Message });
             }
             catch (CryptographicException)
             {
@@ -134,14 +124,6 @@ namespace webapi.Controllers.Core
                 await dataManagement.DeleteData(userInfo.UserId, redisKeys.ReceivedKey);
 
                 return StatusCode(200, new { message = Message.UPDATED });
-            }
-            catch (OperationCanceledException ex)
-            {
-                return StatusCode(500, new { message = ex.Message });
-            }
-            catch (EntityNotUpdatedException ex)
-            {
-                return StatusCode(500, new { message = ex.Message });
             }
             catch (FormatException ex)
             {

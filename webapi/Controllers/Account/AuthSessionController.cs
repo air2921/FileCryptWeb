@@ -1,5 +1,6 @@
 ﻿using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
+using webapi.Attributes;
 using webapi.DB.Abstractions;
 using webapi.DB.Ef.Specifications;
 using webapi.DTO;
@@ -16,6 +17,7 @@ namespace webapi.Controllers.Account
 {
     [Route("api/auth")]
     [ApiController]
+    [EntityExceptionFilter]
     public class AuthSessionController(
         ISessionHelpers sessionHelper,
         [FromKeyedServices(ImplementationKey.ACCOUNT_REGISTRATION_SERVICE)] IDataManagement dataManagament,
@@ -71,10 +73,6 @@ namespace webapi.Controllers.Account
             {
                 return StatusCode(500, new { message = ex.Message });
             }
-            catch (OperationCanceledException ex)
-            {
-                return StatusCode(500, new { message = ex.Message });
-            }
         }
 
         [HttpPost("verify/2fa")]
@@ -85,25 +83,18 @@ namespace webapi.Controllers.Account
         [ProducesResponseType(typeof(object), 500)]
         public async Task<IActionResult> VerifyTwoFA([FromQuery] int code, [FromQuery] string email)
         {
-            try
-            {
-                var userContext = (UserContextObject)await dataManagament.GetData($"{USER_OBJECT}{email.ToLowerInvariant()}");
-                if (userContext is null)
-                    return StatusCode(404, new { message = Message.TASK_TIMED_OUT });
+            var userContext = (UserContextObject)await dataManagament.GetData($"{USER_OBJECT}{email.ToLowerInvariant()}");
+            if (userContext is null)
+                return StatusCode(404, new { message = Message.TASK_TIMED_OUT });
 
-                if (!passwordManager.CheckPassword(code.ToString(), userContext.Code))
-                    return StatusCode(422, new { message = Message.INCORRECT });
+            if (!passwordManager.CheckPassword(code.ToString(), userContext.Code))
+                return StatusCode(422, new { message = Message.INCORRECT });
 
-                var user = await userRepository.GetById(userContext.UserId);
-                if (user is null)
-                    return StatusCode(404, new { message = Message.NOT_FOUND });
+            var user = await userRepository.GetById(userContext.UserId);
+            if (user is null)
+                return StatusCode(404, new { message = Message.NOT_FOUND });
 
-                return await sessionHelper.CreateTokens(user, HttpContext);
-            }
-            catch (OperationCanceledException ex)
-            {
-                return StatusCode(500, new { message = ex.Message });
-            }
+            return await sessionHelper.CreateTokens(user, HttpContext);
         }
 
         [HttpPut("logout")]
@@ -114,17 +105,10 @@ namespace webapi.Controllers.Account
         [ProducesResponseType(typeof(object), 500)]
         public async Task<IActionResult> Logout()
         {
-            try
-            {
-                await sessionHelper.RevokeToken(HttpContext);
-                tokenService.DeleteTokens();
+            await sessionHelper.RevokeToken(HttpContext);
+            tokenService.DeleteTokens();
 
-                return StatusCode(200);
-            }
-            catch (EntityNotDeletedException ex)
-            {
-                return StatusCode(404, new { message = ex.Message });
-            }
+            return StatusCode(200);
         }
 
         [HttpGet("check")]

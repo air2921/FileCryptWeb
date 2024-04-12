@@ -1,6 +1,7 @@
 ﻿using AutoMapper;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
+using webapi.Attributes;
 using webapi.DB.Abstractions;
 using webapi.DTO;
 using webapi.Exceptions;
@@ -13,6 +14,7 @@ namespace webapi.Controllers.Admin
     [Route("api/admin/email/and/notification")]
     [ApiController]
     [Authorize(Roles = "HighestAdmin,Admin")]
+    [EntityExceptionFilter]
     public class SendEmailController(
         IRepository<NotificationModel> notificationRepository,
         IMapper mapper,
@@ -41,10 +43,6 @@ namespace webapi.Controllers.Admin
                 });
 
                 return StatusCode(201, new { message = Message.EMAIL_SENT });
-            }
-            catch (EntityNotCreatedException ex)
-            {
-                return StatusCode(500, new { message = ex.Message });
             }
             catch (SmtpClientException ex)
             {

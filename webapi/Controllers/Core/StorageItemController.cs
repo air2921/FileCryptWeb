@@ -1,10 +1,10 @@
 ﻿using AutoMapper;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
+using webapi.Attributes;
 using webapi.DB.Abstractions;
 using webapi.DB.Ef.Specifications.By_Relation_Specifications;
 using webapi.DTO;
-using webapi.Exceptions;
 using webapi.Helpers;
 using webapi.Helpers.Abstractions;
 using webapi.Localization;
@@ -26,114 +26,90 @@ namespace webapi.Controllers.Core
         IRedisCache redisCache) : ControllerBase
     {
         [HttpPost("{storageId}")]
+        [EntityExceptionFilter]
         [ValidateAntiForgeryToken]
         [ProducesResponseType(201)]
         [ProducesResponseType(typeof(object), 400)]
         [ProducesResponseType(typeof(object), 500)]
         public async Task<IActionResult> AddKey([FromRoute] int storageId, [FromQuery] int code, [FromBody] KeyDTO keyDTO)
         {
-            try
-            {
-                if (!validator.IsValid(keyDTO.key_value))
-                    return StatusCode(422, new { message = Message.INVALID_FORMAT });
+            if (!validator.IsValid(keyDTO.key_value))
+                return StatusCode(422, new { message = Message.INVALID_FORMAT });
 
-                if (!await IsValidStorage(storageId, userInfo.UserId, code))
-                    return StatusCode(400);
+            if (!await IsValidStorage(storageId, userInfo.UserId, code))
+                return StatusCode(400);
 
-                var keyItemModel = mapper.Map<KeyDTO, KeyStorageItemModel>(keyDTO);
-                keyItemModel.storage_id = storageId;
-                keyItemModel.created_at = DateTime.UtcNow;
+            var keyItemModel = mapper.Map<KeyDTO, KeyStorageItemModel>(keyDTO);
+            keyItemModel.storage_id = storageId;
+            keyItemModel.created_at = DateTime.UtcNow;
 
-                await storageItemRepository.Add(keyItemModel);
+            await storageItemRepository.Add(keyItemModel);
 
-                await redisCache.DeteteCacheByKeyPattern($"{ImmutableData.STORAGES_PREFIX}{userInfo.UserId}");
-                return StatusCode(201);
-            }
-            catch (EntityNotCreatedException ex)
-            {
-                return StatusCode(500, new { message = ex.Message });
-            }
-            catch (OperationCanceledException ex)
-            {
-                return StatusCode(500, new { message = ex.Message });
-            }
+            await redisCache.DeteteCacheByKeyPattern($"{ImmutableData.STORAGES_PREFIX}{userInfo.UserId}");
+            return StatusCode(201);
         }
 
         [HttpGet("{storageId}/{keyId}")]
+        [EntityExceptionFilter]
         [ProducesResponseType(typeof(object), 200)]
         [ProducesResponseType(typeof(object), 400)]
         [ProducesResponseType(typeof(object), 500)]
         public async Task<IActionResult> GetKey([FromRoute] int storageId, [FromRoute] int keyId, [FromQuery] int code)
         {
-            try
-            {
-                if (!await IsValidStorage(storageId, userInfo.UserId, code))
-                    return StatusCode(400);
+            if (!await IsValidStorage(storageId, userInfo.UserId, code))
+                return StatusCode(400);
 
-                var key = await storageItemRepository.GetById(keyId);
-                if (key is null)
-                    return StatusCode(404, new { message = Message.NOT_FOUND });
+            var key = await storageItemRepository.GetById(keyId);
+            if (key is null)
+                return StatusCode(404, new { message = Message.NOT_FOUND });
 
-                return StatusCode(200, new { key });
-            }
-            catch (OperationCanceledException ex)
-            {
-                return StatusCode(500, new { message = ex.Message });
-            }
+            return StatusCode(200, new { key });
         }
 
         [HttpGet("all")]
+        [EntityExceptionFilter]
         public async Task<IActionResult> GetAllKeys(int storageId, int code)
         {
-            try
-            {
-                if (!await IsValidStorage(storageId, userInfo.UserId, code))
-                    return StatusCode(400);
+            if (!await IsValidStorage(storageId, userInfo.UserId, code))
+                return StatusCode(400);
 
-                return StatusCode(200, new {
-                    keys = await storageItemRepository
-                    .GetAll(new StorageKeysByRelationSpec(storageId))});
-            }
-            catch (OperationCanceledException ex)
-            {
-                return StatusCode(500, new { message = ex.Message });
-            }
+            return StatusCode(200, new { keys = await storageItemRepository
+                .GetAll(new StorageKeysByRelationSpec(storageId))});
         }
 
         [HttpDelete("{storageId}/{keyId}")]
+        [EntityExceptionFilter]
         [ValidateAntiForgeryToken]
         [ProducesResponseType(204)]
         [ProducesResponseType(typeof(object), 500)]
         public async Task<IActionResult> DeleteKey([FromRoute] int storageId, [FromRoute] int keyId, [FromQuery] int code)
         {
-            try
-            {
-                if (!await IsValidStorage(storageId, userInfo.UserId, code))
-                    return StatusCode(400);
+            if (!await IsValidStorage(storageId, userInfo.UserId, code))
+                return StatusCode(400);
 
-                await storageItemRepository.DeleteByFilter(new StorageKeyByIdAndRelationSpec(keyId, storageId));
+            await storageItemRepository.DeleteByFilter(new StorageKeyByIdAndRelationSpec(keyId, storageId));
 
-                await redisCache.DeteteCacheByKeyPattern($"{ImmutableData.STORAGES_PREFIX}{userInfo.UserId}");
-                return StatusCode(204);
-            }
-            catch (OperationCanceledException ex)
-            {
-                return StatusCode(500, new { message = ex.Message });
-            }
+            await redisCache.DeteteCacheByKeyPattern($"{ImmutableData.STORAGES_PREFIX}{userInfo.UserId}");
+            return StatusCode(204);
         }
+
 
         private async Task<bool> IsValidStorage(int storageId, int userId, int code)
         {
-            var storage = await storageRepository
-                .GetByFilter(new StorageByIdAndRelationSpec(storageId, userId));
+            try
+            {
+                var storage = await storageRepository
+                    .GetByFilter(new StorageByIdAndRelationSpec(storageId, userId));
 
-            if (storage is null)
-                return false;
+                if (storage is null || !passwordManager.CheckPassword(code.ToString(), storage.access_code))
+                    return false;
 
-            if (!passwordManager.CheckPassword(code.ToString(), storage.access_code))
-                return false;
-
-            return true;
+                return true;
+            }
+            catch (OperationCanceledException)
+            {
+                throw;
+            }
         }
     }
 }

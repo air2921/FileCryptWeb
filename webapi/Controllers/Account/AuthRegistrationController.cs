@@ -1,4 +1,5 @@
 ﻿using Microsoft.AspNetCore.Mvc;
+using webapi.Attributes;
 using webapi.DB.Abstractions;
 using webapi.DB.Ef.Specifications;
 using webapi.DTO;
@@ -15,6 +16,7 @@ namespace webapi.Controllers.Account
 {
     [Route("api/auth")]
     [ApiController]
+    [EntityExceptionFilter]
     public class AuthRegistrationController(
         [FromKeyedServices(ImplementationKey.ACCOUNT_REGISTRATION_SERVICE)] ITransaction<User> transaction,
         [FromKeyedServices(ImplementationKey.ACCOUNT_REGISTRATION_SERVICE)] IDataManagement dataManagament,
@@ -69,10 +71,6 @@ namespace webapi.Controllers.Account
             {
                 return StatusCode(500, new { message = ex.Message });
             }
-            catch (OperationCanceledException ex)
-            {
-                return StatusCode(500, new { message = ex.Message });
-            }
         }
 
         [HttpPost("verify")]
@@ -82,23 +80,16 @@ namespace webapi.Controllers.Account
         [ProducesResponseType(typeof(object), 500)]
         public async Task<IActionResult> VerifyAccount([FromQuery] int code, [FromQuery] string email)
         {
-            try
-            {
-                var user = (User)await dataManagament.GetData($"{USER_OBJECT}{email.ToLowerInvariant()}");
-                if (user is null)
-                    return StatusCode(404, new { message = Message.TASK_TIMED_OUT });
+            var user = (User)await dataManagament.GetData($"{USER_OBJECT}{email.ToLowerInvariant()}");
+            if (user is null)
+                return StatusCode(404, new { message = Message.TASK_TIMED_OUT });
 
-                if (!passwordManager.CheckPassword(code.ToString(), user.Code))
-                    return StatusCode(422, new { message = Message.INCORRECT });
+            if (!passwordManager.CheckPassword(code.ToString(), user.Code))
+                return StatusCode(422, new { message = Message.INCORRECT });
 
-                await transaction.CreateTransaction(user);
+            await transaction.CreateTransaction(user);
 
-                return StatusCode(201);
-            }
-            catch (EntityNotCreatedException ex)
-            {
-                return StatusCode(500, new { message = ex.Message });
-            }
+            return StatusCode(201);
         }
     }
 }
