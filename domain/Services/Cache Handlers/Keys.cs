@@ -1,4 +1,5 @@
 ﻿using domain.Abstractions.Data;
+using domain.Exceptions;
 using domain.Localization;
 using domain.Models;
 using domain.Services.Abstractions;
@@ -37,7 +38,7 @@ namespace webapi.Services.Core.Data_Handlers
                 else
                     return keys;
             }
-            catch (OperationCanceledException)
+            catch (EntityException)
             {
                 throw;
             }

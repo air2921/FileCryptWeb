@@ -67,9 +67,9 @@ namespace domain.Services.Master_Services.Account
             {
                 return new Response { Status = 500, Message = ex.Message };
             }
-            catch (OperationCanceledException)
+            catch (EntityException ex)
             {
-                return new Response { Status = 500, Message = Message.ERROR };
+                return new Response { Status = 500, Message = ex.Message };
             }
         }
 
@@ -88,7 +88,7 @@ namespace domain.Services.Master_Services.Account
 
                 return new Response { Status = 200 };
             }
-            catch (EntityNotCreatedException ex)
+            catch (EntityException ex)
             {
                 return new Response { Status = 500, Message = ex.Message };
             }

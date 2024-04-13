@@ -18,4 +18,8 @@
     <ProjectReference Include="..\webapi\webapi.csproj" />
   </ItemGroup>
 
+  <ItemGroup>
+    <Folder Include="Services\Additional\Account\Edit\" />
+  </ItemGroup>
+
 </Project>

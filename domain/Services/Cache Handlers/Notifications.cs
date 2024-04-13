@@ -1,5 +1,6 @@
 ﻿using domain;
 using domain.Abstractions.Data;
+using domain.Exceptions;
 using domain.Localization;
 using domain.Models;
 using domain.Services.Abstractions;
@@ -41,7 +42,7 @@ namespace webapi.Services.Core.Data_Handlers
                 else
                     return null;
             }
-            catch (OperationCanceledException)
+            catch (EntityException)
             {
                 throw;
             }
@@ -74,7 +75,7 @@ namespace webapi.Services.Core.Data_Handlers
                 else
                     throw new FormatException(Message.ERROR);
             }
-            catch (OperationCanceledException)
+            catch (EntityException)
             {
                 throw;
             }

@@ -6,7 +6,7 @@ using domain.Helpers;
 using domain.Localization;
 using domain.Models;
 using domain.Services.Abstractions;
-using domain.Services.Additional;
+using domain.Services.Additional.Account;
 using domain.Specifications;
 using Microsoft.Extensions.DependencyInjection;
 using services.Abstractions;
@@ -51,9 +51,9 @@ namespace domain.Services.Master_Services.Account
             {
                 return new Response { Status = 500, Message = ex.Message };
             }
-            catch (OperationCanceledException)
+            catch (EntityException ex)
             {
-                return new Response { Status = 500, Message = Message.ERROR };
+                return new Response { Status = 500, Message = ex.Message };
             }
         }
 
@@ -85,13 +85,9 @@ namespace domain.Services.Master_Services.Account
 
                 return new Response { Status = 200 };
             }
-            catch (OperationCanceledException)
+            catch (EntityException ex)
             {
-                return new Response { Status = 400, Message = Message.ERROR };
-            }
-            catch (EntityNotDeletedException)
-            {
-                return new Response { Status = 400, Message = Message.ERROR };
+                return new Response { Status = 500, Message = ex.Message };
             }
         }
     }

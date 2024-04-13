@@ -1,11 +1,12 @@
 ﻿using domain.Abstractions.Data;
 using domain.Abstractions.Services;
 using domain.DTO;
+using domain.Exceptions;
 using domain.Helpers;
 using domain.Localization;
 using domain.Models;
 using domain.Services.Abstractions;
-using domain.Services.Additional;
+using domain.Services.Additional.Account;
 using domain.Specifications;
 using Microsoft.Extensions.DependencyInjection;
 using services.Abstractions;
@@ -20,7 +21,6 @@ namespace domain.Services.Master_Services.Account
         IRepository<UserModel> userRepository,
         IEmailSender emailSender,
         IPasswordManager passwordManager,
-        webapi.Helpers.Abstractions.ITokenService tokenService,
         IGenerate generate) : ISessionService
     {
         private readonly string USER_OBJECT = "AuthSessionController_UserObject_Email:";
@@ -40,7 +40,7 @@ namespace domain.Services.Master_Services.Account
                     return new Response { Status = 404, Message = Message.INCORRECT };
 
                 if (!user.is_2fa_enabled)
-                    return await sessionHelper.GenerateCredentials(user, tokenService.GenerateRefreshToken());
+                    return await sessionHelper.GenerateCredentials(user);
 
                 int code = generate.GenerateSixDigitCode();
                 await emailSender.SendMessage(new EmailDto
@@ -62,9 +62,9 @@ namespace domain.Services.Master_Services.Account
             {
                 return new Response { Status = 500, Message = ex.Message };
             }
-            catch (OperationCanceledException)
+            catch (EntityException ex)
             {
-                return new Response { Status = 500, Message = Message.ERROR };
+                return new Response { Status = 500, Message = ex.Message };
             }
         }
 
@@ -83,15 +83,15 @@ namespace domain.Services.Master_Services.Account
                 if (user is null)
                     return new Response { Status = 404, Message = Message.NOT_FOUND };
 
-                return await sessionHelper.GenerateCredentials(user, tokenService.GenerateRefreshToken());
+                return await sessionHelper.GenerateCredentials(user);
             }
             catch (FormatException)
             {
                 return new Response { Status = 500, Message = Message.ERROR };
             }
-            catch (OperationCanceledException)
+            catch (EntityException ex)
             {
-                return new Response { Status = 500, Message = Message.ERROR };
+                return new Response { Status = 500, Message = ex.Message };
             }
         }
 

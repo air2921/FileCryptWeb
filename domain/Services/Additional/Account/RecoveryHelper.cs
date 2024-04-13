@@ -7,14 +7,9 @@ using domain.Services.Abstractions;
 using domain.Specifications;
 using domain.Specifications.By_Relation_Specifications;
 using services.Abstractions;
-using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Text;
 using System.Text.RegularExpressions;
-using webapi.Attributes;
 
-namespace domain.Services.Additional
+namespace domain.Services.Additional.Account
 {
     public interface IRecoveryHelper
     {
@@ -56,17 +51,7 @@ namespace domain.Services.Additional
 
                 await transaction.CommitAsync();
             }
-            catch (EntityNotUpdatedException)
-            {
-                await transaction.RollbackAsync();
-                throw;
-            }
-            catch (EntityNotCreatedException)
-            {
-                await transaction.RollbackAsync();
-                throw;
-            }
-            catch (EntityNotDeletedException)
+            catch (EntityException)
             {
                 await transaction.RollbackAsync();
                 throw;
@@ -102,7 +87,7 @@ namespace domain.Services.Additional
 
                 await transaction.CommitAsync();
             }
-            catch (EntityNotCreatedException)
+            catch (EntityException)
             {
                 await transaction.RollbackAsync();
                 throw;

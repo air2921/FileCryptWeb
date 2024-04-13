@@ -11,7 +11,7 @@ using services.Abstractions;
 using services.Cryptography.Abstractions;
 using System.Text.RegularExpressions;
 
-namespace domain.Services.Additional
+namespace domain.Services.Additional.Account
 {
     public class RegistrationHelper(
         IDatabaseTransaction transaction,
@@ -45,7 +45,7 @@ namespace domain.Services.Additional
 
                 await transaction.CommitAsync();
             }
-            catch (EntityNotCreatedException)
+            catch (EntityException)
             {
                 await transaction.RollbackAsync();
                 throw;

@@ -8,20 +8,22 @@ using domain.Services.Abstractions;
 using domain.Specifications;
 using domain.Specifications.By_Relation_Specifications;
 using Newtonsoft.Json;
+using webapi.Helpers.Abstractions;
 
-namespace domain.Services.Additional
+namespace domain.Services.Additional.Account
 {
     public interface ISessionHelper
     {
         public Task<Response> RevokeToken(string token);
-        public Task<Response> GenerateCredentials(UserModel user, string token);
+        public Task<Response> GenerateCredentials(UserModel user);
     }
 
     public class SessionHelper(
         IDatabaseTransaction transaction,
         IRepository<TokenModel> tokenRepository,
         IRepository<NotificationModel> notificationRepository,
-        IRedisCache redisCache) : ISessionHelper, IDataManagement
+        IRedisCache redisCache,
+        ITokenService tokenService) : ISessionHelper, IDataManagement
     {
         private async Task LoginTransaction(UserModel user, string refreshToken)
         {
@@ -48,17 +50,7 @@ namespace domain.Services.Additional
 
                 await transaction.CommitAsync();
             }
-            catch (EntityNotCreatedException)
-            {
-                await transaction.RollbackAsync();
-                throw;
-            }
-            catch (EntityNotDeletedException)
-            {
-                await transaction.RollbackAsync();
-                throw;
-            }
-            catch (OperationCanceledException)
+            catch (EntityException)
             {
                 await transaction.RollbackAsync();
                 throw;
@@ -78,16 +70,12 @@ namespace domain.Services.Additional
 
                 await tokenRepository.DeleteMany(tokens);
             }
-            catch (OperationCanceledException)
-            {
-                throw;
-            }
-            catch (EntityNotDeletedException)
+            catch (EntityException)
             {
                 throw;
             }
         }
-        
+
         private CredentialsDTO GetCredentials(UserModel user, string token)
         {
             return new CredentialsDTO
@@ -100,25 +88,18 @@ namespace domain.Services.Additional
             };
         }
 
-        public async Task<Response> GenerateCredentials(UserModel user, string token)
+        public async Task<Response> GenerateCredentials(UserModel user)
         {
             try
             {
+                var token = tokenService.GenerateRefreshToken();
                 await LoginTransaction(user, token);
 
                 await redisCache.DeteteCacheByKeyPattern($"{ImmutableData.NOTIFICATIONS_PREFIX}{user.id}");
 
                 return new Response { Status = 200, ObjectData = GetCredentials(user, token) };
             }
-            catch (EntityNotCreatedException ex)
-            {
-                return new Response { Status = 500, Message = ex.Message };
-            }
-            catch (EntityNotDeletedException ex)
-            {
-                return new Response { Status = 500, Message = ex.Message };
-            }
-            catch (OperationCanceledException ex)
+            catch (EntityException ex)
             {
                 return new Response { Status = 500, Message = ex.Message };
             }
@@ -134,7 +115,7 @@ namespace domain.Services.Additional
 
                 return new Response { Status = 204 };
             }
-            catch (EntityNotDeletedException)
+            catch (EntityException)
             {
                 throw;
             }

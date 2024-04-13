@@ -55,12 +55,12 @@ namespace data.Ef
             }
             catch (OperationCanceledException)
             {
-                throw new OperationCanceledException(REQUEST_TIMED_OUT);
+                throw new EntityException(REQUEST_TIMED_OUT);
             }
             catch (Exception ex)
             {
                 _logger.LogCritical(ex.ToString(), nameof(_context), nameof(_dbSet));
-                throw new OperationCanceledException(ERROR);
+                throw new EntityException(ERROR);
             }
         }
 
@@ -78,12 +78,12 @@ namespace data.Ef
             }
             catch (OperationCanceledException)
             {
-                throw new OperationCanceledException(REQUEST_TIMED_OUT);
+                throw new EntityException(REQUEST_TIMED_OUT);
             }
             catch (Exception ex)
             {
                 _logger.LogCritical(ex.ToString(), nameof(_context), nameof(_dbSet));
-                throw new OperationCanceledException(ERROR);
+                throw new EntityException(ERROR);
             }
         }
 
@@ -98,12 +98,12 @@ namespace data.Ef
             }
             catch (OperationCanceledException)
             {
-                throw new OperationCanceledException(REQUEST_TIMED_OUT);
+                throw new EntityException(REQUEST_TIMED_OUT);
             }
             catch (Exception ex)
             {
                 _logger.LogCritical(ex.ToString(), nameof(_context), nameof(_dbSet));
-                throw new OperationCanceledException(ERROR);
+                throw new EntityException(ERROR);
             }
         }
 
@@ -124,12 +124,12 @@ namespace data.Ef
             }
             catch (OperationCanceledException)
             {
-                throw new EntityNotCreatedException(REQUEST_TIMED_OUT);
+                throw new EntityException(REQUEST_TIMED_OUT);
             }
             catch (Exception ex)
             {
                 _logger.LogCritical(ex.ToString(), nameof(_context), nameof(_dbSet));
-                throw new EntityNotCreatedException("Error when creating entity");
+                throw new EntityException("Error when creating entity");
             }
         }
 
@@ -145,12 +145,12 @@ namespace data.Ef
             }
             catch (OperationCanceledException)
             {
-                throw new EntityNotCreatedException(REQUEST_TIMED_OUT);
+                throw new EntityException(REQUEST_TIMED_OUT);
             }
             catch (Exception ex)
             {
                 _logger.LogCritical(ex.ToString(), nameof(_context), nameof(_dbSet));
-                throw new EntityNotCreatedException("Error when creating entity");
+                throw new EntityException("Error when creating entity");
             }
         }
 
@@ -172,12 +172,12 @@ namespace data.Ef
             }
             catch (OperationCanceledException)
             {
-                throw new EntityNotDeletedException(REQUEST_TIMED_OUT);
+                throw new EntityException(REQUEST_TIMED_OUT);
             }
             catch (Exception ex)
             {
                 _logger.LogCritical(ex.ToString(), nameof(_context), nameof(_dbSet));
-                throw new EntityNotDeletedException("Error when deleting data");
+                throw new EntityException("Error when deleting data");
             }
         }
 
@@ -204,12 +204,12 @@ namespace data.Ef
             }
             catch (OperationCanceledException)
             {
-                throw new EntityNotDeletedException(REQUEST_TIMED_OUT);
+                throw new EntityException(REQUEST_TIMED_OUT);
             }
             catch (Exception ex)
             {
                 _logger.LogCritical(ex.ToString(), nameof(_context), nameof(_dbSet));
-                throw new EntityNotDeletedException("Error when deleting data");
+                throw new EntityException("Error when deleting data");
             }
         }
 
@@ -234,12 +234,12 @@ namespace data.Ef
             }
             catch (OperationCanceledException)
             {
-                throw new EntityNotDeletedException(REQUEST_TIMED_OUT);
+                throw new EntityException(REQUEST_TIMED_OUT);
             }
             catch (Exception ex)
             {
                 _logger.LogCritical(ex.ToString(), nameof(_context), nameof(_dbSet));
-                throw new EntityNotDeletedException("Error when deleting data");
+                throw new EntityException("Error when deleting data");
             }
         }
 
@@ -258,12 +258,12 @@ namespace data.Ef
             }
             catch (OperationCanceledException)
             {
-                throw new EntityNotUpdatedException(REQUEST_TIMED_OUT);
+                throw new EntityException(REQUEST_TIMED_OUT);
             }
             catch (Exception ex)
             {
                 _logger.LogCritical(ex.ToString(), nameof(_context), nameof(_dbSet));
-                throw new EntityNotUpdatedException("Error when updating data");
+                throw new EntityException("Error when updating data");
             }
         }
     }

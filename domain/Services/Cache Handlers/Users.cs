@@ -6,6 +6,7 @@ using Microsoft.Extensions.Logging;
 using domain.Specifications;
 using domain;
 using domain.Localization;
+using domain.Exceptions;
 
 namespace webapi.Services.Core.Data_Handlers
 {
@@ -41,7 +42,7 @@ namespace webapi.Services.Core.Data_Handlers
                 user.email = userObj.IsOwner ? user.email : string.Empty;
                 return user;
             }
-            catch (OperationCanceledException)
+            catch (EntityException)
             {
                 throw;
             }
@@ -78,7 +79,7 @@ namespace webapi.Services.Core.Data_Handlers
                 else
                     throw new FormatException(Message.ERROR);
             }
-            catch (OperationCanceledException)
+            catch (EntityException)
             {
                 throw;
             }
