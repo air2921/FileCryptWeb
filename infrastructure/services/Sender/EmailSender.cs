@@ -3,8 +3,8 @@ using MailKit.Security;
 using Microsoft.Extensions.Logging;
 using MimeKit;
 using services.Abstractions;
+using services.DTO;
 using services.Exceptions;
-using services.Sender.DTO;
 using System.Net.Sockets;
 
 namespace services.Sender

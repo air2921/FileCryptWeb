@@ -1,4 +1,4 @@
-﻿using services.Sender.DTO;
+﻿using services.DTO;
 
 namespace services.Abstractions
 {

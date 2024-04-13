@@ -1,4 +1,4 @@
-﻿namespace services.Sender.DTO
+﻿namespace services.DTO
 {
     public class EmailDto
     {
