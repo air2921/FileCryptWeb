@@ -82,6 +82,7 @@
 
     public static class App
     {
+        public const string REACT_APP = "ReactDomain";
         public const string MAIN_DB = "Postgres";
         public const string REDIS_DB = "Redis";
         public const string ELASTIC_SEARCH = "Elasticsearch";

@@ -2,6 +2,8 @@
 using Microsoft.Extensions.DependencyInjection;
 using services.Abstractions;
 using services.ClamAv;
+using services.Helpers;
+using services.Helpers.Security;
 using services.Sender;
 using shared.Immutable;
 using static services.Sender.EmailSender;
@@ -23,8 +25,23 @@ namespace services
                 options.Password = _config[App.EMAIL_PASSWORD]!;
             });
 
+            services.Configure<ClamAV>(options =>
+            {
+                options.ClamServer = _config[App.CLAM_SERVER]!;
+                options.ClamPort = int.Parse(_config[App.CLAM_PORT]!);
+            });
+
+            services.Configure<FileManager>(options =>
+            {
+                options.ReactConnection = _config[App.REACT_APP]!;
+            });
+
             services.AddScoped<IVirusCheck, ClamAV>();
             services.AddScoped<IClamSetting, ClamSetting>();
+            services.AddScoped<IGenerate, Generate>();
+            services.AddScoped<IPasswordManager, PasswordManager>();
+            services.AddScoped<IFileManager, FileManager>();
+            services.AddScoped<IGetSize, FileManager>();
             services.AddTransient<IEmailSender, EmailSender>();
             services.AddTransient<ISmtpClient, SmtpClientWrapper>();
         }

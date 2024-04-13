@@ -9,9 +9,11 @@ using System.Net.Sockets;
 
 namespace services.Sender
 {
+#pragma warning disable CS8618 // Поле, не допускающее значения NULL, должно содержать значение, отличное от NULL, при выходе из конструктора. Возможно, стоит объявить поле как допускающее значения NULL.
     public class EmailSender(EmailSender.ISmtpClient smtpClient, ILogger<EmailSender> logger) : IEmailSender
+#pragma warning restore CS8618 // Поле, не допускающее значения NULL, должно содержать значение, отличное от NULL, при выходе из конструктора. Возможно, стоит объявить поле как допускающее значения NULL.
     {
-        public string Email { get; set; }
+        public string Email { private get; set; }
 
         public async Task SendMessage(EmailDto dto)
         {
@@ -46,13 +48,15 @@ namespace services.Sender
 
         public class SmtpClientWrapper : ISmtpClient
         {
-            public string Email { get; set; }
-            public string Password { get; set; }
+            public string Email { private get; set; }
+            public string Password { private get; set; }
 
             private readonly SmtpClient _smtpClient;
             private readonly ILogger<SmtpClientWrapper> _logger;
 
+#pragma warning disable CS8618 // Поле, не допускающее значения NULL, должно содержать значение, отличное от NULL, при выходе из конструктора. Возможно, стоит объявить поле как допускающее значения NULL.
             public SmtpClientWrapper(ILogger<SmtpClientWrapper> logger)
+#pragma warning restore CS8618 // Поле, не допускающее значения NULL, должно содержать значение, отличное от NULL, при выходе из конструктора. Возможно, стоит объявить поле как допускающее значения NULL.
             {
                 _smtpClient = new SmtpClient();
                 _logger = logger;
