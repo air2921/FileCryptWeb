@@ -1,4 +1,5 @@
-﻿using domain.Abstractions.Services;
+﻿using domain.Abstractions;
+using domain.Abstractions.Services;
 using domain.DTO;
 using domain.Helpers;
 using domain.Services.Abstractions;
@@ -19,12 +20,18 @@ namespace domain
             });
 
             services.AddScoped<Secret>();
+            services.AddScoped<IValidation, Validation>();
+
             services.AddScoped<IRegistrationService, RegistrationService>();
             services.AddScoped<ISessionService, SessionService>();
+            services.AddScoped<IRecoveryService, RecoveryService>();
 
             services.AddKeyedScoped<ITransaction<UserDTO>, RegistrationHelper>(ImplementationKey.ACCOUNT_REGISTRATION_SERVICE);
             services.AddKeyedScoped<IDataManagement, RegistrationHelper>(ImplementationKey.ACCOUNT_REGISTRATION_SERVICE);
             services.AddKeyedScoped<IValidator, RegistrationHelper>(ImplementationKey.ACCOUNT_REGISTRATION_SERVICE);
+
+            services.AddKeyedScoped<IDataManagement, SessionHelper>(ImplementationKey.ACCOUNT_SESSION_SERVICE);
+            services.AddKeyedScoped<IValidator, RecoveryHelper>(ImplementationKey.ACCOUNT_RECOVERY_SERVICE);
         }
     }
 }

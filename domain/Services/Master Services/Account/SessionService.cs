@@ -62,6 +62,10 @@ namespace domain.Services.Master_Services.Account
             {
                 return new Response { Status = 500, Message = ex.Message };
             }
+            catch (OperationCanceledException)
+            {
+                return new Response { Status = 500, Message = Message.ERROR };
+            }
         }
 
         public async Task<Response> Verify2Fa(int code, string email, string refresh)
@@ -82,6 +86,10 @@ namespace domain.Services.Master_Services.Account
                 return await sessionHelper.GenerateCredentials(user, tokenService.GenerateRefreshToken());
             }
             catch (FormatException)
+            {
+                return new Response { Status = 500, Message = Message.ERROR };
+            }
+            catch (OperationCanceledException)
             {
                 return new Response { Status = 500, Message = Message.ERROR };
             }

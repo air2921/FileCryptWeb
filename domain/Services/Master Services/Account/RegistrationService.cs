@@ -67,6 +67,10 @@ namespace domain.Services.Master_Services.Account
             {
                 return new Response { Status = 500, Message = ex.Message };
             }
+            catch (OperationCanceledException)
+            {
+                return new Response { Status = 500, Message = Message.ERROR };
+            }
         }
 
         public async Task<Response> VerifyAccount(int code, string email)
