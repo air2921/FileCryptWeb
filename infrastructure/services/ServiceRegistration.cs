@@ -2,6 +2,8 @@
 using Microsoft.Extensions.DependencyInjection;
 using services.Abstractions;
 using services.ClamAv;
+using services.Cryptography;
+using services.Cryptography.Abstractions;
 using services.Helpers;
 using services.Helpers.Security;
 using services.Sender;
@@ -42,6 +44,10 @@ namespace services
             services.AddScoped<IPasswordManager, PasswordManager>();
             services.AddScoped<IFileManager, FileManager>();
             services.AddScoped<IGetSize, FileManager>();
+
+            services.AddTransient<ICypher, Cypher>();
+            services.AddKeyedTransient<ICypherKey, EncryptKey>("Encrypt");
+            services.AddKeyedTransient<ICypherKey, DecryptKey>("Decrypt");
             services.AddTransient<IEmailSender, EmailSender>();
             services.AddTransient<ISmtpClient, SmtpClientWrapper>();
         }
