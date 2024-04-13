@@ -1,8 +1,6 @@
 ﻿using Microsoft.AspNetCore.Http;
-using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.Logging;
 using services.Abstractions;
-using shared.Immutable;
 
 namespace services.Helpers
 {

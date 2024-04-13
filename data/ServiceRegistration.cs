@@ -1,10 +1,9 @@
-﻿using data.Abstractions;
-using data.Ef;
+﻿using data.Ef;
 using data.Redis;
+using domain.Abstractions.Data;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
-using shared.Immutable;
 
 namespace data
 {
@@ -14,12 +13,12 @@ namespace data
         {
             services.Configure<RedisDbContext>(options =>
             {
-                options.ConnectionString = _config.GetConnectionString(App.REDIS_DB)!;
+                options.ConnectionString = _config.GetConnectionString("Redis")!;
             });
 
             services.AddDbContext<FileCryptDbContext>(options =>
             {
-                options.UseNpgsql(_config.GetConnectionString(App.MAIN_DB))
+                options.UseNpgsql(_config.GetConnectionString("Postgres"))
                 .EnableServiceProviderCaching(false)
                 .EnableDetailedErrors(true);
             });
@@ -30,8 +29,8 @@ namespace data
 
             services.AddScoped(typeof(IRepository<>), typeof(Repository<>));
             services.AddScoped<IDatabaseTransaction, DatabaseTransaction>();
-            services.AddScoped<IRedisDbContext, RedisDbContext>();
             services.AddScoped<IRedisCache, RedisCache>();
+            services.AddScoped<IRedisDbContext, RedisDbContext>();
         }
     }
 }

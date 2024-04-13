@@ -1,6 +1,6 @@
 ﻿using StackExchange.Redis;
 
-namespace data.Abstractions
+namespace data.Redis
 {
     public interface IRedisDbContext
     {

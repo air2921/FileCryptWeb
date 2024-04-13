@@ -7,7 +7,6 @@ using services.Cryptography.Abstractions;
 using services.Helpers;
 using services.Helpers.Security;
 using services.Sender;
-using shared.Immutable;
 using static services.Sender.EmailSender;
 
 namespace services
@@ -18,24 +17,24 @@ namespace services
         {
             services.Configure<EmailSender>(options =>
             {
-                options.Email = _config[App.EMAIL]!;
+                options.Email = _config["Email"]!;
             });
 
             services.Configure<SmtpClientWrapper>(options =>
             {
-                options.Email = _config[App.EMAIL]!;
-                options.Password = _config[App.EMAIL_PASSWORD]!;
+                options.Email = _config["Email"]!;
+                options.Password = _config["EmailPassword"]!;
             });
 
             services.Configure<ClamAV>(options =>
             {
-                options.ClamServer = _config[App.CLAM_SERVER]!;
-                options.ClamPort = int.Parse(_config[App.CLAM_PORT]!);
+                options.ClamServer = _config["ClamServer"]!;
+                options.ClamPort = int.Parse(_config["ClamPort"]!);
             });
 
             services.Configure<FileManager>(options =>
             {
-                options.ReactConnection = _config[App.REACT_APP]!;
+                options.ReactConnection = _config["ReactDomain"]!;
             });
 
             services.AddScoped<IVirusCheck, ClamAV>();

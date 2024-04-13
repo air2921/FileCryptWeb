@@ -1,4 +1,4 @@
-﻿namespace data.Exceptions
+﻿namespace domain.Exceptions
 {
     public class EntityNotUpdatedException : Exception
     {

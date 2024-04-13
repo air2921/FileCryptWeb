@@ -1,4 +1,4 @@
-﻿using data.Abstractions;
+﻿using domain.Abstractions.Data;
 using Newtonsoft.Json;
 using StackExchange.Redis;
 

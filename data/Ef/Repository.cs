@@ -1,10 +1,9 @@
 ﻿using Ardalis.Specification;
 using Ardalis.Specification.EntityFrameworkCore;
-using data.Abstractions;
-using data.Exceptions;
+using domain.Abstractions.Data;
+using domain.Exceptions;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Logging;
-using shared.Localization;
 
 namespace data.Ef
 {
@@ -13,6 +12,7 @@ namespace data.Ef
         #region Const
 
         private const string REQUEST_TIMED_OUT = "Request timed out";
+        private const string ERROR = "Unexpected error";
         private const int GET_ALL_AWAITING = 20;
         private const int GET_BY_FILTER_AWAITING = 20;
         private const int GET_BY_ID_AWAITING = 20;
@@ -60,7 +60,7 @@ namespace data.Ef
             catch (Exception ex)
             {
                 _logger.LogCritical(ex.ToString(), nameof(_context), nameof(_dbSet));
-                throw new OperationCanceledException(Message.ERROR);
+                throw new OperationCanceledException(ERROR);
             }
         }
 
@@ -83,7 +83,7 @@ namespace data.Ef
             catch (Exception ex)
             {
                 _logger.LogCritical(ex.ToString(), nameof(_context), nameof(_dbSet));
-                throw new OperationCanceledException(Message.ERROR);
+                throw new OperationCanceledException(ERROR);
             }
         }
 
@@ -103,7 +103,7 @@ namespace data.Ef
             catch (Exception ex)
             {
                 _logger.LogCritical(ex.ToString(), nameof(_context), nameof(_dbSet));
-                throw new OperationCanceledException(Message.ERROR);
+                throw new OperationCanceledException(ERROR);
             }
         }
 

@@ -1,5 +1,5 @@
 ﻿using Microsoft.EntityFrameworkCore.Storage;
-using data.Abstractions;
+using domain.Abstractions.Data;
 
 namespace data.Ef
 {

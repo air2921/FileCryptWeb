@@ -1,4 +1,4 @@
-﻿namespace data.Abstractions
+﻿namespace domain.Abstractions.Data
 {
     public interface IRedisCache
     {

@@ -1,6 +1,6 @@
 ﻿using Ardalis.Specification;
 
-namespace data.Abstractions
+namespace domain.Abstractions.Data
 {
     public interface IRepository<T> where T : class
     {

@@ -1,5 +1,4 @@
-﻿using data.Abstractions;
-using StackExchange.Redis;
+﻿using StackExchange.Redis;
 
 namespace data.Redis
 {
