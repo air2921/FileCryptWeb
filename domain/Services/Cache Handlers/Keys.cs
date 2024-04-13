@@ -7,7 +7,7 @@ using domain.Specifications.By_Relation_Specifications;
 using Microsoft.Extensions.Logging;
 using Newtonsoft.Json;
 
-namespace webapi.Services.Core.Data_Handlers
+namespace domain.Services
 {
     public class Keys(
         IRepository<KeyModel> keyRepository,

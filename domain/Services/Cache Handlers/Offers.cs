@@ -9,7 +9,7 @@ using domain.Specifications.Sorting_Specifications;
 using Microsoft.Extensions.Logging;
 using Newtonsoft.Json;
 
-namespace webapi.Services.Core.Data_Handlers
+namespace domain.Services
 {
     public class Offers(
         IRepository<OfferModel> offerRepository,

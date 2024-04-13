@@ -4,11 +4,10 @@ using domain.Models;
 using domain.Services.Abstractions;
 using Microsoft.Extensions.Logging;
 using domain.Specifications;
-using domain;
 using domain.Localization;
 using domain.Exceptions;
 
-namespace webapi.Services.Core.Data_Handlers
+namespace domain.Services
 {
     public class Users(
         IRepository<UserModel> userRepository,
