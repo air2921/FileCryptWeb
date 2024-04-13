@@ -30,6 +30,7 @@ namespace domain
             services.AddScoped<IRecoveryService, RecoveryService>();
             services.AddScoped<IUsernameService, UsernameService>();
             services.AddScoped<IPasswordService, PasswordService>();
+            services.AddScoped<I2FaService, _2FaService>();
 
             services.AddScoped<ICacheHandler<FileModel>, Files>();
             services.AddScoped<ICacheHandler<KeyModel>, Keys>();
