@@ -24,11 +24,11 @@ namespace webapi.Middlewares
             if (!string.IsNullOrWhiteSpace(refresh))
             {
                 if (env.IsDevelopment())
-                    logger.LogWarning(tokenService.HashingToken(refresh));
+                    logger.LogWarning(refresh);
 
                 var userAndToken =
                     await (from token in dbContext.Tokens
-                    where token.refresh_token.Equals(tokenService.HashingToken(refresh))
+                    where token.refresh_token.Equals(refresh)
                     join user in dbContext.Users on token.user_id equals user.id
                     select new { token, user })
                     .FirstOrDefaultAsync();

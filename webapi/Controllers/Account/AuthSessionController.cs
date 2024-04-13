@@ -20,7 +20,7 @@ namespace webapi.Controllers.Account
     [EntityExceptionFilter]
     public class AuthSessionController(
         ISessionHelpers sessionHelper,
-        [FromKeyedServices(ImplementationKey.ACCOUNT_REGISTRATION_SERVICE)] IDataManagement dataManagament,
+        [FromKeyedServices(ImplementationKey.ACCOUNT_SESSION_SERVICE)] IDataManagement dataManagament,
         IRepository<UserModel> userRepository,
         IEmailSender emailSender,
         IPasswordManager passwordManager,

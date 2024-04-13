@@ -1,4 +1,6 @@
-﻿using domain.Abstractions.Data;
+﻿using domain;
+using domain.Abstractions.Data;
+using domain.Localization;
 using domain.Models;
 using domain.Services.Abstractions;
 using domain.Specifications.By_Relation_Specifications;
