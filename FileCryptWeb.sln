@@ -17,8 +17,6 @@ Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "data", "data\data.csproj", 
 EndProject
 Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "services", "services\services.csproj", "{8EE0EAA0-FCB7-4AAF-8385-8007DBBBE8A9}"
 EndProject
-Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "shared", "shared\shared.csproj", "{256F0DD2-92CA-4D3A-AE84-3450E76C9105}"
-EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
 		Debug|Any CPU = Debug|Any CPU
@@ -55,10 +53,6 @@ Global
 		{8EE0EAA0-FCB7-4AAF-8385-8007DBBBE8A9}.Debug|Any CPU.Build.0 = Debug|Any CPU
 		{8EE0EAA0-FCB7-4AAF-8385-8007DBBBE8A9}.Release|Any CPU.ActiveCfg = Release|Any CPU
 		{8EE0EAA0-FCB7-4AAF-8385-8007DBBBE8A9}.Release|Any CPU.Build.0 = Release|Any CPU
-		{256F0DD2-92CA-4D3A-AE84-3450E76C9105}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
-		{256F0DD2-92CA-4D3A-AE84-3450E76C9105}.Debug|Any CPU.Build.0 = Debug|Any CPU
-		{256F0DD2-92CA-4D3A-AE84-3450E76C9105}.Release|Any CPU.ActiveCfg = Release|Any CPU
-		{256F0DD2-92CA-4D3A-AE84-3450E76C9105}.Release|Any CPU.Build.0 = Release|Any CPU
 	EndGlobalSection
 	GlobalSection(SolutionProperties) = preSolution
 		HideSolutionNode = FALSE

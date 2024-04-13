@@ -5,7 +5,6 @@ using domain.Specifications.By_Relation_Specifications;
 using domain.Specifications.Sorting_Specifications;
 using Microsoft.Extensions.Logging;
 using Newtonsoft.Json;
-using shared.Localization;
 
 namespace webapi.Services.Core.Data_Handlers
 {
