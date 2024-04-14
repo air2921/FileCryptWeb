@@ -1,6 +1,6 @@
 ﻿using StackExchange.Redis;
 
-namespace data.Redis
+namespace data_access.Redis
 {
     public class RedisDbContext : IRedisDbContext
     {

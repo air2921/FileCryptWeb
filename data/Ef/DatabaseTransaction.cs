@@ -1,7 +1,7 @@
 ﻿using Microsoft.EntityFrameworkCore.Storage;
 using domain.Abstractions.Data;
 
-namespace data.Ef
+namespace data_access.Ef
 {
     public class DatabaseTransaction(FileCryptDbContext dbContext) : IDatabaseTransaction
     {

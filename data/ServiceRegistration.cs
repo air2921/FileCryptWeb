@@ -1,11 +1,11 @@
-﻿using data.Ef;
-using data.Redis;
+﻿using data_access.Ef;
+using data_access.Redis;
 using domain.Abstractions.Data;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
 
-namespace data
+namespace data_access
 {
     public static class ServiceRegistration
     {

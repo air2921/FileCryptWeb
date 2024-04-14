@@ -2,7 +2,7 @@
 using Newtonsoft.Json;
 using StackExchange.Redis;
 
-namespace data.Redis
+namespace data_access.Redis
 {
     public class RedisCache(IRedisDbContext context) : IRedisCache
     {

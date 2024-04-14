@@ -1,7 +1,7 @@
 ﻿using domain.Models;
 using Microsoft.EntityFrameworkCore;
 
-namespace data.Ef
+namespace data_access.Ef
 {
     public class FileCryptDbContext : DbContext
     {

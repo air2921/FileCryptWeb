@@ -5,7 +5,7 @@ using domain.Exceptions;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Logging;
 
-namespace data.Ef
+namespace data_access.Ef
 {
     public class Repository<T> : IRepository<T> where T : class
     {
