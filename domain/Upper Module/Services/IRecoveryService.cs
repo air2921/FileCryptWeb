@@ -1,7 +1,7 @@
 ﻿using domain.DTO;
 using domain.Services;
 
-namespace domain.Abstractions.Services
+namespace domain.Upper_Module.Services
 {
     public interface IRecoveryService
     {

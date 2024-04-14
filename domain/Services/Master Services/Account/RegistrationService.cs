@@ -1,5 +1,4 @@
 ﻿using domain.Abstractions.Data;
-using domain.Abstractions.Services;
 using domain.DTO;
 using domain.Exceptions;
 using domain.Helpers;
@@ -7,6 +6,7 @@ using domain.Localization;
 using domain.Models;
 using domain.Services.Abstractions;
 using domain.Specifications;
+using domain.Upper_Module.Services;
 using Microsoft.Extensions.DependencyInjection;
 using services.Abstractions;
 using services.DTO;
