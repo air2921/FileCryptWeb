@@ -1,4 +1,4 @@
-﻿namespace services.Cryptography.Abstractions
+﻿namespace domain.Abstractions.Services
 {
     public interface ICypherKey
     {

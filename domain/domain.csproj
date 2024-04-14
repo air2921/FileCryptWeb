@@ -14,12 +14,7 @@
   </ItemGroup>
 
   <ItemGroup>
-    <ProjectReference Include="..\services\services.csproj" />
     <ProjectReference Include="..\webapi\webapi.csproj" />
-  </ItemGroup>
-
-  <ItemGroup>
-    <Folder Include="Abstractions\Services\" />
   </ItemGroup>
 
 </Project>

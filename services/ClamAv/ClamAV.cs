@@ -1,6 +1,6 @@
-﻿using Microsoft.Extensions.Logging;
+﻿using domain.Abstractions.Services;
+using Microsoft.Extensions.Logging;
 using nClam;
-using services.Abstractions;
 
 namespace services.ClamAv
 {

@@ -1,4 +1,4 @@
-﻿using services.Abstractions;
+﻿using domain.Abstractions.Services;
 using System.Security.Cryptography;
 
 namespace services.Helpers.Security

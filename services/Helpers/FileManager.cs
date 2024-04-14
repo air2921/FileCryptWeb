@@ -1,6 +1,6 @@
-﻿using Microsoft.AspNetCore.Http;
+﻿using domain.Abstractions.Services;
+using Microsoft.AspNetCore.Http;
 using Microsoft.Extensions.Logging;
-using services.Abstractions;
 
 namespace services.Helpers
 {

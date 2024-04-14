@@ -1,9 +1,8 @@
-﻿using Microsoft.Extensions.Configuration;
+﻿using domain.Abstractions.Services;
+using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
-using services.Abstractions;
 using services.ClamAv;
 using services.Cryptography;
-using services.Cryptography.Abstractions;
 using services.Helpers;
 using services.Helpers.Security;
 using services.Sender;

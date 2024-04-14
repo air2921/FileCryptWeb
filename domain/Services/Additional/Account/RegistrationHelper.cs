@@ -1,4 +1,5 @@
 ﻿using domain.Abstractions.Data;
+using domain.Abstractions.Services;
 using domain.DTO;
 using domain.Exceptions;
 using domain.Helpers;
@@ -7,8 +8,6 @@ using domain.Models;
 using domain.Services.Abstractions;
 using Microsoft.Extensions.DependencyInjection;
 using Newtonsoft.Json;
-using services.Abstractions;
-using services.Cryptography.Abstractions;
 using System.Text.RegularExpressions;
 
 namespace domain.Services.Additional.Account

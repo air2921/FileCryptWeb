@@ -1,4 +1,5 @@
-﻿using services.Cryptography.Abstractions;
+﻿using domain.Abstractions.Services;
+using services.Cryptography.Abstractions;
 using System.Security.Cryptography;
 
 namespace services.Cryptography

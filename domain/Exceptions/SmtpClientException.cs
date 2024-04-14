@@ -1,4 +1,4 @@
-﻿namespace services.Exceptions
+﻿namespace domain.Exceptions
 {
     public class SmtpClientException : Exception
     {

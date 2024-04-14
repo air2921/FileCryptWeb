@@ -1,10 +1,10 @@
-﻿using MailKit.Net.Smtp;
+﻿using domain.Abstractions.Services;
+using domain.DTO;
+using domain.Exceptions;
+using MailKit.Net.Smtp;
 using MailKit.Security;
 using Microsoft.Extensions.Logging;
 using MimeKit;
-using services.Abstractions;
-using services.DTO;
-using services.Exceptions;
 using System.Net.Sockets;
 
 namespace services.Sender

@@ -1,4 +1,6 @@
 ﻿using domain.Abstractions.Data;
+using domain.Abstractions.Services;
+using domain.DTO;
 using domain.Exceptions;
 using domain.Helpers;
 using domain.Localization;
@@ -6,9 +8,6 @@ using domain.Models;
 using domain.Services.Abstractions;
 using domain.Upper_Module.Services;
 using Microsoft.Extensions.DependencyInjection;
-using services.Abstractions;
-using services.DTO;
-using services.Exceptions;
 
 namespace domain.Services.Master_Services.Account.Edit
 {

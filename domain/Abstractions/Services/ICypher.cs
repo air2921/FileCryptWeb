@@ -1,6 +1,8 @@
-﻿using services.DTO;
+﻿
 
-namespace services.Cryptography.Abstractions
+using domain.DTO;
+
+namespace domain.Abstractions.Services
 {
     public interface ICypher
     {

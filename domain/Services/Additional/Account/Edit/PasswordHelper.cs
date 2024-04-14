@@ -1,10 +1,10 @@
 ﻿using domain.Abstractions.Data;
+using domain.Abstractions.Services;
 using domain.Exceptions;
 using domain.Helpers;
 using domain.Localization;
 using domain.Models;
 using domain.Services.Abstractions;
-using services.Abstractions;
 
 namespace domain.Services.Additional.Account.Edit
 {

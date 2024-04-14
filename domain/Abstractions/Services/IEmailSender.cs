@@ -1,6 +1,6 @@
-﻿using services.DTO;
+﻿using domain.DTO;
 
-namespace services.Abstractions
+namespace domain.Abstractions.Services
 {
     public interface IEmailSender
     {

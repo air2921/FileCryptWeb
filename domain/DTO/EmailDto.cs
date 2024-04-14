@@ -1,4 +1,4 @@
-﻿namespace services.DTO
+﻿namespace domain.DTO
 {
     public class EmailDto
     {

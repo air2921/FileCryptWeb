@@ -1,5 +1,5 @@
-﻿using Microsoft.Extensions.Logging;
-using services.Abstractions;
+﻿using domain.Abstractions.Services;
+using Microsoft.Extensions.Logging;
 using BC = BCrypt.Net;
 
 namespace services.Helpers.Security

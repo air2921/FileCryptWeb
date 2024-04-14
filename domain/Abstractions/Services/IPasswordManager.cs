@@ -1,4 +1,4 @@
-﻿namespace services.Abstractions
+﻿namespace domain.Abstractions.Services
 {
     public interface IPasswordManager
     {
