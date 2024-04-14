@@ -13,7 +13,7 @@ Project("{E53339B2-1760-4266-BCC7-CA923CBCF16C}") = "docker-compose", "docker-co
 EndProject
 Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "domain", "domain\domain.csproj", "{31D3299C-553A-4D8D-86BF-E3DAFC240CDD}"
 EndProject
-Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "data", "data\data.csproj", "{93639501-1F21-4679-8938-6B5B990DF045}"
+Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "data access", "data\data access.csproj", "{93639501-1F21-4679-8938-6B5B990DF045}"
 EndProject
 Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "services", "services\services.csproj", "{8EE0EAA0-FCB7-4AAF-8385-8007DBBBE8A9}"
 EndProject
