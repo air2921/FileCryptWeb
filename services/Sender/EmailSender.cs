@@ -1,5 +1,5 @@
-﻿using domain.Abstractions.Services;
-using domain.DTO;
+﻿using application.Abstractions.Services.TP_Services;
+using application.DTO;
 using domain.Exceptions;
 using MailKit.Net.Smtp;
 using MailKit.Security;

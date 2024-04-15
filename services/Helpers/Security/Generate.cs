@@ -1,5 +1,5 @@
-﻿using domain.Abstractions.Services;
-using System.Security.Cryptography;
+﻿using System.Security.Cryptography;
+using application.Abstractions.Services.TP_Services;
 
 namespace services.Helpers.Security
 {

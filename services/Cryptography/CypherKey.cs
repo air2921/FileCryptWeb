@@ -1,6 +1,6 @@
-﻿using domain.Abstractions.Services;
-using services.Cryptography.Abstractions;
+﻿using services.Cryptography.Abstractions;
 using System.Security.Cryptography;
+using application.Abstractions.Services.TP_Services;
 
 namespace services.Cryptography
 {

@@ -1,4 +1,4 @@
-﻿using domain.Abstractions.Services;
+﻿using application.Abstractions.Services.TP_Services;
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
 using services.ClamAv;

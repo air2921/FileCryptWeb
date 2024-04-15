@@ -1,9 +1,9 @@
-﻿using domain.Abstractions.Services;
-using domain.DTO;
-using Microsoft.Extensions.Logging;
+﻿using Microsoft.Extensions.Logging;
 using services.Cryptography.Abstractions;
 using System.Security.Cryptography;
 using System.Text;
+using application.DTO;
+using application.Abstractions.Services.TP_Services;
 
 namespace services.Cryptography
 {
