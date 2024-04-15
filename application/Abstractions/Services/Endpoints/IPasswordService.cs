@@ -1,6 +1,5 @@
 ﻿using application.DTO;
 using application.Services;
-using domain.DTO;
 
 namespace application.Abstractions.Services.Endpoints
 {
