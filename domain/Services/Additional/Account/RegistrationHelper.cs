@@ -68,8 +68,7 @@ namespace domain.Services.Additional.Account
 
         public async Task SetData(string key, object data)
         {
-            var user = data as UserDTO;
-            if (user is null)
+            if (data is not UserDTO user)
                 throw new ArgumentException(Message.ERROR);
 
             user.Password = passwordManager.HashingPassword(user.Password);

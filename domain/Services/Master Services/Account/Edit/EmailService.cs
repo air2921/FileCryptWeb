@@ -100,9 +100,7 @@ namespace domain.Services.Master_Services.Account.Edit
         {
             try
             {
-                string? email = await dataManagament.GetData($"{EMAIL}{id}") as string;
-
-                if (email is null || !validator.IsValid(await dataManagament.GetData(NEW_EMAIL_CODE), code))
+                if (await dataManagament.GetData($"{EMAIL}{id}") is not string email || !validator.IsValid(await dataManagament.GetData(NEW_EMAIL_CODE), code))
                     return new Response { Status = 400, Message = Message.INCORRECT };
 
                 var user = await userRepository.GetById(id);

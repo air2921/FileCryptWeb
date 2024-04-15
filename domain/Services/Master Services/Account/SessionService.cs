@@ -70,8 +70,7 @@ namespace domain.Services.Master_Services.Account
         {
             try
             {
-                var userContext = (UserContextDTO)await dataManagament.GetData($"{USER_OBJECT}{email.ToLowerInvariant()}");
-                if (userContext is null)
+                if (await dataManagament.GetData($"{USER_OBJECT}{email.ToLowerInvariant()}") is not UserContextDTO userContext)
                     return new Response { Status = 404, Message = Message.TASK_TIMED_OUT };
 
                 if (!passwordManager.CheckPassword(code.ToString(), userContext.Code))

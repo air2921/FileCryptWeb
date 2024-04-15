@@ -20,9 +20,8 @@ namespace domain.Services.Additional.Account.Edit
         {
             try
             {
-                if (parameter is not bool || parameter is null)
+                if(parameter is null || !bool.TryParse(parameter.ToString(), out bool enable))
                     throw new EntityException(Message.ERROR);
-                bool enable = (bool)parameter;
 
                 if (user.is_2fa_enabled == enable)
                     throw new EntityException(Message.CONFLICT);
@@ -71,6 +70,6 @@ namespace domain.Services.Additional.Account.Edit
 
         public async Task SetData(string key, object data) => await redisCache.CacheData(key, data, TimeSpan.FromMinutes(10));
 
-        public bool IsValid(object data, object? parameter = null) => data is int v && validation.IsSixDigit(v) && parameter.Equals(data);
+        public bool IsValid(object data, object? parameter = null) => data is int v && validation.IsSixDigit(v) && parameter is not null && parameter.Equals(data);
     }
 }

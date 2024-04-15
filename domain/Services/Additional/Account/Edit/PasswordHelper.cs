@@ -19,8 +19,7 @@ namespace domain.Services.Additional.Account.Edit
         {
             try
             {
-                string? password = (string?)parameter;
-                if (password is null)
+                if (parameter is not string password)
                     throw new EntityException(Message.ERROR);
 
                 user.password = passwordManager.HashingPassword(password);

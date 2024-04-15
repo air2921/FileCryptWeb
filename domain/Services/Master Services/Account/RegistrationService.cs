@@ -75,8 +75,7 @@ namespace domain.Services.Master_Services.Account
         {
             try
             {
-                var user = (UserDTO)await dataManagament.GetData($"{USER_OBJECT}{email.ToLowerInvariant()}");
-                if (user is null)
+                if (await dataManagament.GetData($"{USER_OBJECT}{email.ToLowerInvariant()}") is not UserDTO user)
                     return new Response { Status = 404, Message = Message.TASK_TIMED_OUT };
 
                 if (!passwordManager.CheckPassword(code.ToString(), user.Code))
