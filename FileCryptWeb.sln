@@ -17,8 +17,6 @@ Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "data access", "data\data ac
 EndProject
 Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "services", "services\services.csproj", "{8EE0EAA0-FCB7-4AAF-8385-8007DBBBE8A9}"
 EndProject
-Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "application", "..\application\application.csproj", "{A1EB2C56-C3AF-48C5-887F-981E2C2C01CD}"
-EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
 		Debug|Any CPU = Debug|Any CPU
@@ -55,10 +53,6 @@ Global
 		{8EE0EAA0-FCB7-4AAF-8385-8007DBBBE8A9}.Debug|Any CPU.Build.0 = Debug|Any CPU
 		{8EE0EAA0-FCB7-4AAF-8385-8007DBBBE8A9}.Release|Any CPU.ActiveCfg = Release|Any CPU
 		{8EE0EAA0-FCB7-4AAF-8385-8007DBBBE8A9}.Release|Any CPU.Build.0 = Release|Any CPU
-		{A1EB2C56-C3AF-48C5-887F-981E2C2C01CD}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
-		{A1EB2C56-C3AF-48C5-887F-981E2C2C01CD}.Debug|Any CPU.Build.0 = Debug|Any CPU
-		{A1EB2C56-C3AF-48C5-887F-981E2C2C01CD}.Release|Any CPU.ActiveCfg = Release|Any CPU
-		{A1EB2C56-C3AF-48C5-887F-981E2C2C01CD}.Release|Any CPU.Build.0 = Release|Any CPU
 	EndGlobalSection
 	GlobalSection(SolutionProperties) = preSolution
 		HideSolutionNode = FALSE
