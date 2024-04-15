@@ -3,8 +3,8 @@ using application.Helpers;
 using application.Helpers.Localization;
 using domain.Abstractions.Data;
 using domain.Exceptions;
+using domain.Models;
 using System.Text.RegularExpressions;
-using webapi.Models;
 
 namespace application.Services.Master_Services.Account.Edit
 {
