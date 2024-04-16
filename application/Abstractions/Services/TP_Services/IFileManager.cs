@@ -3,6 +3,6 @@
     public interface IFileManager
     {
         public string GetReactAppUrl();
-        public IEnumerable<string> AddMimeCollection(HashSet<string> existingMimes);
+        public HashSet<string> AddMimeCollection(HashSet<string> existingMimes);
     }
 }

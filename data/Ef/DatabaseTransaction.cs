@@ -7,15 +7,9 @@ namespace data_access.Ef
     {
         private readonly IDbContextTransaction _transaction = dbContext.Database.BeginTransaction();
 
-        public async Task CommitAsync()
-        {
-            await _transaction.CommitAsync();
-        }
+        public async Task CommitAsync() => await _transaction.CommitAsync();
 
-        public async Task RollbackAsync()
-        {
-            await _transaction.RollbackAsync();
-        }
+        public async Task RollbackAsync() => await _transaction.RollbackAsync();
 
         public async ValueTask DisposeAsync()
         {

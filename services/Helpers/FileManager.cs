@@ -37,7 +37,7 @@ namespace services.Helpers
             }
         }
 
-        public IEnumerable<string> AddMimeCollection(HashSet<string> existingMimes)
+        public HashSet<string> AddMimeCollection(HashSet<string> existingMimes)
         {
             var mimeArray = new string[]
             {
