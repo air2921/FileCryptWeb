@@ -4,14 +4,14 @@ using application.Abstractions.Services.TP_Services;
 
 namespace services.Helpers.Security
 {
-    public class PasswordManager(ILogger<PasswordManager> logger) : IPasswordManager
+    public class HashUtility(ILogger<HashUtility> logger) : IHashUtility
     {
-        public string HashingPassword(string password)
+        public string Hash(string password)
         {
             return BC.BCrypt.EnhancedHashPassword(password, BC.HashType.SHA512);
         }
 
-        public bool CheckPassword(string input, string src)
+        public bool Verify(string input, string src)
         {
             try
             {

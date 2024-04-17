@@ -10,7 +10,7 @@ namespace application.Services.Additional.Account.Edit
 {
     public class PasswordHelper(
         IDatabaseTransaction transaction,
-        IPasswordManager passwordManager,
+        IHashUtility hashUtility,
         IRepository<UserModel> userRepository,
         IRepository<NotificationModel> notificationRepository,
         IRedisCache redisCache) : ITransaction<UserModel>, IDataManagement
@@ -22,7 +22,7 @@ namespace application.Services.Additional.Account.Edit
                 if (parameter is not string password)
                     throw new EntityException(Message.ERROR);
 
-                user.password = passwordManager.HashingPassword(password);
+                user.password = hashUtility.Hash(password);
                 await userRepository.Update(user);
 
                 await notificationRepository.Add(new NotificationModel

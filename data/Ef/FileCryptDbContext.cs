@@ -14,12 +14,7 @@ namespace data_access.Ef
         private const bool TWO_FA_ENABLED = false;
         private const bool IS_BLOCKED = false;
 
-        private const int KEYS_ID = 265000;
-        private const string PRIVATE_KEY = "Qfz+jKaBDu3ToOWlabZ5tPxZhCJDcWNhlruuVw2yUgg+bkBpaurIX1F34QYMJpFlY7tOrUSn63pmo4E56eEnSA==";
-        private const string INTERNAL_KEY = "/oalkI8PEHT8/moTD40CM2mjinp7VYc4jTfLcl1PELFUBZPS08Q3byx43IQmg7q2/e5aTEExdc0cZopkaULC+Q==";
-
         public virtual DbSet<UserModel> Users { get; set; }
-        public virtual DbSet<KeyModel> Keys { get; set; }
         public virtual DbSet<FileModel> Files { get; set; }
         public virtual DbSet<NotificationModel> Notifications { get; set; }
         public virtual DbSet<OfferModel> Offers { get; set; }
@@ -39,16 +34,6 @@ namespace data_access.Ef
 
         protected override void OnModelCreating(ModelBuilder modelBuilder)
         {
-            #region Has one with one
-
-            modelBuilder.Entity<UserModel>()
-                .HasOne(u => u.Keys)
-                .WithOne(k => k.User)
-                .HasForeignKey<KeyModel>(k => k.user_id)
-                .OnDelete(DeleteBehavior.Cascade);
-
-            #endregion
-
             #region Has one with many
 
             modelBuilder.Entity<TokenModel>()
@@ -133,14 +118,6 @@ namespace data_access.Ef
                     role = ROLE,
                     is_2fa_enabled = TWO_FA_ENABLED,
                     is_blocked = IS_BLOCKED
-                });
-
-                context.Keys.Add(new KeyModel
-                {
-                    user_id = USER_ID,
-                    key_id = KEYS_ID,
-                    private_key = PRIVATE_KEY,
-                    internal_key = INTERNAL_KEY
                 });
 
                 context.SaveChanges();

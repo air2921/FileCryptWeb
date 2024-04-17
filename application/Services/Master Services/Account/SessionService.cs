@@ -18,7 +18,7 @@ namespace application.Services.Master_Services.Account
         [FromKeyedServices(ImplementationKey.ACCOUNT_SESSION_SERVICE)] IDataManagement dataManagament,
         IRepository<UserModel> userRepository,
         IEmailSender emailSender,
-        IPasswordManager passwordManager,
+        IHashUtility hashUtility,
         IGenerate generate) : ISessionService
     {
         private readonly string USER_OBJECT = "AuthSessionController_UserObject_Email:";
@@ -34,7 +34,7 @@ namespace application.Services.Master_Services.Account
                 if (user.is_blocked)
                     return new Response { Status = 404, Message = Message.BLOCKED };
 
-                if (!passwordManager.CheckPassword(dto.Password, user.password))
+                if (!hashUtility.Verify(dto.Password, user.password))
                     return new Response { Status = 404, Message = Message.INCORRECT };
 
                 if (!user.is_2fa_enabled)
@@ -51,7 +51,7 @@ namespace application.Services.Master_Services.Account
                 await dataManagament.SetData($"{USER_OBJECT}{user.email}", new UserContextDTO
                 {
                     UserId = user.id,
-                    Code = passwordManager.HashingPassword(code.ToString())
+                    Code = hashUtility.Hash(code.ToString())
                 });
 
                 return new Response { Status = 200, Message = Message.EMAIL_SENT, ObjectData = new { confirm = true } };
@@ -73,7 +73,7 @@ namespace application.Services.Master_Services.Account
                 if (await dataManagament.GetData($"{USER_OBJECT}{email.ToLowerInvariant()}") is not UserContextDTO userContext)
                     return new Response { Status = 404, Message = Message.TASK_TIMED_OUT };
 
-                if (!passwordManager.CheckPassword(code.ToString(), userContext.Code))
+                if (!hashUtility.Verify(code.ToString(), userContext.Code))
                     return new Response { Status = 403, Message = Message.INCORRECT };
 
                 var user = await userRepository.GetById(userContext.UserId);

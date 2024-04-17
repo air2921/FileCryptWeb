@@ -15,7 +15,7 @@ namespace application.Services.Additional.Account
         IDatabaseTransaction transaction,
         IRepository<UserModel> userRepository,
         IRedisCache redisCache,
-        IPasswordManager passwordManager) : ITransaction<UserDTO>, IDataManagement, IValidator
+        IHashUtility hashUtility) : ITransaction<UserDTO>, IDataManagement, IValidator
     {
         public async Task CreateTransaction(UserDTO user, object? parameter = null)
         {
@@ -60,8 +60,8 @@ namespace application.Services.Additional.Account
             if (data is not UserDTO user)
                 throw new ArgumentException(Message.ERROR);
 
-            user.Password = passwordManager.HashingPassword(user.Password);
-            user.Code = passwordManager.HashingPassword(user.Code);
+            user.Password = hashUtility.Hash(user.Password);
+            user.Code = hashUtility.Hash(user.Code);
 
             await redisCache.CacheData(key, user, TimeSpan.FromMinutes(10));
         }

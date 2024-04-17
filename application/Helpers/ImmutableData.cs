@@ -55,10 +55,7 @@
         public const string OFFERS_PREFIX = "Offers_";
         public const string USER_DATA_PREFIX = "User_Data_";
         public const string STORAGES_PREFIX = "Storages_";
-
-        public const string PRIVATE_KEY = "privateKey#";
-        public const string INTERNAL_KEY = "internalKey#";
-        public const string RECEIVED_KEY = "receivedKey#";
+        public const string STORAGE_ITEMS_PREFIX = "StorageItems_";
 
         #endregion
     }

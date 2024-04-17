@@ -17,7 +17,7 @@ namespace application.Services.Master_Services.Account.Edit
         [FromKeyedServices(ImplementationKey.ACCOUNT_2FA_SERVICE)] IValidator validator,
         IEmailSender emailSender,
         IRepository<UserModel> userRepository,
-        IPasswordManager passwordManager,
+        IHashUtility hashUtility,
         IGenerate generate) : I2FaService
     {
         private readonly string CODE = $"_2FaController_VerificationCode#";
@@ -30,7 +30,7 @@ namespace application.Services.Master_Services.Account.Edit
                 if (user is null)
                     return new Response { Status = 404, Message = Message.NOT_FOUND };
 
-                if (!passwordManager.CheckPassword(password, user.password))
+                if (!hashUtility.Verify(password, user.password))
                     return new Response { Status = 401, Message = Message.INCORRECT };
 
                 int code = generate.GenerateSixDigitCode();

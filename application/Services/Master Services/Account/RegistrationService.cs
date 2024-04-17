@@ -18,7 +18,7 @@ namespace application.Services.Master_Services.Account
         [FromKeyedServices(ImplementationKey.ACCOUNT_REGISTRATION_SERVICE)] IValidator validator,
         IRepository<UserModel> userRepository,
         IEmailSender emailSender,
-        IPasswordManager passwordManager,
+        IHashUtility hashUtility,
         IGenerate generate) : IRegistrationService
     {
         private readonly string USER_OBJECT = "AuthRegistrationController_UserObject_Email:";
@@ -78,7 +78,7 @@ namespace application.Services.Master_Services.Account
                 if (await dataManagament.GetData($"{USER_OBJECT}{email.ToLowerInvariant()}") is not UserDTO user)
                     return new Response { Status = 404, Message = Message.TASK_TIMED_OUT };
 
-                if (!passwordManager.CheckPassword(code.ToString(), user.Code))
+                if (!hashUtility.Verify(code.ToString(), user.Code))
                     return new Response { Status = 422, Message = Message.INCORRECT };
 
                 await transaction.CreateTransaction(user);

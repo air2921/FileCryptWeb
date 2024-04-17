@@ -18,7 +18,7 @@ namespace application.Services.Master_Services.Account.Edit
         [FromKeyedServices(ImplementationKey.ACCOUNT_EMAIL_SERVICE)] IValidator validator,
         IRepository<UserModel> userRepository,
         IEmailSender emailSender,
-        IPasswordManager passwordManager,
+        IHashUtility hashUtility,
         IGenerate generate) : IEmailService
     {
         private readonly string EMAIL = $"EmailController_Email#";
@@ -33,7 +33,7 @@ namespace application.Services.Master_Services.Account.Edit
                 if (user is null)
                     return new Response { Status = 404, Message = Message.NOT_FOUND };
 
-                if (!passwordManager.CheckPassword(password, user.password))
+                if (!hashUtility.Verify(password, user.password))
                     return new Response { Status = 401, Message = Message.INCORRECT };
 
                 int code = generate.GenerateSixDigitCode();

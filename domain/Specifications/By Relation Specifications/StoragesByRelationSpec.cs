@@ -10,9 +10,7 @@ namespace domain.Specifications.By_Relation_Specifications
             UserId = userId;
             Query.Where(x => x.user_id.Equals(userId));
         }
-        public int UserId
-        {
-            get; private set;
-        }
+
+        public int UserId { get; private set; }
     }
 }

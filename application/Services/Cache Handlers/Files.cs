@@ -62,7 +62,7 @@ namespace application.Services.Cache_Handlers
                 if (cache is null)
                 {
                     files = (List<FileModel>)await fileRepository
-                        .GetAll(new FilesSortSpec(fileObj.UserId, fileObj.Skip, fileObj.Count, fileObj.ByDesc, fileObj.Type, fileObj.Mime, fileObj.Category));
+                        .GetAll(new FilesSortSpec(fileObj.UserId, fileObj.Skip, fileObj.Count, fileObj.ByDesc, fileObj.Mime, fileObj.Category));
 
                     await redisCache.CacheData(fileObj.CacheKey, files, TimeSpan.FromMinutes(5));
                     return files;
@@ -87,5 +87,5 @@ namespace application.Services.Cache_Handlers
     }
 
     public record class FileObject(string CacheKey, int UserId, int FileId);
-    public record class FileRangeObject(string CacheKey, int UserId, int Skip, int Count, bool ByDesc, string? Type, string? Category, string? Mime);
+    public record class FileRangeObject(string CacheKey, int UserId, int Skip, int Count, bool ByDesc, string? Category, string? Mime);
 }

@@ -5,13 +5,12 @@ namespace domain.Specifications.Sorting_Specifications
 {
     public class FilesSortSpec : Specification<FileModel>
     {
-        public FilesSortSpec(int? userId, int skip, int count, bool byDesc, string? type, string? mime, string? category)
+        public FilesSortSpec(int? userId, int skip, int count, bool byDesc, string? mime, string? category)
         {
             UserId = userId;
             SkipCount = skip;
             Count = count;
             ByDesc = byDesc;
-            Type = type;
             Mime = mime;
             Category = category;
 
@@ -22,9 +21,6 @@ namespace domain.Specifications.Sorting_Specifications
 
             if (userId.HasValue)
                 Query.Where(f => f.user_id.Equals(userId));
-
-            if (!string.IsNullOrWhiteSpace(type))
-                Query.Where(f => f.type.Equals(type));
 
             if (!string.IsNullOrWhiteSpace(category))
                 Query.Where(f => f.file_mime_category.Equals(category));

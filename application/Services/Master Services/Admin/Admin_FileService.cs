@@ -37,7 +37,7 @@ namespace application.Services.Master_Services.Admin
                     ObjectData = new
                     {
                         files = await repository
-                            .GetAll(new FilesSortSpec(userId, skip, count, byDesc, null, null, category))
+                            .GetAll(new FilesSortSpec(userId, skip, count, byDesc, null, category))
                     }
                 };
             }

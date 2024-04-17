@@ -16,7 +16,7 @@ namespace application.Services.Master_Services.Account.Edit
         [FromKeyedServices(ImplementationKey.ACCOUNT_PASSWORD_SERVICE)] ITransaction<UserModel> transaction,
         [FromKeyedServices(ImplementationKey.ACCOUNT_PASSWORD_SERVICE)] IDataManagement dataManagament,
         IRepository<UserModel> userRepository,
-        IPasswordManager passwordManager) : IPasswordService
+        IHashUtility hashUtility) : IPasswordService
     {
         public async Task<Response> UpdatePassword(PasswordDTO dto, int id)
         {
@@ -29,7 +29,7 @@ namespace application.Services.Master_Services.Account.Edit
                 if (user is null)
                     return new Response { Status = 404, Message = Message.NOT_FOUND };
 
-                if (!passwordManager.CheckPassword(dto.OldPassword, user.password))
+                if (!hashUtility.Verify(dto.OldPassword, user.password))
                     return new Response { Status = 401, Message = Message.INCORRECT };
 
                 await transaction.CreateTransaction(user, dto.NewPassword);

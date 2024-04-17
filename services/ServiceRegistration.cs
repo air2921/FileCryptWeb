@@ -39,7 +39,7 @@ namespace services
             services.AddScoped<IVirusCheck, ClamAV>();
             services.AddScoped<IClamSetting, ClamSetting>();
             services.AddScoped<IGenerate, Generate>();
-            services.AddScoped<IPasswordManager, PasswordManager>();
+            services.AddScoped<IHashUtility, HashUtility>();
             services.AddScoped<IFileManager, FileManager>();
             services.AddScoped<IGetSize, FileManager>();
 

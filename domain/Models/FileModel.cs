@@ -16,8 +16,6 @@ namespace domain.Models
 
         public string file_mime_category { get; set; }
 
-        public string type { get; set; }
-
         public DateTime operation_date { get; set; }
 
         [ForeignKey("user_id")]

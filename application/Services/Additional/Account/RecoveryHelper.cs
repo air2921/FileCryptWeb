@@ -23,7 +23,7 @@ namespace application.Services.Additional.Account
         IRepository<NotificationModel> notificationRepository,
         IRepository<LinkModel> linkRepository,
         IRepository<TokenModel> tokenRepository,
-        IPasswordManager passwordManager) : IRecoveryHelper, IValidator
+        IHashUtility hashUtility) : IRecoveryHelper, IValidator
     {
         public bool IsValid(object data, object? parameter = null) => Regex.IsMatch((string)data, Validation.Password);
 
@@ -31,7 +31,7 @@ namespace application.Services.Additional.Account
         {
             try
             {
-                user.password = passwordManager.HashingPassword(password);
+                user.password = hashUtility.Hash(password);
                 await userRepository.Update(user);
 
                 await notificationRepository.Add(new NotificationModel
