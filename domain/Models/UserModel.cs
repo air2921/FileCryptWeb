@@ -24,9 +24,6 @@ namespace domain.Models
         public bool is_blocked { get; set; }
 
         [JsonIgnore]
-        public KeyModel? Keys { get; set; }
-
-        [JsonIgnore]
         public virtual ICollection<KeyStorageModel>? KeyStorages { get; set; }
 
         [JsonIgnore]

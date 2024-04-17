@@ -6,7 +6,6 @@ using application.Services.Abstractions;
 using domain.Abstractions.Data;
 using domain.Exceptions;
 using domain.Models;
-using Microsoft.Extensions.DependencyInjection;
 using Newtonsoft.Json;
 using System.Text.RegularExpressions;
 
@@ -15,12 +14,8 @@ namespace application.Services.Additional.Account
     public class RegistrationHelper(
         IDatabaseTransaction transaction,
         IRepository<UserModel> userRepository,
-        IRepository<KeyModel> keyRepository,
         IRedisCache redisCache,
-        IGenerate generate,
-        IPasswordManager passwordManager,
-        [FromKeyedServices("Encrypt")] ICypherKey encrypt,
-        Secret secret) : ITransaction<UserDTO>, IDataManagement, IValidator
+        IPasswordManager passwordManager) : ITransaction<UserDTO>, IDataManagement, IValidator
     {
         public async Task CreateTransaction(UserDTO user, object? parameter = null)
         {
@@ -35,12 +30,6 @@ namespace application.Services.Additional.Account
                     is_2fa_enabled = user.Flag2Fa,
                     is_blocked = false
                 }, e => e.id);
-
-                await keyRepository.Add(new KeyModel
-                {
-                    user_id = id,
-                    private_key = await encrypt.CypherKeyAsync(generate.GenerateKey(), secret.Key)
-                });
 
                 await transaction.CommitAsync();
             }

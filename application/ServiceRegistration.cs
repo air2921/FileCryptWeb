@@ -5,6 +5,7 @@ using application.Helpers;
 using application.Services.Abstractions;
 using application.Services.Additional.Account;
 using application.Services.Additional.Account.Edit;
+using application.Services.Additional.Admin;
 using application.Services.Cache_Handlers;
 using application.Services.Master_Services.Account;
 using application.Services.Master_Services.Account.Edit;
@@ -28,10 +29,11 @@ namespace application
 
             services.AddUpperModuleServices();
             services.AddCacheServices();
-            services.AddKeyedServices();
+            services.AddAccountKeyedServices();
+            services.AddAdminKeyedServices();
         }
 
-        private static void AddKeyedServices(this IServiceCollection services)
+        private static void AddAccountKeyedServices(this IServiceCollection services)
         {
             services.AddKeyedScoped<ITransaction<UserModel>, _2FaHelper>(ImplementationKey.ACCOUNT_2FA_SERVICE);
             services.AddKeyedScoped<IDataManagement, _2FaHelper>(ImplementationKey.ACCOUNT_2FA_SERVICE);
@@ -52,10 +54,18 @@ namespace application
             services.AddKeyedScoped<IValidator, RecoveryHelper>(ImplementationKey.ACCOUNT_RECOVERY_SERVICE);
         }
 
+        private static void AddAdminKeyedServices(this IServiceCollection services)
+        {
+            services.AddKeyedScoped<ITransaction<TokenModel>, TokenService>(ImplementationKey.ADMIN_TOKEN_SERVICE);
+            services.AddKeyedScoped<IValidator, TokenService>(ImplementationKey.ADMIN_TOKEN_SERVICE);
+
+            services.AddKeyedScoped<ITransaction<UserModel>, UserService>(ImplementationKey.ADMIN_USER_SERVICE);
+            services.AddKeyedScoped<IValidator, UserService>(ImplementationKey.ADMIN_USER_SERVICE);
+        }
+
         private static void AddCacheServices(this IServiceCollection services)
         {
             services.AddScoped<ICacheHandler<FileModel>, Files>();
-            services.AddScoped<ICacheHandler<KeyModel>, Keys>();
             services.AddScoped<ICacheHandler<NotificationModel>, Notifications>();
             services.AddScoped<ICacheHandler<OfferModel>, Offers>();
             services.AddScoped<ICacheHandler<UserModel>, Users>();

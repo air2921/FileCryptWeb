@@ -7,17 +7,17 @@ using domain.Specifications.Sorting_Specifications;
 
 namespace application.Services.Master_Services.Admin
 {
-    public class Admin_NotificationService(IRepository<NotificationModel> repository, IRedisCache redisCache)
+    public class Admin_OfferService(IRepository<OfferModel> repository, IRedisCache redisCache)
     {
-        public async Task<Response> GetOne(int notificationId)
+        public async Task<Response> GetOne(int offerId)
         {
             try
             {
-                var notification = await repository.GetById(notificationId);
-                if (notification is null)
+                var offer = await repository.GetById(offerId);
+                if (offer is null)
                     return new Response { Status = 404, Message = Message.NOT_FOUND };
 
-                return new Response { Status = 200, ObjectData = new { notification } };
+                return new Response { Status = 200, ObjectData = new { offer } };
             }
             catch (EntityException ex)
             {
@@ -25,7 +25,8 @@ namespace application.Services.Master_Services.Admin
             }
         }
 
-        public async Task<Response> GetRange(int? userId, int skip, int count, bool byDesc)
+        public async Task<Response> GetRange(int? userId, int skip, int count, bool byDesc,
+            bool? sended, bool? isAccepted, string? type)
         {
             try
             {
@@ -34,8 +35,8 @@ namespace application.Services.Master_Services.Admin
                     Status = 200,
                     ObjectData = new
                     {
-                        notifications = await repository
-                            .GetAll(new NotificationsSortSpec(userId, skip, count, byDesc, null, null))
+                        offers = await repository
+                            .GetAll(new OffersSortSpec(userId, skip, count, byDesc, sended, isAccepted, type))
                     }
                 };
             }
@@ -45,15 +46,16 @@ namespace application.Services.Master_Services.Admin
             }
         }
 
-        public async Task<Response> DeleteOne(int notificationId)
+        public async Task<Response> DeleteOne(int offerId)
         {
             try
             {
-                var notification = await repository.Delete(notificationId);
-                if (notification is null)
+                var offer = await repository.Delete(offerId);
+                if (offer is null)
                     return new Response { Status = 404, Message = Message.NOT_FOUND };
 
-                await redisCache.DeteteCacheByKeyPattern($"{ImmutableData.NOTIFICATIONS_PREFIX}{notification.user_id}");
+                await redisCache.DeteteCacheByKeyPattern($"{ImmutableData.OFFERS_PREFIX}{offer.sender_id}");
+                await redisCache.DeteteCacheByKeyPattern($"{ImmutableData.OFFERS_PREFIX}{offer.receiver_id}");
 
                 return new Response { Status = 204 };
             }
@@ -67,8 +69,10 @@ namespace application.Services.Master_Services.Admin
         {
             try
             {
-                var notificationList = await repository.DeleteMany(identifiers);
-                await redisCache.DeleteRedisCache(notificationList, ImmutableData.NOTIFICATIONS_PREFIX, item => item.user_id);
+                var offers = await repository.DeleteMany(identifiers);
+                await redisCache.DeleteRedisCache(offers, ImmutableData.OFFERS_PREFIX, item => item.sender_id);
+                await redisCache.DeleteRedisCache(offers, ImmutableData.OFFERS_PREFIX, item => item.receiver_id);
+
                 return new Response { Status = 204 };
             }
             catch (EntityException ex)

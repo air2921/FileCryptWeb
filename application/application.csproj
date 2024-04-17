@@ -16,4 +16,8 @@
     <ProjectReference Include="..\domain\domain.csproj" />
   </ItemGroup>
 
+  <ItemGroup>
+    <Folder Include="Services\Master Services\Core\" />
+  </ItemGroup>
+
 </Project>
