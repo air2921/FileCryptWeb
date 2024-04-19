@@ -11,12 +11,13 @@ namespace services.Cryptography
     {
         private readonly IAes _aes = aes;
 
-        private async Task EncryptionAsync(Stream src, Stream target, byte[] key, CancellationToken cancellationToken, string? username = null, int? id = null)
+        private async Task EncryptionAsync(Stream src, Stream target, byte[] key,
+            CancellationToken cancellationToken/*, string? signature*/)
         {
             try
             {
-                if (username is not null && id is not null)
-                    await target.WriteAsync(Encoding.UTF8.GetBytes($"{username}#{id}"), cancellationToken);
+                //if (signature is not null)
+                //    await target.WriteAsync(Encoding.UTF8.GetBytes(signature), cancellationToken);
 
                 using var aes = _aes.GetAesInstance();
 
@@ -34,20 +35,20 @@ namespace services.Cryptography
             }
         }
 
-        private async Task DecryptionAsync(Stream source, Stream target, byte[] key, CancellationToken cancellationToken, string? username = null, int? id = null)
+        private async Task DecryptionAsync(Stream source, Stream target, byte[] key,
+            CancellationToken cancellationToken/*, string? signature*/)
         {
             try
             {
-                if (username is not null && id is not null)
-                {
-                    byte[] expectedSignatureBytes = Encoding.UTF8.GetBytes($"{username}#{id}");
-                    byte[] readSignatureBytes = new byte[expectedSignatureBytes.Length];
-                    await source.ReadAsync(readSignatureBytes, cancellationToken);
+                //if (signature is not null)
+                //{
+                //    byte[] expectedSignatureBytes = Encoding.UTF8.GetBytes(signature);
+                //    byte[] readSignatureBytes = new byte[expectedSignatureBytes.Length];
+                //    await source.ReadAsync(readSignatureBytes, cancellationToken);
 
-                    if (!readSignatureBytes.SequenceEqual(expectedSignatureBytes))
-                        throw new CryptographicException("Signature verification failed.");
-                }
-
+                //    if (!readSignatureBytes.SequenceEqual(expectedSignatureBytes))
+                //        throw new CryptographicException("Signature verification failed.");
+                //}
 
                 using var aes = _aes.GetAesInstance();
 
@@ -77,10 +78,10 @@ namespace services.Cryptography
                     switch (cryptoData.Operation)
                     {
                         case "encrypt":
-                            await EncryptionAsync(source, target, cryptoData.Key, cryptoData.CancellationToken, cryptoData.Username, cryptoData.UserId);
+                            await EncryptionAsync(source, target, cryptoData.Key, cryptoData.CancellationToken);
                             break;
                         case "decrypt":
-                            await DecryptionAsync(source, target, cryptoData.Key, cryptoData.CancellationToken, cryptoData.Username, cryptoData.UserId);
+                            await DecryptionAsync(source, target, cryptoData.Key, cryptoData.CancellationToken);
                             break;
                         default:
                             return new CryptographyResult { Success = false };

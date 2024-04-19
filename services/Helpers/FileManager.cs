@@ -1,5 +1,4 @@
-﻿using Microsoft.AspNetCore.Http;
-using Microsoft.Extensions.Logging;
+﻿using Microsoft.Extensions.Logging;
 using application.Abstractions.Services.TP_Services;
 
 namespace services.Helpers
@@ -21,10 +20,12 @@ namespace services.Helpers
             {
                 switch (file)
                 {
-                    case IFormFile formFile:
-                        return (double)formFile.Length / (1024 * 1024);
+                    case Stream streamFile:
+                        return (double)streamFile.Length / (1024 * 1024);
+                    case long length:
+                        return (double)length / (1024 * 1024);
                     case string filePath:
-                        FileInfo fileInfo = new FileInfo(filePath);
+                        FileInfo fileInfo = new(filePath);
                         return (double)fileInfo.Length / (1024 * 1024);
                     default:
                         throw new ArgumentException("Unsupported file type");

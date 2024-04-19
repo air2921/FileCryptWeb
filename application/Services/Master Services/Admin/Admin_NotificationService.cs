@@ -17,7 +17,7 @@ namespace application.Services.Master_Services.Admin
                 if (notification is null)
                     return new Response { Status = 404, Message = Message.NOT_FOUND };
 
-                return new Response { Status = 200, ObjectData = new { notification } };
+                return new Response { Status = 200, ObjectData = notification };
             }
             catch (EntityException ex)
             {
@@ -32,11 +32,8 @@ namespace application.Services.Master_Services.Admin
                 return new Response
                 {
                     Status = 200,
-                    ObjectData = new
-                    {
-                        notifications = await repository
+                    ObjectData = await repository
                             .GetAll(new NotificationsSortSpec(userId, skip, count, byDesc, null, null))
-                    }
                 };
             }
             catch (EntityException ex)

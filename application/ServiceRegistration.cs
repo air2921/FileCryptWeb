@@ -6,6 +6,7 @@ using application.Services.Abstractions;
 using application.Services.Additional.Account;
 using application.Services.Additional.Account.Edit;
 using application.Services.Additional.Admin;
+using application.Services.Additional.Core;
 using application.Services.Cache_Handlers;
 using application.Services.Master_Services.Account;
 using application.Services.Master_Services.Account.Edit;
@@ -19,13 +20,9 @@ namespace application
     {
         public static void AddDomain(this IServiceCollection services, IConfiguration _config)
         {
-            services.Configure<Secret>(options =>
-            {
-                options.Key = Convert.FromBase64String(_config[App.ENCRYPTION_KEY]!);
-            });
-
-            services.AddScoped<Secret>();
             services.AddScoped<IValidation, Validation>();
+            services.AddScoped<ICryptographyHelper, CryptographyHelper>();
+            services.AddScoped<IFileHelper, FileHelper>();
 
             services.AddUpperModuleServices();
             services.AddCacheServices();

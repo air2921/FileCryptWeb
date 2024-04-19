@@ -21,7 +21,7 @@ namespace application.Services.Master_Services.Admin
                 if (mime is null)
                     return new Response { Status = 404, Message = Message.NOT_FOUND };
                 else
-                    return new Response { Status = 200, ObjectData = new { mime } };
+                    return new Response { Status = 200, ObjectData = mime };
             }
             catch (EntityException ex)
             {
@@ -36,10 +36,7 @@ namespace application.Services.Master_Services.Admin
                 return new Response
                 {
                     Status = 200,
-                    ObjectData = new
-                    {
-                        mimes = await repository.GetAll(new MimesSortSpec(skip, count))
-                    }
+                    ObjectData = await repository.GetAll(new MimesSortSpec(skip, count))
                 };
             }
             catch (EntityException ex)

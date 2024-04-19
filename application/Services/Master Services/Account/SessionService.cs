@@ -54,7 +54,7 @@ namespace application.Services.Master_Services.Account
                     Code = hashUtility.Hash(code.ToString())
                 });
 
-                return new Response { Status = 200, Message = Message.EMAIL_SENT, ObjectData = new { confirm = true } };
+                return new Response { Status = 200, Message = Message.EMAIL_SENT, ObjectData = true };
             }
             catch (SmtpClientException ex)
             {

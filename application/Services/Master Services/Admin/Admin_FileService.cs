@@ -19,7 +19,7 @@ namespace application.Services.Master_Services.Admin
                 if (file is null)
                     return new Response { Status = 404, Message = Message.NOT_FOUND };
                 else
-                    return new Response { Status = 200, ObjectData = new { file } };
+                    return new Response { Status = 200, ObjectData = file };
             }
             catch (EntityException ex)
             {
@@ -34,11 +34,8 @@ namespace application.Services.Master_Services.Admin
                 return new Response
                 {
                     Status = 200,
-                    ObjectData = new
-                    {
-                        files = await repository
+                    ObjectData = await repository
                             .GetAll(new FilesSortSpec(userId, skip, count, byDesc, null, category))
-                    }
                 };
             }
             catch (EntityException ex)

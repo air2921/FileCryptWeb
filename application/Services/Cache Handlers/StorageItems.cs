@@ -32,6 +32,9 @@ namespace application.Services.Cache_Handlers
                 var cache = await redisCache.GetCachedData(itemObj.CacheKey);
                 if (cache is null)
                 {
+                    if (!await IsAllowAccess(itemObj.UserId, itemObj.StorageId, itemObj.AccessCode))
+                        throw new EntityException(Message.INCORRECT);
+
                     item = await repository.GetByFilter(
                         new StorageKeyByIdAndRelationSpec(itemObj.StorageItemId, itemObj.StorageId));
 
@@ -72,6 +75,9 @@ namespace application.Services.Cache_Handlers
                 var cache = await redisCache.GetCachedData(itemObj.CacheKey);
                 if (cache is null)
                 {
+                    if (!await IsAllowAccess(itemObj.UserId, itemObj.StorageId, itemObj.AccessCode))
+                        throw new EntityException(Message.INCORRECT);
+
                     items = (List<KeyStorageItemModel>)await repository.GetAll(
                         new StorageItemsSortSpec(itemObj.StorageId, itemObj.Skip, itemObj.Count, itemObj.ByDesc));
 

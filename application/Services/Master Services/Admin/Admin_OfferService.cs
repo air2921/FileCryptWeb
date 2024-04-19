@@ -17,7 +17,7 @@ namespace application.Services.Master_Services.Admin
                 if (offer is null)
                     return new Response { Status = 404, Message = Message.NOT_FOUND };
 
-                return new Response { Status = 200, ObjectData = new { offer } };
+                return new Response { Status = 200, ObjectData = offer };
             }
             catch (EntityException ex)
             {
@@ -33,11 +33,8 @@ namespace application.Services.Master_Services.Admin
                 return new Response
                 {
                     Status = 200,
-                    ObjectData = new
-                    {
-                        offers = await repository
+                    ObjectData = await repository
                             .GetAll(new OffersSortSpec(userId, skip, count, byDesc, sended, isAccepted, type))
-                    }
                 };
             }
             catch (EntityException ex)
