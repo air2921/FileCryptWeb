@@ -2,6 +2,7 @@
 {
     public class CredentialsDTO
     {
+        public string Jwt { get; set; }
         public string Refresh { get; set; }
         public bool IsAuth { get; set; }
         public string Username { get; set; }

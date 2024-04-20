@@ -20,9 +20,13 @@ namespace application
     {
         public static void AddDomain(this IServiceCollection services, IConfiguration _config)
         {
+            services.Configure<TokenComparator>(options =>
+            {
+                options.Key = _config[App.SECRET_KEY]!;
+            });
+
             services.AddScoped<IValidation, Validation>();
-            services.AddScoped<ICryptographyHelper, CryptographyHelper>();
-            services.AddScoped<IFileHelper, FileHelper>();
+            services.AddScoped<ITokenComparator, TokenComparator>();
 
             services.AddUpperModuleServices();
             services.AddCacheServices();

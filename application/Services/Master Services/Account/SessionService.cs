@@ -1,4 +1,5 @@
 ﻿using application.Abstractions.Services.Endpoints;
+using application.Abstractions.Services.Inner;
 using application.Abstractions.Services.TP_Services;
 using application.DTO.Inner;
 using application.DTO.Outer;
@@ -17,14 +18,16 @@ namespace application.Services.Master_Services.Account
     public class SessionService(
         ISessionHelper sessionHelper,
         [FromKeyedServices(ImplementationKey.ACCOUNT_SESSION_SERVICE)] IDataManagement dataManagament,
+        IRepository<TokenModel> tokenRepository,
         IRepository<UserModel> userRepository,
         IEmailSender emailSender,
         IHashUtility hashUtility,
-        IGenerate generate) : ISessionService
+        IGenerate generate,
+        ITokenComparator tokenComparator) : ISessionService
     {
         private readonly string USER_OBJECT = "AuthSessionController_UserObject_Email:";
 
-        public async Task<Response> Login(LoginDTO dto, string refresh)
+        public async Task<Response> Login(LoginDTO dto)
         {
             try
             {
@@ -39,7 +42,7 @@ namespace application.Services.Master_Services.Account
                     return new Response { Status = 404, Message = Message.INCORRECT };
 
                 if (!user.is_2fa_enabled)
-                    return await sessionHelper.GenerateCredentials(user, refresh);
+                    return await sessionHelper.GenerateCredentials(user, tokenComparator.CreateRefresh());
 
                 int code = generate.GenerateSixDigitCode();
                 await emailSender.SendMessage(new EmailDto
@@ -67,7 +70,7 @@ namespace application.Services.Master_Services.Account
             }
         }
 
-        public async Task<Response> Verify2Fa(int code, string email, string refresh)
+        public async Task<Response> Verify2Fa(int code, string email)
         {
             try
             {
@@ -81,7 +84,7 @@ namespace application.Services.Master_Services.Account
                 if (user is null)
                     return new Response { Status = 404, Message = Message.NOT_FOUND };
 
-                return await sessionHelper.GenerateCredentials(user, refresh);
+                return await sessionHelper.GenerateCredentials(user, tokenComparator.CreateRefresh());
             }
             catch (FormatException)
             {
@@ -93,6 +96,47 @@ namespace application.Services.Master_Services.Account
             }
         }
 
-        public Task<Response> Logout(string refresh) => sessionHelper.RevokeToken(refresh);
+        public async Task<Response> Logout(string refresh)
+        {
+            try
+            {
+                return await sessionHelper.RevokeToken(refresh);
+            }
+            catch (EntityException ex)
+            {
+                return new Response { Status = 500, Message = ex.Message };
+            }
+        }
+
+        public async Task<Response> UpdateJwt(string refresh)
+        {
+            try
+            {
+                var token = await tokenRepository.GetByFilter(new RefreshTokenByTokenSpec(refresh));
+                if (token is null)
+                    return new Response { Status = 401, Message = Message.UNAUTHORIZED };
+
+                var user = await userRepository.GetById(token.user_id);
+                if (user is null)
+                    return new Response { Status = 401, Message = Message.UNAUTHORIZED };
+
+                return new Response
+                {
+                    Status = 201,
+                    ObjectData = tokenComparator.CreateJWT(new JwtDTO
+                    {
+                        UserId = user.id,
+                        Email = user.email,
+                        Role = user.role,
+                        Username = user.username,
+                        Expires = ImmutableData.JwtExpiry
+                    })
+                };
+            }
+            catch (EntityException ex)
+            {
+                return new Response { Status = 500, Message = ex.Message };
+            }
+        }
     }
 }

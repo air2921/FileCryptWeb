@@ -1,4 +1,5 @@
-﻿using application.DTO.Inner;
+﻿using application.Abstractions.Services.Inner;
+using application.DTO.Inner;
 using application.Helpers;
 using application.Helpers.Localization;
 using application.Services.Abstractions;
@@ -21,7 +22,8 @@ namespace application.Services.Additional.Account
         IDatabaseTransaction transaction,
         IRepository<TokenModel> tokenRepository,
         IRepository<NotificationModel> notificationRepository,
-        IRedisCache redisCache) : ISessionHelper, IDataManagement
+        IRedisCache redisCache,
+        ITokenComparator tokenComparator) : ISessionHelper, IDataManagement
     {
         private async Task LoginTransaction(UserModel user, string refreshToken)
         {
@@ -76,8 +78,18 @@ namespace application.Services.Additional.Account
 
         private CredentialsDTO GetCredentials(UserModel user, string token)
         {
+            var jwt = tokenComparator.CreateJWT(new JwtDTO
+            {
+                UserId = user.id,
+                Email = user.email,
+                Username = user.username,
+                Role = user.role,
+                Expires = ImmutableData.JwtExpiry
+            });
+
             return new CredentialsDTO
             {
+                Jwt = jwt,
                 Refresh = token,
                 IsAuth = true,
                 Role = user.role,
@@ -91,7 +103,6 @@ namespace application.Services.Additional.Account
             try
             {
                 await LoginTransaction(user, refresh);
-
                 await redisCache.DeteteCacheByKeyPattern($"{ImmutableData.NOTIFICATIONS_PREFIX}{user.id}");
 
                 return new Response { Status = 200, ObjectData = GetCredentials(user, refresh) };

@@ -3,6 +3,7 @@
     public static class Message
     {
         public const string NOT_FOUND = "Not found";
+        public const string UNAUTHORIZED = "Unauthorized";
         public const string FORBIDDEN = "Forbidden";
         public const string CONFLICT = "Conflict";
         public const string ERROR = "Unexpected error";
