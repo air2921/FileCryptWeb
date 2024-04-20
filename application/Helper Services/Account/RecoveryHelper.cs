@@ -24,7 +24,7 @@ namespace application.Helper_Services.Account
         IRepository<TokenModel> tokenRepository,
         IHashUtility hashUtility) : IRecoveryHelper, IValidator
     {
-        public bool IsValid(object data, object? parameter = null) => Regex.IsMatch((string)data, Validation.Password);
+        public bool IsValid(object data, object? parameter = null) => Regex.IsMatch((string)data, RegularEx.Password);
 
         public async Task RecoveryTransaction(UserModel user, string token, string password)
         {

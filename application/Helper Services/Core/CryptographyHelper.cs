@@ -12,17 +12,31 @@ namespace application.Helper_Services.Core
 {
     public class CryptographyHelper(
         ICypher cypherFile,
-        ICacheHandler<KeyStorageItemModel> cacheHandler,
-        IValidation validation) : ICryptographyHelper
+        ICacheHandler<KeyStorageItemModel> cacheHandler) : ICryptographyHelper
     {
         private const int TASK_AWAITING = 10000;
 
         private byte[] ConvertKey(string key)
         {
-            if (!Regex.IsMatch(key, Validation.EncryptionKey) || !validation.IsBase64String(key))
+            if (!Regex.IsMatch(key, RegularEx.EncryptionKey) || !IsBase64String(key))
                 throw new FormatException(Message.INVALID_FORMAT);
 
             return Convert.FromBase64String(key);
+        }
+
+        private bool IsBase64String(string? key)
+        {
+            if (string.IsNullOrEmpty(key) || key.Length % 4 != 0)
+                return false;
+
+            try
+            {
+                return Convert.FromBase64String(key).Length.Equals(32);
+            }
+            catch (FormatException)
+            {
+                return false;
+            }
         }
 
         public async Task<byte[]?> GetKey(int userId, int keyId, int storageId, string accessCode)

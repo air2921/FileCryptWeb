@@ -22,7 +22,7 @@ namespace application.Master_Services.Account.Edit
         {
             try
             {
-                if (!Regex.IsMatch(dto.NewPassword, Validation.Password))
+                if (!Regex.IsMatch(dto.NewPassword, RegularEx.Password))
                     return new Response { Status = 422, Message = Message.INVALID_FORMAT };
 
                 var user = await userRepository.GetById(id);

@@ -72,8 +72,8 @@ namespace application.Helper_Services.Account
             if (user is null)
                 return false;
 
-            bool isValidUsername = Regex.IsMatch(user.Username, Validation.Username);
-            bool isValidPassword = Regex.IsMatch(user.Password, Validation.Password);
+            bool isValidUsername = Regex.IsMatch(user.Username, RegularEx.Username);
+            bool isValidPassword = Regex.IsMatch(user.Password, RegularEx.Password);
 
             return isValidUsername && isValidPassword;
         }

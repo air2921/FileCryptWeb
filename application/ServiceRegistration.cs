@@ -25,7 +25,6 @@ namespace application
                 options.Key = _config[App.SECRET_KEY]!;
             });
 
-            services.AddScoped<IValidation, Validation>();
             services.AddScoped<ITokenComparator, TokenComparator>();
 
             services.AddUpperModuleServices();

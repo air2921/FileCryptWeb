@@ -12,7 +12,6 @@ namespace application.Helper_Services.Account.Edit
         IDatabaseTransaction transaction,
         IRepository<UserModel> userRepository,
         IRepository<NotificationModel> notificationRepository,
-        IValidation validation,
         IRedisCache redisCache) : ITransaction<UserModel>, IDataManagement, IValidator
     {
         public async Task CreateTransaction(UserModel user, object? parameter = null)
@@ -68,6 +67,6 @@ namespace application.Helper_Services.Account.Edit
 
         public async Task SetData(string key, object data) => await redisCache.CacheData(key, data, TimeSpan.FromMinutes(10));
 
-        public bool IsValid(object data, object? parameter = null) => data is int v && validation.IsSixDigit(v) && parameter is not null && parameter.Equals(data);
+        public bool IsValid(object data, object? parameter = null) => data is int v && v != default && parameter is not null && parameter.Equals(data);
     }
 }

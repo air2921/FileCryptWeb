@@ -16,7 +16,7 @@ namespace application.Master_Services.Account.Edit
         {
             try
             {
-                if (!Regex.IsMatch(username, Validation.Username))
+                if (!Regex.IsMatch(username, RegularEx.Username))
                     return new Response { Status = 400, Message = Message.INVALID_FORMAT };
 
                 var user = await userRepository.GetById(id);

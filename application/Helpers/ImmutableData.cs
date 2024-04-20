@@ -4,7 +4,7 @@
     {
         #region Tokens Expire
 
-        public static readonly TimeSpan JwtExpiry = TimeSpan.FromMinutes(20);
+        public static readonly TimeSpan JwtExpiry = TimeSpan.FromMinutes(90);
         public static readonly TimeSpan RefreshExpiry = TimeSpan.FromDays(90);
 
         #endregion
@@ -93,5 +93,13 @@
         public const string EMAIL = "Email";
         public const string EMAIL_PASSWORD = "EmailPassword";
         public const string SECRET_KEY = "JwtKey";
+    }
+
+    public static class RegularEx
+    {
+        public const string EncryptionKey = "^[A-Za-z0-9+/]{43}=$";
+        public const string Password = "^(?=.*[A-Za-z])(?=.*\\d)[A-Za-z\\d]{8,30}$";
+        public const string Email = "^[a-zA-Z0-9._%+-]+@[a-zA-Z0-9.-]+\\.[a-zA-Z]{2,}$";
+        public const string Username = "^(?!.*#)[\\s\\S]{1,30}$";
     }
 }
