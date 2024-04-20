@@ -45,11 +45,11 @@ namespace application.Services.Master_Services.Admin
             }
         }
 
-        public async Task<Response> CreateOne(FileMimeModel model)
+        public async Task<Response> CreateOne(string mime)
         {
             try
             {
-                await repository.Add(model);
+                await repository.Add(new FileMimeModel { mime_name = mime });
                 await ClearCache();
 
                 return new Response { Status = 201, Message = Message.CREATED };
@@ -60,10 +60,15 @@ namespace application.Services.Master_Services.Admin
             }
         }
 
-        public async Task<Response> CreateRange(IEnumerable<FileMimeModel> models)
+        public async Task<Response> CreateRange(IEnumerable<string> mimes)
         {
+            var models = new List<FileMimeModel>();
+
             try
             {
+                foreach (var mime in mimes)
+                    models.Add(new FileMimeModel { mime_name = mime });
+
                 await repository.AddRange(models);
                 await ClearCache();
 

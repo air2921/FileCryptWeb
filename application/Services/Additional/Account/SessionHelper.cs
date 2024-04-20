@@ -1,4 +1,4 @@
-﻿using application.DTO;
+﻿using application.DTO.Inner;
 using application.Helpers;
 using application.Helpers.Localization;
 using application.Services.Abstractions;

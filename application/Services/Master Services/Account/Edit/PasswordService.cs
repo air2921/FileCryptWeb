@@ -1,6 +1,6 @@
 ﻿using application.Abstractions.Services.Endpoints;
 using application.Abstractions.Services.TP_Services;
-using application.DTO;
+using application.DTO.Outer;
 using application.Helpers;
 using application.Helpers.Localization;
 using application.Services.Abstractions;

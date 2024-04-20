@@ -1,5 +1,5 @@
 ﻿using application.Abstractions.Services.Inner;
-using application.DTO;
+using application.DTO.Outer;
 using application.Helpers.Localization;
 using domain.Exceptions;
 using Microsoft.Extensions.Logging;

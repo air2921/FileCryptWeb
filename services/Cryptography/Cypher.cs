@@ -2,8 +2,8 @@
 using services.Cryptography.Abstractions;
 using System.Security.Cryptography;
 using System.Text;
-using application.DTO;
 using application.Abstractions.Services.TP_Services;
+using application.DTO.Inner;
 
 namespace services.Cryptography
 {

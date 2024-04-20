@@ -1,4 +1,4 @@
-﻿namespace application.DTO
+﻿namespace application.DTO.Outer
 {
     public class RegisterDTO
     {

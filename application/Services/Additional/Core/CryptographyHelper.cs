@@ -1,6 +1,7 @@
 ﻿using application.Abstractions.Services.Inner;
 using application.Abstractions.Services.TP_Services;
 using application.DTO;
+using application.DTO.Inner;
 using application.Helpers;
 using application.Helpers.Localization;
 using application.Services.Abstractions;

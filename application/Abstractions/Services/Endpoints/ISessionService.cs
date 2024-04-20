@@ -1,4 +1,4 @@
-﻿using application.DTO;
+﻿using application.DTO.Outer;
 using application.Services;
 
 namespace application.Abstractions.Services.Endpoints

@@ -1,4 +1,4 @@
-﻿using application.DTO;
+﻿using application.DTO.Inner;
 
 namespace application.Abstractions.Services.TP_Services
 {

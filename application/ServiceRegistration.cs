@@ -1,6 +1,6 @@
 ﻿using application.Abstractions.Services.Endpoints;
 using application.Abstractions.Services.Inner;
-using application.DTO;
+using application.DTO.Inner;
 using application.Helpers;
 using application.Services.Abstractions;
 using application.Services.Additional.Account;
@@ -28,6 +28,7 @@ namespace application
             services.AddCacheServices();
             services.AddAccountKeyedServices();
             services.AddAdminKeyedServices();
+            services.AddCoreServices();
         }
 
         private static void AddAccountKeyedServices(this IServiceCollection services)
@@ -75,6 +76,8 @@ namespace application
             services.AddScoped<ICacheHandler<NotificationModel>, Notifications>();
             services.AddScoped<ICacheHandler<OfferModel>, Offers>();
             services.AddScoped<ICacheHandler<UserModel>, Users>();
+            services.AddScoped<ICacheHandler<KeyStorageItemModel>, StorageItems>();
+            services.AddScoped<ICacheHandler<KeyStorageModel>, Storages>();
         }
 
         private static void AddUpperModuleServices(this IServiceCollection services)

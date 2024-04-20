@@ -1,4 +1,4 @@
-﻿using application.DTO;
+﻿using application.DTO.Inner;
 using application.Helpers;
 using application.Services.Abstractions;
 using domain.Abstractions.Data;

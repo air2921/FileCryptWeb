@@ -1,6 +1,6 @@
 ﻿using domain.Models;
 
-namespace application.DTO
+namespace application.DTO.Inner
 {
     public class AcceptOfferDTO
     {
