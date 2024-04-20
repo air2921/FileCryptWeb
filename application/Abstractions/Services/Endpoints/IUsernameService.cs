@@ -1,4 +1,4 @@
-﻿using application.Services;
+﻿using application.Master_Services;
 
 namespace application.Abstractions.Services.Endpoints
 {

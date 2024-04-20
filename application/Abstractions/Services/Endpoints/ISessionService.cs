@@ -1,5 +1,5 @@
 ﻿using application.DTO.Outer;
-using application.Services;
+using application.Master_Services;
 
 namespace application.Abstractions.Services.Endpoints
 {
