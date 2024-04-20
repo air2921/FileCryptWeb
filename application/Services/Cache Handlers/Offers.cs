@@ -46,7 +46,7 @@ namespace application.Services.Cache_Handlers
             }
             catch (JsonException ex)
             {
-                logger.LogCritical(ex.ToString(), nameof(Files));
+                logger.LogCritical(ex.ToString(), nameof(Offers));
                 throw new FormatException(Message.ERROR);
             }
         }

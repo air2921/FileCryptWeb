@@ -47,7 +47,7 @@ namespace application.Services.Cache_Handlers
             }
             catch (JsonException ex)
             {
-                logger.LogCritical(ex.ToString(), nameof(Files));
+                logger.LogCritical(ex.ToString(), nameof(Users));
                 throw new FormatException(Message.ERROR);
             }
         }
@@ -68,7 +68,7 @@ namespace application.Services.Cache_Handlers
                         user.email = string.Empty;
                     }
 
-                    await redisCache.CacheData(userObj.CacheKey, users, TimeSpan.FromMinutes(5));
+                    await redisCache.CacheData(userObj.CacheKey, users, TimeSpan.FromMinutes(3));
                     return users;
                 }
 

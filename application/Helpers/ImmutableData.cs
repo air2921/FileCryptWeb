@@ -56,6 +56,7 @@
         public const string USER_DATA_PREFIX = "User_Data_";
         public const string STORAGES_PREFIX = "Storages_";
         public const string STORAGE_ITEMS_PREFIX = "StorageItems_";
+        public const string USER_LIST = "UserListByUsername_";
 
         #endregion
     }

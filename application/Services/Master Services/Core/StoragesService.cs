@@ -6,6 +6,7 @@ using application.Services.Cache_Handlers;
 using domain.Abstractions.Data;
 using domain.Exceptions;
 using domain.Models;
+using domain.Specifications.By_Relation_Specifications;
 
 namespace application.Services.Master_Services.Core
 {
@@ -85,7 +86,7 @@ namespace application.Services.Master_Services.Core
         {
             try
             {
-                var storage = await repository.GetById(storageId);
+                var storage = await repository.GetByFilter(new StorageByIdAndRelationSpec(storageId, userId));
                 if (storage is null)
                     return new Response { Status = 404, Message = Message.NOT_FOUND };
 
