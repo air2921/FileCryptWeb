@@ -60,6 +60,15 @@ namespace application
             services.AddKeyedScoped<IValidator, UserService>(ImplementationKey.ADMIN_USER_SERVICE);
         }
 
+        private static void AddCoreServices(this IServiceCollection services)
+        {
+            services.AddScoped<ICryptographyHelper, CryptographyHelper>();
+            services.AddScoped<IFileHelper, FileHelper>();
+            services.AddScoped<ITransaction<CreateOfferDTO>, OfferHelper>();
+            services.AddScoped<ITransaction<AcceptOfferDTO>, OfferHelper>();
+            services.AddKeyedScoped<IDataManagement, OfferHelper>(ImplementationKey.CORE_OFFER_SERVICE);
+        }
+
         private static void AddCacheServices(this IServiceCollection services)
         {
             services.AddScoped<ICacheHandler<FileModel>, Files>();

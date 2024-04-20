@@ -32,6 +32,12 @@ namespace application.Services.Cache_Handlers
                     if (notification is null)
                         return null;
 
+                    if (!notification.is_checked)
+                    {
+                        notification.is_checked = true;
+                        await notificationRepository.Update(notification);
+                    }    
+
                     await redisCache.CacheData(ntfObj.CacheKey, notification, TimeSpan.FromMinutes(5));
                     return notification;
                 }

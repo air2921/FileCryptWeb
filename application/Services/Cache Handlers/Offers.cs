@@ -25,13 +25,10 @@ namespace application.Services.Cache_Handlers
                 if (cache is null)
                 {
                     offer = await offerRepository.GetByFilter(
-                        new OfferByIdAndRelationSpec(offerObj.OfferId, offerObj.UserId, null));
+                        new OfferByIdAndRelationSpec(offerObj.OfferId, offerObj.UserId));
 
                     if (offer is null)
                         return null;
-
-                    offer.offer_header = string.Empty;
-                    offer.offer_body = string.Empty;
 
                     await redisCache.CacheData(offerObj.CacheKey, offer, TimeSpan.FromMinutes(10));
                     return offer;
@@ -65,12 +62,6 @@ namespace application.Services.Cache_Handlers
                 {
                     offers = (List<OfferModel>)await offerRepository.GetAll(
                         new OffersSortSpec(offerObj.UserId, offerObj.Skip, offerObj.Count, offerObj.ByDesc, offerObj.Sended, offerObj.IsAccepted, offerObj.Type));
-
-                    foreach (var offer in offers)
-                    {
-                        offer.offer_header = string.Empty;
-                        offer.offer_body = string.Empty;
-                    }
 
                     await redisCache.CacheData(offerObj.CacheKey, offers, TimeSpan.FromMinutes(10));
                     return offers;
