@@ -3,6 +3,7 @@ using Microsoft.AspNetCore.Server.Kestrel.Core;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.IdentityModel.Tokens;
 using System.Text;
+using webapi.Controllers.Account;
 using webapi.DB.Ef;
 using webapi.Helpers;
 
@@ -79,6 +80,13 @@ namespace webapi
                     ValidAudience = "User",
                     ClockSkew = TimeSpan.Zero
                 };
+                //jwt.Events = new JwtBearerEvents
+                //{
+                //    OnAuthenticationFailed = async context =>
+                //    {
+
+                //    }
+                //};
             });
 
             services.AddAntiforgery(options => { options.HeaderName = ImmutableData.XSRF_HEADER_NAME; });
