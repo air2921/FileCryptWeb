@@ -1,4 +1,4 @@
-﻿namespace application.DTO.Inner
+﻿namespace application.DTO.Outer
 {
     public class CredentialsDTO
     {

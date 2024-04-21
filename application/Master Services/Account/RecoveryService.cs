@@ -82,7 +82,7 @@ namespace application.Master_Services.Account
                 await redisCache.DeteteCacheByKeyPattern($"{ImmutableData.NOTIFICATIONS_PREFIX}{user.id}");
                 await redisCache.DeteteCacheByKeyPattern($"{ImmutableData.USER_DATA_PREFIX}{user.id}");
 
-                return new Response { Status = 200 };
+                return new Response { Status = 200, Message = Message.UPDATED };
             }
             catch (EntityException ex)
             {
