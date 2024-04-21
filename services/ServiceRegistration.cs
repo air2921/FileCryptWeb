@@ -3,6 +3,7 @@ using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
 using services.ClamAv;
 using services.Cryptography;
+using services.Cryptography.Abstractions;
 using services.Helpers;
 using services.Helpers.Security;
 using services.Sender;
@@ -38,6 +39,7 @@ namespace services
 
             services.AddLogging();
 
+            services.AddScoped<IAes, AesCreator>();
             services.AddScoped<IVirusCheck, ClamAV>();
             services.AddScoped<IClamSetting, ClamSetting>();
             services.AddScoped<IGenerate, Generate>();

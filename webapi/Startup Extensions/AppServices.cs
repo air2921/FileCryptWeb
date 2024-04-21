@@ -1,7 +1,7 @@
 ﻿using application.Helpers;
+using data_access.Ef;
 using Microsoft.AspNetCore.Authentication.JwtBearer;
 using Microsoft.AspNetCore.Server.Kestrel.Core;
-using Microsoft.EntityFrameworkCore;
 using Microsoft.IdentityModel.Tokens;
 using System.Text;
 
@@ -83,6 +83,10 @@ namespace webapi
             {
                 options.Limits.MaxRequestBodySize = 75 * 1024 * 1024;
             });
+
+            using var serviceScope = services.BuildServiceProvider().CreateScope();
+            var dbSeed = serviceScope.ServiceProvider.GetRequiredService<ISeed>();
+            dbSeed.AdminSeed().GetAwaiter().GetResult();
         }
     }
 }

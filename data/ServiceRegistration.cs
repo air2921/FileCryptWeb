@@ -11,6 +11,9 @@ namespace data_access
     {
         public static void AddDataInfrastructure(this IServiceCollection services, IConfiguration _config)
         {
+            Console.WriteLine($"Redis: {_config.GetConnectionString("Redis")}");
+            Console.WriteLine($"PostreSQL: {_config.GetConnectionString("Postgres")}");
+
             services.Configure<RedisDbContext>(options =>
             {
                 options.ConnectionString = _config.GetConnectionString("Redis")!;
@@ -24,6 +27,7 @@ namespace data_access
             });
 
             services.AddLogging();
+            services.AddScoped<ISeed, FileCryptDbContext>();
             services.AddScoped(typeof(IRepository<>), typeof(Repository<>));
             services.AddScoped<IDatabaseTransaction, DatabaseTransaction>();
             services.AddScoped<IRedisCache, RedisCache>();

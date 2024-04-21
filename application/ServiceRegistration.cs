@@ -22,8 +22,12 @@ namespace application
 {
     public static class ServiceRegistration
     {
-        public static void AddDomain(this IServiceCollection services, IConfiguration _config)
+        public static void AddApplication(this IServiceCollection services, IConfiguration _config)
         {
+            Console.WriteLine($"KEY: {_config[App.SECRET_KEY]}");
+            Console.WriteLine($"AUDIENCE: {_config[App.AUDIENCE]}");
+            Console.WriteLine($"ISSUER: {_config[App.ISSUER]}");
+
             services.Configure<TokenComparator>(options =>
             {
                 options.Key = _config[App.SECRET_KEY]!;

@@ -20,7 +20,7 @@ namespace webapi
 
             services.AddDataInfrastructure(config);
             services.AddServicesInfrastructure(config);
-            services.AddDomain(config);
+            services.AddApplication(config);
 
             services.Singleton();
             services.Scoped();
