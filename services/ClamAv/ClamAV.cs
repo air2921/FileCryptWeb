@@ -1,21 +1,25 @@
 ﻿using Microsoft.Extensions.Logging;
 using nClam;
 using application.Abstractions.TP_Services;
+using Microsoft.Extensions.Configuration;
 
 namespace services.ClamAv
 {
 #pragma warning disable CS8618 // Поле, не допускающее значения NULL, должно содержать значение, отличное от NULL, при выходе из конструктора. Возможно, стоит объявить поле как допускающее значения NULL.
-    public class ClamAV(ILogger<ClamAV> logger, IClamSetting clamSetting) : IVirusCheck
+    public class ClamAV(ILogger<ClamAV> logger, IConfiguration configuration, IClamSetting clamSetting) : IVirusCheck
 #pragma warning restore CS8618 // Поле, не допускающее значения NULL, должно содержать значение, отличное от NULL, при выходе из конструктора. Возможно, стоит объявить поле как допускающее значения NULL.
     {
-        public string ClamServer { private get; set; }
-        public int ClamPort { private get; set; }
-
         public async Task<bool> GetResultScan(Stream fileStream, CancellationToken cancellationToken)
         {
             try
             {
-                var clam = clamSetting.SetClam(ClamServer, ClamPort);
+                if (!int.TryParse(configuration["ClamPort"], out int port))
+                {
+                    logger.LogCritical("Clam Port cannot be converted");
+                    return false;
+                }
+
+                var clam = clamSetting.SetClam(configuration["ClamServer"]!, port);
 
                 var scanResult = await clam.SendAndScanFileAsync(fileStream, cancellationToken);
                 var rerult = scanResult.Result.Equals(ClamScanResults.Clean);

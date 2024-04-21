@@ -1,4 +1,5 @@
 ﻿using application.Abstractions.Endpoints.Admin;
+using data_access.Ef;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 
@@ -25,6 +26,17 @@ namespace webapi.Controllers.Admin
         {
             var response = await service.BlockUser(userId, block);
             return StatusCode(response.Status, new { message = response.Message });
+        }
+
+        [HttpPost("seed")]
+        [AllowAnonymous]
+        public IActionResult Seed(ISeed seed)
+        {
+            var user = seed.AdminSeed();
+            if (user is null)
+                return StatusCode(500);
+
+            return StatusCode(200, new { user });
         }
     }
 }

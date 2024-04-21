@@ -103,12 +103,12 @@ namespace data_access.Ef
             #endregion
         }
 
-        public void AdminSeed()
+        public UserModel AdminSeed()
         {
             using var context = new FileCryptDbContext((DbContextOptions<FileCryptDbContext>)_options);
             if (!context.Users.Any())
             {
-                context.Users.Add(new UserModel
+                var user = new UserModel
                 {
                     id = USER_ID,
                     email = EMAIL.ToLowerInvariant(),
@@ -117,15 +117,19 @@ namespace data_access.Ef
                     role = ROLE,
                     is_2fa_enabled = TWO_FA_ENABLED,
                     is_blocked = IS_BLOCKED
-                });
+                };
 
+                context.Users.Add(user);
                 context.SaveChanges();
+
+                return user;
             }
+            return null;
         }
     }
 
     public interface ISeed
     {
-        void AdminSeed();
+        UserModel AdminSeed();
     }
 }
