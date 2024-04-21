@@ -103,29 +103,29 @@ namespace data_access.Ef
             #endregion
         }
 
-        public async Task AdminSeed()
+        public void AdminSeed()
         {
             using var context = new FileCryptDbContext((DbContextOptions<FileCryptDbContext>)_options);
-            if (context.Users.FirstOrDefaultAsync(x => x.id.Equals(USER_ID)) is null)
+            if (!context.Users.Any())
             {
-                await context.Users.AddAsync(new UserModel
+                context.Users.Add(new UserModel
                 {
                     id = USER_ID,
+                    email = EMAIL.ToLowerInvariant(),
                     username = USERNAME,
-                    email = EMAIL,
                     password = PASSWORD,
                     role = ROLE,
                     is_2fa_enabled = TWO_FA_ENABLED,
                     is_blocked = IS_BLOCKED
                 });
 
-                await context.SaveChangesAsync();
+                context.SaveChanges();
             }
         }
     }
 
     public interface ISeed
     {
-        Task AdminSeed();
+        void AdminSeed();
     }
 }

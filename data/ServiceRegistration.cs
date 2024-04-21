@@ -14,11 +14,6 @@ namespace data_access
             Console.WriteLine($"Redis: {_config.GetConnectionString("Redis")}");
             Console.WriteLine($"PostreSQL: {_config.GetConnectionString("Postgres")}");
 
-            services.Configure<RedisDbContext>(options =>
-            {
-                options.ConnectionString = _config.GetConnectionString("Redis")!;
-            });
-
             services.AddDbContext<FileCryptDbContext>(options =>
             {
                 options.UseNpgsql(_config.GetConnectionString("Postgres"))
@@ -30,8 +25,8 @@ namespace data_access
             services.AddScoped<ISeed, FileCryptDbContext>();
             services.AddScoped(typeof(IRepository<>), typeof(Repository<>));
             services.AddScoped<IDatabaseTransaction, DatabaseTransaction>();
+            services.AddScoped<IRedisDbContext>(provider => new RedisDbContext(_config));
             services.AddScoped<IRedisCache, RedisCache>();
-            services.AddScoped<IRedisDbContext, RedisDbContext>();
         }
     }
 }

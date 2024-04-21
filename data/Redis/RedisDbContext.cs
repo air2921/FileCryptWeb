@@ -1,19 +1,19 @@
-﻿using StackExchange.Redis;
+﻿using Microsoft.Extensions.Configuration;
+using StackExchange.Redis;
 
 namespace data_access.Redis
 {
     public class RedisDbContext : IRedisDbContext
     {
-        public string ConnectionString { get; set; }
-
         private readonly IDatabase _database;
+        private readonly IConfiguration _config;
 
-        public RedisDbContext()
+        public RedisDbContext(IConfiguration config)
         {
-            if (ConnectionString is null)
-                throw new ArgumentNullException(nameof(ConnectionString), "Redis connection string is null.");
-
-            _database = ConnectionMultiplexer.Connect(ConnectionString).GetDatabase();
+            _config = config;
+            var connectionStr = _config.GetConnectionString("Redis") ?? throw new InvalidOperationException();
+            var connection = ConnectionMultiplexer.Connect(connectionStr);
+            _database = connection.GetDatabase();
         }
 
         public IDatabase GetDatabase() => _database;

@@ -11,6 +11,10 @@ namespace webapi
     {
         public static void Register(IServiceCollection services)
         {
+            using var serviceScope = services.BuildServiceProvider().CreateScope();
+            var dbSeed = serviceScope.ServiceProvider.GetRequiredService<ISeed>();
+            dbSeed.AdminSeed();
+
             var configuration = new ConfigurationBuilder()
                 .AddUserSecrets<Program>()
                 .SetBasePath(Directory.GetCurrentDirectory())
@@ -83,10 +87,6 @@ namespace webapi
             {
                 options.Limits.MaxRequestBodySize = 75 * 1024 * 1024;
             });
-
-            using var serviceScope = services.BuildServiceProvider().CreateScope();
-            var dbSeed = serviceScope.ServiceProvider.GetRequiredService<ISeed>();
-            dbSeed.AdminSeed().GetAwaiter().GetResult();
         }
     }
 }
