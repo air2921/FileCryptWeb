@@ -1,11 +1,9 @@
-﻿using Microsoft.AspNetCore.Authentication.JwtBearer;
+﻿using application.Helpers;
+using Microsoft.AspNetCore.Authentication.JwtBearer;
 using Microsoft.AspNetCore.Server.Kestrel.Core;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.IdentityModel.Tokens;
 using System.Text;
-using webapi.Controllers.Account;
-using webapi.DB.Ef;
-using webapi.Helpers;
 
 namespace webapi
 {
@@ -19,17 +17,6 @@ namespace webapi
                 .AddJsonFile("appsettings.json", false, true)
                 .AddEnvironmentVariables()
                 .Build();
-
-            services.AddDbContext<FileCryptDbContext>(options =>
-            {
-                options.UseNpgsql(configuration.GetConnectionString(App.MAIN_DB))
-                .EnableServiceProviderCaching(false)
-                .EnableDetailedErrors(true);
-            });
-
-            using var serviceScope = services.BuildServiceProvider().CreateScope();
-            var dbContext = serviceScope.ServiceProvider.GetRequiredService<FileCryptDbContext>();
-            dbContext.Initial();
 
             services.AddAutoMapper(typeof(Startup));
             services.AddControllers();

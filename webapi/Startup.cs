@@ -1,4 +1,7 @@
 ﻿using webapi.Middlewares;
+using application;
+using services;
+using data_access;
 
 namespace webapi
 {
@@ -6,12 +9,21 @@ namespace webapi
     {
         public void ConfigureServices(IServiceCollection services)
         {
+            var config = new ConfigurationBuilder()
+                .AddUserSecrets<Program>()
+                .SetBasePath(Directory.GetCurrentDirectory())
+                .AddJsonFile("appsettings.json", false, true)
+                .AddEnvironmentVariables()
+                .Build();
+
             AppConfigurationCheck.ConfigurationCheck();
 
-            DependencyContainer.Singleton(services);
-            DependencyContainer.Scoped(services);
-            DependencyContainer.Transient(services);
-            DependencyContainer.OtherServices(services);
+            services.AddDataInfrastructure(config);
+            services.AddServicesInfrastructure(config);
+            services.AddDomain(config);
+
+            services.Singleton();
+            services.Scoped();
 
             AppServices.Register(services);
         }
@@ -33,8 +45,6 @@ namespace webapi
             app.UseRouting();
             app.UseSession();
             app.UseCors("AllowSpecificOrigin");
-            app.UseFreeze();
-            app.UseBearer();
             app.UseAuthHandler();
             app.UseAuthentication();
             app.UseUserSession();

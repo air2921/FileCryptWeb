@@ -1,4 +1,5 @@
-﻿using System.Security.Claims;
+﻿using application.Helpers;
+using System.Security.Claims;
 using webapi.Helpers;
 
 namespace webapi.Middlewares
