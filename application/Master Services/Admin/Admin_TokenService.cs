@@ -1,4 +1,5 @@
-﻿using application.Helper_Services;
+﻿using application.Abstractions.Endpoints.Admin;
+using application.Helper_Services;
 using application.Helpers;
 using application.Helpers.Localization;
 using domain.Abstractions.Data;
@@ -12,7 +13,7 @@ namespace application.Master_Services.Admin
         [FromKeyedServices(ImplementationKey.ADMIN_TOKEN_SERVICE)] ITransaction<TokenModel> transaction,
         [FromKeyedServices(ImplementationKey.ADMIN_TOKEN_SERVICE)] IValidator validator,
         IRepository<TokenModel> tokenRepository,
-        IRepository<UserModel> userRepository)
+        IRepository<UserModel> userRepository) : IAdminTokenService
     {
         public async Task<Response> RevokeAllUserTokens(int targetId, string ownRole)
         {

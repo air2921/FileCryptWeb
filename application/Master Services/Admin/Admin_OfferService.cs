@@ -1,4 +1,5 @@
-﻿using application.Helpers;
+﻿using application.Abstractions.Endpoints.Admin;
+using application.Helpers;
 using application.Helpers.Localization;
 using domain.Abstractions.Data;
 using domain.Exceptions;
@@ -7,7 +8,9 @@ using domain.Specifications.Sorting_Specifications;
 
 namespace application.Master_Services.Admin
 {
-    public class Admin_OfferService(IRepository<OfferModel> repository, IRedisCache redisCache)
+    public class Admin_OfferService(
+        IRepository<OfferModel> repository,
+        IRedisCache redisCache) : IAdminOfferService
     {
         public async Task<Response> GetOne(int offerId)
         {

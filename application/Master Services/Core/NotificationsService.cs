@@ -5,13 +5,14 @@ using domain.Abstractions.Data;
 using domain.Exceptions;
 using domain.Models;
 using domain.Specifications.By_Relation_Specifications;
+using application.Abstractions.Endpoints.Core;
 
 namespace application.Master_Services.Core
 {
     public class NotificationsService(
         IRepository<NotificationModel> repository,
         ICacheHandler<NotificationModel> cacheHandler,
-        IRedisCache redisCache)
+        IRedisCache redisCache) : INotificationService
     {
         public async Task<Response> GetOne(int userId, int notificationId)
         {

@@ -1,4 +1,6 @@
 ﻿using application.Abstractions.Endpoints.Account;
+using application.Abstractions.Endpoints.Admin;
+using application.Abstractions.Endpoints.Core;
 using application.Abstractions.Inner;
 using application.Cache_Handlers;
 using application.DTO.Inner;
@@ -10,6 +12,8 @@ using application.Helper_Services.Core;
 using application.Helpers;
 using application.Master_Services.Account;
 using application.Master_Services.Account.Edit;
+using application.Master_Services.Admin;
+using application.Master_Services.Core;
 using domain.Models;
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
@@ -56,6 +60,22 @@ namespace application
             services.AddScoped<IPasswordService, PasswordService>();
             services.AddScoped<I2FaService, _2FaService>();
             services.AddScoped<IEmailService, EmailService>();
+
+            services.AddScoped<IAdminFileService, Admin_FileService>();
+            services.AddScoped<IAdminLinkService, Admin_LinkService>();
+            services.AddScoped<IAdminMimeService, Admin_MimeService>();
+            services.AddScoped<IAdminNotificationService, Admin_NotificationService>();
+            services.AddScoped<IAdminOfferService, Admin_OfferService>();
+            services.AddScoped<IAdminTokenService, Admin_TokenService>();
+            services.AddScoped<IAdminUserService, Admin_UserService>();
+
+            services.AddScoped<ICryptographyService, CryptographyService>();
+            services.AddScoped<IFileService, FilesService>();
+            services.AddScoped<INotificationService, NotificationsService>();
+            services.AddScoped<IOfferService, OfferService>();
+            services.AddScoped<IStorageItemService, StorageItemsService>();
+            services.AddScoped<IStorageService, StoragesService>();
+            services.AddScoped<IUserService, UsersService>();
         }
     }
 

@@ -1,4 +1,5 @@
-﻿using application.Abstractions.Inner;
+﻿using application.Abstractions.Endpoints.Core;
+using application.Abstractions.Inner;
 using application.DTO.Outer;
 using application.Helpers.Localization;
 using domain.Exceptions;
@@ -9,7 +10,7 @@ namespace application.Master_Services.Core
     public class CryptographyService(
         IFileHelper fileHelper,
         ICryptographyHelper cryptographyHelper,
-        ILogger<CryptographyService> logger)
+        ILogger<CryptographyService> logger) : ICryptographyService
     {
         private const string DISK_NAME = "C:";
         private const string DEFAULT_FOLDER = "FileCryptWeb";

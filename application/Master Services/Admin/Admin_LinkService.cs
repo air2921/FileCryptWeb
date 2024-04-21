@@ -4,10 +4,11 @@ using application.Helpers;
 using application.Helpers.Localization;
 using domain.Models;
 using domain.Specifications.Sorting_Specifications;
+using application.Abstractions.Endpoints.Admin;
 
 namespace application.Master_Services.Admin
 {
-    public class Admin_LinkService(IRepository<LinkModel> repository)
+    public class Admin_LinkService(IRepository<LinkModel> repository) : IAdminLinkService
     {
         public async Task<Response> GetOne(int linkId)
         {

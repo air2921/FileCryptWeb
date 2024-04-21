@@ -5,13 +5,14 @@ using domain.Models;
 using application.Helpers.Localization;
 using application.Helpers;
 using application.Cache_Handlers;
+using application.Abstractions.Endpoints.Core;
 
 namespace application.Master_Services.Core
 {
     internal class FilesService(
         IRepository<FileModel> repository,
         ICacheHandler<FileModel> cacheHandler,
-        IRedisCache redisCache)
+        IRedisCache redisCache) : IFileService
     {
         public async Task<Response> GetOne(int userId, int fileId)
         {

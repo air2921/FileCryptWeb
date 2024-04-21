@@ -1,4 +1,5 @@
-﻿using application.Helpers;
+﻿using application.Abstractions.Endpoints.Admin;
+using application.Helpers;
 using application.Helpers.Localization;
 using domain.Abstractions.Data;
 using domain.Exceptions;
@@ -9,7 +10,7 @@ namespace application.Master_Services.Admin
 {
     public class Admin_FileService(
         IRepository<FileModel> repository,
-        IRedisCache redisCache)
+        IRedisCache redisCache) : IAdminFileService
     {
         public async Task<Response> GetOne(int fileId)
         {

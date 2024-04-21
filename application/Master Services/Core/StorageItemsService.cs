@@ -5,6 +5,7 @@ using domain.Abstractions.Data;
 using domain.Exceptions;
 using domain.Models;
 using application.Abstractions.TP_Services;
+using application.Abstractions.Endpoints.Core;
 
 namespace application.Master_Services.Core
 {
@@ -13,7 +14,7 @@ namespace application.Master_Services.Core
         ICacheHandler<KeyStorageItemModel> itemCacheHandler,
         ICacheHandler<KeyStorageModel> storageCacheHandler,
         IRedisCache redisCache,
-        IHashUtility hashUtility)
+        IHashUtility hashUtility) : IStorageItemService
     {
         public async Task<Response> Add(int userId, int storageId, string code, string name, string value)
         {
