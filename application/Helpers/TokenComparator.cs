@@ -10,10 +10,12 @@ namespace application.Helpers
     public class TokenComparator : ITokenComparator
     {
         public string Key { get; set; }
+        public string Issuer { get; set; }
+        public string Audience { get; set; }
 
         public string CreateJWT(JwtDTO dto)
         {
-            SymmetricSecurityKey key = new SymmetricSecurityKey(Encoding.ASCII.GetBytes(Key));
+            var key = new SymmetricSecurityKey(Encoding.ASCII.GetBytes(Key));
             var credentials = new SigningCredentials(key, SecurityAlgorithms.HmacSha256);
 
             var claims = new[]
@@ -25,8 +27,8 @@ namespace application.Helpers
             };
 
             var token = new JwtSecurityToken(
-                issuer: "FileCrypt",
-                audience: "User",
+                issuer: Issuer,
+                audience: Audience,
                 claims: claims,
                 expires: DateTime.UtcNow + dto.Expires,
                 signingCredentials: credentials);

@@ -23,6 +23,8 @@ namespace application
             services.Configure<TokenComparator>(options =>
             {
                 options.Key = _config[App.SECRET_KEY]!;
+                options.Audience = _config[App.AUDIENCE]!;
+                options.Issuer = _config[App.ISSUER]!;
             });
 
             services.AddScoped<ITokenComparator, TokenComparator>();
@@ -56,8 +58,6 @@ namespace application
             services.AddScoped<IEmailService, EmailService>();
         }
     }
-
-
 
 
 

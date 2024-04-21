@@ -93,6 +93,8 @@
         public const string EMAIL = "Email";
         public const string EMAIL_PASSWORD = "EmailPassword";
         public const string SECRET_KEY = "JwtKey";
+        public const string ISSUER = "JwtIssuer";
+        public const string AUDIENCE = "JwtAudience";
     }
 
     public static class RegularEx

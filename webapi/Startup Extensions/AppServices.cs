@@ -28,7 +28,7 @@ namespace webapi
             });
 
             using var serviceScope = services.BuildServiceProvider().CreateScope();
-            var dbContext = serviceScope.ServiceProvider.GetService<FileCryptDbContext>();
+            var dbContext = serviceScope.ServiceProvider.GetRequiredService<FileCryptDbContext>();
             dbContext.Initial();
 
             services.AddAutoMapper(typeof(Startup));
@@ -76,7 +76,7 @@ namespace webapi
                     ValidateIssuer = true,
                     ValidateAudience = true,
                     IssuerSigningKey = new SymmetricSecurityKey(Encoding.ASCII.GetBytes(configuration[App.SECRET_KEY]!)),
-                    ValidIssuer = "FileCrypt",
+                    ValidIssuer = "FileCryptWeb",
                     ValidAudience = "User",
                     ClockSkew = TimeSpan.Zero
                 };
