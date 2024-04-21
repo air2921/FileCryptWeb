@@ -101,7 +101,9 @@ namespace application
             services.AddKeyedScoped<IValidator, RegistrationHelper>(ImplementationKey.ACCOUNT_REGISTRATION_SERVICE);
 
             services.AddKeyedScoped<IDataManagement, SessionHelper>(ImplementationKey.ACCOUNT_SESSION_SERVICE);
+            services.AddScoped<ISessionHelper, SessionHelper>();
             services.AddKeyedScoped<IValidator, RecoveryHelper>(ImplementationKey.ACCOUNT_RECOVERY_SERVICE);
+            services.AddScoped<IRecoveryHelper, RecoveryHelper>();
         }
 
         internal static void AddAdminKeyedServices(this IServiceCollection services)
