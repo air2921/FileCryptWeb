@@ -47,7 +47,13 @@ namespace webapi
                 session.Cookie.SecurePolicy = CookieSecurePolicy.Always;
             });
 
-            services.AddAuthorization();
+            services.AddAuthorization(options =>
+            {
+                options.AddPolicy("RequireAdminPolicy", policy =>
+                {
+                    policy.RequireRole("HighestAdmin", "Admin");
+                });
+            });
 
             services.AddAuthentication(auth =>
             {
@@ -64,17 +70,10 @@ namespace webapi
                     ValidateIssuer = true,
                     ValidateAudience = true,
                     IssuerSigningKey = new SymmetricSecurityKey(Encoding.ASCII.GetBytes(configuration[App.SECRET_KEY]!)),
-                    ValidIssuer = "FileCrypt",
-                    ValidAudience = "User",
+                    ValidIssuer = configuration[App.ISSUER],
+                    ValidAudience = configuration[App.AUDIENCE],
                     ClockSkew = TimeSpan.Zero
                 };
-                //jwt.Events = new JwtBearerEvents
-                //{
-                //    OnAuthenticationFailed = async context =>
-                //    {
-
-                //    }
-                //};
             });
 
             services.AddAntiforgery(options => { options.HeaderName = ImmutableData.XSRF_HEADER_NAME; });
