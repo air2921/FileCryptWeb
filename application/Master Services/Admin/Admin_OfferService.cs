@@ -20,7 +20,7 @@ namespace application.Master_Services.Admin
                 if (offer is null)
                     return new Response { Status = 404, Message = Message.NOT_FOUND };
 
-                return new Response { Status = 200, ObjectData = offer };
+                return new Response(true) { Status = 200, ObjectData = offer };
             }
             catch (EntityException ex)
             {
@@ -33,7 +33,7 @@ namespace application.Master_Services.Admin
         {
             try
             {
-                return new Response
+                return new Response(true)
                 {
                     Status = 200,
                     ObjectData = await repository
@@ -57,7 +57,7 @@ namespace application.Master_Services.Admin
                 await redisCache.DeteteCacheByKeyPattern($"{ImmutableData.OFFERS_PREFIX}{offer.sender_id}");
                 await redisCache.DeteteCacheByKeyPattern($"{ImmutableData.OFFERS_PREFIX}{offer.receiver_id}");
 
-                return new Response { Status = 204 };
+                return new Response(true) { Status = 204 };
             }
             catch (EntityException ex)
             {
@@ -73,7 +73,7 @@ namespace application.Master_Services.Admin
                 await redisCache.DeleteRedisCache(offers, ImmutableData.OFFERS_PREFIX, item => item.sender_id);
                 await redisCache.DeleteRedisCache(offers, ImmutableData.OFFERS_PREFIX, item => item.receiver_id);
 
-                return new Response { Status = 204 };
+                return new Response(true) { Status = 204 };
             }
             catch (EntityException ex)
             {

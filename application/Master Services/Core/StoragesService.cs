@@ -29,7 +29,7 @@ namespace application.Master_Services.Core
                 });
 
                 await redisCache.DeteteCacheByKeyPattern($"{ImmutableData.STORAGES_PREFIX}{userId}");
-                return new Response { Status = 201, Message = Message.CREATED };
+                return new Response(true) { Status = 201, Message = Message.CREATED };
             }
             catch (EntityException ex)
             {
@@ -47,7 +47,7 @@ namespace application.Master_Services.Core
                     return new Response { Status = 404, Message = Message.NOT_FOUND };
 
                 storage.access_code = string.Empty;
-                return new Response { Status = 200, ObjectData =  storage };
+                return new Response(true) { Status = 200, ObjectData =  storage };
             }
             catch (EntityException ex)
             {
@@ -70,7 +70,7 @@ namespace application.Master_Services.Core
                 foreach (var storage in storages)
                     storage.access_code = string.Empty;
 
-                return new Response { Status = 200, ObjectData = storages };
+                return new Response(true) { Status = 200, ObjectData = storages };
             }
             catch (EntityException ex)
             {
@@ -94,7 +94,7 @@ namespace application.Master_Services.Core
                     return new Response { Status = 403, Message = Message.INCORRECT };
 
                 await repository.Delete(storageId);
-                return new Response { Status = 204 };
+                return new Response(true) { Status = 204 };
             }
             catch (EntityException ex)
             {

@@ -58,7 +58,7 @@ namespace application.Master_Services.Account
                     Code = hashUtility.Hash(code.ToString())
                 });
 
-                return new Response { Status = 200, Message = Message.EMAIL_SENT, ObjectData = true };
+                return new Response(true) { Status = 200, Message = Message.EMAIL_SENT, ObjectData = true };
             }
             catch (SmtpClientException ex)
             {
@@ -120,7 +120,7 @@ namespace application.Master_Services.Account
                 if (user is null || user.is_blocked)
                     return new Response { Status = 401, Message = Message.UNAUTHORIZED };
 
-                return new Response
+                return new Response(true)
                 {
                     Status = 201,
                     ObjectData = tokenComparator.CreateJWT(new JwtDTO

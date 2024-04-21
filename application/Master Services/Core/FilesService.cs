@@ -23,7 +23,7 @@ namespace application.Master_Services.Core
                 if (file is null)
                     return new Response { Status = 404, Message = Message.NOT_FOUND };
                 else
-                    return new Response { Status = 200, ObjectData = file };
+                    return new Response(true) { Status = 200, ObjectData = file };
             }
             catch (EntityException ex)
             {
@@ -41,7 +41,7 @@ namespace application.Master_Services.Core
             try
             {
                 var cacheKey = $"{ImmutableData.FILES_PREFIX}{userId}_{skip}_{count}_{byDesc}_{category}_{mime}";
-                return new Response
+                return new Response(true)
                 {
                     Status = 200,
                     ObjectData = await cacheHandler.CacheAndGetRange(
@@ -67,7 +67,7 @@ namespace application.Master_Services.Core
                     return new Response { Status = 404, Message = Message.NOT_FOUND };
 
                 await redisCache.DeteteCacheByKeyPattern($"{ImmutableData.FILES_PREFIX}{userId}");
-                return new Response { Status = 204 };
+                return new Response(true) { Status = 204 };
             }
             catch (EntityException ex)
             {

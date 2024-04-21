@@ -20,7 +20,7 @@ namespace application.Master_Services.Admin
                 if (file is null)
                     return new Response { Status = 404, Message = Message.NOT_FOUND };
                 else
-                    return new Response { Status = 200, ObjectData = file };
+                    return new Response(true) { Status = 200, ObjectData = file };
             }
             catch (EntityException ex)
             {
@@ -32,7 +32,7 @@ namespace application.Master_Services.Admin
         {
             try
             {
-                return new Response
+                return new Response(true)
                 {
                     Status = 200,
                     ObjectData = await repository
@@ -54,7 +54,7 @@ namespace application.Master_Services.Admin
                     return new Response { Status = 404, Message = Message.NOT_FOUND };
 
                 await redisCache.DeteteCacheByKeyPattern($"{ImmutableData.FILES_PREFIX}{file.user_id}");
-                return new Response { Status = 204 };
+                return new Response(true) { Status = 204 };
             }
             catch (EntityException ex)
             {
@@ -68,7 +68,7 @@ namespace application.Master_Services.Admin
             {
                 var fileList = await repository.DeleteMany(identifiers);
                 await redisCache.DeleteRedisCache(fileList, ImmutableData.FILES_PREFIX, item => item.user_id);
-                return new Response { Status = 204 };
+                return new Response(true) { Status = 204 };
             }
             catch (EntityException ex)
             {

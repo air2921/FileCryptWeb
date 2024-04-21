@@ -22,7 +22,7 @@ namespace application.Master_Services.Core
                 if (user is null)
                     return new Response { Status = 404, Message = Message.NOT_FOUND };
 
-                return new Response { Status = 200, ObjectData = user };
+                return new Response(true) { Status = 200, ObjectData = user };
             }
             catch (EntityException ex)
             {
@@ -40,7 +40,7 @@ namespace application.Master_Services.Core
             {
                 var cacheKey = $"{ImmutableData.USER_LIST}{username}";
 
-                return new Response
+                return new Response(true)
                 {
                     Status = 200,
                     ObjectData = await cacheHandler.CacheAndGetRange(new UserRangeObject(cacheKey, username))
@@ -64,7 +64,7 @@ namespace application.Master_Services.Core
                 await redisCache.DeleteCache($"{ImmutableData.USER_DATA_PREFIX}{user.id}");
                 await redisCache.DeleteCache($"{ImmutableData.USER_LIST}{user.username}");
 
-                return new Response { Status = 204 };
+                return new Response(true) { Status = 204 };
             }
             catch (EntityException ex)
             {

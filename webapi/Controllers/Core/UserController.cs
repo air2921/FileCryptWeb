@@ -1,4 +1,5 @@
 ﻿using application.Abstractions.Endpoints.Core;
+using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 using webapi.Helpers.Abstractions;
 
@@ -6,6 +7,7 @@ namespace webapi.Controllers.Core
 {
     [Route("api/core/user")]
     [ApiController]
+    [Authorize]
     public class UserController(
         IUserService service,
         IUserInfo userInfo) : ControllerBase
@@ -14,7 +16,7 @@ namespace webapi.Controllers.Core
         public async Task<IActionResult> GetUser([FromRoute] int userId)
         {
             var response = await service.GetOne(userInfo.UserId, userId);
-            if (!response.IsSuccess)
+            if (response.Status != 200)
                 return StatusCode(response.Status, new { message = response.Message });
             else
                 return StatusCode(response.Status, new { user = response.ObjectData });

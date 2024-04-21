@@ -23,7 +23,7 @@ namespace application.Master_Services.Admin
                 return new Response { Status = 403, Message = Message.FORBIDDEN };
 
             await userRepository.Delete(userId);
-            return new Response { Status = 204 };
+            return new Response(true) { Status = 204 };
         }
 
         public async Task<Response> BlockUser(int userId, bool block)
@@ -36,7 +36,7 @@ namespace application.Master_Services.Admin
                 return new Response { Status = 403, Message = Message.FORBIDDEN };
 
             await transaction.CreateTransaction(target, block);
-            return new Response { Status = 200, Message = Message.UPDATED };
+            return new Response(true) { Status = 200, Message = Message.UPDATED };
         }
     }
 }

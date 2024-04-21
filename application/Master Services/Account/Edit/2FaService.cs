@@ -44,7 +44,7 @@ namespace application.Master_Services.Account.Edit
 
                 await dataManagament.SetData($"{CODE}{id}", code);
 
-                return new Response { Status = 200, Message = Message.EMAIL_SENT };
+                return new Response(true) { Status = 200, Message = Message.EMAIL_SENT };
             }
             catch (SmtpClientException ex)
             {
@@ -70,7 +70,7 @@ namespace application.Master_Services.Account.Edit
                 await transaction.CreateTransaction(user, enable);
                 await dataManagament.DeleteData(id);
 
-                return new Response { Status = 200, Message = Message.UPDATED };
+                return new Response(true) { Status = 200, Message = Message.UPDATED };
             }
             catch (EntityException ex)
             {

@@ -27,7 +27,7 @@ namespace application.Master_Services.Account.Edit
                 await userRepository.Update(user);
                 await redisCache.DeteteCacheByKeyPattern($"{ImmutableData.USER_DATA_PREFIX}{id}");
 
-                return new Response { Status = 200, Message = Message.UPDATED };
+                return new Response(true) { Status = 200, Message = Message.UPDATED };
             }
             catch (EntityException ex)
             {

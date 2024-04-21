@@ -18,7 +18,7 @@ namespace application.Master_Services.Admin
                 if (link is null)
                     return new Response { Status = 404, Message = Message.NOT_FOUND };
                 else
-                    return new Response { Status = 200, ObjectData = link  };
+                    return new Response(true) { Status = 200, ObjectData = link  };
             }
             catch (EntityException ex)
             {
@@ -30,7 +30,7 @@ namespace application.Master_Services.Admin
         {
             try
             {
-                return new Response
+                return new Response(true)
                 {
                     Status = 200,
                     ObjectData = await repository.GetAll(new LinksSortSpec(userId, skip, count, byDesc, expired))
@@ -50,7 +50,7 @@ namespace application.Master_Services.Admin
                 if (link is null)
                     return new Response { Status = 404, Message = Message.NOT_FOUND };
                 else
-                    return new Response { Status = 204 };
+                    return new Response(true) { Status = 204 };
             }
             catch (EntityException ex)
             {
@@ -63,7 +63,7 @@ namespace application.Master_Services.Admin
             try
             {
                 await repository.DeleteMany(identifiers);
-                return new Response { Status = 204 };
+                return new Response(true) { Status = 204 };
             }
             catch (EntityException ex)
             {

@@ -22,7 +22,7 @@ namespace application.Master_Services.Admin
                 if (mime is null)
                     return new Response { Status = 404, Message = Message.NOT_FOUND };
                 else
-                    return new Response { Status = 200, ObjectData = mime };
+                    return new Response(true) { Status = 200, ObjectData = mime };
             }
             catch (EntityException ex)
             {
@@ -34,7 +34,7 @@ namespace application.Master_Services.Admin
         {
             try
             {
-                return new Response
+                return new Response(true)
                 {
                     Status = 200,
                     ObjectData = await repository.GetAll(new MimesSortSpec(skip, count))
@@ -53,7 +53,7 @@ namespace application.Master_Services.Admin
                 await repository.Add(new FileMimeModel { mime_name = mime });
                 await ClearCache();
 
-                return new Response { Status = 201, Message = Message.CREATED };
+                return new Response(true) { Status = 201, Message = Message.CREATED };
             }
             catch (EntityException ex)
             {
@@ -73,7 +73,7 @@ namespace application.Master_Services.Admin
                 await repository.AddRange(models);
                 await ClearCache();
 
-                return new Response { Status = 201, Message = Message.CREATED };
+                return new Response(true) { Status = 201, Message = Message.CREATED };
             }
             catch (EntityException ex)
             {
@@ -95,7 +95,7 @@ namespace application.Master_Services.Admin
                 await repository.AddRange(mimeModels);
                 await ClearCache();
 
-                return new Response { Status = 201, Message = Message.CREATED };
+                return new Response(true) { Status = 201, Message = Message.CREATED };
             }
             catch (EntityException ex)
             {
@@ -112,7 +112,7 @@ namespace application.Master_Services.Admin
                     return new Response { Status = 404, Message = Message.NOT_FOUND };
                 
                 await ClearCache();
-                return new Response { Status = 204 };
+                return new Response(true) { Status = 204 };
             }
             catch (EntityException ex)
             {
@@ -128,7 +128,7 @@ namespace application.Master_Services.Admin
                 await repository.DeleteMany(identifiers);
                 await ClearCache();
 
-                return new Response { Status = 204 };
+                return new Response(true) { Status = 204 };
             }
             catch (EntityException ex)
             {

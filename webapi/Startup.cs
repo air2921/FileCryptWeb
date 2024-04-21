@@ -2,6 +2,8 @@
 using application;
 using services;
 using data_access;
+using webapi.Helpers.Abstractions;
+using webapi.Helpers;
 
 namespace webapi
 {
@@ -18,12 +20,12 @@ namespace webapi
 
             AppConfigurationCheck.ConfigurationCheck();
 
+            services.AddScoped<IUserInfo, UserData>();
+            services.AddSingleton<IHttpContextAccessor, HttpContextAccessor>();
+
             services.AddDataInfrastructure(config);
             services.AddServicesInfrastructure(config);
             services.AddApplication(config);
-
-            services.Singleton();
-            services.Scoped();
 
             AppServices.Register(services);
         }
