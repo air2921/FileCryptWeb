@@ -35,7 +35,7 @@ namespace webapi.Controllers.Core
             if (!response.IsSuccess)
                 return StatusCode(response.Status, new { message = response.Message });
 
-            var stream = GetFile(response.ObjectData);
+            var stream = GetStream(response.ObjectData);
             if (stream is null)
                 return StatusCode(500, new { message = Message.ERROR });
 
@@ -74,7 +74,7 @@ namespace webapi.Controllers.Core
                 return StatusCode(response.Status);
         }
 
-        private Stream GetFile(object? response)
+        private Stream? GetStream(object? response)
         {
             if (response is not Stream stream)
                 return null;

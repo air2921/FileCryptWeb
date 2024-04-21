@@ -53,7 +53,7 @@ namespace webapi.Controllers.Account.Auth
         [Authorize]
         public async Task<IActionResult> Logout()
         {
-            if (!HttpContext.Request.Cookies.TryGetValue(ImmutableData.REFRESH_COOKIE_KEY, out string token))
+            if (!HttpContext.Request.Cookies.TryGetValue(ImmutableData.REFRESH_COOKIE_KEY, out string? token))
                 return StatusCode(204);
 
             var response = await service.Logout(token);
@@ -64,7 +64,7 @@ namespace webapi.Controllers.Account.Auth
         [HttpPost("refresh")]
         public async Task<IActionResult> Refresh()
         {
-            if (!HttpContext.Request.Cookies.TryGetValue(ImmutableData.REFRESH_COOKIE_KEY, out string token))
+            if (!HttpContext.Request.Cookies.TryGetValue(ImmutableData.REFRESH_COOKIE_KEY, out string? token))
                 return StatusCode(404, new { message = Message.UNAUTHORIZED});
 
             var response = await service.UpdateJwt(token);

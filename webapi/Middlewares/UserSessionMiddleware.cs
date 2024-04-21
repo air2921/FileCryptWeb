@@ -28,7 +28,8 @@ namespace webapi.Middlewares
             if (username is not null && userId is not null && userRole is not null && userAuth is not null)
                 return next(httpContext);
 
-            if (!userContext.Identity.IsAuthenticated)
+
+            if (userContext.Identity is null || !userContext.Identity.IsAuthenticated)
             {
                 httpContext.Response.Cookies.Append(ImmutableData.IS_AUTHORIZED, false.ToString(), cookieOptions);
                 return next(httpContext);

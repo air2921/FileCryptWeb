@@ -102,26 +102,5 @@ namespace data_access.Ef
 
             #endregion
         }
-
-        public void Initial()
-        {
-            using var context = new FileCryptDbContext((DbContextOptions<FileCryptDbContext>)_options);
-
-            if (!context.Users.Any())
-            {
-                context.Users.Add(new UserModel
-                {
-                    id = USER_ID,
-                    email = EMAIL.ToLowerInvariant(),
-                    username = USERNAME,
-                    password = PASSWORD,
-                    role = ROLE,
-                    is_2fa_enabled = TWO_FA_ENABLED,
-                    is_blocked = IS_BLOCKED
-                });
-
-                context.SaveChanges();
-            }
-        }
     }
 }

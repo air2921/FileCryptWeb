@@ -5,7 +5,7 @@ using webapi.Helpers.Abstractions;
 
 namespace webapi.Controllers.Core
 {
-    [Route("api/[controller]")]
+    [Route("api/core/offer")]
     [ApiController]
     [Authorize]
     public class OfferController(
@@ -13,6 +13,7 @@ namespace webapi.Controllers.Core
         IUserInfo userInfo) : ControllerBase
     {
         [HttpPost("open/{receiverId}")]
+        [ValidateAntiForgeryToken]
         public async Task<IActionResult> Open([FromRoute] int receiverId,
             [FromQuery] int storageId, [FromQuery] int keyId, [FromQuery] int code)
         {
@@ -21,6 +22,7 @@ namespace webapi.Controllers.Core
         }
 
         [HttpPost("close/{offerId}")]
+        [ValidateAntiForgeryToken]
         public async Task<IActionResult> Close([FromRoute] int offerId, [FromQuery] string keyname,
             [FromQuery] int storageId, [FromQuery] int code)
         {
@@ -47,10 +49,11 @@ namespace webapi.Controllers.Core
             if (!response.IsSuccess)
                 return StatusCode(response.Status, new { message = response.Message });
             else
-                return StatusCode(response.Status, new { offer = response.ObjectData });
+                return StatusCode(response.Status, new { offers = response.ObjectData });
         }
 
         [HttpDelete("{offerId}")]
+        [ValidateAntiForgeryToken]
         public async Task<IActionResult> DeleteOffer([FromRoute] int offerId)
         {
             var response = await service.DeleteOne(userInfo.UserId, offerId);
