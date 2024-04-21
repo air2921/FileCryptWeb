@@ -1,6 +1,6 @@
 ﻿using Microsoft.Extensions.Logging;
 using nClam;
-using application.Abstractions.Services.TP_Services;
+using application.Abstractions.TP_Services;
 
 namespace services.ClamAv
 {

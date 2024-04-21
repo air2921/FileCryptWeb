@@ -1,6 +1,4 @@
-﻿using application.Abstractions.Services.Endpoints;
-using application.Abstractions.Services.TP_Services;
-using application.DTO.Inner;
+﻿using application.DTO.Inner;
 using application.DTO.Outer;
 using application.Helpers;
 using application.Helper_Services;
@@ -11,6 +9,8 @@ using domain.Models;
 using domain.Specifications;
 using Microsoft.Extensions.DependencyInjection;
 using application.Helper_Services.Account;
+using application.Abstractions.TP_Services;
+using application.Abstractions.Endpoints.Account;
 
 namespace application.Master_Services.Account
 {

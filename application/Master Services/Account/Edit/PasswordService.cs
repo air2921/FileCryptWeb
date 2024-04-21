@@ -1,6 +1,4 @@
-﻿using application.Abstractions.Services.Endpoints;
-using application.Abstractions.Services.TP_Services;
-using application.DTO.Outer;
+﻿using application.DTO.Outer;
 using application.Helpers;
 using application.Helpers.Localization;
 using application.Helper_Services;
@@ -9,6 +7,8 @@ using domain.Exceptions;
 using domain.Models;
 using Microsoft.Extensions.DependencyInjection;
 using System.Text.RegularExpressions;
+using application.Abstractions.TP_Services;
+using application.Abstractions.Endpoints.Account;
 
 namespace application.Master_Services.Account.Edit
 {

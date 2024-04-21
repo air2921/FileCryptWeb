@@ -33,7 +33,7 @@ namespace application.Master_Services.Core
             }
         }
 
-        public async Task<Response> GetRange(int ownerId, string username)
+        public async Task<Response> GetRange(string username)
         {
             try
             {

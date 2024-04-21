@@ -1,4 +1,4 @@
-﻿using application.Abstractions.Services.TP_Services;
+﻿using application.Abstractions.TP_Services;
 using application.DTO.Inner;
 using application.DTO.Outer;
 using application.Helpers;

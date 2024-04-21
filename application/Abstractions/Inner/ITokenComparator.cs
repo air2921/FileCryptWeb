@@ -1,6 +1,6 @@
 ﻿using application.DTO.Inner;
 
-namespace application.Abstractions.Services.Inner
+namespace application.Abstractions.Inner
 {
     public interface ITokenComparator
     {

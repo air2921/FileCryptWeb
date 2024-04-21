@@ -3,7 +3,7 @@ using System.Text;
 using Microsoft.IdentityModel.Tokens;
 using System.IdentityModel.Tokens.Jwt;
 using application.DTO.Inner;
-using application.Abstractions.Services.Inner;
+using application.Abstractions.Inner;
 
 namespace application.Helpers
 {

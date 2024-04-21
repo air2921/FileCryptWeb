@@ -1,7 +1,7 @@
 ﻿using application.DTO.Outer;
 using application.Master_Services;
 
-namespace application.Abstractions.Services.Endpoints
+namespace application.Abstractions.Endpoints.Account
 {
     internal interface ISessionService
     {

@@ -1,6 +1,6 @@
 ﻿using application.Master_Services;
 
-namespace application.Abstractions.Services.Endpoints
+namespace application.Abstractions.Endpoints.Account
 {
     public interface I2FaService
     {

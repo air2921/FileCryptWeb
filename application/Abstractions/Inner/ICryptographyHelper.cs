@@ -1,4 +1,4 @@
-﻿namespace application.Abstractions.Services.Inner
+﻿namespace application.Abstractions.Inner
 {
     public interface ICryptographyHelper
     {

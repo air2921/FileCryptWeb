@@ -1,5 +1,5 @@
-﻿using application.Abstractions.Services.Endpoints;
-using application.Abstractions.Services.TP_Services;
+﻿using application.Abstractions.Endpoints.Account;
+using application.Abstractions.TP_Services;
 using application.DTO.Inner;
 using application.Helper_Services;
 using application.Helpers;

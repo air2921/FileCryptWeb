@@ -1,4 +1,4 @@
-﻿using application.Abstractions.Services.Endpoints;
+﻿using application.Abstractions.Endpoints.Account;
 using application.Helpers;
 using application.Helpers.Localization;
 using domain.Abstractions.Data;

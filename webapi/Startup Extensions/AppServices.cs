@@ -76,7 +76,7 @@ namespace webapi
                     ValidateIssuer = true,
                     ValidateAudience = true,
                     IssuerSigningKey = new SymmetricSecurityKey(Encoding.ASCII.GetBytes(configuration[App.SECRET_KEY]!)),
-                    ValidIssuer = "FileCryptWeb",
+                    ValidIssuer = "FileCrypt",
                     ValidAudience = "User",
                     ClockSkew = TimeSpan.Zero
                 };

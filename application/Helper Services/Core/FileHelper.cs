@@ -1,5 +1,5 @@
-﻿using application.Abstractions.Services.Inner;
-using application.Abstractions.Services.TP_Services;
+﻿using application.Abstractions.Inner;
+using application.Abstractions.TP_Services;
 using application.Helpers;
 using domain.Abstractions.Data;
 using domain.Exceptions;

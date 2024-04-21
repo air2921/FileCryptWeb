@@ -1,5 +1,4 @@
-﻿using application.Abstractions.Services.TP_Services;
-using application.DTO.Inner;
+﻿using application.DTO.Inner;
 using application.Helpers;
 using application.Helpers.Localization;
 using application.Cache_Handlers;
@@ -9,6 +8,7 @@ using domain.Models;
 using domain.Specifications.By_Relation_Specifications;
 using Microsoft.Extensions.DependencyInjection;
 using application.Helper_Services;
+using application.Abstractions.TP_Services;
 
 namespace application.Master_Services.Core
 {

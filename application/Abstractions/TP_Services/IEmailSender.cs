@@ -1,6 +1,6 @@
 ﻿using application.DTO.Inner;
 
-namespace application.Abstractions.Services.TP_Services
+namespace application.Abstractions.TP_Services
 {
     public interface IEmailSender
     {

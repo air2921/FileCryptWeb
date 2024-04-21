@@ -1,4 +1,4 @@
-﻿using application.Abstractions.Services.TP_Services;
+﻿using application.Abstractions.TP_Services;
 using application.Helpers;
 using application.Helpers.Localization;
 using domain.Abstractions.Data;

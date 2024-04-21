@@ -1,5 +1,5 @@
-﻿using application.Abstractions.Services.Endpoints;
-using application.Abstractions.Services.Inner;
+﻿using application.Abstractions.Endpoints.Account;
+using application.Abstractions.Inner;
 using application.Cache_Handlers;
 using application.DTO.Inner;
 using application.Helper_Services;
