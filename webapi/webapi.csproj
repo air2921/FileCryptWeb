@@ -41,8 +41,4 @@
     <ProjectReference Include="..\services\services.csproj" />
   </ItemGroup>
 
-  <ItemGroup>
-    <Folder Include="Controllers\Account\Edit\" />
-  </ItemGroup>
-
 </Project>

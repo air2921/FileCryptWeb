@@ -112,10 +112,6 @@ namespace application.Master_Services.Account.Edit
 
                 return new Response { Status = 200 };
             }
-            catch (UnauthorizedAccessException)
-            {
-                throw;
-            }
             catch (EntityException ex)
             {
                 return new Response { Status = 500, Message = ex.Message };

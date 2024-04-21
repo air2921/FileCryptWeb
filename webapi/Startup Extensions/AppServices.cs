@@ -21,6 +21,7 @@ namespace webapi
             services.AddAutoMapper(typeof(Startup));
             services.AddControllers();
             services.AddLogging();
+            services.AddHttpClient();
             services.AddEndpointsApiExplorer();
             services.AddSwaggerGen();
 

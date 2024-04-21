@@ -36,6 +36,8 @@ namespace services
                 options.ReactConnection = _config["ReactDomain"]!;
             });
 
+            services.AddLogging();
+
             services.AddScoped<IVirusCheck, ClamAV>();
             services.AddScoped<IClamSetting, ClamSetting>();
             services.AddScoped<IGenerate, Generate>();

@@ -31,6 +31,8 @@ namespace application
                 options.Issuer = _config[App.ISSUER]!;
             });
 
+            services.AddLogging();
+
             services.AddScoped<ITokenComparator, TokenComparator>();
 
             services.AddUpperModuleServices();

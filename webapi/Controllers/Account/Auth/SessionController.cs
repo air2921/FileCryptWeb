@@ -68,7 +68,7 @@ namespace webapi.Controllers.Account.Auth
                 return StatusCode(404, new { message = Message.UNAUTHORIZED});
 
             var response = await service.UpdateJwt(token);
-            if (response.Status != 201)
+            if (!response.IsSuccess)
                 return StatusCode(response.Status, new { message = response.Message });
 
             if (response.ObjectData is not string jwt)
