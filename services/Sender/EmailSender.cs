@@ -66,7 +66,6 @@ namespace services.Sender
             {
                 try
                 {
-
                     await _smtpClient.ConnectAsync("smtp.yandex.ru", 587, SecureSocketOptions.Auto);
                     await _smtpClient.AuthenticateAsync(Email, Password);
                     await _smtpClient.SendAsync(message);
