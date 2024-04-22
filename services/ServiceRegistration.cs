@@ -6,8 +6,8 @@ using Microsoft.Extensions.Logging;
 using services.ClamAv;
 using services.Cryptography;
 using services.Cryptography.Abstractions;
-using services.Helpers;
-using services.Helpers.Security;
+using services.Cryptography.Helpers;
+using services.Cryptography.Helpers.Security;
 using services.Sender;
 using static services.Sender.EmailSender;
 

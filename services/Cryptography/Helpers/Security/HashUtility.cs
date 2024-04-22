@@ -2,7 +2,7 @@
 using BC = BCrypt.Net;
 using application.Abstractions.TP_Services;
 
-namespace services.Helpers.Security
+namespace services.Cryptography.Helpers.Security
 {
     public class HashUtility(ILogger<HashUtility> logger) : IHashUtility
     {

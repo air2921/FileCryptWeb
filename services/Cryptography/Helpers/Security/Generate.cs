@@ -1,7 +1,7 @@
 ﻿using System.Security.Cryptography;
 using application.Abstractions.TP_Services;
 
-namespace services.Helpers.Security
+namespace services.Cryptography.Helpers.Security
 {
     public class Generate : IGenerate
     {
