@@ -1,167 +1,66 @@
-﻿using Microsoft.AspNetCore.Authorization;
+﻿using application.Abstractions.Endpoints.Core;
+using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
-using webapi.DB.Abstractions;
-using webapi.DB.Ef.Specifications.By_Relation_Specifications;
-using webapi.Exceptions;
-using webapi.Helpers;
 using webapi.Helpers.Abstractions;
-using webapi.Localization;
-using webapi.Models;
-using webapi.Services.Abstractions;
-using webapi.Services.Core;
-using webapi.Services.Core.Data_Handlers;
 
 namespace webapi.Controllers.Core
 {
-    [Route("api/core/offers")]
+    [Route("api/core/offer")]
     [ApiController]
     [Authorize]
     public class OfferController(
-        [FromKeyedServices(ImplementationKey.CORE_OFFER_SERVICE)] IDataManagement dataManagement,
-        [FromKeyedServices(ImplementationKey.CORE_OFFER_SERVICE)] ITransaction<KeyModel> keyTransaction,
-        [FromKeyedServices(ImplementationKey.CORE_OFFER_SERVICE)] ITransaction<Participants> participantsTransaction,
-        IRepository<UserModel> userRepository,
-        IRepository<OfferModel> offerRepository,
-        IRepository<KeyModel> keyRepository,
-        ICacheHandler<OfferModel> cache,
-        IRedisCache redisCache,
+        IOfferService service,
         IUserInfo userInfo) : ControllerBase
     {
-        [HttpPost("new/{receiverId}")]
+        [HttpPost("open/{receiverId}")]
         [ValidateAntiForgeryToken]
-        [ProducesResponseType(typeof(object), 201)]
-        [ProducesResponseType(typeof(object), 404)]
-        [ProducesResponseType(typeof(object), 409)]
-        [ProducesResponseType(typeof(object), 500)]
-        public async Task<IActionResult> CreateOneOffer([FromRoute] int receiverId)
+        public async Task<IActionResult> Open([FromRoute] int receiverId,
+            [FromQuery] int storageId, [FromQuery] int keyId, [FromQuery] int code)
         {
-            try
-            {
-                if (userInfo.UserId.Equals(receiverId))
-                    return StatusCode(409, new { message = Message.CONFLICT });
-
-                var receiver = await userRepository.GetById(receiverId);
-                if (receiver is null)
-                    return StatusCode(404, new { message = Message.NOT_FOUND });
-
-                var keys = await keyRepository.GetByFilter(new KeysByRelationSpec(userInfo.UserId));
-                if (keys is null)
-                    return StatusCode(404, new { message = Message.NOT_FOUND });
-
-                if (keys.internal_key is null)
-                    return StatusCode(404, new { message = "You don't have a internal key for create an offer" });
-
-                await participantsTransaction.CreateTransaction(new Participants(userInfo.UserId, receiverId), keys.internal_key);
-                await dataManagement.DeleteData(userInfo.UserId, receiverId);
-
-                return StatusCode(201, new { message = Message.CREATED });
-            }
-            catch (EntityNotCreatedException ex)
-            {
-                return StatusCode(500, new { message = ex.Message });
-            }
+            var response = await service.Add(userInfo.UserId, receiverId, keyId, storageId, code.ToString());
+            return StatusCode(response.Status, new { message = response.Message });
         }
 
-        [HttpPut("accept/{offerId}")]
+        [HttpPost("close/{offerId}")]
         [ValidateAntiForgeryToken]
-        [ProducesResponseType(typeof(object), 200)]
-        [ProducesResponseType(typeof(object), 404)]
-        [ProducesResponseType(typeof(object), 409)]
-        [ProducesResponseType(typeof(object), 500)]
-        public async Task<IActionResult> AcceptOffer([FromRoute] int offerId)
+        public async Task<IActionResult> Close([FromRoute] int offerId, [FromQuery] string keyname,
+            [FromQuery] int storageId, [FromQuery] int code)
         {
-            try
-            {
-                var offer = await offerRepository.GetByFilter(new OfferByIdAndRelationSpec(offerId, userInfo.UserId, false));
-                if (offer is null)
-                    return StatusCode(404, new { message = Message.NOT_FOUND });
-
-                if (offer.is_accepted)
-                    return StatusCode(409, new { message = Message.CONFLICT });
-
-                var receiver = await keyRepository.GetByFilter(new KeysByRelationSpec(offer.receiver_id));
-                if (receiver is null)
-                    return StatusCode(404, new { message = Message.NOT_FOUND });
-
-                await keyTransaction.CreateTransaction(receiver, offer);
-                await dataManagement.DeleteData(offer.sender_id, userInfo.UserId);
-
-                return StatusCode(200, new { message = Message.UPDATED });
-            }
-            catch (EntityNotUpdatedException ex)
-            {
-                return StatusCode(500, new { message = ex.Message });
-            }
+            var response = await service.Accept(userInfo.UserId, keyname, offerId, storageId, code.ToString());
+            return StatusCode(response.Status, new { message = response.Message });
         }
 
         [HttpGet("{offerId}")]
-        [ProducesResponseType(typeof(OfferModel), 200)]
-        [ProducesResponseType(typeof(object), 404)]
-        [ProducesResponseType(typeof(object), 500)]
-        public async Task<IActionResult> GetOneOffer([FromRoute] int offerId)
+        public async Task<IActionResult> GetOffer([FromRoute] int offerId)
         {
-            try
-            {
-                var cacheKey = $"{ImmutableData.OFFERS_PREFIX}{userInfo.UserId}_{offerId}";
-                var offer = await cache.CacheAndGet(new OfferObject(cacheKey, userInfo.UserId, offerId));
-                if (offer is null)
-                    return StatusCode(404, new { message = Message.NOT_FOUND });
-
-                return StatusCode(200, new { offer, userId = userInfo.UserId });
-            }
-            catch (OperationCanceledException ex)
-            {
-                return StatusCode(500, new { message = ex.Message });
-            }
-            catch (FormatException)
-            {
-                return StatusCode(500, new { message = Message.ERROR });
-            }
+            var response = await service.GetOne(userInfo.UserId, offerId);
+            if (!response.IsSuccess)
+                return StatusCode(response.Status, new { message = response.Message });
+            else
+                return StatusCode(response.Status, new { offer = response.ObjectData });
         }
 
-        [HttpGet("all")]
-        [ProducesResponseType(typeof(IEnumerable<OfferModel>), 200)]
-        [ProducesResponseType(typeof(object), 500)]
-        public async Task<IActionResult> GetAll([FromQuery] int skip, [FromQuery] int count,
-            [FromQuery] bool byDesc, [FromQuery] bool? sended,
+        [HttpGet("range")]
+        public async Task<IActionResult> GetRangeOffers([FromQuery] int skip, [FromQuery] int count,
+            [FromQuery] bool byDesc, [FromQuery] bool? sent,
             [FromQuery] bool? isAccepted, [FromQuery] string? type)
         {
-            try
-            {
-                var cacheKey = $"{ImmutableData.OFFERS_PREFIX}{userInfo.UserId}_{skip}_{count}_{byDesc}_{sended}_{isAccepted}_{type}";
-                var offers = await cache.CacheAndGetRange(new OfferRangeObject(cacheKey, userInfo.UserId, skip, count, byDesc, sended, isAccepted, type));
-
-                return StatusCode(200, new { offers, user_id = userInfo.UserId });
-            }
-            catch (OperationCanceledException ex)
-            {
-                return StatusCode(500, new { message = ex.Message });
-            }
-            catch (FormatException)
-            {
-                return StatusCode(500, new { message = Message.ERROR });
-            }
+            var response = await service.GetRange(userInfo.UserId, skip, count, byDesc, sent, isAccepted, type);
+            if (!response.IsSuccess)
+                return StatusCode(response.Status, new { message = response.Message });
+            else
+                return StatusCode(response.Status, new { offers = response.ObjectData });
         }
 
         [HttpDelete("{offerId}")]
         [ValidateAntiForgeryToken]
-        [ProducesResponseType(204)]
-        [ProducesResponseType(typeof(object), 404)]
-        public async Task<IActionResult> DeleteOneOffer([FromRoute] int offerId)
+        public async Task<IActionResult> DeleteOffer([FromRoute] int offerId)
         {
-            try
-            {
-                var offer = await offerRepository.DeleteByFilter(new OfferByIdAndRelationSpec(offerId, userInfo.UserId, null));
-
-                await redisCache.DeteteCacheByKeyPattern($"{ImmutableData.OFFERS_PREFIX}{offer.sender_id}");
-                await redisCache.DeteteCacheByKeyPattern($"{ImmutableData.OFFERS_PREFIX}{offer.receiver_id}");
-
-                return StatusCode(204);
-            }
-            catch (EntityNotDeletedException ex)
-            {
-                return StatusCode(404, new { message = ex.Message });
-            }
+            var response = await service.DeleteOne(userInfo.UserId, offerId);
+            if (!response.IsSuccess)
+                return StatusCode(response.Status, new { message = response.Message });
+            else
+                return StatusCode(response.Status);
         }
     }
 }
