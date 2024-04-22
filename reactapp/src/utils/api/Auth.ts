@@ -1,6 +1,5 @@
 import axios from 'axios';
-import { BASE_URL } from './Url';
-import { errorHandler } from './ErrorHandler';
+import { BASE_URL, JWT_ITEM, errorHandler } from './Helper';
 
 const EMAIL_IN_STORAGE = 'login_email';
 
@@ -13,13 +12,24 @@ export async function login(email: string, password: string) {
             }, { withCredentials: true }
         );
 
-        localStorage.setItem(EMAIL_IN_STORAGE, email);
+        if (response.data.confirm == false) {
+            localStorage.setItem(JWT_ITEM, JSON.stringify(response.data.access))
 
-        return {
-            success: true,
-            statusCode: response.status,
-            verificationRequired: response.data.confirm,
-            message: response.data.message
+            return {
+                success: true,
+                statusCode: response.status,
+                verificationRequired: false,
+                message: response.data.message
+            }
+        } else {
+            localStorage.setItem(EMAIL_IN_STORAGE, email);
+
+            return {
+                success: true,
+                statusCode: response.status,
+                verificationRequired: true,
+                message: response.data.message
+            }
         }
 
     } catch (error: any) {
@@ -47,7 +57,9 @@ export async function verifyLogin(code: number) {
         const response = await axios.post(BASE_URL + `api/auth/verify/2fa?code=${code}&email=${email}`, null, {
             withCredentials: true
         });
+
         localStorage.removeItem(EMAIL_IN_STORAGE);
+        localStorage.setItem(JWT_ITEM, JSON.stringify(response.data.access))
 
         return {
             success: true,
@@ -61,7 +73,7 @@ export async function verifyLogin(code: number) {
 
 export async function createRecovery(email: string) {
     try {
-        const response = await axios.post(BASE_URL + `api/auth/recovery/unique/token?email=${email}`, null, {
+        const response = await axios.post(BASE_URL + `api/auth/send/ticket?email=${email}`, null, {
             withCredentials: true
         });
 
@@ -77,7 +89,7 @@ export async function createRecovery(email: string) {
 
 export async function recoveryAccount(password: string, token: string) {
     try {
-        const response = await axios.post(BASE_URL + `api/auth/recovery/account`, {
+        const response = await axios.post(BASE_URL + `api/auth/reset`, {
             password: password,
             token: token
         }, { withCredentials: true })

@@ -1,6 +1,5 @@
 import axios from 'axios';
-import { BASE_URL } from '../api/Url';
-import { errorHandler } from './ErrorHandler';
+import { BASE_URL, errorHandler } from './Helper';
 
 export interface FilesSortProps {
     skip: number,
