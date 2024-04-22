@@ -1,4 +1,5 @@
-﻿using System.Security.Claims;
+﻿using System.Diagnostics;
+using System.Security.Claims;
 
 namespace webapi.Middlewares
 {
@@ -7,45 +8,54 @@ namespace webapi.Middlewares
     {
         public async Task Invoke(HttpContext context)
         {
+            var stopwatch = Stopwatch.StartNew();
+
             var userContext = context.User;
-
-            string? claimsUsername = null;
-            string? claimId = null;
-            string? claimRole = null;
-
             var path = context.Request.Path.ToString();
             var method = context.Request.Method.ToString();
+            var requestId = Guid.NewGuid().ToString();
 
-            if (userContext.Identity.IsAuthenticated)
+            string claimsUsername = "Unknown";
+            string claimId = "Unknown";
+            string claimRole = "Unknown";
+
+            if (userContext.Identity?.IsAuthenticated ?? false)
             {
-                if (userContext.HasClaim(u => u.Type == ClaimTypes.Name))
-                    claimsUsername = userContext.FindFirstValue(ClaimTypes.Name);
-                if (userContext.HasClaim(u => u.Type == ClaimTypes.NameIdentifier))
-                    claimId = userContext.FindFirstValue(ClaimTypes.NameIdentifier);
-                if (userContext.HasClaim(u => u.Type == ClaimTypes.Role))
-                    claimRole = userContext.FindFirstValue(ClaimTypes.Role);
+                claimsUsername = userContext.FindFirstValue(ClaimTypes.Name) ?? "Unknown";
+                claimId = userContext.FindFirstValue(ClaimTypes.NameIdentifier) ?? "Unknown";
+                claimRole = userContext.FindFirstValue(ClaimTypes.Role) ?? "Unknown";
             }
 
-            var user = new
-            {
-                username = claimsUsername,
-                id = claimId,
-                role = claimRole,
-            };
+            var user = new User { Username = claimsUsername, Id = claimId, Role = claimRole };
+            var request = new RequestInfo { Path = path, Method = method };
 
-            var request = new
-            {
-                path,
-                method,
-            };
+            logger.LogInformation($"Request Id: {requestId}\n" +
+                                  $"Request entered at: {DateTime.UtcNow}\n" +
+                                  $"User: {user.Username}, Id: {user.Id}, Role: {user.Role}\n" +
+                                  $"Request: {request.Path}, Method: {request.Method}");
 
-            logger.LogInformation($"{user} {request}");
+            context.Request.Headers.Append("X-REQUEST-TOKEN", requestId);
 
             await next(context);
 
-            var statusCode = context.Response.StatusCode;
+            stopwatch.Stop();
+            logger.LogInformation($"Request Id: {requestId}\n" +
+                                  $"Request finished at: {DateTime.UtcNow}\n" +
+                                  $"Total time request works: {stopwatch.Elapsed}\n" +
+                                  $"Status Code: {context.Response.StatusCode}");
+        }
 
-            logger.LogInformation($"Status Code: {statusCode}");
+        private class User
+        {
+            public string Username { get; set; } = "Unknown";
+            public string Id { get; set; } = "Unknown";
+            public string Role { get; set; } = "Unknown";
+        }
+
+        private class RequestInfo
+        {
+            public string Path { get; set; } = null!;
+            public string Method { get; set; } = null!;
         }
     }
 

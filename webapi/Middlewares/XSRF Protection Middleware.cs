@@ -1,4 +1,5 @@
-﻿using Microsoft.AspNetCore.Antiforgery;
+﻿using application.Helpers;
+using Microsoft.AspNetCore.Antiforgery;
 using webapi.Helpers;
 
 namespace webapi.Middlewares
