@@ -22,16 +22,20 @@ namespace application
 {
     public static class ServiceRegistration
     {
-        public static void AddDomain(this IServiceCollection services, IConfiguration _config)
+        public static void AddApplication(this IServiceCollection services, IConfiguration _config)
         {
-            services.Configure<TokenComparator>(options =>
-            {
-                options.Key = _config[App.SECRET_KEY]!;
-                options.Audience = _config[App.AUDIENCE]!;
-                options.Issuer = _config[App.ISSUER]!;
-            });
+            Console.WriteLine($"KEY: {_config[App.SECRET_KEY]}");
+            Console.WriteLine($"AUDIENCE: {_config[App.AUDIENCE]}");
+            Console.WriteLine($"ISSUER: {_config[App.ISSUER]}");
 
-            services.AddScoped<ITokenComparator, TokenComparator>();
+            //services.Configure<TokenComparator>(options =>
+            //{
+            //    options.Key = _config[App.SECRET_KEY]!;
+            //    options.Audience = _config[App.AUDIENCE]!;
+            //    options.Issuer = _config[App.ISSUER]!;
+            //});
+
+            services.AddLogging();
 
             services.AddUpperModuleServices();
             services.AddCacheServices();
@@ -39,6 +43,11 @@ namespace application
             services.AddAccountKeyedServices();
             services.AddAdminKeyedServices();
             services.AddCoreServices();
+
+            services.AddScoped<ITokenComparator>(provider =>
+            {
+                return new TokenComparator(_config);
+            });
         }
 
         private static void AddCacheServices(this IServiceCollection services)

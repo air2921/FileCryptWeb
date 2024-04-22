@@ -1,5 +1,6 @@
 ﻿using application.Abstractions.Inner;
 using application.DTO.Inner;
+using application.DTO.Outer;
 using application.Helpers;
 using application.Helpers.Localization;
 using application.Master_Services;
@@ -105,7 +106,7 @@ namespace application.Helper_Services.Account
                 await LoginTransaction(user, refresh);
                 await redisCache.DeteteCacheByKeyPattern($"{ImmutableData.NOTIFICATIONS_PREFIX}{user.id}");
 
-                return new Response { Status = 200, ObjectData = GetCredentials(user, refresh) };
+                return new Response { Status = 201, ObjectData = GetCredentials(user, refresh) };
             }
             catch (EntityException ex)
             {

@@ -11,10 +11,8 @@ namespace data_access
     {
         public static void AddDataInfrastructure(this IServiceCollection services, IConfiguration _config)
         {
-            services.Configure<RedisDbContext>(options =>
-            {
-                options.ConnectionString = _config.GetConnectionString("Redis")!;
-            });
+            Console.WriteLine($"Redis: {_config.GetConnectionString("Redis")}");
+            Console.WriteLine($"PostreSQL: {_config.GetConnectionString("Postgres")}");
 
             services.AddDbContext<FileCryptDbContext>(options =>
             {
@@ -23,14 +21,12 @@ namespace data_access
                 .EnableDetailedErrors(true);
             });
 
-            using var serviceScope = services.BuildServiceProvider().CreateScope();
-            var dbContext = serviceScope.ServiceProvider.GetService<FileCryptDbContext>();
-            dbContext.Initial();
-
+            services.AddLogging();
+            services.AddScoped<ISeed, FileCryptDbContext>();
             services.AddScoped(typeof(IRepository<>), typeof(Repository<>));
             services.AddScoped<IDatabaseTransaction, DatabaseTransaction>();
+            services.AddScoped<IRedisDbContext>(provider => new RedisDbContext(_config));
             services.AddScoped<IRedisCache, RedisCache>();
-            services.AddScoped<IRedisDbContext, RedisDbContext>();
         }
     }
 }

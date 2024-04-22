@@ -3,7 +3,7 @@ using application.Master_Services;
 
 namespace application.Abstractions.Endpoints.Account
 {
-    internal interface ISessionService
+    public interface ISessionService
     {
         public Task<Response> Login(LoginDTO dto);
         public Task<Response> Verify2Fa(int code, string email);

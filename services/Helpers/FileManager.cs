@@ -1,17 +1,16 @@
 ﻿using Microsoft.Extensions.Logging;
 using application.Abstractions.TP_Services;
+using Microsoft.Extensions.Configuration;
 
 namespace services.Helpers
 {
 #pragma warning disable CS8618 // Поле, не допускающее значения NULL, должно содержать значение, отличное от NULL, при выходе из конструктора. Возможно, стоит объявить поле как допускающее значения NULL.
-    public class FileManager(ILogger<FileManager> logger) : IFileManager, IGetSize
+    public class FileManager(ILogger<FileManager> logger, IConfiguration configuration) : IFileManager, IGetSize
 #pragma warning restore CS8618 // Поле, не допускающее значения NULL, должно содержать значение, отличное от NULL, при выходе из конструктора. Возможно, стоит объявить поле как допускающее значения NULL.
     {
-        public string ReactConnection { private get; set; }
-
         public string GetReactAppUrl()
         {
-            return ReactConnection!;
+            return configuration["ReactDomain"]!;
         }
 
         public double GetFileSizeInMb<T>(T file)

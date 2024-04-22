@@ -2,18 +2,22 @@
 {
     public class Response
     {
-        public Response()
-        {
-            bool success = Status >= 100 && Status <= 399;
+        private int _status;
 
-            if (success)
-                Message = "Success";
-            else
-                Message = "An occured unexpected error";
+        public int Status
+        {
+            get { return _status; }
+            internal set
+            {
+                if (value >= 200 && value <= 399)
+                    IsSuccess = true;
+
+                _status = value;
+            }
         }
 
-        public int Status { get; internal set; } = 500;
-        public string Message { get; internal set; }
+        public bool IsSuccess { get; set; }
+        public string Message { get; set; }
         public object? ObjectData { get; internal set; }
     }
 }

@@ -33,10 +33,6 @@ namespace application.Master_Services.Account.Edit
             {
                 return new Response { Status = 500, Message = ex.Message };
             }
-            catch (UnauthorizedAccessException)
-            {
-                throw;
-            }
         }
     }
 }

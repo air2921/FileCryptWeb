@@ -84,7 +84,7 @@ namespace application.Master_Services.Account
 
                 await transaction.CreateTransaction(user);
 
-                return new Response { Status = 200 };
+                return new Response { Status = 200, Message = Message.CREATED };
             }
             catch (EntityException ex)
             {

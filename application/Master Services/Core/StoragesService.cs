@@ -47,7 +47,7 @@ namespace application.Master_Services.Core
                     return new Response { Status = 404, Message = Message.NOT_FOUND };
 
                 storage.access_code = string.Empty;
-                return new Response { Status = 200, ObjectData =  storage };
+                return new Response { Status = 200, ObjectData = storage };
             }
             catch (EntityException ex)
             {

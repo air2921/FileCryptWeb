@@ -113,11 +113,11 @@ namespace application.Master_Services.Account
             try
             {
                 var token = await tokenRepository.GetByFilter(new RefreshTokenByTokenSpec(refresh));
-                if (token is null)
+                if (token is null || token.expiry_date < DateTime.UtcNow)
                     return new Response { Status = 401, Message = Message.UNAUTHORIZED };
 
                 var user = await userRepository.GetById(token.user_id);
-                if (user is null)
+                if (user is null || user.is_blocked)
                     return new Response { Status = 401, Message = Message.UNAUTHORIZED };
 
                 return new Response
