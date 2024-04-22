@@ -1,10 +1,10 @@
-﻿using Microsoft.AspNetCore.Authentication.JwtBearer;
+﻿using application.Helpers;
+using data_access.Ef;
+using Microsoft.AspNetCore.Authentication.JwtBearer;
 using Microsoft.AspNetCore.Server.Kestrel.Core;
-using Microsoft.EntityFrameworkCore;
 using Microsoft.IdentityModel.Tokens;
+using Microsoft.OpenApi.Models;
 using System.Text;
-using webapi.DB;
-using webapi.Helpers;
 
 namespace webapi
 {
@@ -19,22 +19,38 @@ namespace webapi
                 .AddEnvironmentVariables()
                 .Build();
 
-            services.AddDbContext<FileCryptDbContext>(options =>
-            {
-                options.UseNpgsql(configuration.GetConnectionString(App.MAIN_DB))
-                .EnableServiceProviderCaching(false)
-                .EnableDetailedErrors(true);
-            });
-
-            using var serviceScope = services.BuildServiceProvider().CreateScope();
-            var dbContext = serviceScope.ServiceProvider.GetService<FileCryptDbContext>();
-            dbContext.Initial();
-
             services.AddAutoMapper(typeof(Startup));
             services.AddControllers();
             services.AddLogging();
+            services.AddHttpClient();
             services.AddEndpointsApiExplorer();
-            services.AddSwaggerGen();
+            services.AddSwaggerGen(c =>
+            {
+                c.SwaggerDoc("v1", new OpenApiInfo { Title = "webapi", Version = "v1" });
+
+                c.AddSecurityDefinition("Bearer", new OpenApiSecurityScheme
+                {
+                    Description = "JWT Authorization header using the Bearer scheme. Enter 'Bearer' [space] and then your token in the text input below.",
+                    Name = "Authorization",
+                    In = ParameterLocation.Header,
+                    Type = SecuritySchemeType.ApiKey,
+                    Scheme = "Bearer"
+                });
+                c.AddSecurityRequirement(new OpenApiSecurityRequirement
+                {
+                    {
+                        new OpenApiSecurityScheme
+                        {
+                            Reference = new OpenApiReference
+                            {
+                                Type = ReferenceType.SecurityScheme,
+                                Id = "Bearer"
+                            }
+                        },
+                        new string[] {}
+                    }
+                });
+            });
 
             services.AddCors(options =>
             {
@@ -44,20 +60,6 @@ namespace webapi
                            .AllowAnyHeader()
                            .AllowAnyMethod()
                            .AllowCredentials();
-                });
-
-                options.AddPolicy("AllowOriginAPI", builder =>
-                {
-                    builder.AllowAnyOrigin()
-                    .WithMethods("POST")
-                    .WithHeaders(ImmutableData.ENCRYPTION_KEY_HEADER_NAME, ImmutableData.API_HEADER_NAME)
-                    .SetIsOriginAllowed(origin =>
-                    origin.EndsWith("api/public/cryptography/private/decrypt") ||
-                    origin.EndsWith("api/public/cryptography/internal/decrypt") ||
-                    origin.EndsWith("api/public/cryptography/received/decrypt") ||
-                    origin.EndsWith("api/public/cryptography/private/encrypt") ||
-                    origin.EndsWith("api/public/cryptography/internal/encrypt") ||
-                    origin.EndsWith("api/public/cryptography/received/encrypt"));
                 });
             });
 
@@ -72,7 +74,13 @@ namespace webapi
                 session.Cookie.SecurePolicy = CookieSecurePolicy.Always;
             });
 
-            services.AddAuthorization();
+            services.AddAuthorization(options =>
+            {
+                options.AddPolicy("RequireAdminPolicy", policy =>
+                {
+                    policy.RequireRole("HighestAdmin", "Admin");
+                });
+            });
 
             services.AddAuthentication(auth =>
             {
@@ -89,8 +97,8 @@ namespace webapi
                     ValidateIssuer = true,
                     ValidateAudience = true,
                     IssuerSigningKey = new SymmetricSecurityKey(Encoding.ASCII.GetBytes(configuration[App.SECRET_KEY]!)),
-                    ValidIssuer = "FileCrypt",
-                    ValidAudience = "User",
+                    ValidIssuer = configuration[App.ISSUER],
+                    ValidAudience = configuration[App.AUDIENCE],
                     ClockSkew = TimeSpan.Zero
                 };
             });

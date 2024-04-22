@@ -7,12 +7,22 @@ namespace webapi.Middlewares
     {
         public async Task Invoke(HttpContext context)
         {
-            var routeRequiresAuthorization = context.GetEndpoint()?.Metadata.GetMetadata<AuthorizeAttribute>() != null;
+            var ignoreEndpoints = new string[]
+            {
+                "api/auth/logout", "api/auth/refresh"
+            };
+
+            if (ignoreEndpoints.Contains(context.Request.Path.ToString()))
+            {
+                var routeRequiresAuthorization = context.GetEndpoint()?.Metadata.GetMetadata<AuthorizeAttribute>() != null;
+
+                await next(context);
+
+                if (routeRequiresAuthorization && context.Response.StatusCode == 401)
+                    context.Response.Headers.Append("X-AUTH-REQUIRED", true.ToString());
+            }
 
             await next(context);
-
-            if (routeRequiresAuthorization && context.Response.StatusCode == 401)
-                context.Response.Headers.Append("X-AUTH-REQUIRED", true.ToString());
         }
     }
 

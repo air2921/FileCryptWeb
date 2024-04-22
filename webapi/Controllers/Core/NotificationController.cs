@@ -1,94 +1,49 @@
-﻿using Microsoft.AspNetCore.Authorization;
+﻿using application.Abstractions.Endpoints.Core;
+using Microsoft.AspNetCore.Authorization;
+using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Mvc;
-using webapi.Exceptions;
-using webapi.Helpers;
-using webapi.Interfaces;
-using webapi.Interfaces.Redis;
-using webapi.Interfaces.Services;
-using webapi.Localization;
-using webapi.Models;
-using webapi.Services.Core.Data_Handlers;
+using webapi.Helpers.Abstractions;
 
 namespace webapi.Controllers.Core
 {
-    [Route("api/core/notifications")]
+    [Route("api/core/notification")]
     [ApiController]
     [Authorize]
     public class NotificationController(
-        IRepository<NotificationModel> notificationRepository,
-        ICacheHandler<NotificationModel> cache,
-        IRedisCache redisCache,
+        INotificationService service,
         IUserInfo userInfo) : ControllerBase
     {
         [HttpGet("{notificationId}")]
-        [ProducesResponseType(typeof(NotificationModel), 200)]
-        [ProducesResponseType(typeof(object), 404)]
-        [ProducesResponseType(typeof(object), 500)]
         public async Task<IActionResult> GetNotification([FromRoute] int notificationId)
         {
-            try
-            {
-                var cacheKey = $"{ImmutableData.NOTIFICATIONS_PREFIX}{userInfo.UserId}_{notificationId}";
-                var notification = await cache.CacheAndGet(new NotificationObject(cacheKey, userInfo.UserId, notificationId));
-                if (notification is null)
-                    return StatusCode(404, new { message = Message.NOT_FOUND });
-
-                return StatusCode(200, new { notification });
-            }
-            catch (OperationCanceledException ex)
-            {
-                return StatusCode(500, new { message = ex.Message });
-            }
-            catch (FormatException)
-            {
-                return StatusCode(500, new { message = Message.ERROR });
-            }
+            var response = await service.GetOne(userInfo.UserId, notificationId);
+            if (!response.IsSuccess)
+                return StatusCode(response.Status, new { message = response.Message });
+            else
+                return StatusCode(response.Status, new { notification = response.ObjectData });
         }
 
-        [HttpGet("all")]
-        [ProducesResponseType(typeof(IEnumerable<NotificationModel>), 200)]
-        [ProducesResponseType(typeof(object), 500)]
-        public async Task<IActionResult> GetAll([FromQuery] int skip, [FromQuery] int count,
+        [HttpGet("range")]
+        public async Task<IActionResult> GetRangeNotifications([FromQuery] int skip, [FromQuery] int count,
             [FromQuery] bool byDesc, [FromQuery] string? priority,
             [FromQuery] bool? isChecked)
         {
-            try
-            {
-                var cacheKey = $"{ImmutableData.NOTIFICATIONS_PREFIX}{userInfo.UserId}_{skip}_{count}_{byDesc}_{priority}_{isChecked}";
-                var notifications = await cache.CacheAndGetRange(new NotificationRangeObject(cacheKey, userInfo.UserId, skip, count, byDesc, priority, isChecked));
-
-                return StatusCode(200, new { notifications });
-            }
-            catch (OperationCanceledException ex)
-            {
-                return StatusCode(500, new { message = ex.Message });
-            }
-            catch (FormatException)
-            {
-                return StatusCode(500, new { message = Message.ERROR });
-            }
+            var response = await service.GetRange(userInfo.UserId, skip, count, byDesc, priority, isChecked);
+            if (!response.IsSuccess)
+                return StatusCode(response.Status, new { message = response.Message });
+            else
+                return StatusCode(response.Status, new { notifications = response.ObjectData });
         }
 
         [HttpDelete("{notificationId}")]
         [ValidateAntiForgeryToken]
-        [ProducesResponseType(204)]
-        [ProducesResponseType(typeof(object), 500)]
         public async Task<IActionResult> DeleteNotification([FromRoute] int notificationId)
         {
-            try
-            {
-                var notification = await notificationRepository
-                    .DeleteByFilter(query => query.Where(n => n.notification_id.Equals(notificationId) && n.user_id.Equals(userInfo.UserId)));
-                
-                if (notification is not null)
-                    await redisCache.DeteteCacheByKeyPattern($"{ImmutableData.NOTIFICATIONS_PREFIX}{userInfo.UserId}");
-
-                return StatusCode(204);
-            }
-            catch (EntityNotDeletedException ex)
-            {
-                return StatusCode(500, new { message = ex.Message });
-            }
+            var response = await service.DeleteOne(userInfo.UserId, notificationId);
+            if (!response.IsSuccess)
+                return StatusCode(response.Status, new { message = response.Message });
+            else
+                return StatusCode(response.Status);
         }
     }
 }
