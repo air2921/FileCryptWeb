@@ -12,7 +12,7 @@ namespace webapi
         public void ConfigureServices(IServiceCollection services)
         {
             var config = new ConfigurationBuilder()
-                .AddUserSecrets<Program>()
+                .AddUserSecrets<Startup>()
                 .SetBasePath(Directory.GetCurrentDirectory())
                 .AddJsonFile("appsettings.json", false, true)
                 .AddEnvironmentVariables()
@@ -46,7 +46,6 @@ namespace webapi
             app.UseRouting();
             app.UseSession();
             app.UseCors("AllowSpecificOrigin");
-            app.UseAuthHandler();
             app.UseAuthentication();
             app.UseUserSession();
 

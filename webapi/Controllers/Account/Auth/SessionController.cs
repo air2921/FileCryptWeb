@@ -69,7 +69,11 @@ namespace webapi.Controllers.Account.Auth
 
             var response = await service.UpdateJwt(token);
             if (!response.IsSuccess)
+            {
+                if (response.Status.Equals(401))
+                    HttpContext.Response.Cookies.Delete(ImmutableData.REFRESH_COOKIE_KEY);
                 return StatusCode(response.Status, new { message = response.Message });
+            }
 
             if (response.ObjectData is not string jwt)
                 return StatusCode(500, new { message = Message.ERROR });

@@ -94,6 +94,18 @@ namespace webapi
                     ValidAudience = configuration[App.AUDIENCE],
                     ClockSkew = TimeSpan.Zero
                 };
+                jwt.Events = new JwtBearerEvents()
+                {
+                    OnAuthenticationFailed = auth =>
+                    {
+                        auth.Response.StatusCode = 401;
+                        auth.Response.ContentType = "application/json";
+                        if (auth.Request.Cookies.ContainsKey(ImmutableData.REFRESH_COOKIE_KEY))
+                            auth.Response.Headers.Append("X-AUTH-REQUIRED", true.ToString());
+
+                        return auth.Response.WriteAsJsonAsync(new { message = "Invalid auth token" });
+                    }
+                };
             });
 
             services.AddAntiforgery(options => { options.HeaderName = ImmutableData.XSRF_HEADER_NAME; });
