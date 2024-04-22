@@ -1,13 +1,13 @@
-﻿using Microsoft.EntityFrameworkCore;
+﻿using data_access.Ef;
+using domain.Exceptions;
+using domain.Models;
+using domain.Specifications.By_Relation_Specifications;
+using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Logging;
-using webapi.DB.Ef;
-using webapi.DB.Ef.Specifications.By_Relation_Specifications;
-using webapi.Exceptions;
-using webapi.Models;
 
-namespace tests.Db_Tests.Sql_Tests
+namespace tests.Data_Access
 {
-    public class Repository_Test
+    public class RepositoryTest
     {
         [Fact]
         public async Task GetAll_ReturnsAllEntities()
@@ -124,7 +124,7 @@ namespace tests.Db_Tests.Sql_Tests
 
             var cancellationToken = new CancellationTokenSource(TimeSpan.FromMilliseconds(0.01)).Token;
 
-            await Assert.ThrowsAsync<OperationCanceledException>(() => repository.GetAll(null, cancellationToken));
+            await Assert.ThrowsAsync<EntityException>(() => repository.GetAll(null, cancellationToken));
         }
 
         [Fact]
@@ -141,7 +141,7 @@ namespace tests.Db_Tests.Sql_Tests
             var cancellationTokenSource = new CancellationTokenSource();
             cancellationTokenSource.Cancel();
 
-            await Assert.ThrowsAsync<OperationCanceledException>(() => repository.GetAll(null, cancellationTokenSource.Token));
+            await Assert.ThrowsAsync<EntityException>(() => repository.GetAll(null, cancellationTokenSource.Token));
         }
 
         [Fact]
@@ -211,7 +211,7 @@ namespace tests.Db_Tests.Sql_Tests
 
             var cancellationToken = new CancellationTokenSource(TimeSpan.FromMilliseconds(0.01)).Token;
 
-            await Assert.ThrowsAsync<OperationCanceledException>(() => repository.GetByFilter(null, cancellationToken));
+            await Assert.ThrowsAsync<EntityException>(() => repository.GetByFilter(null, cancellationToken));
         }
 
         [Fact]
@@ -228,7 +228,7 @@ namespace tests.Db_Tests.Sql_Tests
             var cancellationTokenSource = new CancellationTokenSource();
             cancellationTokenSource.Cancel();
 
-            await Assert.ThrowsAsync<OperationCanceledException>(() => repository.GetByFilter(null, cancellationTokenSource.Token));
+            await Assert.ThrowsAsync<EntityException>(() => repository.GetByFilter(null, cancellationTokenSource.Token));
         }
 
         [Fact]
@@ -297,7 +297,7 @@ namespace tests.Db_Tests.Sql_Tests
 
             var cancellationToken = new CancellationTokenSource(TimeSpan.FromMilliseconds(0.01)).Token;
 
-            await Assert.ThrowsAsync<OperationCanceledException>(() => repository.GetById(1, cancellationToken));
+            await Assert.ThrowsAsync<EntityException>(() => repository.GetById(1, cancellationToken));
         }
 
         [Fact]
@@ -314,7 +314,7 @@ namespace tests.Db_Tests.Sql_Tests
             var cancellationTokenSource = new CancellationTokenSource();
             cancellationTokenSource.Cancel();
 
-            await Assert.ThrowsAsync<OperationCanceledException>(() => repository.GetById(1, cancellationTokenSource.Token));
+            await Assert.ThrowsAsync<EntityException>(() => repository.GetById(1, cancellationTokenSource.Token));
         }
 
         [Fact]
@@ -366,7 +366,7 @@ namespace tests.Db_Tests.Sql_Tests
                 user_id = 1
             };
 
-            await Assert.ThrowsAsync<EntityNotCreatedException>(() => repository.Add(storageModel, null, cancellationToken));
+            await Assert.ThrowsAsync<EntityException>(() => repository.Add(storageModel, null, cancellationToken));
         }
 
         [Fact]
@@ -392,7 +392,7 @@ namespace tests.Db_Tests.Sql_Tests
                 user_id = 1
             };
 
-            await Assert.ThrowsAsync<EntityNotCreatedException>(() => repository.Add(storageModel, null, cancellationTokenSource.Token));
+            await Assert.ThrowsAsync<EntityException>(() => repository.Add(storageModel, null, cancellationTokenSource.Token));
         }
 
         [Fact]
@@ -455,7 +455,7 @@ namespace tests.Db_Tests.Sql_Tests
                     access_code = "access_code_3", user_id = 3 }
             };
 
-            await Assert.ThrowsAsync<EntityNotCreatedException>(() => repository.AddRange(entities, cancellationToken));
+            await Assert.ThrowsAsync<EntityException>(() => repository.AddRange(entities, cancellationToken));
         }
 
         [Fact]
@@ -482,7 +482,7 @@ namespace tests.Db_Tests.Sql_Tests
                     access_code = "access_code_3", user_id = 3 }
             };
 
-            await Assert.ThrowsAsync<EntityNotCreatedException>(() => repository.AddRange(entities, cancellationTokenSource.Token));
+            await Assert.ThrowsAsync<EntityException>(() => repository.AddRange(entities, cancellationTokenSource.Token));
         }
 
         [Fact]
@@ -539,7 +539,7 @@ namespace tests.Db_Tests.Sql_Tests
 
             await repository.Add(storageModel);
 
-            await Assert.ThrowsAsync<EntityNotDeletedException>(() => repository.Delete(1, cancellationToken));
+            await Assert.ThrowsAsync<EntityException>(() => repository.Delete(1, cancellationToken));
         }
 
         [Fact]
@@ -567,7 +567,7 @@ namespace tests.Db_Tests.Sql_Tests
 
             await repository.Add(storageModel);
 
-            await Assert.ThrowsAsync<EntityNotDeletedException>(() => repository.Delete(1, cancellationTokenSource.Token));
+            await Assert.ThrowsAsync<EntityException>(() => repository.Delete(1, cancellationTokenSource.Token));
         }
 
         [Fact]
@@ -642,7 +642,7 @@ namespace tests.Db_Tests.Sql_Tests
 
             await repository.AddRange(entities);
 
-            await Assert.ThrowsAsync<EntityNotDeletedException>(() => repository.DeleteMany(new List<int> { 1, 2, 3 }, cancellationToken));
+            await Assert.ThrowsAsync<EntityException>(() => repository.DeleteMany(new List<int> { 1, 2, 3 }, cancellationToken));
         }
 
         [Fact]
@@ -671,7 +671,7 @@ namespace tests.Db_Tests.Sql_Tests
 
             await repository.AddRange(entities);
 
-            await Assert.ThrowsAsync<EntityNotDeletedException>(() => repository.DeleteMany(new List<int> { 1, 2, 3 }, cancellationTokenSource.Token));
+            await Assert.ThrowsAsync<EntityException>(() => repository.DeleteMany(new List<int> { 1, 2, 3 }, cancellationTokenSource.Token));
         }
 
         [Fact]
@@ -731,7 +731,7 @@ namespace tests.Db_Tests.Sql_Tests
 
             Assert.NotNull(entity);
 
-            await Assert.ThrowsAsync<EntityNotDeletedException>(() => repository.DeleteByFilter(null, cancellationToken));
+            await Assert.ThrowsAsync<EntityException>(() => repository.DeleteByFilter(null, cancellationToken));
         }
 
         [Fact]
@@ -762,7 +762,7 @@ namespace tests.Db_Tests.Sql_Tests
 
             Assert.NotNull(entity);
 
-            await Assert.ThrowsAsync<EntityNotDeletedException>(() => repository.DeleteByFilter(null, cancellationTokenSource.Token));
+            await Assert.ThrowsAsync<EntityException>(() => repository.DeleteByFilter(null, cancellationTokenSource.Token));
         }
 
         [Fact]
@@ -828,7 +828,7 @@ namespace tests.Db_Tests.Sql_Tests
 
             Assert.NotNull(entity);
 
-            await Assert.ThrowsAsync<EntityNotUpdatedException>(() => repository.Update(entity, cancellationToken));
+            await Assert.ThrowsAsync<EntityException>(() => repository.Update(entity, cancellationToken));
         }
 
         [Fact]
@@ -859,7 +859,7 @@ namespace tests.Db_Tests.Sql_Tests
 
             Assert.NotNull(entity);
 
-            await Assert.ThrowsAsync<EntityNotUpdatedException>(() => repository.Update(entity, cancellationTokenSource.Token));
+            await Assert.ThrowsAsync<EntityException>(() => repository.Update(entity, cancellationTokenSource.Token));
         }
     }
 }

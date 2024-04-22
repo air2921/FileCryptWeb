@@ -1,10 +1,16 @@
 ﻿using Microsoft.AspNetCore.Http;
+using Moq;
+using System;
+using System.Collections.Generic;
+using System.Linq;
 using System.Security.Claims;
+using System.Text;
+using System.Threading.Tasks;
 using webapi.Helpers;
 
-namespace tests.Helpers_Tests
+namespace tests.Api
 {
-    public class UserData_Test
+    public class UserInfoTest
     {
         [Fact]
         public void Constructor_UserNotAuthenticated_ThrowsException()
@@ -117,7 +123,7 @@ namespace tests.Helpers_Tests
                     break;
                 case ClaimTypes.Name:
                     result = userData.Username;
-                break;
+                    break;
             }
 
             Assert.Equal(expectedValue, result);

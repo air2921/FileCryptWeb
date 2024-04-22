@@ -21,7 +21,7 @@ namespace application.Master_Services.Core
             try
             {
                 var response = await VerifyAccess(userId, storageId, code);
-                if (response.Status != 200)
+                if (!response.IsSuccess)
                     return response;
 
                 await repository.Add(new KeyStorageItemModel
@@ -95,7 +95,7 @@ namespace application.Master_Services.Core
             try
             {
                 var response = await VerifyAccess(userId, storageId, code);
-                if (response.Status != 200)
+                if (!response.IsSuccess)
                     return response;
 
                 await repository.Delete(keyId);

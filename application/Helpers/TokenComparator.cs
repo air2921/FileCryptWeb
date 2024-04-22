@@ -4,18 +4,15 @@ using Microsoft.IdentityModel.Tokens;
 using System.IdentityModel.Tokens.Jwt;
 using application.DTO.Inner;
 using application.Abstractions.Inner;
+using Microsoft.Extensions.Configuration;
 
 namespace application.Helpers
 {
-    public class TokenComparator : ITokenComparator
+    public class TokenComparator(IConfiguration configuration) : ITokenComparator
     {
-        public string Key { get; set; }
-        public string Issuer { get; set; }
-        public string Audience { get; set; }
-
         public string CreateJWT(JwtDTO dto)
         {
-            var key = new SymmetricSecurityKey(Encoding.ASCII.GetBytes(Key));
+            var key = new SymmetricSecurityKey(Encoding.ASCII.GetBytes(configuration[App.SECRET_KEY]!));
             var credentials = new SigningCredentials(key, SecurityAlgorithms.HmacSha256);
 
             var claims = new[]
@@ -27,8 +24,8 @@ namespace application.Helpers
             };
 
             var token = new JwtSecurityToken(
-                issuer: Issuer,
-                audience: Audience,
+                issuer: configuration[App.ISSUER]!,
+                audience: configuration[App.AUDIENCE],
                 claims: claims,
                 expires: DateTime.UtcNow + dto.Expires,
                 signingCredentials: credentials);

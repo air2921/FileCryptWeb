@@ -3,7 +3,7 @@ using Microsoft.EntityFrameworkCore;
 
 namespace data_access.Ef
 {
-    public class FileCryptDbContext : DbContext
+    public class FileCryptDbContext : DbContext, ISeed
     {
         private const int USER_ID = 264950;
 
@@ -102,5 +102,35 @@ namespace data_access.Ef
 
             #endregion
         }
+
+        public UserModel AdminSeed()
+        {
+            using var context = new FileCryptDbContext((DbContextOptions<FileCryptDbContext>)_options);
+            var user = context.Users.Find(USER_ID);
+            if (user is null)
+            {
+                user = new UserModel
+                {
+                    id = USER_ID,
+                    email = EMAIL.ToLowerInvariant(),
+                    username = USERNAME,
+                    password = PASSWORD,
+                    role = ROLE,
+                    is_2fa_enabled = TWO_FA_ENABLED,
+                    is_blocked = IS_BLOCKED
+                };
+
+                context.Users.Add(user);
+                context.SaveChanges();
+
+                return user;
+            }
+            return user;
+        }
+    }
+
+    public interface ISeed
+    {
+        UserModel AdminSeed();
     }
 }

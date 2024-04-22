@@ -1,4 +1,5 @@
 ﻿using application.Abstractions.Endpoints.Core;
+using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 using webapi.Helpers.Abstractions;
 
@@ -6,6 +7,7 @@ namespace webapi.Controllers.Core
 {
     [Route("api/core/user")]
     [ApiController]
+    [Authorize]
     public class UserController(
         IUserService service,
         IUserInfo userInfo) : ControllerBase

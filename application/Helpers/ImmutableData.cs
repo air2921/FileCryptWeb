@@ -92,6 +92,7 @@
         public const string ENCRYPTION_KEY = "AppKey";
         public const string EMAIL = "Email";
         public const string EMAIL_PASSWORD = "EmailPassword";
+        public const string REACT = "";
         public const string SECRET_KEY = "JwtKey";
         public const string ISSUER = "JwtIssuer";
         public const string AUDIENCE = "JwtAudience";

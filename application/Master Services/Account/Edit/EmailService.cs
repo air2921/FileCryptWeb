@@ -110,7 +110,7 @@ namespace application.Master_Services.Account.Edit
                 await transaction.CreateTransaction(user, email);
                 await dataManagament.DeleteData(id);
 
-                return new Response { Status = 200 };
+                return new Response { Status = 200, Message = Message.UPDATED };
             }
             catch (EntityException ex)
             {
