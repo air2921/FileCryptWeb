@@ -15,6 +15,17 @@ namespace webapi.Helpers
 
         public string Email => GetStringClaimValue(ClaimTypes.Email);
 
+        public string RequestId => GetRequest();
+
+        private string GetRequest()
+        {
+            Microsoft.Extensions.Primitives.StringValues token;
+            if (_httpContext.Request.Headers.TryGetValue("X-REQUEST-TOKEN", out token))
+                return token.FirstOrDefault() ?? "None";
+            else
+                return "None";
+        }
+
         private string GetStringClaimValue(string claimType)
         {
             ClaimsPrincipal user = _httpContext.User;
