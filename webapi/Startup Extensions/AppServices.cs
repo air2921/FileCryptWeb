@@ -8,17 +8,10 @@ using System.Text;
 
 namespace webapi
 {
-    public class AppServices
+    public static class AppServices
     {
-        public static void Register(IServiceCollection services)
+        public static void Register(this IServiceCollection services, IConfiguration configuration)
         {
-            var configuration = new ConfigurationBuilder()
-                .AddUserSecrets<Program>()
-                .SetBasePath(Directory.GetCurrentDirectory())
-                .AddJsonFile("appsettings.json", false, true)
-                .AddEnvironmentVariables()
-                .Build();
-
             services.AddAutoMapper(typeof(Startup));
             services.AddControllers();
             services.AddLogging();

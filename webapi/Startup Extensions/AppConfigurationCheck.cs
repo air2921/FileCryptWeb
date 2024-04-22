@@ -5,22 +5,15 @@ using webapi.Helpers;
 
 namespace webapi
 {
-    public class AppConfigurationCheck
+    public static class AppConfigurationCheck
     {
         /// <summary>
         /// Using GetAwaiter().GetResult() or .Result is bad practice and may cause a deadlock
         /// </summary>
         /// <exception cref="InvalidConfigurationException"></exception>
 
-        public static void ConfigurationCheck()
+        public static void ConfigurationCheck(this IConfiguration configuration)
         {
-            var configuration = new ConfigurationBuilder()
-                .AddUserSecrets<Program>()
-                .SetBasePath(Directory.GetCurrentDirectory())
-                .AddJsonFile("appsettings.json", false, true)
-                .AddEnvironmentVariables()
-                .Build();
-
             string? jwtKey = configuration[App.SECRET_KEY];
             string? emailPassword = configuration[App.EMAIL_PASSWORD];
             string? emailAdress = configuration[App.EMAIL];

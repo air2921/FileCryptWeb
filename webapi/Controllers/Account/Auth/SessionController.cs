@@ -26,7 +26,7 @@ namespace webapi.Controllers.Account.Auth
 
                 SetCredentials(cookies);
                 var expires = (int)(DateTime.UtcNow + ImmutableData.JwtExpiry - new DateTime(1970, 1, 1)).TotalSeconds;
-                return StatusCode(200, new { jwt = cookies.Jwt, expires = expires });
+                return StatusCode(200, new { access = new { jwt = cookies.Jwt, expires } });
             }
 
             return StatusCode(response.Status, new { message = response.Message });
@@ -43,7 +43,7 @@ namespace webapi.Controllers.Account.Auth
 
                 SetCredentials(cookies);
                 var expires = (int)(DateTime.UtcNow + ImmutableData.JwtExpiry - new DateTime(1970, 1, 1)).TotalSeconds;
-                return StatusCode(200, new { jwt = cookies.Jwt, expires = expires });
+                return StatusCode(200, new { access = new { jwt = cookies.Jwt, expires } });
             }
 
             return StatusCode(response.Status, new { message = response.Message });
@@ -75,7 +75,7 @@ namespace webapi.Controllers.Account.Auth
                 return StatusCode(500, new { message = Message.ERROR });
 
             var expires = (int)(DateTime.UtcNow + ImmutableData.JwtExpiry - new DateTime(1970, 1, 1)).TotalSeconds;
-            return StatusCode(response.Status, new { token = jwt, expires = expires });
+            return StatusCode(response.Status, new { access = new { jwt, expires } });
         }
 
         private void SetCredentials(CredentialsDTO dto)

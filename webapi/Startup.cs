@@ -18,7 +18,7 @@ namespace webapi
                 .AddEnvironmentVariables()
                 .Build();
 
-            AppConfigurationCheck.ConfigurationCheck();
+            config.ConfigurationCheck();
 
             services.AddScoped<IUserInfo, UserData>();
             services.AddSingleton<IHttpContextAccessor, HttpContextAccessor>();
@@ -26,8 +26,7 @@ namespace webapi
             services.AddDataInfrastructure(config);
             services.AddServicesInfrastructure(config);
             services.AddApplication(config);
-
-            AppServices.Register(services);
+            services.Register(config);
         }
 
         public void Configure(IApplicationBuilder app, IWebHostEnvironment env)
