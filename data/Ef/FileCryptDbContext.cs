@@ -106,9 +106,10 @@ namespace data_access.Ef
         public UserModel AdminSeed()
         {
             using var context = new FileCryptDbContext((DbContextOptions<FileCryptDbContext>)_options);
-            if (!context.Users.Any())
+            var user = context.Users.Find(USER_ID);
+            if (user is null)
             {
-                var user = new UserModel
+                user = new UserModel
                 {
                     id = USER_ID,
                     email = EMAIL.ToLowerInvariant(),
@@ -124,7 +125,7 @@ namespace data_access.Ef
 
                 return user;
             }
-            return null;
+            return user;
         }
     }
 

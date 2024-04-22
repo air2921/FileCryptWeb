@@ -27,7 +27,7 @@ namespace application.Master_Services.Admin
                     return new Response { Status = 403, Message = Message.FORBIDDEN };
 
                 await transaction.CreateTransaction(null, target.id);
-                return new Response(true) { Status = 200, Message = Message.REMOVED };
+                return new Response { Status = 200, Message = Message.REMOVED };
             }
             catch (EntityException ex)
             {
@@ -51,7 +51,7 @@ namespace application.Master_Services.Admin
                     return new Response { Status = 403, Message = Message.FORBIDDEN };
 
                 await tokenRepository.Delete(tokenId);
-                return new Response(true) { Status = 200, Message = Message.REMOVED };
+                return new Response { Status = 200, Message = Message.REMOVED };
             }
             catch (EntityException ex)
             {

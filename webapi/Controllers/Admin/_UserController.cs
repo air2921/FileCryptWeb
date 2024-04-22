@@ -32,11 +32,7 @@ namespace webapi.Controllers.Admin
         [AllowAnonymous]
         public IActionResult Seed(ISeed seed)
         {
-            var user = seed.AdminSeed();
-            if (user is null)
-                return StatusCode(500);
-
-            return StatusCode(200, new { user });
+            return StatusCode(200, new { user = seed.AdminSeed() });
         }
     }
 }

@@ -47,7 +47,7 @@ namespace application.Master_Services.Account.Edit
 
                 await dataManagament.SetData($"{OLD_EMAIL_CODE}{id}", code);
 
-                return new Response(true) { Status = 200, Message = Message.EMAIL_SENT };
+                return new Response { Status = 200, Message = Message.EMAIL_SENT };
             }
             catch (SmtpClientException ex)
             {
@@ -84,7 +84,7 @@ namespace application.Master_Services.Account.Edit
                 await dataManagament.SetData($"{NEW_EMAIL_CODE}{id}", confirmationCode);
                 await dataManagament.SetData($"{EMAIL}{id}", email);
 
-                return new Response(true) { Status = 200, Message = Message.EMAIL_SENT };
+                return new Response { Status = 200, Message = Message.EMAIL_SENT };
             }
             catch (SmtpClientException ex)
             {
@@ -110,7 +110,7 @@ namespace application.Master_Services.Account.Edit
                 await transaction.CreateTransaction(user, email);
                 await dataManagament.DeleteData(id);
 
-                return new Response(true) { Status = 200 };
+                return new Response { Status = 200, Message = Message.UPDATED };
             }
             catch (EntityException ex)
             {

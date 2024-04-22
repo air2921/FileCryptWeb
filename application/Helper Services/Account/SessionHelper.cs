@@ -106,7 +106,7 @@ namespace application.Helper_Services.Account
                 await LoginTransaction(user, refresh);
                 await redisCache.DeteteCacheByKeyPattern($"{ImmutableData.NOTIFICATIONS_PREFIX}{user.id}");
 
-                return new Response(true) { Status = 201, ObjectData = GetCredentials(user, refresh) };
+                return new Response { Status = 201, ObjectData = GetCredentials(user, refresh) };
             }
             catch (EntityException ex)
             {
@@ -122,7 +122,7 @@ namespace application.Helper_Services.Account
                 if (tokenModel is not null)
                     await DeleteExpiredTokens(tokenModel.user_id);
 
-                return new Response(true) { Status = 204 };
+                return new Response { Status = 204 };
             }
             catch (EntityException)
             {

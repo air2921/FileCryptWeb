@@ -35,7 +35,7 @@ namespace application.Master_Services.Account.Edit
                 await transaction.CreateTransaction(user, dto.NewPassword);
                 await dataManagament.DeleteData(id);
 
-                return new Response(true) { Status = 200, Message = Message.UPDATED };
+                return new Response { Status = 200, Message = Message.UPDATED };
             }
             catch (EntityException ex)
             {

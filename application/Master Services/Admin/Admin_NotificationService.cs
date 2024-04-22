@@ -20,7 +20,7 @@ namespace application.Master_Services.Admin
                 if (notification is null)
                     return new Response { Status = 404, Message = Message.NOT_FOUND };
 
-                return new Response(true) { Status = 200, ObjectData = notification };
+                return new Response { Status = 200, ObjectData = notification };
             }
             catch (EntityException ex)
             {
@@ -32,7 +32,7 @@ namespace application.Master_Services.Admin
         {
             try
             {
-                return new Response(true)
+                return new Response
                 {
                     Status = 200,
                     ObjectData = await repository
@@ -55,7 +55,7 @@ namespace application.Master_Services.Admin
 
                 await redisCache.DeteteCacheByKeyPattern($"{ImmutableData.NOTIFICATIONS_PREFIX}{notification.user_id}");
 
-                return new Response(true) { Status = 204 };
+                return new Response { Status = 204 };
             }
             catch (EntityException ex)
             {
@@ -69,7 +69,7 @@ namespace application.Master_Services.Admin
             {
                 var notificationList = await repository.DeleteMany(identifiers);
                 await redisCache.DeleteRedisCache(notificationList, ImmutableData.NOTIFICATIONS_PREFIX, item => item.user_id);
-                return new Response(true) { Status = 204 };
+                return new Response { Status = 204 };
             }
             catch (EntityException ex)
             {

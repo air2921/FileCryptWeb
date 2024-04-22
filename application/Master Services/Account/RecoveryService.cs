@@ -44,7 +44,7 @@ namespace application.Master_Services.Account
 
                 await redisCache.DeteteCacheByKeyPattern($"{ImmutableData.NOTIFICATIONS_PREFIX}{user.id}");
 
-                return new Response(true) { Status = 201, Message = Message.EMAIL_SENT };
+                return new Response { Status = 201, Message = Message.EMAIL_SENT };
             }
             catch (SmtpClientException ex)
             {
@@ -82,7 +82,7 @@ namespace application.Master_Services.Account
                 await redisCache.DeteteCacheByKeyPattern($"{ImmutableData.NOTIFICATIONS_PREFIX}{user.id}");
                 await redisCache.DeteteCacheByKeyPattern($"{ImmutableData.USER_DATA_PREFIX}{user.id}");
 
-                return new Response(true) { Status = 200, Message = Message.UPDATED };
+                return new Response { Status = 200, Message = Message.UPDATED };
             }
             catch (EntityException ex)
             {

@@ -16,7 +16,7 @@ namespace webapi.Controllers.Core
         public async Task<IActionResult> GetUser([FromRoute] int userId)
         {
             var response = await service.GetOne(userInfo.UserId, userId);
-            if (response.Status != 200)
+            if (!response.IsSuccess)
                 return StatusCode(response.Status, new { message = response.Message });
             else
                 return StatusCode(response.Status, new { user = response.ObjectData });

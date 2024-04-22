@@ -51,7 +51,7 @@ namespace application.Master_Services.Core
 
                 await data.DeleteData(senderId, receiverId);
 
-                return new Response(true) { Status = 201, Message = Message.CREATED };
+                return new Response { Status = 201, Message = Message.CREATED };
             }
             catch (EntityException ex)
             {
@@ -93,7 +93,7 @@ namespace application.Master_Services.Core
 
                 await data.DeleteData(offer.sender_id, offer.receiver_id);
 
-                return new Response(true) { Status = 200, Message = Message.UPDATED };
+                return new Response { Status = 200, Message = Message.UPDATED };
             }
             catch (EntityException ex)
             {
@@ -110,7 +110,7 @@ namespace application.Master_Services.Core
                 if (offer is null)
                     return new Response { Status = 404, Message = Message.NOT_FOUND };
                 else
-                    return new Response(true) { Status = 200, ObjectData = offer };
+                    return new Response { Status = 200, ObjectData = offer };
             }
             catch (EntityException ex)
             {
@@ -130,7 +130,7 @@ namespace application.Master_Services.Core
                 var cacheKey = $"{ImmutableData.OFFERS_PREFIX}{userId}_{skip}_{count}_{byDesc}_{sended}_{isAccepted}_{type}";
                 var obj = new OfferRangeObject(cacheKey, userId, skip, count, byDesc, sended, isAccepted, type);
 
-                return new Response(true)
+                return new Response
                 {
                     Status = 200,
                     ObjectData = await offerCacheHandler.CacheAndGetRange(obj)
@@ -155,7 +155,7 @@ namespace application.Master_Services.Core
                     return new Response { Status = 404, Message = Message.NOT_FOUND };
 
                 await data.DeleteData(offer.sender_id, offer.receiver_id);
-                return new Response(true) { Status = 204 };
+                return new Response { Status = 204 };
             }
             catch (EntityException ex)
             {

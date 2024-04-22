@@ -56,7 +56,7 @@ namespace application.Master_Services.Account
                     Code = code.ToString()
                 });
 
-                return new Response(true) { Status = 200, Message = Message.EMAIL_SENT };
+                return new Response { Status = 200, Message = Message.EMAIL_SENT };
             }
             catch (SmtpClientException ex)
             {
@@ -84,7 +84,7 @@ namespace application.Master_Services.Account
 
                 await transaction.CreateTransaction(user);
 
-                return new Response(true) { Status = 200, Message = Message.CREATED };
+                return new Response { Status = 200, Message = Message.CREATED };
             }
             catch (EntityException ex)
             {

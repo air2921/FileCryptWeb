@@ -21,7 +21,7 @@ namespace application.Master_Services.Core
             try
             {
                 var response = await VerifyAccess(userId, storageId, code);
-                if (response.Status != 200)
+                if (!response.IsSuccess)
                     return response;
 
                 await repository.Add(new KeyStorageItemModel
@@ -33,7 +33,7 @@ namespace application.Master_Services.Core
                 });
                 await redisCache.DeleteCache($"{ImmutableData.STORAGE_ITEMS_PREFIX}{userId}");
 
-                return new Response(true) { Status = 201, Message = Message.CREATED };
+                return new Response { Status = 201, Message = Message.CREATED };
             }
             catch (EntityException ex)
             {
@@ -50,7 +50,7 @@ namespace application.Master_Services.Core
             try
             {
                 var cacheKey = $"{ImmutableData.STORAGE_ITEMS_PREFIX}{userId}_{keyId}";
-                return new Response(true)
+                return new Response
                 {
                     Status = 200,
                     ObjectData = await itemCacheHandler.CacheAndGet(
@@ -73,7 +73,7 @@ namespace application.Master_Services.Core
             try
             {
                 var cacheKey = $"{ImmutableData.STORAGE_ITEMS_PREFIX}{userId}_{storageId}_{skip}_{count}_{byDesc}";
-                return new Response(true)
+                return new Response
                 {
                     Status = 200,
                     ObjectData = await itemCacheHandler.CacheAndGetRange(
@@ -95,13 +95,13 @@ namespace application.Master_Services.Core
             try
             {
                 var response = await VerifyAccess(userId, storageId, code);
-                if (response.Status != 200)
+                if (!response.IsSuccess)
                     return response;
 
                 await repository.Delete(keyId);
                 await redisCache.DeleteCache($"{ImmutableData.STORAGE_ITEMS_PREFIX}{userId}");
 
-                return new Response(true) { Status = 204 };
+                return new Response { Status = 204 };
             }
             catch (EntityException ex)
             {
@@ -125,7 +125,7 @@ namespace application.Master_Services.Core
                 if (!hashUtility.Verify(code, storage.access_code))
                     return new Response { Status = 403, Message = Message.INCORRECT };
 
-                return new Response(true) { Status = 200 };
+                return new Response { Status = 200 };
             }
             catch (EntityException)
             {

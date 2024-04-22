@@ -40,7 +40,7 @@ namespace application.Master_Services.Core
                 await fileHelper.CreateFile(dto.UserId, filename, dto.ContentType,
                     fileHelper.GetFileCategory(dto.ContentType));
 
-                return new Response(true)
+                return new Response
                 {
                     Status = 201,
                     ObjectData = new FileStream(path, FileMode.Open, FileAccess.Read,
