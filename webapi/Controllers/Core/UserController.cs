@@ -13,9 +13,9 @@ namespace webapi.Controllers.Core
         IUserInfo userInfo) : ControllerBase
     {
         [HttpGet("{userId}")]
-        public async Task<IActionResult> GetUser([FromRoute] int userId)
+        public async Task<IActionResult> GetUser([FromRoute] int userId, [FromQuery] bool own)
         {
-            var response = await service.GetOne(userInfo.UserId, userId);
+            var response = await service.GetOne(userInfo.UserId, own ? userInfo.UserId : userId);
             if (!response.IsSuccess)
                 return StatusCode(response.Status, new { message = response.Message });
             else

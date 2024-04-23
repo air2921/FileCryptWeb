@@ -37,11 +37,6 @@ namespace webapi.Middlewares
 
             httpContext.Response.Cookies.Append(ImmutableData.IS_AUTHORIZED, true.ToString(), cookieOptions);
 
-            if (userContext.HasClaim(u => u.Type == ClaimTypes.Name))
-            {
-                var claimUsername = userContext.FindFirstValue(ClaimTypes.Name);
-                httpContext.Response.Cookies.Append(ImmutableData.USERNAME_COOKIE_KEY, claimUsername!, cookieOptions);
-            }
             if (userContext.HasClaim(u => u.Type == ClaimTypes.NameIdentifier))
             {
                 var claimId = userContext.FindFirstValue(ClaimTypes.NameIdentifier);

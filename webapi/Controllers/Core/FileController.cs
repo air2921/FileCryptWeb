@@ -7,7 +7,7 @@ using webapi.Helpers.Abstractions;
 
 namespace webapi.Controllers.Core
 {
-    [Route("api/core/files")]
+    [Route("api/core/file")]
     [ApiController]
     [Authorize]
     public class FileController(
@@ -15,14 +15,14 @@ namespace webapi.Controllers.Core
         IFileService fileService,
         IUserInfo userInfo) : ControllerBase
     {
-        [HttpPost("cypher/{operation}/{storageId}/{keyId}")]
+        [HttpPost("cypher/{storageId}/{keyId}")]
         [ValidateAntiForgeryToken]
-        public async Task<IActionResult> CypherFile(IFormFile file, [FromRoute] string operation,
-            [FromRoute] int storageId, [FromRoute] int keyId, [FromQuery] int code)
+        public async Task<IActionResult> CypherFile(IFormFile file, [FromRoute] int storageId,
+            [FromRoute] int keyId, [FromQuery] bool encrypt, [FromQuery] int code)
         {
             var response = await cryptographyService.Cypher(new CypherFileDTO
             {
-                Operation = operation,
+                Operation = encrypt ? "encrypt" : "decrypt",
                 StorageId = storageId,
                 KeyId = keyId,
                 Code = code.ToString(),

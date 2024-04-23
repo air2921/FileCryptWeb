@@ -59,7 +59,7 @@ namespace application.Master_Services.Account.Edit
             }
         }
 
-        public async Task<Response> ConfirmOldEmail(string email, int code, string username, int id)
+        public async Task<Response> ConfirmOldEmail(string email, int code, int id)
         {
             try
             {
@@ -75,7 +75,7 @@ namespace application.Master_Services.Account.Edit
                 int confirmationCode = generate.GenerateSixDigitCode();
                 await emailSender.SendMessage(new EmailDto()
                 {
-                    username = username,
+                    username = "User",
                     email = email,
                     subject = EmailMessage.ConfirmNewEmailHeader,
                     message = EmailMessage.ConfirmNewEmailBody + confirmationCode

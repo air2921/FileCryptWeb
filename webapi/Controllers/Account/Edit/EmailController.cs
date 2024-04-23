@@ -22,7 +22,7 @@ namespace webapi.Controllers.Account.Edit
         [HttpPost("verify/current")]
         public async Task<IActionResult> VerifyCurrent([FromQuery] string email, [FromQuery] int code)
         {
-            var response = await service.ConfirmOldEmail(email, code, userInfo.Username, userInfo.UserId);
+            var response = await service.ConfirmOldEmail(email, code, userInfo.UserId);
             return StatusCode(response.Status, new { message = response.Message });
         }
 

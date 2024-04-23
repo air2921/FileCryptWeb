@@ -1,65 +1,47 @@
 ﻿import React, { useEffect, useState } from 'react';
 import { useNavigate, useParams } from 'react-router-dom';
-import UserData from './UserData';
-import UserKeys from './UserKeys';
 import OfferList from '../../components/lists/offers/OfferList';
-import AxiosRequest from '../../utils/api/AxiosRequest';
 import FileList from '../../components/lists/files/FileList';
+import { getFiles } from '../../utils/api/Files';
 
 const User = () => {
-    const { userId } = useParams();
-    const { username } = useParams();
-    const [userData, setUserData] = useState(null);
-    const [successStatusCode, setStatusCode] = useState(false)
-    const [errorMessage, setErrorMessage] = useState('');
-    const navigate = useNavigate();
+    //const { userId } = useParams();
+    //const [userData, setUserData] = useState(null);
+    //const [successStatusCode, setStatusCode] = useState(false)
+    //const [errorMessage, setErrorMessage] = useState('');
+    //const navigate = useNavigate();
 
-    const fetchData = async () => {
+    //const fetchData = async () => {
+    //    const user = await getUser(parseInt(userId!), false);
+    //};
 
-        const response = await AxiosRequest({ endpoint: `api/core/users/${userId}/${username}`, method: 'GET', withCookie: true, requestBody: null })
+    //useEffect(() => {
+    //    fetchData();
+    //}, [userId]);
 
-        if (response.isSuccess) {
-            setUserData(response.data);
-            setStatusCode(true);
-            console.log(response.data);
-        }
-        else {
-            if (response.statusCode === 404) {
-                navigate("*");
-            }
+    //if (!successStatusCode || !userData) {
+    //    return <div className="error">{errorMessage || 'Loading...'}</div>;
+    //}
 
-            setErrorMessage(response.data);
-        }
-    };
+    //const { user, isOwner, keys, files, offers } = userData as {
+    //    user: any, isOwner: boolean, keys: any, files: any[], offers: any[]
+    //};
 
-    useEffect(() => {
-        fetchData();
-    }, [userId, username]);
+    //return (
+    //    <div className="profile">
+    //        <div className="user-container">
 
-    if (!successStatusCode || !userData) {
-        return <div className="error">{errorMessage || 'Loading...'}</div>;
-    }
-
-    const { user, isOwner, keys, files, offers } = userData as {
-        user: any, isOwner: boolean, keys: any, files: any[], offers: any[]
-    };
-
-    return (
-        <div className="profile">
-            <div className="user-container">
-                <UserData user={user} isOwner={isOwner} showButton={isOwner} />
-                <UserKeys keys={keys} />
-            </div>
-            <div className="file-offer-container">
-                <div className="files">
-                    <FileList files={files} isOwner={isOwner} />
-                </div>
-                <div className="offers">
-                    <OfferList offers={offers} isOwner={isOwner} />
-                </div>
-            </div>
-        </div>
-    );
+    //        </div>
+    //        <div className="file-offer-container">
+    //            <div className="files">
+    //                <FileList files={files} isOwner={isOwner} />
+    //            </div>
+    //            <div className="offers">
+    //                <OfferList offers={offers} isOwner={isOwner} />
+    //            </div>
+    //        </div>
+    //    </div>
+    //);
 };
 
 export default User;

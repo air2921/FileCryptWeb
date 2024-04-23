@@ -49,6 +49,7 @@ export async function verifyLogin(code: number) {
         const email = localStorage.getItem(EMAIL_IN_STORAGE);
         if (!email || email === undefined) {
             return {
+                success: false,
                 statusCode: 400,
                 message: 'Email not found in localStorage'
             };
@@ -65,6 +66,21 @@ export async function verifyLogin(code: number) {
             success: true,
             statusCode: response.status,
             message: response.data.message
+        }
+    } catch (error: any) {
+        return errorHandler(error);
+    }
+}
+
+export async function logout() {
+    try {
+        const response = await axios.post(BASE_URL + 'api/auth/logout', null, { withCredentials: true });
+        if ('X-LOGOUT' in response.headers)
+            localStorage.removeItem(JWT_ITEM);
+
+        return {
+            success: true,
+            statusCode: response.status,
         }
     } catch (error: any) {
         return errorHandler(error);

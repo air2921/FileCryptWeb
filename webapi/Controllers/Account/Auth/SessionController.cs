@@ -9,10 +9,10 @@ namespace webapi.Controllers.Account.Auth
 {
     [Route("api/auth")]
     [ApiController]
-    [ValidateAntiForgeryToken]
     public class SessionController(ISessionService service) : ControllerBase
     {
         [HttpPost("login")]
+        [ValidateAntiForgeryToken]
         public async Task<IActionResult> Login([FromBody] LoginDTO dto)
         {
             var response = await service.Login(dto);
@@ -33,6 +33,7 @@ namespace webapi.Controllers.Account.Auth
         }
 
         [HttpPost("verify/2fa")]
+        [ValidateAntiForgeryToken]
         public async Task<IActionResult> Verify([FromQuery] string email, [FromQuery] int code)
         {
             var response = await service.Verify2Fa(code, email);
@@ -50,6 +51,7 @@ namespace webapi.Controllers.Account.Auth
         }
 
         [HttpPost("logout")]
+        [ValidateAntiForgeryToken]
         [Authorize]
         public async Task<IActionResult> Logout()
         {
@@ -62,6 +64,7 @@ namespace webapi.Controllers.Account.Auth
         }
 
         [HttpPost("refresh")]
+        [ValidateAntiForgeryToken]
         public async Task<IActionResult> Refresh()
         {
             if (!HttpContext.Request.Cookies.TryGetValue(ImmutableData.REFRESH_COOKIE_KEY, out string? token))
@@ -79,7 +82,23 @@ namespace webapi.Controllers.Account.Auth
                 return StatusCode(500, new { message = Message.ERROR });
 
             var expires = (int)(DateTime.UtcNow + ImmutableData.JwtExpiry - new DateTime(1970, 1, 1)).TotalSeconds;
+
+            HttpContext.Response.Cookies.Append(ImmutableData.IS_AUTHORIZED, true.ToString(), new CookieOptions
+            {
+                MaxAge = ImmutableData.JwtExpiry,
+                Secure = true,
+                HttpOnly = false,
+                SameSite = SameSiteMode.None,
+                IsEssential = false
+            });
             return StatusCode(response.Status, new { access = new { jwt, expires } });
+        }
+
+        [HttpGet("check")]
+        [Authorize]
+        public IActionResult CheckAuth()
+        {
+            return StatusCode(204);
         }
 
         private void SetCredentials(CredentialsDTO dto)
@@ -105,7 +124,6 @@ namespace webapi.Controllers.Account.Auth
             HttpContext.Response.Cookies.Append(ImmutableData.REFRESH_COOKIE_KEY, dto.Refresh, cookieOptionsToken);
 
             HttpContext.Response.Cookies.Append(ImmutableData.IS_AUTHORIZED, dto.IsAuth.ToString(), cookieOptionsUserInfo);
-            HttpContext.Response.Cookies.Append(ImmutableData.USERNAME_COOKIE_KEY, dto.Username, cookieOptionsUserInfo);
             HttpContext.Response.Cookies.Append(ImmutableData.USER_ID_COOKIE_KEY, dto.Id, cookieOptionsUserInfo);
             HttpContext.Response.Cookies.Append(ImmutableData.ROLE_COOKIE_KEY, dto.Role, cookieOptionsUserInfo);
         }

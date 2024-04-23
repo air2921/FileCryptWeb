@@ -19,8 +19,8 @@ namespace webapi.Controllers.Account.Edit
             return StatusCode(response.Status, new { message = response.Message });
         }
 
-        [HttpPost("verify/{enable}")]
-        public async Task<IActionResult> Verify([FromQuery] int code, [FromRoute] bool enable)
+        [HttpPost("verify")]
+        public async Task<IActionResult> Verify([FromQuery] int code, [FromQuery] bool enable)
         {
             var response = await service.UpdateState(code, enable, userInfo.UserId);
             return StatusCode(response.Status, new { message = response.Message });

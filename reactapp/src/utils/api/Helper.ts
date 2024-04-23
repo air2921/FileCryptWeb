@@ -15,6 +15,7 @@ export function errorHandler(error: any) {
     return {
         success: false,
         statusCode: statusCode,
+        data: null,
         message: errorMessage
     }
 }
@@ -22,16 +23,15 @@ export function errorHandler(error: any) {
 export async function refreshJwt() {
     try {
         const response = await axios.post(BASE_URL + 'api/auth/refresh', null, { withCredentials: true })
+        localStorage.removeItem(JWT_ITEM);
         localStorage.setItem(JWT_ITEM, JSON.stringify(response.data.access))
 
         return {
             success: true,
             statusCode: response.status,
-            message: undefined
         }
     } catch (error: any) {
-        error = errorHandler(error);
-        return error;
+        return errorHandler(error);
     }
 }
 
@@ -41,16 +41,24 @@ export function interceptor() {
     instance.interceptors.request.use(
         async (config) => {
             const tokenObject = localStorage.getItem(JWT_ITEM);
-            if (!tokenObject) return config;
+            if (!tokenObject) {
+                await refreshJwt();
+                return config;
+            }
 
             const tokenJson = JSON.parse(tokenObject);
-            if (!tokenJson) return config;
+            if (!tokenJson) {
+                await refreshJwt();
+                return config;
+            }
 
             const token = tokenJson.jwt;
             const expires = +tokenJson.expires;
             const secondsSinceEpoch = Math.floor(new Date().getTime() / 1000);
             if (expires > secondsSinceEpoch || token) {
                 config.headers.Authorization = `Bearer ${token}`;
+            } else {
+                await refreshJwt();
             }
             return config;
         },
@@ -62,7 +70,6 @@ export function interceptor() {
     axios.interceptors.response.use(
         async function (response) {
             if ('X-AUTH-REQUIRED' in response.headers) {
-                localStorage.removeItem(JWT_ITEM);
                 await refreshJwt();
                 return response;
             }

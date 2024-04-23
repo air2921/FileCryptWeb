@@ -12,7 +12,9 @@ namespace application.Master_Services.Core
         ICryptographyHelper cryptographyHelper,
         ILogger<CryptographyService> logger) : ICryptographyService
     {
-        private const string DEFAULT_FOLDER = "C:\\FileCryptWeb";
+        private const string DISK_NAME = "C:";
+        private const string FOLDER = "FileCryptWeb";
+        private readonly string FullPath = Path.Join(DISK_NAME, FOLDER);
 
         public async Task<Response> Cypher(CypherFileDTO dto)
         {
@@ -20,12 +22,12 @@ namespace application.Master_Services.Core
                 return new Response { Status = 404, Message = Message.INVALID_ROUTE };
 
             var filename = Guid.NewGuid().ToString() + "_" + dto.FileName;
-            var path = Path.Combine(DEFAULT_FOLDER, filename);
+            var path = Path.Join(FullPath, filename);
 
             try
             {
-                if (!Directory.Exists(DEFAULT_FOLDER))
-                    Directory.CreateDirectory(DEFAULT_FOLDER);
+                if (!Directory.Exists(FullPath))
+                    Directory.CreateDirectory(FullPath);
 
                 if (!fileHelper.IsValidFile(dto.Content, dto.ContentType)/* || !await fileHelper.IsAllowedMIME(dto.ContentType)*/)
                     return new Response { Status = 422, Message = Message.INVALID_FORMAT };

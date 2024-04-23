@@ -37,7 +37,6 @@ function FileList({ files, isOwner, deleteFile }: FileListProps) {
                         <div className="file-mime">File MIME: {fileData.file_mime}</div>
                         <div className="file-mime-category">MIME Category: {fileData.file_mime_category}</div>
                     </div>
-                    <div className="file-type">File type: {fileData.type}</div>
                 </div>
                 <div className="date">
                     <div className="time">Operation Date: <DateComponent date={fileData.operation_date} /></div>

@@ -33,7 +33,7 @@ function App() {
                     <Route path="policy" element={<Policy />} />
                     {isAuth ? (
                         <>
-                            <Route path="user/:userId/:username" element={<User />} />
+                            <Route path="user/:userId" element={<User />} />
                             <Route path="settings" element={<Settings />} />
                             <Route path="files" element={<Files />} />
                         </>
