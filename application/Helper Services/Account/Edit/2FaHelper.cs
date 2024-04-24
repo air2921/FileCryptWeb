@@ -9,7 +9,6 @@ using Newtonsoft.Json;
 namespace application.Helper_Services.Account.Edit
 {
     public class _2FaHelper(
-        IDatabaseTransaction transaction,
         IRepository<UserModel> userRepository,
         IRepository<NotificationModel> notificationRepository,
         IRedisCache redisCache) : ITransaction<UserModel>, IDataManagement, IValidator
@@ -37,16 +36,10 @@ namespace application.Helper_Services.Account.Edit
                     user_id = user.id
                 });
 
-                await transaction.CommitAsync();
             }
             catch (EntityException)
             {
-                await transaction.RollbackAsync();
                 throw;
-            }
-            finally
-            {
-                await transaction.DisposeAsync();
             }
         }
 

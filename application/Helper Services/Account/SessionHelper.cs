@@ -20,7 +20,6 @@ namespace application.Helper_Services.Account
     }
 
     public class SessionHelper(
-        IDatabaseTransaction transaction,
         IRepository<TokenModel> tokenRepository,
         IRepository<NotificationModel> notificationRepository,
         IRedisCache redisCache,
@@ -48,17 +47,10 @@ namespace application.Helper_Services.Account
                 });
 
                 await DeleteExpiredTokens(user.id);
-
-                await transaction.CommitAsync();
             }
             catch (EntityException)
             {
-                await transaction.RollbackAsync();
                 throw;
-            }
-            finally
-            {
-                await transaction.DisposeAsync();
             }
         }
 

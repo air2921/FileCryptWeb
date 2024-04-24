@@ -17,7 +17,6 @@ namespace application.Helper_Services.Account
     }
 
     public class RecoveryHelper(
-        IDatabaseTransaction transaction,
         IRepository<UserModel> userRepository,
         IRepository<NotificationModel> notificationRepository,
         IRepository<LinkModel> linkRepository,
@@ -47,17 +46,10 @@ namespace application.Helper_Services.Account
 
                 var tokens = (await tokenRepository.GetAll(new RefreshTokensByRelationSpec(user.id))).Select(x => x.token_id);
                 await tokenRepository.DeleteMany(tokens);
-
-                await transaction.CommitAsync();
             }
             catch (EntityException)
             {
-                await transaction.RollbackAsync();
                 throw;
-            }
-            finally
-            {
-                await transaction.DisposeAsync();
             }
         }
 
@@ -83,17 +75,10 @@ namespace application.Helper_Services.Account
                     is_checked = false,
                     user_id = user.id
                 });
-
-                await transaction.CommitAsync();
             }
             catch (EntityException)
             {
-                await transaction.RollbackAsync();
                 throw;
-            }
-            finally
-            {
-                await transaction.DisposeAsync();
             }
         }
     }

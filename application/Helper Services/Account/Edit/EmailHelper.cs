@@ -9,7 +9,6 @@ using Newtonsoft.Json;
 namespace application.Helper_Services.Account.Edit
 {
     public class EmailHelper(
-        IDatabaseTransaction transaction,
         IRepository<UserModel> userRepository,
         IRepository<NotificationModel> notificationRepository,
         IRedisCache redisCache) : ITransaction<UserModel>, IDataManagement, IValidator
@@ -32,17 +31,10 @@ namespace application.Helper_Services.Account.Edit
                     is_checked = false,
                     user_id = user.id
                 });
-
-                await transaction.CommitAsync();
             }
             catch (EntityException)
             {
-                await transaction.RollbackAsync();
                 throw;
-            }
-            finally
-            {
-                await transaction.DisposeAsync();
             }
         }
 

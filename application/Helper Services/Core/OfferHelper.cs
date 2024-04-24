@@ -10,7 +10,6 @@ namespace application.Helper_Services.Core
         IRepository<KeyStorageItemModel> storageItemRepository,
         IRepository<OfferModel> offerRepository,
         IRepository<NotificationModel> notificationRepository,
-        IDatabaseTransaction transaction,
         IRedisCache redisCache) : ITransaction<CreateOfferDTO>, ITransaction<AcceptOfferDTO>, IDataManagement
     {
         public async Task CreateTransaction(CreateOfferDTO dto, object? parameter = null)
@@ -37,17 +36,10 @@ namespace application.Helper_Services.Core
                     is_checked = false,
                     user_id = dto.ReceiverId
                 });
-
-                await transaction.CommitAsync();
             }
             catch (EntityException)
             {
-                await transaction.RollbackAsync();
                 throw;
-            }
-            finally
-            {
-                await transaction.DisposeAsync();
             }
         }
 
@@ -65,17 +57,10 @@ namespace application.Helper_Services.Core
 
                 dto.Offer.is_accepted = true;
                 await offerRepository.Update(dto.Offer);
-
-                await transaction.CommitAsync();
             }
             catch (EntityException)
             {
-                await transaction.RollbackAsync();
                 throw;
-            }
-            finally
-            {
-                await transaction.DisposeAsync();
             }
         }
 

@@ -7,8 +7,7 @@ namespace application.Helper_Services.Admin
 {
     public class UserService(
         IRepository<UserModel> userRepository,
-        IRepository<TokenModel> tokenRepository,
-        IDatabaseTransaction transaction) : ITransaction<UserModel>, IValidator
+        IRepository<TokenModel> tokenRepository) : ITransaction<UserModel>, IValidator
     {
         public async Task CreateTransaction(UserModel target, object? parameter = null)
         {
@@ -24,8 +23,6 @@ namespace application.Helper_Services.Admin
                     await tokenRepository.DeleteMany((await tokenRepository
                         .GetAll(new RefreshTokensByRelationSpec(target.id)))
                         .Select(t => t.token_id));
-
-                await transaction.CommitAsync();
             }
             catch (EntityException)
             {

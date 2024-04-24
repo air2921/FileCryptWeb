@@ -8,7 +8,6 @@ using domain.Models;
 namespace application.Helper_Services.Account.Edit
 {
     public class PasswordHelper(
-        IDatabaseTransaction transaction,
         IHashUtility hashUtility,
         IRepository<UserModel> userRepository,
         IRepository<NotificationModel> notificationRepository,
@@ -33,17 +32,10 @@ namespace application.Helper_Services.Account.Edit
                     is_checked = false,
                     user_id = user.id
                 });
-
-                await transaction.CommitAsync();
             }
             catch (EntityException)
             {
-                await transaction.RollbackAsync();
                 throw;
-            }
-            finally
-            {
-                await transaction.DisposeAsync();
             }
         }
 

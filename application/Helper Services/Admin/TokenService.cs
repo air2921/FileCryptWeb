@@ -8,8 +8,7 @@ namespace application.Helper_Services.Admin
 {
     public class TokenService(
         IRepository<TokenModel> tokenRepository,
-        IRepository<NotificationModel> notificationRepository,
-        IDatabaseTransaction transaction) : ITransaction<TokenModel>, IValidator
+        IRepository<NotificationModel> notificationRepository) : ITransaction<TokenModel>, IValidator
     {
         public async Task CreateTransaction(TokenModel data, object? parameter = null)
         {
@@ -30,8 +29,6 @@ namespace application.Helper_Services.Admin
                     send_time = DateTime.UtcNow,
                     user_id = userId!
                 });
-
-                await transaction.CommitAsync();
             }
             catch (EntityException)
             {

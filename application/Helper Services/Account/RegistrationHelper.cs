@@ -12,7 +12,6 @@ using System.Text.RegularExpressions;
 namespace application.Helper_Services.Account
 {
     public class RegistrationHelper(
-        IDatabaseTransaction transaction,
         IRepository<UserModel> userRepository,
         IRedisCache redisCache,
         IHashUtility hashUtility) : ITransaction<UserDTO>, IDataManagement, IValidator
@@ -21,7 +20,7 @@ namespace application.Helper_Services.Account
         {
             try
             {
-                var id = await userRepository.Add(new UserModel
+                await userRepository.Add(new UserModel
                 {
                     email = user.Email,
                     password = user.Password,
@@ -29,18 +28,11 @@ namespace application.Helper_Services.Account
                     role = user.Role,
                     is_2fa_enabled = user.Flag2Fa,
                     is_blocked = false
-                }, e => e.id);
-
-                await transaction.CommitAsync();
+                });
             }
             catch (EntityException)
             {
-                await transaction.RollbackAsync();
                 throw;
-            }
-            finally
-            {
-                await transaction.DisposeAsync();
             }
         }
 
