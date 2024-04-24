@@ -1,5 +1,5 @@
 import axios from 'axios';
-import { BASE_URL, JWT_ITEM, errorHandler } from './Helper';
+import { BASE_URL, errorHandler } from './Helper';
 
 const EMAIL_IN_STORAGE = 'login_email';
 
@@ -13,7 +13,6 @@ export async function login(email: string, password: string) {
         );
 
         if (response.data.confirm == false) {
-            localStorage.setItem(JWT_ITEM, JSON.stringify(response.data.access))
 
             return {
                 success: true,
@@ -60,7 +59,6 @@ export async function verifyLogin(code: number) {
         });
 
         localStorage.removeItem(EMAIL_IN_STORAGE);
-        localStorage.setItem(JWT_ITEM, JSON.stringify(response.data.access))
 
         return {
             success: true,
@@ -75,8 +73,6 @@ export async function verifyLogin(code: number) {
 export async function logout() {
     try {
         const response = await axios.post(BASE_URL + 'api/auth/logout', null, { withCredentials: true });
-        if ('X-LOGOUT' in response.headers)
-            localStorage.removeItem(JWT_ITEM);
 
         return {
             success: true,

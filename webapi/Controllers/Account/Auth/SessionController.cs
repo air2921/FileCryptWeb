@@ -25,8 +25,16 @@ namespace webapi.Controllers.Account.Auth
                     return StatusCode(500, new { message = Message.ERROR });
 
                 SetCredentials(cookies);
-                var expires = (int)(DateTime.UtcNow + ImmutableData.JwtExpiry - new DateTime(1970, 1, 1)).TotalSeconds;
-                return StatusCode(200, new { access = new { jwt = cookies.Jwt, expires } });
+                return StatusCode(200, new
+                {
+                    access = new
+                    {
+                        jwt = cookies.Jwt,
+                        jwtExpires = GetExpires(ImmutableData.JwtExpiry),
+                        refresh = cookies.Refresh,
+                        refreshExpires = GetExpires(ImmutableData.RefreshExpiry)
+                    }
+                });
             }
 
             return StatusCode(response.Status, new { message = response.Message });
@@ -43,32 +51,49 @@ namespace webapi.Controllers.Account.Auth
                     return StatusCode(500, new { message = Message.ERROR });
 
                 SetCredentials(cookies);
-                var expires = (int)(DateTime.UtcNow + ImmutableData.JwtExpiry - new DateTime(1970, 1, 1)).TotalSeconds;
-                return StatusCode(200, new { access = new { jwt = cookies.Jwt, expires } });
+                return StatusCode(200, new 
+                {
+                    access = new
+                    {
+                        jwt = cookies.Jwt,
+                        jwtExpires = GetExpires(ImmutableData.JwtExpiry),
+                        refresh = cookies.Refresh,
+                        refreshExpires = GetExpires(ImmutableData.RefreshExpiry)
+                    }
+                });
             }
 
             return StatusCode(response.Status, new { message = response.Message });
         }
 
-        [HttpPost("logout")]
+        [HttpDelete("logout")]
         [ValidateAntiForgeryToken]
         [Authorize]
         public async Task<IActionResult> Logout()
         {
-            if (!HttpContext.Request.Cookies.TryGetValue(ImmutableData.REFRESH_COOKIE_KEY, out string? token))
-                return StatusCode(204);
+            try
+            {
+                if (!HttpContext.Request.Cookies.TryGetValue(ImmutableData.REFRESH_COOKIE_KEY, out string? token))
+                    return StatusCode(200);
 
-            var response = await service.Logout(token);
-            HttpContext.Response.Headers.Append("X-LOGOUT", true.ToString());
-            return StatusCode(response.Status);
+                var response = await service.Logout(token);
+                return StatusCode(response.Status);
+            }
+            finally
+            {
+                HttpContext.Response.Cookies.Delete(ImmutableData.JWT_COOKIE_KEY);
+                HttpContext.Response.Cookies.Delete(ImmutableData.IS_AUTHORIZED);
+            }
         }
 
         [HttpPost("refresh")]
         [ValidateAntiForgeryToken]
-        public async Task<IActionResult> Refresh()
+        public async Task<IActionResult> Refresh(
+            [FromHeader(Name = ImmutableData.REFRESH_TOKEN_HEADER_NAME)] string? token, [FromQuery] bool fromHeader)
         {
-            if (!HttpContext.Request.Cookies.TryGetValue(ImmutableData.REFRESH_COOKIE_KEY, out string? token))
-                return StatusCode(404, new { message = Message.UNAUTHORIZED});
+            token = GetRefresh(token, fromHeader);
+            if (token is null)
+                return StatusCode(401, new { message = Message.UNAUTHORIZED });
 
             var response = await service.UpdateJwt(token);
             if (!response.IsSuccess)
@@ -81,8 +106,6 @@ namespace webapi.Controllers.Account.Auth
             if (response.ObjectData is not string jwt)
                 return StatusCode(500, new { message = Message.ERROR });
 
-            var expires = (int)(DateTime.UtcNow + ImmutableData.JwtExpiry - new DateTime(1970, 1, 1)).TotalSeconds;
-
             HttpContext.Response.Cookies.Append(ImmutableData.IS_AUTHORIZED, true.ToString(), new CookieOptions
             {
                 MaxAge = ImmutableData.JwtExpiry,
@@ -91,7 +114,14 @@ namespace webapi.Controllers.Account.Auth
                 SameSite = SameSiteMode.None,
                 IsEssential = false
             });
-            return StatusCode(response.Status, new { access = new { jwt, expires } });
+
+            return StatusCode(response.Status, new 
+            { 
+                access = new
+                {   jwt,
+                    jwtExpires = GetExpires(ImmutableData.JwtExpiry)
+                } 
+            });
         }
 
         [HttpGet("check")]
@@ -103,15 +133,6 @@ namespace webapi.Controllers.Account.Auth
 
         private void SetCredentials(CredentialsDTO dto)
         {
-            var cookieOptionsToken = new CookieOptions
-            {
-                MaxAge = ImmutableData.RefreshExpiry,
-                Secure = true,
-                HttpOnly = true,
-                SameSite = SameSiteMode.None,
-                IsEssential = true
-            };
-
             var cookieOptionsUserInfo = new CookieOptions
             {
                 MaxAge = ImmutableData.JwtExpiry,
@@ -121,11 +142,46 @@ namespace webapi.Controllers.Account.Auth
                 IsEssential = false
             };
 
-            HttpContext.Response.Cookies.Append(ImmutableData.REFRESH_COOKIE_KEY, dto.Refresh, cookieOptionsToken);
-
+            HttpContext.Response.Cookies.Append(ImmutableData.REFRESH_COOKIE_KEY, dto.Refresh, SetOptions(ImmutableData.RefreshExpiry));
+            HttpContext.Response.Cookies.Append(ImmutableData.JWT_COOKIE_KEY, dto.Jwt, SetOptions(ImmutableData.JwtExpiry));
             HttpContext.Response.Cookies.Append(ImmutableData.IS_AUTHORIZED, dto.IsAuth.ToString(), cookieOptionsUserInfo);
             HttpContext.Response.Cookies.Append(ImmutableData.USER_ID_COOKIE_KEY, dto.Id, cookieOptionsUserInfo);
             HttpContext.Response.Cookies.Append(ImmutableData.ROLE_COOKIE_KEY, dto.Role, cookieOptionsUserInfo);
+        }
+
+        private int GetExpires(TimeSpan expires)
+        {
+            return (int)(DateTime.UtcNow + expires - new DateTime(1970, 1, 1)).TotalSeconds;
+        }
+
+        private string? GetRefresh(string? token, bool fromHeader)
+        {
+            if (fromHeader)
+            {
+                if (string.IsNullOrWhiteSpace(token))
+                    return null;
+                else
+                    return token;
+            }
+            else
+            {
+                if (!HttpContext.Request.Cookies.TryGetValue(ImmutableData.REFRESH_COOKIE_KEY, out token))
+                    return null;
+                else
+                    return token;
+            }
+        }
+
+        private CookieOptions SetOptions(TimeSpan expires)
+        {
+            return new CookieOptions
+            {
+                MaxAge = expires,
+                Secure = true,
+                HttpOnly = true,
+                SameSite = SameSiteMode.None,
+                IsEssential = true
+            };
         }
     }
 }

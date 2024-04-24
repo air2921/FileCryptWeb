@@ -1,7 +1,5 @@
 import axios from 'axios';
-import { BASE_URL, errorHandler, interceptor } from './Helper';
-
-interceptor();
+import { BASE_URL, errorHandler } from './Helper';
 
 export interface FilesSortProps {
     skip: number,

@@ -1,6 +1,6 @@
 ﻿using application.Abstractions.Endpoints.Account;
+using application.Helpers;
 using Microsoft.AspNetCore.Authorization;
-using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Mvc;
 using webapi.Helpers.Abstractions;
 
@@ -16,6 +16,11 @@ namespace webapi.Controllers.Account.Edit
         public async Task<IActionResult> Update([FromQuery] string username)
         {
             var response = await service.UpdateUsername(username, userInfo.UserId);
+            if (!response.IsSuccess)
+                return StatusCode(response.Status, new { message = response.Message });
+
+            HttpContext.Response.Cookies.Delete(ImmutableData.JWT_COOKIE_KEY);
+            HttpContext.Response.Cookies.Delete(ImmutableData.USERNAME_COOKIE_KEY);
             return StatusCode(response.Status, new { message = response.Message });
         }
     }

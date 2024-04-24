@@ -1,7 +1,5 @@
 import axios from "axios";
-import { BASE_URL, JWT_ITEM, errorHandler, interceptor, refreshJwt } from "../Helper"
-
-interceptor();
+import { BASE_URL, errorHandler } from "../Helper"
 
 export async function getUser(userId: number, own: boolean) {
     try {
@@ -35,7 +33,6 @@ export async function getRangeUsers(username: string) {
 export async function deleteAccount() {
     try {
         const response = await axios.delete(BASE_URL + 'api/core/user', { withCredentials: true });
-        localStorage.removeItem(JWT_ITEM);
 
         return {
             success: true,
@@ -53,7 +50,6 @@ export async function updateUsername(username: string) {
             null,
             { withCredentials: true }
         );
-        refreshJwt();
 
         return {
             success: true,
