@@ -35,7 +35,8 @@ namespace webapi
 
             services.AddScoped<IUserInfo, UserData>();
             services.AddSingleton<IHttpContextAccessor, HttpContextAccessor>();
-            services.AddSingleton(typeof(ICustomLogger<>), typeof(AdditionalLogger<>));
+            services.AddSingleton<IRequest, Request>();
+            services.AddSingleton(typeof(ILogger<>), typeof(AdditionalLogger<>));
 
             services.AddLogging();
 

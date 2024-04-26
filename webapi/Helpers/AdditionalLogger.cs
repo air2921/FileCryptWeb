@@ -1,10 +1,8 @@
 ﻿namespace webapi.Helpers
 {
-    public class AdditionalLogger<T>(ILoggerFactory loggerFactory) : ICustomLogger<T>
+    public class AdditionalLogger<T>(ILoggerFactory loggerFactory, IRequest request) : ILogger<T>
     {
         private readonly ILogger _logger = loggerFactory.CreateLogger(typeof(T).FullName);
-
-        public string RequestId { get; set; }
 
         public IDisposable BeginScope<TState>(TState state)
         {
@@ -18,15 +16,20 @@
 
         public void Log<TState>(LogLevel logLevel, EventId eventId, TState state, Exception exception, Func<TState, Exception, string> formatter)
         {
-            var token = RequestId ?? "None";
+            var token = request.Token ?? "None";
             var newState = $"RequestId: {token} \n{state}";
 
             _logger.Log(logLevel, eventId, newState, exception, formatter);
         }
     }
 
-    public interface ICustomLogger<T> : ILogger<T>
+    public class Request : IRequest
     {
-        public string RequestId { get; internal set; }
+        public string Token { get; set; }
+    }
+
+    public interface IRequest
+    {
+        public string Token { get; set; }
     }
 }
