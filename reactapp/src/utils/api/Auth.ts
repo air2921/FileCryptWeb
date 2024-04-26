@@ -159,3 +159,16 @@ export async function verifyRegistration(code: number) {
         return errorHandler(error);
     }
 }
+
+export async function getAuth() {
+    try {
+        const response = await axios.get(BASE_URL + 'api/auth/check', { withCredentials: true });
+        return {
+            success: true
+        };
+    } catch (error) {
+        return {
+            success: false
+        };
+    }
+}

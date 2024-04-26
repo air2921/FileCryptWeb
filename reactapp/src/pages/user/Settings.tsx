@@ -2,7 +2,6 @@ import React, { ChangeEvent, FormEvent, useEffect, useState } from 'react';
 import Modal from '../../components/modal/Modal';
 import Message from '../../utils/helpers/message/Message';
 import * as api from '../../utils/api/user/User';
-import { UserProps } from './UserProps';
 import Loader from '../static/loader/Loader';
 import ErrorPage from '../static/error-status/ErrorPage';
 
@@ -13,7 +12,7 @@ interface TwoFaProps {
 const Settings = () => {
     const [globalMessage, setGlobalMessage] = useState('');
     const [status, setStatus] = useState(500)
-    const [user, setUser] = useState<UserProps | null>();
+    const [user, setUser] = useState<api.UserProps | null>();
     const [lastUpdate, setLastUpdate] = useState(Date.now())
 
     const [message, setMessage] = useState('');
@@ -27,6 +26,18 @@ const Settings = () => {
             setStatus(response.statusCode);
             setGlobalMessage(response.message!);
         }
+    }
+
+    const User = (user: api.UserProps) => {
+        return (
+            <div className="user-container">
+                <div className="info-container">
+                    <div className="">
+
+                    </div>
+                </div>
+            </div>
+        )
     }
 
     //#region Username Component

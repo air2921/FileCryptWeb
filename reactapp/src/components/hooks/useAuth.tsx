@@ -1,7 +1,7 @@
 import { useState, useEffect } from 'react';
 import cookie from 'react-cookies'
-import AxiosRequest from '../../utils/api/AxiosRequest';
 import { useNavigate } from 'react-router-dom';
+import { getAuth } from '../../utils/api/Auth';
 
 const useAuth = () => {
     const [isAuthenticated, setIsAuthenticated] = useState<null | boolean>(null);
@@ -14,12 +14,11 @@ const useAuth = () => {
     }
 
     const getAuthStatus = async () => {
-        const response = await AxiosRequest({ endpoint: 'api/auth/check', method: 'GET', withCookie: true, requestBody: null });
+        const response = await getAuth();
 
-        if (response.isSuccess) {
+        if (response.success) {
             setIsAuthenticated(true);
-        }
-        else {
+        } else {
             setIsAuthenticated(false);
         }
     }
@@ -29,12 +28,10 @@ const useAuth = () => {
 
         if (authStatus === undefined) {
             getAuthStatus();
-        }
-        else {
+        } else {
             if (authStatus === 'True') {
                 setIsAuthenticated(true);
-            }
-            else {
+            } else {
                 setIsAuthenticated(false);
             }
         }

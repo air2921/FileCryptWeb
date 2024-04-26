@@ -1,6 +1,16 @@
 import axios from "axios";
 import { BASE_URL, errorHandler } from "../Helper"
 
+export interface UserProps {
+    id: number,
+    username: string,
+    role: string,
+    email?: string,
+    last_time_password_modified: string,
+    is_2fa_enabled: boolean,
+    is_blocked: boolean
+}
+
 export async function getUser(userId: number, own: boolean) {
     try {
         const response = await axios.get(BASE_URL + `api/core/user/${userId}?own=${own}`, { withCredentials: true });
