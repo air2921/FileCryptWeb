@@ -19,6 +19,8 @@ namespace domain.Models
 
         public string password { get; set; }
 
+        public DateTime last_time_password_modified { get; set; }
+
         public bool is_2fa_enabled { get; set; }
 
         public bool is_blocked { get; set; }

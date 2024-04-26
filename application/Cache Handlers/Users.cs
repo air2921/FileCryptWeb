@@ -27,6 +27,7 @@ namespace application.Cache_Handlers
                         return null;
 
                     user.password = string.Empty;
+                    user.last_time_password_modified = userObj.IsOwner ? user.last_time_password_modified : DateTime.UtcNow;
                     user.email = userObj.IsOwner ? user.email : string.Empty;
 
                     await redisCache.CacheData(userObj.CacheKey, user, TimeSpan.FromMinutes(10));
@@ -37,6 +38,7 @@ namespace application.Cache_Handlers
                 if (user is null)
                     return null;
 
+                user.last_time_password_modified = userObj.IsOwner ? user.last_time_password_modified : DateTime.UtcNow;
                 user.email = userObj.IsOwner ? user.email : string.Empty;
                 return user;
             }
