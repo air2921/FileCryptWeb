@@ -1,85 +1,26 @@
 import React, { ChangeEvent, FormEvent, useEffect, useState } from 'react';
 import Modal from '../../components/modal/Modal';
 import Message from '../../utils/helpers/message/Message';
-import AxiosRequest from '../../utils/api/AxiosRequest';
-import { getUser } from '../../utils/api/user/User';
+import * as api from '../../utils/api/user/User';
 import { UserProps } from './UserProps';
 import Loader from '../static/loader/Loader';
 import ErrorPage from '../static/error-status/ErrorPage';
 
-interface VerifyProps {
-    endpoint: string;
-    method: string;
-}
-
 interface TwoFaProps {
     isEnable: boolean;
-}
-
-const Verify = ({ endpoint, method }: VerifyProps) => {
-    const [code, setCode] = useState<number>();
-    const [verificationMessage, setVerificationMessage] = useState('');
-    const [verificationIcon, setVerificationIcon] = useState('');
-
-    const handleSubmit = async (e: FormEvent) => {
-        e.preventDefault();
-
-        const response = await AxiosRequest({ endpoint: `${endpoint}?code=${code}`, method: method, withCookie: true, requestBody: null });
-
-        if (response.isSuccess) {
-            setVerificationMessage('Action confirmed, you can close this window');
-            setVerificationIcon('check-circle');
-        }
-        else {
-            setVerificationMessage(response.data);
-            setVerificationIcon('error');
-        }
-    };
-
-    return (
-        <div>
-            <p>Verify Action</p>
-            <form onSubmit={handleSubmit}>
-                <label htmlFor="code">
-                    Enter your numeric code from your email
-                    <input
-                        type="text"
-                        id="code"
-                        required={true}
-                        value={code}
-                        onChange={(e) => {
-                            const value = e.target.value;
-                            if (value === '') {
-                                setCode(undefined);
-                            } else {
-                                const parsedValue = parseInt(value, 10);
-                                if (!isNaN(parsedValue)) {
-                                    setCode(parsedValue);
-                                }
-                            }
-                        }}
-                        inputMode="numeric"
-                        placeholder="Code"
-                    />
-                </label>
-                <button type="submit">Verify</button>
-            </form>
-            {verificationMessage && <Message message={verificationMessage} font={verificationIcon} />}
-        </div>
-    );
 }
 
 const Settings = () => {
     const [globalMessage, setGlobalMessage] = useState('');
     const [status, setStatus] = useState(500)
     const [user, setUser] = useState<UserProps | null>();
-    const [lastUpdate, setUpdate] = useState<Date>()
+    const [lastUpdate, setLastUpdate] = useState(Date.now())
 
     const [message, setMessage] = useState('');
     const [icon, setIcon] = useState('')
 
     async function fetchUser() {
-        const response = await getUser(0, true);
+        const response = await api.getUser(0, true);
         if (response.success) {
             setUser(response.data.user)
         } else {
@@ -95,20 +36,17 @@ const Settings = () => {
             const handleSubmit = async (e: FormEvent) => {
                 e.preventDefault();
 
-                const response = await AxiosRequest({ endpoint: `api/account/edit/username?username=${username}`, method: 'PUT', withCookie: true, requestBody: { username: username } })
+                const response = await api.updateUsername(username);
+                setMessage(response.message);
+                setIcon(response.success ? 'done' : 'error');
 
-                if (response.isSuccess) {
-                    setMessage(response.data.message);
-                    setIcon('done')
-                }
-                else {
-                    setMessage(response.data);
-                    setIcon('error');
+                if (response.success) {
+                    setLastUpdate(Date.now());
                 }
 
                 setTimeout(() => {
                     setMessage('');
-                    setIcon('')
+                    setIcon('');
                 }, 3000)
             }
 
@@ -140,28 +78,17 @@ const Settings = () => {
             const handleSubmit = async (e: FormEvent) => {
                 e.preventDefault();
 
-                const response = await AxiosRequest({
-                    endpoint: `api/account/edit/password`,
-                    method: 'PUT',
-                    withCookie: true,
-                    requestBody: {
-                        OldPassword: oldPassword,
-                        NewPassword: newPassword
-                    }
-                })
+                const response = await api.updatePassword(oldPassword, newPassword);
+                setMessage(response.message);
+                setIcon(response.success ? 'done' : 'error');
 
-                if (response.isSuccess) {
-                    setMessage(response.data.message);
-                    setIcon('done')
-                }
-                else {
-                    setMessage(response.data);
-                    setIcon('error');
+                if (response.success) {
+                    setLastUpdate(Date.now());
                 }
 
                 setTimeout(() => {
                     setMessage('');
-                    setIcon('')
+                    setIcon('');
                 }, 3000)
             }
 
@@ -203,19 +130,17 @@ const Settings = () => {
             const handleSubmit = async (e: FormEvent) => {
                 e.preventDefault();
 
-                const response = await AxiosRequest({ endpoint: `api/account/edit/email/start?password=${password}`, method: 'POST', withCookie: true, requestBody: null })
-
-                if (response.isSuccess) {
+                const response = await api.veridyPasswordAndSendCode(password);
+                if (response.success) {
                     setStatus(true);
-                }
-                else {
-                    setMessage(response.data);
+                } else {
+                    setMessage(response.message);
                     setIcon('error');
                 }
 
                 setTimeout(() => {
                     setMessage('');
-                    setIcon('')
+                    setIcon('');
                 }, 3000)
             }
 
@@ -243,76 +168,91 @@ const Settings = () => {
                 </div>
             );
         }
-    // #endregion
 
-    // #region Helped Component "Confirm"
         const Confirm = () => {
             const [successStatus, setStatus] = useState(false);
 
             const [email, setEmail] = useState('');
-            const [code, setCode] = useState<number>();
 
-            const handleSubmit = async (e: FormEvent) => {
+            const [firstCode, setFirstCode] = useState<number>();
+
+            const handleVerifyCodeAndSendCode = async (e: FormEvent) => {
                 e.preventDefault();
 
-                const response = await AxiosRequest({ endpoint: `api/account/edit/email/confirm/old?email=${email}&code=${code}`, method: 'POST', withCookie: true, requestBody: null })
+                const response = await api.verifyCodeAndSendCode(firstCode!, email);
 
-                if (response.isSuccess) {
+                if (response.success) {
                     setStatus(true);
-                }
-                else {
-                    setMessage(response.data);
+                } else {
+                    setMessage(response.message);
                     setIcon('error');
                 }
 
                 setTimeout(() => {
                     setMessage('');
-                    setIcon('')
+                    setIcon('');
+                }, 3000)
+            }
+
+            const handleVerifyCodeAndUpdate = async (e: FormEvent, code: number) => {
+                e.preventDefault();
+
+                const response = await api.verifyCodeAndUpdate(code);
+
+                setMessage(response.message);
+                setIcon(response.success ? 'done' : 'error')
+
+                if (response.success) {
+                    setLastUpdate(Date.now());
+                }
+
+                setTimeout(() => {
+                    setMessage('');
+                    setIcon('');
                 }, 3000)
             }
 
             return (
                 <div>
-                    {successStatus ? (
-                        <Verify endpoint='api/account/edit/email/confirm/new' method='PUT' />
-                    ) : (
-                        <div className="email-and-code">
-                            <form onSubmit={handleSubmit}>
-                                <label htmlFor="email">
-                                    {email ? "Your new email" : "* Your new email"}
-                                    <input
-                                        type="email"
-                                        id="email"
-                                        required={true}
-                                        value={email}
-                                        onChange={(e) => setEmail(e.target.value)}
-                                    />
-                                </label>
-                                <label htmlFor="code">
-                                    {email ? "Confirmation code" : "* Confirmation code"}
-                                    <input
-                                        type="text"
-                                        id="code"
-                                        required={true}
-                                        value={code}
-                                        onChange={(e) => {
-                                            const value = e.target.value;
-                                            if (value === '') {
-                                                setCode(undefined);
-                                            } else {
-                                                const parsedValue = parseInt(value, 10);
-                                                if (!isNaN(parsedValue)) {
-                                                    setCode(parsedValue);
-                                                }
+                    <div className="email-and-code">
+                        <form onSubmit={handleVerifyCodeAndSendCode}>
+                            <label htmlFor="email">
+                                {email ? "Your new email" : "* Your new email"}
+                                <input
+                                    type="email"
+                                    id="email"
+                                    required={true}
+                                    value={email}
+                                    onChange={(e) => setEmail(e.target.value)}
+                                />
+                            </label>
+                            <label htmlFor="code">
+                                {email ? "Confirmation code" : "* Confirmation code"}
+                                <input
+                                    type="text"
+                                    id="code"
+                                    required={true}
+                                    value={firstCode}
+                                    onChange={(e) => {
+                                        const value = e.target.value;
+                                        if (value === '') {
+                                            setFirstCode(undefined);
+                                        } else {
+                                            const parsedValue = parseInt(value, 10);
+                                            if (!isNaN(parsedValue)) {
+                                                setFirstCode(parsedValue);
                                             }
-                                        }}
-                                        inputMode="numeric"
-                                    />
-                                </label>
-                                <button type="submit">Confirm</button>
-                            </form>
-                        </div>
-                    )}
+                                        }
+                                    }}
+                                    inputMode="numeric"
+                                />
+                            </label>
+                            <button type="submit">Confirm</button>
+                        </form>
+                    </div>
+                    <Modal isActive={successStatus} setActive={setStatus}>
+                        <Verify apiCall={handleVerifyCodeAndUpdate} />
+                    </Modal>
                 </div>
             );
         }
@@ -323,39 +263,58 @@ const Settings = () => {
         const TwoFA = ({ isEnable }: TwoFaProps) => {
             const [password, setPassword] = useState('');
             const [successStatus, setStatus] = useState(false);
-            const [is2Fa, set2Fa] = useState(true);
             const [visibleForm, setFormVisible] = useState(false);
+            const [twoFa, setTwoFa] = useState<boolean>();
 
-            const handleSubmit = async (e: FormEvent) => {
+            const handleSubmitConfirmPassword = async (e: FormEvent) => {
                 e.preventDefault();
 
-                const response = await AxiosRequest({ endpoint: `api/account/edit/2fa/start?password=${password}`, method: 'POST', withCookie: true, requestBody: null })
+                const response = await api.twoFaPasswordConfirm(password);
 
-                if (response.isSuccess) {
+                if (response.success) {
                     setStatus(true);
-                }
-                else {
-                    setMessage(response.data);
+                } else {
+                    setMessage(response.message);
                     setIcon('error');
                 }
 
                 setTimeout(() => {
                     setMessage('');
-                    setIcon('')
+                    setIcon('');
                 }, 3000)
             }
 
-            const set2FaStatus = (twoFaStatus: boolean, formVisible: boolean) => {
-                set2Fa(twoFaStatus);
+            const handleSubmitEmailVerify = async (e: FormEvent, code: number) => {
+                e.preventDefault();
+
+                const response = await api.twoFaEmailVerify(code, twoFa!);
+
+                if (response.success) {
+                    setStatus(true);
+                    setLastUpdate(Date.now());
+                } else {
+                    setMessage(response.message);
+                    setIcon('error');
+                }
+
+                setTimeout(() => {
+                    setMessage('');
+                    setIcon('');
+                }, 3000)
+            }
+
+            const setState = (formVisible: boolean, twoFaState: boolean) => {
                 setFormVisible(formVisible);
+                setTwoFa(twoFaState);
             }
 
             return (
                 <div>
-                    {isEnable && !visibleForm && <button onClick={() => set2FaStatus(false, true)}>Disable 2FA</button>}
-                    {!isEnable && !visibleForm && <button onClick={() => set2FaStatus(true, true)}>Enable 2FA</button>}
+                    <button onClick={() => setState(true, !isEnable)}>
+                        {isEnable ? "Disable 2FA" : "Enable 2FA"}
+                    </button>
                     {visibleForm && (
-                        <form onSubmit={handleSubmit}>
+                        <form onSubmit={handleSubmitConfirmPassword}>
                             <label htmlFor="password">
                                 {password ? "Password" : "* Password"}
                                 <input
@@ -370,13 +329,52 @@ const Settings = () => {
                         </form>
                     )}
                     <Modal isActive={successStatus} setActive={setStatus}>
-                        <Verify endpoint={`api/account/edit/2fa/confirm/${is2Fa}`} method={'PUT'} />
+                        <Verify apiCall={handleSubmitEmailVerify} />
                     </Modal>
                 </div>
             );
         }
 
     // #endregion
+
+    interface VerifyProps {
+        apiCall: (e: FormEvent, code: number) => Promise<void>;
+    }
+
+    const Verify = ({ apiCall }: VerifyProps) => {
+        const [code, setCode] = useState<number>();
+
+        return (
+            <div>
+                <p>Verify Action</p>
+                <form onSubmit={(e) => apiCall(e, code!)}>
+                    <label htmlFor="code">
+                        Enter your numeric code from your email
+                        <input
+                            type="text"
+                            id="code"
+                            required={true}
+                            value={code}
+                            onChange={(e) => {
+                                const value = e.target.value;
+                                if (value === '') {
+                                    setCode(undefined);
+                                } else {
+                                    const parsedValue = parseInt(value, 10);
+                                    if (!isNaN(parsedValue)) {
+                                        setCode(parsedValue);
+                                    }
+                                }
+                            }}
+                            inputMode="numeric"
+                            placeholder="Code"
+                        />
+                    </label>
+                    <button type="submit">Verify</button>
+                </form>
+            </div>
+        )
+    }
 
     useEffect(() => {
         fetchUser();

@@ -4,24 +4,13 @@ using application.Helpers;
 namespace webapi.Middlewares
 {
     // You may need to install the Microsoft.AspNetCore.Http.Abstractions package into your project
-    public class BearerMiddleware
+    public class BearerMiddleware(RequestDelegate next, ILogger<BearerMiddleware> logger, IWebHostEnvironment env)
     {
-        private readonly RequestDelegate _next;
-        private readonly ILogger<BearerMiddleware> _logger;
-        private readonly IWebHostEnvironment _env;
-
-        public BearerMiddleware(RequestDelegate next, ILogger<BearerMiddleware> logger, IWebHostEnvironment env)
-        {
-            _next = next;
-            _logger = logger;
-            _env = env;
-        }
-
         public async Task Invoke(HttpContext context, ISessionService service)
         {
             if (context.Request.Headers.ContainsKey(ImmutableData.NONE_BEARER))
             {
-                await _next(context);
+                await next(context);
                 return;
             }
 
@@ -31,27 +20,27 @@ namespace webapi.Middlewares
                 context.Request.Headers.Append("Authorization", $"Bearer {requestJwt}");
                 AddSecurityHeaders(context);
 
-                await _next(context);
+                await next(context);
                 return;
             }
 
             context.Request.Cookies.TryGetValue(ImmutableData.REFRESH_COOKIE_KEY, out string? requestRefresh);
             if (!string.IsNullOrWhiteSpace(requestRefresh))
             {
-                if (_env.IsDevelopment())
-                    _logger.LogWarning(requestRefresh);
+                if (env.IsDevelopment())
+                    logger.LogWarning(requestRefresh);
 
                 var response = await service.UpdateJwt(requestRefresh);
                 if (!response.IsSuccess)
                 {
                     context.Response.Cookies.Delete(ImmutableData.REFRESH_COOKIE_KEY);
-                    await _next(context);
+                    await next(context);
                     return;
                 }
 
                 if (response.ObjectData is not string newJwt)
                 {
-                    await _next(context);
+                    await next(context);
                     return;
                 }
 
@@ -67,7 +56,7 @@ namespace webapi.Middlewares
                 AddSecurityHeaders(context);
             }
 
-            await _next(context);
+            await next(context);
             return;
         }
 
