@@ -8,7 +8,7 @@ namespace webapi
     public static class AppConfigurationCheck
     {
         /// <summary>
-        /// Using GetAwaiter().GetResult() or .Result is bad practice and may cause a deadlock
+        /// Checks configuration settings and stops the application if the settings are invalid
         /// </summary>
         /// <exception cref="InvalidConfigurationException"></exception>
 
