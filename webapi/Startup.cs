@@ -7,6 +7,7 @@ using webapi.Helpers;
 using Serilog;
 using application.Helpers;
 using Serilog.Sinks.Elasticsearch;
+using additional;
 
 namespace webapi
 {
@@ -35,11 +36,10 @@ namespace webapi
 
             services.AddScoped<IUserInfo, UserData>();
             services.AddSingleton<IHttpContextAccessor, HttpContextAccessor>();
-            services.AddSingleton<IRequest, Request>();
-            services.AddSingleton(typeof(ILogger<>), typeof(AdditionalLogger<>));
 
             services.AddLogging();
 
+            services.AddAdditionalInfrastructure(Log.Logger);
             services.AddDataInfrastructure(config, Log.Logger);
             services.AddServicesInfrastructure(config, Log.Logger);
             services.AddApplication(config);

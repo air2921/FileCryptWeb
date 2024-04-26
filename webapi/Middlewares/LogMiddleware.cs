@@ -1,6 +1,6 @@
-﻿using System.Diagnostics;
+﻿using additional;
+using System.Diagnostics;
 using System.Security.Claims;
-using webapi.Helpers;
 
 namespace webapi.Middlewares
 {
@@ -31,8 +31,7 @@ namespace webapi.Middlewares
             var request = new RequestInfo { Path = path, Method = method };
             requestInfo.Token = requestId;
 
-            logger.LogInformation($"Request Id: {requestId}\n" +
-                                  $"Request entered at: {DateTime.UtcNow}\n" +
+            logger.LogInformation($"Request entered at: {DateTime.UtcNow}\n" +
                                   $"User: {user.Username}, Id: {user.Id}, Role: {user.Role}\n" +
                                   $"Request: {request.Path}, Method: {request.Method}");
 
@@ -41,8 +40,7 @@ namespace webapi.Middlewares
             await next(context);
 
             stopwatch.Stop();
-            logger.LogInformation($"Request Id: {requestId}\n" +
-                                  $"Request finished at: {DateTime.UtcNow}\n" +
+            logger.LogInformation($"Request finished at: {DateTime.UtcNow}\n" +
                                   $"Total time request works: {stopwatch.Elapsed}\n" +
                                   $"Status Code: {context.Response.StatusCode}");
         }
