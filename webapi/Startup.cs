@@ -4,6 +4,9 @@ using services;
 using data_access;
 using webapi.Helpers.Abstractions;
 using webapi.Helpers;
+using Serilog;
+using application.Helpers;
+using Serilog.Sinks.Elasticsearch;
 
 namespace webapi
 {
@@ -11,6 +14,7 @@ namespace webapi
     {
         public void ConfigureServices(IServiceCollection services)
         {
+            var env = Environment.GetEnvironmentVariable("ASPNETCORE_ENVIRONMENT");
             var config = new ConfigurationBuilder()
                 .AddUserSecrets<Startup>()
                 .SetBasePath(Directory.GetCurrentDirectory())
@@ -18,13 +22,22 @@ namespace webapi
                 .AddEnvironmentVariables()
                 .Build();
 
+            Log.Logger = new LoggerConfiguration()
+                .MinimumLevel.Information()
+                .Enrich.FromLogContext()
+                .Enrich.WithProperty("Environment", env)
+                .ReadFrom.Configuration(config)
+                .WriteTo.Console()
+                .WriteTo.Elasticsearch(ConfigurationElasticSink(config, env!))
+                .CreateLogger();
+
             config.ConfigurationCheck();
 
             services.AddScoped<IUserInfo, UserData>();
             services.AddSingleton<IHttpContextAccessor, HttpContextAccessor>();
 
-            services.AddDataInfrastructure(config);
-            services.AddServicesInfrastructure(config);
+            services.AddDataInfrastructure(config, Log.Logger);
+            services.AddServicesInfrastructure(config, Log.Logger);
             services.AddApplication(config);
             services.Register(config);
         }
@@ -61,6 +74,15 @@ namespace webapi
             {
                 endpoint.MapControllers();
             });
+        }
+
+        private static ElasticsearchSinkOptions ConfigurationElasticSink(IConfigurationRoot configuration, string env)
+        {
+            return new ElasticsearchSinkOptions(new Uri(configuration.GetConnectionString(App.ELASTIC_SEARCH)!))
+            {
+                AutoRegisterTemplate = true,
+                IndexFormat = $"logs-{DateTime.UtcNow:yyyy}"
+            };
         }
     }
 }

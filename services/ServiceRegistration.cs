@@ -3,6 +3,7 @@ using application.Master_Services.Account.Edit;
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Logging;
+using Serilog;
 using services.ClamAv;
 using services.Cryptography;
 using services.Cryptography.Abstractions;
@@ -15,20 +16,14 @@ namespace services
 {
     public static class ServiceRegistration
     {
-        public static void AddServicesInfrastructure(this IServiceCollection services, IConfiguration _config)
+        public static void AddServicesInfrastructure(this IServiceCollection services,
+            IConfiguration _config, Serilog.ILogger logger)
         {
-            //services.Configure<ClamAV>(options =>
-            //{
-            //    options.ClamServer = _config["ClamServer"]!;
-            //    options.ClamPort = int.Parse(_config["ClamPort"]!);
-            //});
-
-            //services.Configure<FileManager>(options =>
-            //{
-            //    options.ReactConnection = _config["ReactDomain"]!;
-            //});
-
-            services.AddLogging();
+            services.AddLogging(log =>
+            {
+                log.ClearProviders();
+                log.AddSerilog(logger);
+            });
 
             services.AddScoped<IAes, AesCreator>();
             services.AddScoped<IClamSetting, ClamSetting>();
