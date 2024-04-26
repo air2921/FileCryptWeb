@@ -36,6 +36,7 @@
   </ItemGroup>
 
   <ItemGroup>
+    <ProjectReference Include="..\additional\additional.csproj" />
     <ProjectReference Include="..\application\application.csproj" />
     <ProjectReference Include="..\data\data access.csproj" />
     <ProjectReference Include="..\services\services.csproj" />
