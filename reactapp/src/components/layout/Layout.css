@@ -4,7 +4,7 @@
     min-height: 100vh;
 }
 
-.mobile-menu {
+.layout-mobile-menu {
     position: absolute;
     margin-top: 30px;
     background: #1d1e28;
@@ -19,37 +19,37 @@
     scroll-behavior: smooth;
 }
 
-.mobile-link {
+.layout-mobile-link {
     display: flex;
     align-items: center;
     border-bottom: solid 0.6px #808080;
 }
 
-.link-content {
+.layout-mobile-link-content {
     display: flex;
     align-items: center;
     margin: 0;
     padding: 10px;
 }
 
-.icon {
+.layout-mobile-icon {
     margin-right: 20px;
     color: #fff;
 }
 
-.name {
+.layout-mobile-name {
     font-size: 16px;
     color: #fff;
 }
 
-.mobile-auth-btn-container {
+.layout-mobile-auth-btn-container {
     display: flex;
     padding-top: 30px;
     align-items: center;
     justify-content: center !important;
 }
 
-.mobile-signout-btn {
+.layout-mobile-signout-btn {
     text-decoration: none;
     outline: none;
     border: none;
@@ -57,12 +57,12 @@
     background-color: #f00;
 }
 
-.mobile-is-auth-container {
+.layout-mobile-is-auth-container {
     display: flex;
 }
 
-.mobile-signup-btn,
-.mobile-signin-btn {
+.layout-mobile-signup-btn,
+.layout-mobile-signin-btn {
     text-decoration: none;
     outline: none;
     border: none;
@@ -72,7 +72,7 @@
     margin-left: 10px;
 }
 
-.sidebar {
+.layout-desktop-sidebar {
     padding: 1rem;
     position: fixed;
     flex-direction: column;
@@ -84,31 +84,31 @@
     transition: width 0.5s ease;
 }
 
-.desktop-sidebar-links-container {
+.layout-desktop-sidebar-links-container {
     width: 100%;
 }
 
-    .desktop-sidebar-links-container a {
+    .layout-desktop-sidebar-links-container a {
         color: #fff;
         text-decoration: none;
         transition: color 0.3s ease;
     }
 
-        .desktop-sidebar-links-container a:hover {
+        .layout-desktop-sidebar-links-container a:hover {
             color: #075ce2;
         }
 
-.desktop-link {
+.layout-desktop-link {
     display: flex;
     align-items: center;
 }
 
-    .desktop-link h4 {
+    .layout-desktop-link h4 {
         margin-left: 8px;
         margin-top: 4px;
     }
 
-.aside-visible-container {
+.layout-aside-visible-container {
     justify-content: flex-start;
     background-color: transparent;
     margin-top: 15px;
@@ -116,21 +116,30 @@
     transform: translateY(-50%);
 }
 
-.aside-visible-btn {
+.layout-aside-visible-btn {
     padding: 3px;
     background-color: transparent;
 }
 
-    .aside-visible-btn:hover {
+    .layout-aside-visible-btn:hover {
         border-color: transparent;
     }
 
-    .aside-visible-btn:focus {
+    .layout-aside-visible-btn:focus {
         outline: none;
         text-decoration: none;
     }
 
-.head {
+
+
+
+.layout-header-outlet-container {
+    flex: 1;
+    display: flex;
+    flex-Direction: column;
+}
+
+.layout-header-container {
     color: #fff;
     background: #1d1e28;
     padding: 1rem;
@@ -142,31 +151,31 @@
     border-bottom: solid 0.6px #808080;
 }
 
-.header-links {
+.layout-header-links {
     justify-content: flex-start;
     margin-left: 60px;
     margin-top: 0px;
     position: fixed;
 }
 
-    .header-links a {
+    .layout-header-links a {
         margin-right: 20px;
         text-decoration: none;
         color: #fff;
         transition: color 0.3s ease;
     }
 
-        .header-links a:hover {
+        .layout-header-links a:hover {
             color: #075ce2;
         }
 
-.head-center {
+.layout-head-center {
     display: flex;
     justify-content: center;
     align-items: center;
 }
 
-.find-container {
+.layout-find-container {
     display: flex;
     justify-content: center;
     align-items: center;
@@ -205,58 +214,58 @@
         text-indent: 6px;
     }
 
-.find-btn {
+.layout-find-btn {
     margin-left: 5px;
     margin-top: -5px;
     padding: 3px;
     background-color: transparent;
 }
 
-    .find-btn:hover {
+    .layout-find-btn:hover {
         border-color: transparent;
     }
 
-        .find-btn:focus {
-            outline: none;
-        }
+    .layout-find-btn:focus {
+        outline: none;
+    }
 
-.notification-container {
+.layout-notification-container {
     margin-top: -5px;
     margin-left: 30px;
 }
 
-    .notification-container a {
+    .layout-notification-container a {
         text-decoration: none;
         color: #fff;
         transition: color 0.3s ease;
     }
 
-        .notification-container a:hover {
+        .layout-notification-container a:hover {
             color: #075ce2;
         }
 
-.signout-btn-container {
+.layout-header-signout-btn-container {
     display: flex;
     justify-content: flex-end;
     margin-right: 50px;
     margin-top: -38px;
 }
 
-    .signout-btn:hover {
-        background-color: #f00;
-        border: 1px solid #f00;
-    }
+.layout-header-signout-btn:hover {
+    background-color: #f00;
+    border: 1px solid #f00;
+}
 
-.is-auth-container {
+.layout-header-is-auth-container {
     display: flex;
     justify-content: flex-end;
     margin-right: 50px;
     margin-top: -35px;
 }
 
-.signup-btn,
-.signin-btn,
-.signout-btn {
+.layout-header-signup-btn,
+.layout-header-signin-btn,
+.layout-header-signout-btn {
     padding: 8px;
     border-radius: 12px;
     border: 1px solid #808080;
@@ -264,39 +273,33 @@
     transition: background-color 0.5s ease, border-color 0.5s ease;
 }
 
-    .signup-btn:focus,
-    .signin-btn:focus,
-    .signout-btn:focus {
+    .layout-header-signup-btn:focus,
+    .layout-header-signin-btn:focus,
+    .layout-header-signout-btn:focus {
         outline: none;
     }
 
-    .signup-btn:hover,
-    .signin-btn:hover {
+    .layout-header-signup-btn:hover,
+    .layout-header-signin-btn:hover {
         background-color: #075ce2;
         border: 1px solid #075ce2;
     }
 
-.signup-btn-container,
-.signin-btn-container {
+.layout-header-signup-btn-container,
+.layout-header-signin-btn-container {
     margin-left: 10px;
 }
 
-.header-outlet-container {
-    flex: 1;
-    display: flex;
-    flex-Direction: column;
-}
-
-.outlet {
+.layout-outlet {
     transition: margin-left 0.3s ease;
     padding-top: 55px;
     flex: 1;
 }
 
 @media only screen and (max-width: 768px) {
-    .notification-container,
-    .header-links,
-    .auth-btn-container {
+    .layout-notification-container,
+    .layout-header-links,
+    .layout-header-auth-btn-container {
         display: none;
     }
 }

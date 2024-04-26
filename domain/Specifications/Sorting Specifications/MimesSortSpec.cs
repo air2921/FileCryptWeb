@@ -3,7 +3,7 @@ using domain.Models;
 
 namespace domain.Specifications.Sorting_Specifications
 {
-    public class MimesSortSpec : Specification<FileMimeModel>
+    public class MimesSortSpec : Specification<MimeModel>
     {
         public MimesSortSpec(int skip, int take)
         {

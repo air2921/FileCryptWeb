@@ -4,7 +4,7 @@ using System.ComponentModel.DataAnnotations;
 namespace domain.Models
 {
     [Table("forbidden_mimes")]
-    public class FileMimeModel
+    public class MimeModel
     {
         [Key]
         public int mime_id { get; set; }

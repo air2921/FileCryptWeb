@@ -18,7 +18,7 @@ namespace data_access.Ef
         public virtual DbSet<FileModel> Files { get; set; }
         public virtual DbSet<NotificationModel> Notifications { get; set; }
         public virtual DbSet<OfferModel> Offers { get; set; }
-        public virtual DbSet<FileMimeModel> Mimes { get; set; }
+        public virtual DbSet<MimeModel> Mimes { get; set; }
         public virtual DbSet<TokenModel> Tokens { get; set; }
         public virtual DbSet<LinkModel> Links { get; set; }
         public virtual DbSet<KeyStorageModel> KeyStorages { get; set; }
@@ -100,6 +100,10 @@ namespace data_access.Ef
                 .HasIndex(l => l.u_token)
                 .IsUnique();
 
+            modelBuilder.Entity<MimeModel>()
+                .HasIndex(m => m.mime_name)
+                .IsUnique();
+
             #endregion
         }
 
@@ -115,6 +119,7 @@ namespace data_access.Ef
                     email = EMAIL.ToLowerInvariant(),
                     username = USERNAME,
                     password = PASSWORD,
+                    last_time_password_modified = DateTime.UtcNow,
                     role = ROLE,
                     is_2fa_enabled = TWO_FA_ENABLED,
                     is_blocked = IS_BLOCKED

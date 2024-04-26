@@ -39,7 +39,7 @@ namespace webapi.Controllers.Core
             if (!response.IsSuccess)
                 return StatusCode(response.Status, new { message = response.Message });
             else
-                return StatusCode(response.Status, new { storage = response.ObjectData });
+                return StatusCode(response.Status, new { storages = response.ObjectData });
         }
 
         [HttpDelete("{storageId}")]

@@ -2,13 +2,13 @@
 import Font from '../../utils/helpers/icon/Font';
 import { Link, Outlet, useNavigate } from 'react-router-dom';
 import cookie from 'react-cookies'
-import AxiosRequest from '../../utils/api/AxiosRequest';
 import './Layout.css'
 import useResize from '../hooks/useResize';
 import useAuth from '../hooks/useAuth';
+import { getAuth, logout } from '../../utils/api/Auth';
+import { getUser } from '../../utils/api/user/User';
 
 function Layout() {
-    const [username, setUsername] = useState(cookie.load('auth_username'));
     const [id, setId] = useState(cookie.load('auth_user_id'));
     const [role, setRole] = useState(cookie.load('auth_role'));
     const [profilePath, setPath] = useState('');
@@ -16,18 +16,18 @@ function Layout() {
     const [inputValue, setInputValue] = useState('');
     const [inputError, setInputError] = useState(false);
 
-    const resetAsideVisible = () => {
-        setAsideVisible(false);
-    };
-
     const isAuth = useAuth();
     const isDesktop = useResize();
     const navigate = useNavigate();
 
-    const getAuthStatus = async () => {
-        const response = await AxiosRequest({ endpoint: 'api/auth/check', method: 'GET', withCookie: true, requestBody: null });
+    const resetAsideVisible = () => {
+        setAsideVisible(false);
+    };
 
-        if (response.isSuccess) {
+    const getAuthStatus = async () => {
+        const response = await getAuth()
+
+        if (response.success) {
             return true;
         }
         else {
@@ -36,22 +36,19 @@ function Layout() {
     }
 
     const checkCookies = async () => {
-        const newUsername = cookie.load('auth_username');
         const newId = cookie.load('auth_user_id');
         const newRole = cookie.load('auth_role');
 
         if (isAuth) {
-            if (newUsername === undefined || newId === undefined || newRole === undefined || username === undefined || id === undefined || role === undefined) {
+            if (newId === undefined || newRole === undefined || id === undefined || role === undefined) {
                 const isAuthStatus = await getAuthStatus()
 
                 if (isAuthStatus) {
-                    setUsername(newUsername);
                     setId(newId);
                     setRole(newRole);
                 }
             }
             else {
-                setUsername(newUsername);
                 setId(newId);
                 setRole(newRole);
             }
@@ -79,12 +76,7 @@ function Layout() {
                 return;
             }
 
-            const response = await AxiosRequest({
-                endpoint: `api/core/users/find?userId=${findUserId ? findUserId : 0}`,
-                method: 'GET',
-                withCookie: true,
-                requestBody: null
-            });
+            const response = await getUser(findUserId ? findUserId : 0, false)
 
             if (response.statusCode === 404) {
                 navigate('*');
@@ -92,7 +84,7 @@ function Layout() {
             }
 
             if (response.statusCode === 200) {
-                navigate(`/user/${response.data.user.id}/${response.data.user.username}`);
+                navigate(`/user/${response.data.user.id}`);
                 setInputValue('');
             }
         }
@@ -110,265 +102,283 @@ function Layout() {
         }
     };
 
-    const logout = async () => {
-        const response = await AxiosRequest({ endpoint: 'api/auth/logout', method: 'PUT', withCookie: true, requestBody: null })
+    const logoutMe = async () => {
+        const response = await logout();
 
-        if (response.isSuccess) {
+        if (response.success) {
             navigate('/auth/login')
         }
     }
 
+    const DesktopSidebar = () => {
+        return (
+            <>
+                <div className="layout-desktop-sidebar-links-container">
+                    <div className="layout-desktop-link">
+                        <Link to={profilePath}>
+                            <i className="material-icons-outlined" style={{ background: 'transparent', fontSize: '26px' }}>account_circle</i>
+                            <h4>Profile</h4>
+                        </Link>
+                    </div>
+                    <div className="layout-desktop-link">
+                        <Link to="/settings">
+                            <i className="material-icons-outlined" style={{ background: 'transparent', fontSize: '26px' }}>manage_accounts</i>
+                            <h4>Settings</h4>
+                        </Link>
+                    </div>
+                    <div className="layout-desktop-link">
+                        <Link to="/files">
+                            <i className="material-icons-outlined" style={{ background: 'transparent', fontSize: '26px' }}>storage</i>
+                            <h4>Files</h4>
+                        </Link>
+                    </div>
+                    <div className="layout-desktop-link">
+                        <Link to="/offers">
+                            <i className="material-icons-outlined" style={{ background: 'transparent', fontSize: '26px' }}>storage</i>
+                            <h4>Offers</h4>
+                        </Link>
+                    </div>
+                    <div className="layout-desktop-link">
+                        <Link to="/api">
+                            <i className="material-icons-outlined" style={{ background: 'transparent', fontSize: '26px' }}>vpn_key</i>
+                            <h4>API</h4>
+                        </Link>
+                    </div>
+                    {(role === 'Admin' || role === 'HighestAdmin') && (
+                        <div className="layout-desktop-link">
+                            <Link to="/admin">
+                                <i className="material-icons-outlined" style={{ background: 'transparent', fontSize: '26px' }}>admin_panel_settings</i>
+                                <h4>Admin</h4>
+                            </Link>
+                        </div>
+                    )}
+                </div>
+            </>
+        );
+    }
+
+    const MobileSidebar = () => {
+        return (
+            <div className="layout-mobile-menu" onClick={resetAsideVisible}>
+                {isAuth && (
+                    <>
+                        <div className="layout-mobile-link">
+                            <Link to={profilePath}>
+                                <div className="layout-mobile-link-content">
+                                    <div className="layout-mobile-icon">
+                                        <i className="material-icons-outlined" style={{ background: 'transparent', fontSize: '28px' }}>account_circle</i>
+                                    </div>
+                                    <div className="layout-mobile-name">
+                                        Profile
+                                    </div>
+                                </div>
+                            </Link>
+                        </div>
+                        <div className="layout-mobile-link">
+                            <Link to="/settings">
+                                <div className="layout-mobile-link-content">
+                                    <div className="layout-mobile-icon">
+                                        <i className="material-icons-outlined" style={{ background: 'transparent', fontSize: '28px' }}>manage_accounts</i>
+                                    </div>
+                                    <div className="layout-mobile-name">
+                                        Settings
+                                    </div>
+                                </div>
+                            </Link>
+                        </div>
+                        <div className="layout-mobile-link">
+                            <Link to="/files">
+                                <div className="layout-mobile-link-content">
+                                    <div className="layout-mobile-icon">
+                                        <i className="material-icons-outlined" style={{ background: 'transparent', fontSize: '28px' }}>storage</i>
+                                    </div>
+                                    <div className="layout-mobile-name">
+                                        Files
+                                    </div>
+                                </div>
+                            </Link>
+                        </div>
+                        <div className="layout-mobile-link">
+                            <Link to="/offers">
+                                <div className="layout-mobile-link-content">
+                                    <div className="layout-mobile-icon">
+                                        <i className="material-icons-outlined" style={{ background: 'transparent', fontSize: '28px' }}>storage</i>
+                                    </div>
+                                    <div className="layout-mobile-name">
+                                        Offers
+                                    </div>
+                                </div>
+                            </Link>
+                        </div>
+                        <div className="layout-mobile-link">
+                            <Link to="/api">
+                                <div className="layout-mobile-link-content">
+                                    <div className="layout-mobile-icon">
+                                        <i className="material-icons-outlined" style={{ background: 'transparent', fontSize: '28px' }}>vpn_key</i>
+                                    </div>
+                                    <div className="layout-mobile-name">
+                                        API
+                                    </div>
+                                </div>
+                            </Link>
+                        </div>
+                        {(role === 'Admin' || role === 'HighestAdmin') && (
+                            <div className="layout-mobile-link">
+                                <Link to="/admin">
+                                    <div className="layout-mobile-link-content">
+                                        <div className="layout-mobile-icon">
+                                            <i className="material-icons-outlined" style={{ background: 'transparent', fontSize: '28px' }}>admin_panel_settings</i>
+                                        </div>
+                                        <div className="layout-mobile-name">
+                                            Admin
+                                        </div>
+                                    </div>
+                                </Link>
+                            </div>
+                        )}
+                    </>
+                )}
+                <div className="layout-mobile-link">
+                    <Link to="/">
+                        <div className="layout-mobile-link-content">
+                            <div className="layout-mobile-icon">
+                                <i className="material-icons-outlined" style={{ background: 'transparent', fontSize: '28px' }}>home</i>
+                            </div>
+                            <div className="layout-mobile-name">
+                                Home
+                            </div>
+                        </div>
+                    </Link>
+                </div>
+                <div className="layout-mobile-link">
+                    <Link to="/about">
+                        <div className="layout-mobile-link-content">
+                            <div className="layout-mobile-icon">
+                                <i className="material-icons-outlined" style={{ background: 'transparent', fontSize: '28px' }}>info</i>
+                            </div>
+                            <div className="layout-mobile-name">
+                                About
+                            </div>
+                        </div>
+                    </Link>
+                </div>
+                <div className="layout-mobile-link">
+                    <Link to="/policy">
+                        <div className="layout-mobile-link-content">
+                            <div className="layout-mobile-icon">
+                                <i className="material-icons-outlined" style={{ background: 'transparent', fontSize: '28px' }}>policy</i>
+                            </div>
+                            <div className="layout-mobile-name">
+                                Policy
+                            </div>
+                        </div>
+                    </Link>
+                </div>
+                <div className="layout-mobile-auth-btn-container">
+                    {isAuth ? (
+                        <div className="layout-mobile-signout-btn-container">
+                            <button className="layout-mobile-signout-btn" onClick={logout}>Sign Out</button>
+                        </div>
+                    ) : (
+                            <div className="layout-mobile-is-auth-container">
+                                <div className="layout-mobile-signup-btn-container" onClick={resetAsideVisible}>
+                                    <button className="layout-mobile-signup-btn" onClick={() => navigate('/auth/signup')}>Sign Up</button>
+                                </div>
+                                <div className="layout-mobile-signin-btn-container" onClick={resetAsideVisible}>
+                                    <button className="layout-mobile-signin-btn" onClick={() => navigate('/auth/login')}>Sign In</button>
+                                </div>
+                            </div>
+                    )}
+                </div>
+            </div>
+        );
+    }
+
+    const DesktopHeader = () => {
+        return (
+            <div>
+                <div className="layout-header-links">
+                    <Link to="/">FILECRYPT</Link>
+                    <Link to="/about">About</Link>
+                    <Link to="/policy">Policy</Link>
+                </div>
+                <div className="layout-head-center">
+                    <div className="layout-find-container">
+                        <input className={inputError ? 'find-input error' : 'find-input'}
+                            type="text" id="user"
+                            required={true}
+                            value={inputValue}
+                            onChange={(e) => setInputValue(e.target.value)}
+                            placeholder="#2921"
+                        />
+                        <button className="layout-find-btn" onClick={findUser}><Font font={'search'} /></button>
+                    </div>
+                    {isAuth && (
+                        <div className="layout-notification-container">
+                            <Link to="/notifications"><Font font={'notifications'} /></Link>
+                        </div>
+                    )}
+                </div>
+                <div className="layout-header-auth-btn-container">
+                    {isAuth ? (
+                        <div className="layout-header-signout-btn-container">
+                            <button className="layout-header-signout-btn" onClick={logoutMe}>Sign Out</button>
+                        </div>
+                    ) : (
+                            <div className="layout-header-is-auth-container">
+                                <div className="layout-header-signup-btn-container">
+                                    <button className="layout-header-signup-btn" onClick={() => navigate('/auth/signup')}>Sign Up</button>
+                                </div>
+                                <div className="layout-header-signin-btn-container">
+                                    <button className="layout-header-signin-btn" onClick={() => navigate('/auth/login')}>Sign In</button>
+                                </div>
+                            </div>
+                    )}
+                </div>
+            </div>
+        );
+    }
+
     useEffect(() => {
         checkCookies();
-        setPath(`/user/${id}/${username}`);
+        setPath(`/user/${id}`);
     }, [isAuth, navigate]);
 
     return (
         <div className="layout-container">
             {isAuth && isAsideVisible && isDesktop && (
-                <aside className="sidebar" style={{ width: isAsideVisible ? "115px" : 0 }}>
+                <aside className="layout-desktop-sidebar" style={{ width: isAsideVisible ? "115px" : 0 }}>
                     <nav>
-                        <div className="desktop-sidebar-links-container">
-                            <div className="desktop-link">
-                                <Link to={profilePath}>
-                                    <i className="material-icons-outlined" style={{ background: 'transparent', fontSize: '26px' }}>account_circle</i>
-                                    <h4>Profile</h4>
-                                </Link>
-                            </div>
-                            <div className="desktop-link">
-                                <Link to="/settings">
-                                    <i className="material-icons-outlined" style={{ background: 'transparent', fontSize: '26px' }}>manage_accounts</i>
-                                    <h4>Settings</h4>
-                                </Link>
-                            </div>
-                            <div className="desktop-link">
-                                <Link to="/files">
-                                    <i className="material-icons-outlined" style={{ background: 'transparent', fontSize: '26px' }}>storage</i>
-                                    <h4>Files</h4>
-                                </Link>
-                            </div>
-                            <div className="desktop-link">
-                                <Link to="/offers">
-                                    <i className="material-icons-outlined" style={{ background: 'transparent', fontSize: '26px' }}>storage</i>
-                                    <h4>Offers</h4>
-                                </Link>
-                            </div>
-                            <div className="desktop-link">
-                                <Link to="/api">
-                                    <i className="material-icons-outlined" style={{ background: 'transparent', fontSize: '26px' }}>vpn_key</i>
-                                    <h4>API</h4>
-                                </Link>
-                            </div>
-                            {(role === 'Admin' || role === 'HighestAdmin') && (
-                                <div className="desktop-link">
-                                    <Link to="/admin">
-                                        <i className="material-icons-outlined" style={{ background: 'transparent', fontSize: '26px' }}>admin_panel_settings</i>
-                                        <h4>Admin</h4>
-                                    </Link>
-                                </div>
-                            )}
-                        </div>
+                        <DesktopSidebar />
                     </nav>
                 </aside>
             )}
             {isAsideVisible && !isDesktop && (
-                <div className="mobile-menu" onClick={resetAsideVisible}>
-                    <nav>
-                        <div className="mobile-menu" onClick={resetAsideVisible}>
-                            {isAuth && (
-                                <>
-                                    <div className="mobile-link">
-                                        <Link to={profilePath}>
-                                            <div className="link-content">
-                                                <div className="icon">
-                                                    <i className="material-icons-outlined" style={{ background: 'transparent', fontSize: '28px' }}>account_circle</i>
-                                                </div>
-                                                <div className="name">
-                                                    Profile
-                                                </div>
-                                            </div>
-                                        </Link>
-                                    </div>
-                                    <div className="mobile-link">
-                                        <Link to="/settings">
-                                            <div className="link-content">
-                                                <div className="icon">
-                                                    <i className="material-icons-outlined" style={{ background: 'transparent', fontSize: '28px' }}>manage_accounts</i>
-                                                </div>
-                                                <div className="name">
-                                                    Settings
-                                                </div>
-                                            </div>
-                                        </Link>
-                                    </div>
-                                    <div className="mobile-link">
-                                        <Link to="/files">
-                                            <div className="link-content">
-                                                <div className="icon">
-                                                    <i className="material-icons-outlined" style={{ background: 'transparent', fontSize: '28px' }}>storage</i>
-                                                </div>
-                                                <div className="name">
-                                                    Files
-                                                </div>
-                                            </div>
-                                        </Link>
-                                    </div>
-                                    <div className="mobile-link">
-                                        <Link to="/offers">
-                                            <div className="link-content">
-                                                <div className="icon">
-                                                    <i className="material-icons-outlined" style={{ background: 'transparent', fontSize: '28px' }}>storage</i>
-                                                </div>
-                                                <div className="name">
-                                                    Offers
-                                                </div>
-                                            </div>
-                                        </Link>
-                                    </div>
-                                    <div className="mobile-link">
-                                        <Link to="/api">
-                                            <div className="link-content">
-                                                <div className="icon">
-                                                    <i className="material-icons-outlined" style={{ background: 'transparent', fontSize: '28px' }}>vpn_key</i>
-                                                </div>
-                                                <div className="name">
-                                                    API
-                                                </div>
-                                            </div>
-                                        </Link>
-                                    </div>
-                                    {(role === 'Admin' || role === 'HighestAdmin') && (
-                                        <div className="mobile-link">
-                                            <Link to="/admin">
-                                                <div className="link-content">
-                                                    <div className="icon">
-                                                        <i className="material-icons-outlined" style={{ background: 'transparent', fontSize: '28px' }}>admin_panel_settings</i>
-                                                    </div>
-                                                    <div className="name">
-                                                        Admin
-                                                    </div>
-                                                </div>
-                                            </Link>
-                                        </div>
-                                    )}
-                                </>
-                            )}
-                            <div className="mobile-link">
-                                <Link to="/">
-                                    <div className="link-content">
-                                        <div className="icon">
-                                            <i className="material-icons-outlined" style={{ background: 'transparent', fontSize: '28px' }}>home</i>
-                                        </div>
-                                        <div className="name">
-                                            Home
-                                        </div>
-                                    </div>
-                                </Link>
-                            </div>
-                            <div className="mobile-link">
-                                <Link to="/about">
-                                    <div className="link-content">
-                                        <div className="icon">
-                                            <i className="material-icons-outlined" style={{ background: 'transparent', fontSize: '28px' }}>info</i>
-                                        </div>
-                                        <div className="name">
-                                            About
-                                        </div>
-                                    </div>
-                                </Link>
-                            </div>
-                            <div className="mobile-link">
-                                <Link to="/policy">
-                                    <div className="link-content">
-                                        <div className="icon">
-                                            <i className="material-icons-outlined" style={{ background: 'transparent', fontSize: '28px' }}>policy</i>
-                                        </div>
-                                        <div className="name">
-                                            Policy
-                                        </div>
-                                    </div> 
-                                </Link>
-                            </div>
-                            <div className="mobile-auth-btn-container">
-                                {isAuth ? (
-                                    <div className="mobile-signout-btn-container">
-                                        <button className="mobile-signout-btn" onClick={logout}>Sign Out</button>
-                                    </div>
-                                ) : (
-                                    <div className="mobile-is-auth-container">
-                                        <div className="mobile-signup-btn-container" onClick={resetAsideVisible}>
-                                            <button className="mobile-signup-btn" onClick={() => navigate('/auth/signup')}>Sign Up</button>
-                                        </div>
-                                        <div className="mobile-signin-btn-container" onClick={resetAsideVisible}>
-                                            <button className="mobile-signin-btn" onClick={() => navigate('/auth/login')}>Sign In</button>
-                                        </div>
-                                    </div>
-                                )}
-                            </div>
-                        </div>
-                    </nav>
-                </div>
+                <nav>
+                    <MobileSidebar />
+                </nav>
             )}
-            <div className="header-outlet-container">
-                <header className="head">
-                    <div className="aside-visible-container">
+            <div className="layout-header-outlet-container">
+                <header className="layout-header-container">
+                    <div className="layout-aside-visible-container">
                         {!isAuth && isDesktop ? (
                             <>
                             </>
                         ) : (
-                                <button className="aside-visible-btn" onClick={() => setAsideVisible(!isAsideVisible)}>
-                                    <i className="material-icons-outlined" style={{ background: 'transparent' }}>menu</i>
+                                <button className="layout-aside-visible-btn" onClick={() => setAsideVisible(!isAsideVisible)}>
+                                    <i className="layout-material-icons-outlined" style={{ background: 'transparent' }}>menu</i>
                                 </button>
                         )}
                     </div>
                     <nav>
-                        <div>
-                            <div className="header-links">
-                                <Link to="/">FILECRYPT</Link>
-                                <Link to="/about">About</Link>
-                                <Link to="/policy">Policy</Link>
-                            </div>
-                            <div className="head-center">
-                                <div className="find-container">
-                                    <input className={inputError ? 'find-input error' : 'find-input'}
-                                        type="text" id="user"
-                                        required={true}
-                                        value={inputValue}
-                                        onChange={(e) => setInputValue(e.target.value)}
-                                        placeholder="#2921"
-                                    />
-                                    <button className="find-btn" onClick={findUser}><Font font={'search'} /></button>
-                                </div>
-                                {isAuth && (
-                                    <div className="notification-container">
-                                        <Link to="/notifications"><Font font={'notifications'} /></Link>
-                                    </div>
-                                )}
-                            </div>
-                            <div className="auth-btn-container">
-                                {isAuth ? (
-                                    <div className="signout-btn-container">
-                                        <button className="signout-btn" onClick={logout}>Sign Out</button>
-                                    </div>
-                                ) : (
-                                        <div className="is-auth-container">
-                                            <div className="signup-btn-container">
-                                                <button className="signup-btn" onClick={() => navigate('/auth/signup')}>Sign Up</button>
-                                            </div>
-                                            <div className="signin-btn-container">
-                                                <button className="signin-btn" onClick={() => navigate('/auth/login')}>Sign In</button>
-                                            </div>
-                                        </div>
-                                )}
-                            </div>
-                        </div>
+                        <DesktopHeader />
                     </nav>
                 </header>
                 {isAsideVisible && !isDesktop ? (
                     <>
                     </>
                 ) : (
-                        <div className="outlet" style={{ marginLeft: isAsideVisible && isDesktop && isAuth ? '150px' : 0 }}>
+                        <div className="layout-outlet" style={{ marginLeft: isAsideVisible && isDesktop && isAuth ? '150px' : 0 }}>
                             <Outlet />
                         </div>
                 )}

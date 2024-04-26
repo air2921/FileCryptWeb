@@ -11,7 +11,7 @@ namespace application.Helper_Services.Core
 {
     public class FileHelper(
         IRepository<FileModel> fileRepository,
-        IRepository<FileMimeModel> mimeRepository, 
+        IRepository<MimeModel> mimeRepository, 
 #pragma warning disable CS9113 // Параметр не прочитан.
         IVirusCheck virusCheck,
 #pragma warning restore CS9113 // Параметр не прочитан.

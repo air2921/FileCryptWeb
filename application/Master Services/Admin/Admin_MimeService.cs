@@ -10,7 +10,7 @@ using domain.Specifications.Sorting_Specifications;
 namespace application.Master_Services.Admin
 {
     public class Admin_MimeService(
-        IRepository<FileMimeModel> repository,
+        IRepository<MimeModel> repository,
         IRedisCache redisCache,
         IFileManager fileManager) : IAdminMimeService
     {
@@ -50,7 +50,7 @@ namespace application.Master_Services.Admin
         {
             try
             {
-                await repository.Add(new FileMimeModel { mime_name = mime });
+                await repository.Add(new MimeModel { mime_name = mime });
                 await ClearCache();
 
                 return new Response { Status = 201, Message = Message.CREATED };
@@ -63,12 +63,12 @@ namespace application.Master_Services.Admin
 
         public async Task<Response> CreateRange(IEnumerable<string> mimes)
         {
-            var models = new List<FileMimeModel>();
+            var models = new List<MimeModel>();
 
             try
             {
                 foreach (var mime in mimes)
-                    models.Add(new FileMimeModel { mime_name = mime });
+                    models.Add(new MimeModel { mime_name = mime });
 
                 await repository.AddRange(models);
                 await ClearCache();
@@ -88,9 +88,9 @@ namespace application.Master_Services.Admin
 
                 var mimes = fileManager.AddMimeCollection((await repository.GetAll()).Select(m => m.mime_name).ToHashSet());
 
-                var mimeModels = new HashSet<FileMimeModel>();
+                var mimeModels = new HashSet<MimeModel>();
                 foreach (var mime in mimes)
-                    mimeModels.Add(new FileMimeModel { mime_name = mime });
+                    mimeModels.Add(new MimeModel { mime_name = mime });
 
                 await repository.AddRange(mimeModels);
                 await ClearCache();
