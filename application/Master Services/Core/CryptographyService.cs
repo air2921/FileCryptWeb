@@ -1,7 +1,9 @@
 ﻿using application.Abstractions.Endpoints.Core;
 using application.Abstractions.Inner;
 using application.DTO.Outer;
+using application.Helpers;
 using application.Helpers.Localization;
+using domain.Abstractions.Data;
 using domain.Exceptions;
 using Microsoft.Extensions.Logging;
 
@@ -10,6 +12,7 @@ namespace application.Master_Services.Core
     public class CryptographyService(
         IFileHelper fileHelper,
         ICryptographyHelper cryptographyHelper,
+        IRedisCache redisCache,
         ILogger<CryptographyService> logger) : ICryptographyService
     {
         private const string DISK_NAME = "C:";
@@ -40,6 +43,8 @@ namespace application.Master_Services.Core
                 await cryptographyHelper.CypherFile(path, dto.Operation, key);
                 await fileHelper.CreateFile(dto.UserId, filename, dto.ContentType,
                     fileHelper.GetFileCategory(dto.ContentType));
+
+                await redisCache.DeteteCacheByKeyPattern($"{ImmutableData.FILES_PREFIX}{dto.UserId}");
 
                 return new Response
                 {

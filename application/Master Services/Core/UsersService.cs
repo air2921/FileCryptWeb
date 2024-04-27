@@ -61,8 +61,8 @@ namespace application.Master_Services.Core
             try
             {
                 var user = await repository.Delete(userId);
-                await redisCache.DeleteCache($"{ImmutableData.USER_DATA_PREFIX}{user.id}");
-                await redisCache.DeleteCache($"{ImmutableData.USER_LIST}{user.username}");
+                await redisCache.DeteteCacheByKeyPattern($"{ImmutableData.USER_DATA_PREFIX}{user.id}");
+                await redisCache.DeteteCacheByKeyPattern($"{ImmutableData.USER_LIST}{user.username}");
 
                 return new Response { Status = 204 };
             }

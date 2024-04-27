@@ -28,18 +28,25 @@ namespace webapi.Controllers.Core
             IStorageService storageService, IOfferService offerService)
         {
             var user = await service.GetOne(userInfo.UserId, userId);
-            if (user.IsSuccess) return StatusCode(user.Status, new { message = user.Message });
+            if (!user.IsSuccess) return StatusCode(user.Status, new { message = user.Message });
 
             var files = await fileService.GetRange(userId, 0, 5, true, null, null);
-            if (files.IsSuccess) return StatusCode(files.Status, new { message = files.Message });
+            if (!files.IsSuccess) return StatusCode(files.Status, new { message = files.Message });
 
             var storages = await storageService.GetRange(userId, 0, 5, true);
-            if (storages.IsSuccess) return StatusCode(storages.Status, new { message = storages.Message });
+            if (!storages.IsSuccess) return StatusCode(storages.Status, new { message = storages.Message });
 
             var offers = await offerService.GetRange(userId, 0, 5, true, true, null, null, true);
-            if (offers.IsSuccess) return StatusCode(offers.Status, new { message = offers.Message });
+            if (!offers.IsSuccess) return StatusCode(offers.Status, new { message = offers.Message });
 
-            return StatusCode(200, new { user, files, storages, offers, isOwner = userInfo.UserId.Equals(userId) });
+            return StatusCode(200, new 
+            {
+                user = user.ObjectData,
+                files = files.ObjectData,
+                storages = storages.ObjectData,
+                offers = offers.ObjectData,
+                isOwner = userInfo.UserId.Equals(userId)
+            });
         }
 
         [HttpGet("range/{username}")]

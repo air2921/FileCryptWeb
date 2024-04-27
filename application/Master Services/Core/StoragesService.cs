@@ -94,6 +94,7 @@ namespace application.Master_Services.Core
                     return new Response { Status = 403, Message = Message.INCORRECT };
 
                 await repository.Delete(storageId);
+                await redisCache.DeteteCacheByKeyPattern($"{ImmutableData.STORAGES_PREFIX}{userId}");
                 return new Response { Status = 204 };
             }
             catch (EntityException ex)

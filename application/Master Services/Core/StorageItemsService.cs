@@ -6,6 +6,7 @@ using domain.Exceptions;
 using domain.Models;
 using application.Abstractions.TP_Services;
 using application.Abstractions.Endpoints.Core;
+using System.Text.RegularExpressions;
 
 namespace application.Master_Services.Core
 {
@@ -16,10 +17,28 @@ namespace application.Master_Services.Core
         IRedisCache redisCache,
         IHashUtility hashUtility) : IStorageItemService
     {
+        private bool IsBase64String(string? key)
+        {
+            if (string.IsNullOrEmpty(key) || key.Length % 4 != 0 || !Regex.IsMatch(key, RegularEx.EncryptionKey))
+                return false;
+
+            try
+            {
+                return Convert.FromBase64String(key).Length.Equals(32);
+            }
+            catch (FormatException)
+            {
+                return false;
+            }
+        }
+
         public async Task<Response> Add(int userId, int storageId, string code, string name, string value)
         {
             try
             {
+                if (!IsBase64String(value))
+                    return new Response { Status = 422, Message = Message.INVALID_FORMAT };
+
                 var response = await VerifyAccess(userId, storageId, code);
                 if (!response.IsSuccess)
                     return response;
@@ -31,7 +50,7 @@ namespace application.Master_Services.Core
                     key_value = value,
                     created_at = DateTime.UtcNow
                 });
-                await redisCache.DeleteCache($"{ImmutableData.STORAGE_ITEMS_PREFIX}{userId}");
+                await redisCache.DeteteCacheByKeyPattern($"{ImmutableData.STORAGE_ITEMS_PREFIX}{userId}");
 
                 return new Response { Status = 201, Message = Message.CREATED };
             }
@@ -50,12 +69,13 @@ namespace application.Master_Services.Core
             try
             {
                 var cacheKey = $"{ImmutableData.STORAGE_ITEMS_PREFIX}{userId}_{keyId}";
-                return new Response
-                {
-                    Status = 200,
-                    ObjectData = await itemCacheHandler.CacheAndGet(
-                        new StorageItemObject(cacheKey, userId, keyId, storageId, code))
-                };
+                var key = await itemCacheHandler.CacheAndGet(
+                    new StorageItemObject(cacheKey, userId, keyId, storageId, code));
+
+                if (key is null)
+                    return new Response { Status = 404, Message = Message.NOT_FOUND };
+                else
+                    return new Response { Status = 200, ObjectData = key };
             }
             catch (EntityException ex)
             {
@@ -99,7 +119,7 @@ namespace application.Master_Services.Core
                     return response;
 
                 await repository.Delete(keyId);
-                await redisCache.DeleteCache($"{ImmutableData.STORAGE_ITEMS_PREFIX}{userId}");
+                await redisCache.DeteteCacheByKeyPattern($"{ImmutableData.STORAGE_ITEMS_PREFIX}{userId}");
 
                 return new Response { Status = 204 };
             }
