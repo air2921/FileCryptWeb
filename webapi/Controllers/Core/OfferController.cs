@@ -33,7 +33,7 @@ namespace webapi.Controllers.Core
         [HttpGet("{offerId}")]
         public async Task<IActionResult> GetOffer([FromRoute] int offerId)
         {
-            var response = await service.GetOne(userInfo.UserId, offerId);
+            var response = await service.GetOne(userInfo.UserId, offerId, false);
             if (!response.IsSuccess)
                 return StatusCode(response.Status, new { message = response.Message });
             else
@@ -43,9 +43,9 @@ namespace webapi.Controllers.Core
         [HttpGet("range")]
         public async Task<IActionResult> GetRangeOffers([FromQuery] int skip, [FromQuery] int count,
             [FromQuery] bool byDesc, [FromQuery] bool? sent,
-            [FromQuery] bool? isAccepted, [FromQuery] string? type)
+            [FromQuery] bool? closed, [FromQuery] string? type)
         {
-            var response = await service.GetRange(userInfo.UserId, skip, count, byDesc, sent, isAccepted, type);
+            var response = await service.GetRange(userInfo.UserId, skip, count, byDesc, sent, closed, type, false);
             if (!response.IsSuccess)
                 return StatusCode(response.Status, new { message = response.Message });
             else

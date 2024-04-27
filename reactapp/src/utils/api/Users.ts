@@ -1,5 +1,5 @@
 import axios from "axios";
-import { BASE_URL, errorHandler } from "../Helper"
+import { BASE_URL, errorHandler } from "./Helper"
 
 export interface UserProps {
     id: number,
@@ -26,6 +26,21 @@ export async function getUser(userId: number, own: boolean) {
     }
 }
 
+export async function getFullyUser(userId: number) {
+    try {
+        const response = await axios.get(BASE_URL + `api/core/user/fully/${userId}`, { withCredentials: true });
+
+        return {
+            success: true,
+            statusCode: response.status,
+            data: response.data,
+            message: undefined
+        }
+    } catch (error: any) {
+        return errorHandler(error);
+    }
+}
+
 export async function getRangeUsers(username: string) {
     try {
         const response = await axios.get(BASE_URL + `api/core/user/range/${username}`, { withCredentials: true });
@@ -33,7 +48,8 @@ export async function getRangeUsers(username: string) {
         return {
             success: true,
             statusCode: response.status,
-            data: response.data
+            data: response.data,
+            message: undefined
         }
     } catch (error: any) {
         return errorHandler(error);

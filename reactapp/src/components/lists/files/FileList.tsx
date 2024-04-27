@@ -5,7 +5,7 @@ import Message from '../../../utils/helpers/message/Message';
 import Font from '../../../utils/helpers/icon/Font';
 import { FileProps } from '../../../utils/api/Files';
 
-interface FileListProps {
+export interface FileListProps {
     files: FileProps[] | null,
     isOwner: boolean,
     deleteFile?: (offerId: number) => void,

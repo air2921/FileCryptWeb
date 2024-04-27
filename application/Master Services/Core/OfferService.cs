@@ -101,7 +101,7 @@ namespace application.Master_Services.Core
             }
         }
 
-        public async Task<Response> GetOne(int userId, int offerId)
+        public async Task<Response> GetOne(int userId, int offerId, bool bodyHide)
         {
             try
             {
@@ -109,8 +109,9 @@ namespace application.Master_Services.Core
                 var offer = await offerCacheHandler.CacheAndGet(new OfferObject(cacheKey, userId, offerId));
                 if (offer is null)
                     return new Response { Status = 404, Message = Message.NOT_FOUND };
-                else
-                    return new Response { Status = 200, ObjectData = offer };
+
+                offer.offer_body = bodyHide ? "hidden" : offer.offer_body;
+                return new Response { Status = 200, ObjectData = offer };
             }
             catch (EntityException ex)
             {
@@ -123,17 +124,22 @@ namespace application.Master_Services.Core
         }
 
         public async Task<Response> GetRange(int userId, int skip, int count, bool byDesc,
-            bool? sended, bool? isAccepted, string? type)
+            bool? sended, bool? isAccepted, string? type, bool bodyHide)
         {
             try
             {
                 var cacheKey = $"{ImmutableData.OFFERS_PREFIX}{userId}_{skip}_{count}_{byDesc}_{sended}_{isAccepted}_{type}";
                 var obj = new OfferRangeObject(cacheKey, userId, skip, count, byDesc, sended, isAccepted, type);
+                var offers = await offerCacheHandler.CacheAndGetRange(obj);
+
+                if (bodyHide)
+                    foreach (var offer in offers)
+                        offer.offer_body = "hidden";
 
                 return new Response
                 {
                     Status = 200,
-                    ObjectData = await offerCacheHandler.CacheAndGetRange(obj)
+                    ObjectData = offers
                 };
             }
             catch (EntityException ex)

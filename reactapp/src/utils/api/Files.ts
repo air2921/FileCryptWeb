@@ -5,8 +5,8 @@ export interface FilesSortProps {
     skip: number,
     count: 10,
     orderByDesc: string,
-    mime: string,
-    category: string
+    mime?: string,
+    category?: string
 }
 
 export interface FileProps {
@@ -27,6 +27,21 @@ export interface CypherProps {
     code: number
 }
 
+export async function getFile(fileId: number) {
+    try {
+        const response = await axios.get(BASE_URL + `api/core/file/${fileId}`)
+
+        return {
+            success: true,
+            statusCode: response.status,
+            data: response.data,
+            message: undefined
+        }
+    } catch (error: any) {
+        return errorHandler(error);
+    }
+}
+
 export async function getFiles(sort: FilesSortProps) {
     try {
         const endpoint =
@@ -36,28 +51,22 @@ export async function getFiles(sort: FilesSortProps) {
         return {
             success: true,
             statusCode: response.status,
-            data: response.data.files as FileProps[]
+            data: response.data,
+            message: undefined
         }
     } catch (error: any) {
-        error = errorHandler(error);
-
-        return {
-            success: error.success,
-            statusCode: error.statusCode,
-            message: error.message,
-            data: null
-        }
+        return errorHandler(error);
     }
 }
 
-export async function deleteFile(id: number) {
+export async function deleteFile(fileId: number) {
     try {
-        const response = await axios.delete(BASE_URL + `api/core/file/${id}`, { withCredentials: true });
+        const response = await axios.delete(BASE_URL + `api/core/file/${fileId}`, { withCredentials: true });
 
         return {
             success: true,
             statusCode: response.status,
-            message: null
+            message: undefined
         }
     } catch (error: any) {
         return errorHandler(error);

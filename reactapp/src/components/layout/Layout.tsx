@@ -6,7 +6,7 @@ import './Layout.css'
 import useResize from '../hooks/useResize';
 import useAuth from '../hooks/useAuth';
 import { getAuth, logout } from '../../utils/api/Auth';
-import { getUser } from '../../utils/api/user/User';
+import { getUser } from '../../utils/api/Users';
 
 function Layout() {
     const [id, setId] = useState(cookie.load('auth_user_id'));
@@ -76,17 +76,7 @@ function Layout() {
                 return;
             }
 
-            const response = await getUser(findUserId ? findUserId : 0, false)
-
-            if (response.statusCode === 404) {
-                navigate('*');
-                setInputValue('');
-            }
-
-            if (response.statusCode === 200) {
-                navigate(`/user/${response.data.user.id}`);
-                setInputValue('');
-            }
+            navigate(`/user/${findUserId}`);
         }
         else {
 

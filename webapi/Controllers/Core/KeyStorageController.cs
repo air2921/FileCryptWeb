@@ -15,9 +15,9 @@ namespace webapi.Controllers.Core
     {
         [HttpPost]
         [ValidateAntiForgeryToken]
-        public async Task<IActionResult> AddStorage([FromQuery] string storageName, [FromQuery] int code)
+        public async Task<IActionResult> AddStorage([FromQuery] string name, [FromQuery] int code)
         {
-            var response = await storageService.Add(storageName, code.ToString(), userInfo.UserId);
+            var response = await storageService.Add(name, code.ToString(), userInfo.UserId);
             return StatusCode(response.Status, new { message = response.Message });
         }
 
@@ -55,8 +55,8 @@ namespace webapi.Controllers.Core
 
         [HttpPost("{storageId}")]
         [ValidateAntiForgeryToken]
-        public async Task<IActionResult> AddItem([FromRoute] int storageId, [FromQuery] int code,
-            [FromQuery] string name, [FromQuery] string value)
+        public async Task<IActionResult> AddItem([FromRoute] int storageId, [FromQuery] string name,
+            [FromQuery] string value, [FromQuery] int code)
         {
             var response = await storageItemService.Add(userInfo.UserId, storageId, code.ToString(), name, value);
             return StatusCode(response.Status, new { message = response.Message });

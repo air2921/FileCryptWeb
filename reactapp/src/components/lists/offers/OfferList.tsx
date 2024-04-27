@@ -2,6 +2,7 @@ import React from 'react';
 import Message from '../../../utils/helpers/message/Message';
 import DateComponent from '../../../utils/helpers/date/Date';
 import Font from '../../../utils/helpers/icon/Font';
+import { OfferProps } from '../../../utils/api/Offers';
 
 interface OfferListProps {
     offers: OfferProps[] | null,
@@ -9,15 +10,6 @@ interface OfferListProps {
     user_id?: number
     deleteOffer?: (offerId: number) => void,
     acceptOffer?: (offerId: number) => void,
-}
-
-interface OfferProps {
-    offer_id: number,
-    sender_id: number,
-    receiver_id: number,
-    offer_type: string,
-    created_at: string,
-    is_accepted: boolean
 }
 
 function OfferList({ offers, user_id, isOwner, deleteOffer, acceptOffer }: OfferListProps) {

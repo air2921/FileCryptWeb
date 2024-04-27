@@ -1,5 +1,7 @@
 export const BASE_URL = 'https://localhost:8081/';
 
+const STORAGE_PREFIX = 'Storage#'
+
 export function errorHandler(error: any) {
     console.error(error);
     let statusCode = 500;
@@ -15,4 +17,18 @@ export function errorHandler(error: any) {
         data: null,
         message: errorMessage
     }
+}
+
+export function getStorageCode(storageId: number) {
+    const code = sessionStorage.getItem(`${STORAGE_PREFIX}${storageId}`);
+
+    if (!code) {
+        return null;
+    } else {
+        return parseInt(code);
+    }
+}
+
+export function setStorageCode(storageId: number, code: number) {
+    sessionStorage.setItem(`${STORAGE_PREFIX}${storageId}`, code.toString());
 }

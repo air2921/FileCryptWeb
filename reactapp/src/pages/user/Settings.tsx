@@ -1,7 +1,7 @@
 import React, { ChangeEvent, FormEvent, useEffect, useState } from 'react';
 import Modal from '../../components/modal/Modal';
 import Message from '../../utils/helpers/message/Message';
-import * as api from '../../utils/api/user/User';
+import * as api from '../../utils/api/Users';
 import Loader from '../static/loader/Loader';
 import ErrorPage from '../static/error-status/ErrorPage';
 
