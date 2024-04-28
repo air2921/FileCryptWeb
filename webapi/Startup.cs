@@ -29,21 +29,24 @@ namespace webapi
                 .Enrich.WithProperty("Environment", env)
                 .ReadFrom.Configuration(config)
                 .WriteTo.Console()
-                .WriteTo.Elasticsearch(ConfigurationElasticSink(config, env!))
+                .WriteTo.Elasticsearch(ConfigurationElasticSink(config))
                 .CreateLogger();
 
-            config.ConfigurationCheck();
-
+            config.Check();
             services.AddScoped<IUserInfo, UserData>();
             services.AddSingleton<IHttpContextAccessor, HttpContextAccessor>();
 
-            services.AddLogging();
+            services.AddLogging(log =>
+            {
+                log.ClearProviders();
+                log.AddSerilog(Log.Logger);
+            });
 
-            services.AddAdditionalInfrastructure(Log.Logger);
+            services.AddProviderInfrastructure(Log.Logger);
             services.AddDataInfrastructure(config, Log.Logger);
-            services.AddServicesInfrastructure(config, Log.Logger);
+            services.AddServiceInfrastructure(config, Log.Logger);
             services.AddApplication(config);
-            services.Register(config);
+            services.AddServices(config);
         }
 
         public void Configure(IApplicationBuilder app, IWebHostEnvironment env)
@@ -80,7 +83,7 @@ namespace webapi
             });
         }
 
-        private static ElasticsearchSinkOptions ConfigurationElasticSink(IConfigurationRoot configuration, string env)
+        private static ElasticsearchSinkOptions ConfigurationElasticSink(IConfigurationRoot configuration)
         {
             return new ElasticsearchSinkOptions(new Uri(configuration.GetConnectionString(App.ELASTIC_SEARCH)!))
             {

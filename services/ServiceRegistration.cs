@@ -16,7 +16,7 @@ namespace services
 {
     public static class ServiceRegistration
     {
-        public static void AddServicesInfrastructure(this IServiceCollection services,
+        public static void AddServiceInfrastructure(this IServiceCollection services,
             IConfiguration _config, Serilog.ILogger logger)
         {
             services.AddLogging(log =>

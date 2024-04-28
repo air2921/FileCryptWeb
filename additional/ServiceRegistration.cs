@@ -6,7 +6,7 @@ namespace additional
 {
     public static class ServiceRegistration
     {
-        public static void AddAdditionalInfrastructure(this IServiceCollection services, Serilog.ILogger logger)
+        public static void AddProviderInfrastructure(this IServiceCollection services, Serilog.ILogger logger)
         {
             services.AddSingleton<IRequest, Request>();
             services.AddSingleton(typeof(ILogger<>), typeof(AdditionalLogger<>));

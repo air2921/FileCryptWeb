@@ -25,9 +25,12 @@ namespace data_access.Redis
                 var dataToSave = JsonConvert.SerializeObject(value, settings);
                 await _db.StringSetAsync(key, dataToSave, expires);
 
+                // FormatException at this line, idk whi it happens.
+                // No one variable int this log not null.
+                // Maybe it because of '\n' in log message
                 logger.LogInformation($"Request to save data in redis cluster\n" +
                     $"Information about saved data:\n" +
-                    $"Key: {key}\nValue: {dataToSave}\nExpires: {expires}");
+                    $"Key: {key}\nValue: {dataToSave ?? "NULL"}\nExpires: {expires}");
             }
             catch (Exception ex)
             {
@@ -40,6 +43,10 @@ namespace data_access.Redis
             try
             {
                 var value = await _db.StringGetAsync(key);
+
+                // FormatException at this line, idk whi it happens.
+                // No one variable int this log not null.
+                // Maybe it because of '\n' in log message
                 logger.LogInformation($"Request to get data from redis cluster\n" +
                     $"Information about the requested data:\n" +
                     $"Key: {key}\nValue: {GetStringValue(value)}");
@@ -61,6 +68,9 @@ namespace data_access.Redis
                 if (value.HasValue)
                     await _db.KeyDeleteAsync(key);
 
+                // FormatException at this line, idk whi it happens.
+                // No one variable int this log not null.
+                // Maybe it because of '\n' in log message
                 logger.LogInformation($"Request to delete data by key from redis cluster\n" +
                     $"Information about deleted data\n" +
                     $"Key: {key}\nValue: {GetStringValue(value)}");
@@ -81,6 +91,9 @@ namespace data_access.Redis
                 if (result is null)
                     return;
 
+                // FormatException at this line, idk whi it happens.
+                // No one variable int this log not null.
+                // Maybe it because of '\n' in log message
                 logger.LogInformation($"Request to delete data by pattern from redis cluster\n" +
                     $"Pattern: {key}");
 
@@ -138,11 +151,15 @@ namespace data_access.Redis
             }
         }
 
-        private static string GetStringValue(RedisValue redisValue)
+        private static string GetStringValue(RedisValue? redisValue)
         {
-            string? dataReturn = redisValue.HasValue ? redisValue! : default;
+            string? dataToReturn = null;
 
-            return dataReturn is not null ? dataReturn : "Requested value is null";
+            if (redisValue.HasValue)
+                dataToReturn = redisValue;
+
+            var temp = dataToReturn is not null ? dataToReturn : "Requested value is null";
+            return temp;
         }
     }
 }

@@ -1,5 +1,3 @@
-using Serilog;
-
 namespace webapi
 {
     public class Program
@@ -8,11 +6,6 @@ namespace webapi
 
         public static IHostBuilder CreateHostBuilder(string[] args) =>
             Host.CreateDefaultBuilder(args)
-            .ConfigureLogging(a => { a.ClearProviders(); })
-            .UseSerilog()
-            .ConfigureWebHostDefaults(builder =>
-            {
-                builder.UseStartup<Startup>();
-            });
+            .ConfigureWebHostDefaults(builder => {  builder.UseStartup<Startup>(); });
     }
 }

@@ -10,7 +10,7 @@ namespace webapi
 {
     public static class AppServices
     {
-        public static void Register(this IServiceCollection services, IConfiguration configuration)
+        public static void AddServices(this IServiceCollection services, IConfiguration configuration)
         {
             services.AddAutoMapper(typeof(Startup));
             services.AddControllers();

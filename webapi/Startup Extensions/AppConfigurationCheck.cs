@@ -12,7 +12,7 @@ namespace webapi
         /// </summary>
         /// <exception cref="InvalidConfigurationException"></exception>
 
-        public static void ConfigurationCheck(this IConfiguration configuration)
+        public static void Check(this IConfiguration configuration)
         {
             string? jwtKey = configuration[App.SECRET_KEY];
             string? emailPassword = configuration[App.EMAIL_PASSWORD];
