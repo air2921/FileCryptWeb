@@ -1,4 +1,5 @@
 ﻿using application.Abstractions.Endpoints.Core;
+using application.DTO.Outer;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 using webapi.Helpers.Abstractions;
@@ -15,9 +16,9 @@ namespace webapi.Controllers.Core
     {
         [HttpPost]
         [ValidateAntiForgeryToken]
-        public async Task<IActionResult> AddStorage([FromQuery] string name, [FromQuery] int code)
+        public async Task<IActionResult> AddStorage([FromBody] StorageDTO dto)
         {
-            var response = await storageService.Add(name, code.ToString(), userInfo.UserId);
+            var response = await storageService.Add(dto.Name, dto.Code.ToString(), dto.Description, userInfo.UserId);
             return StatusCode(response.Status, new { message = response.Message });
         }
 

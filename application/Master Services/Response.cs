@@ -16,7 +16,7 @@
             }
         }
 
-        public bool IsSuccess { get; set; }
+        public bool IsSuccess { get; private set; }
         public string Message { get; set; }
         public object? ObjectData { get; internal set; }
     }

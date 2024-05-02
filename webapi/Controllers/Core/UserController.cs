@@ -42,10 +42,10 @@ namespace webapi.Controllers.Core
             return StatusCode(200, new 
             {
                 user = user.ObjectData,
+                isOwner = userInfo.UserId.Equals(userId),
                 files = files.ObjectData,
                 storages = storages.ObjectData,
                 offers = offers.ObjectData,
-                isOwner = userInfo.UserId.Equals(userId)
             });
         }
 

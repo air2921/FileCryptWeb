@@ -40,15 +40,14 @@ function Layout() {
         const newRole = cookie.load('auth_role');
 
         if (isAuth) {
-            if (newId === undefined || newRole === undefined || id === undefined || role === undefined) {
+            if (!newId || !newRole || !id || !role) {
                 const isAuthStatus = await getAuthStatus()
 
                 if (isAuthStatus) {
                     setId(newId);
                     setRole(newRole);
                 }
-            }
-            else {
+            } else {
                 setId(newId);
                 setRole(newRole);
             }
@@ -77,8 +76,7 @@ function Layout() {
             }
 
             navigate(`/user/${findUserId}`);
-        }
-        else {
+        } else {
 
             //Здесь возможно будет поиск списка юзеров по юзернейму
 

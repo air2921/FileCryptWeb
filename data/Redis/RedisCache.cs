@@ -81,42 +81,37 @@ namespace data_access.Redis
             }
         }
 
-        public async Task DeteteCacheByKeyPattern(string key)
+        public async Task DeteteCacheByKeyPattern(string pattern)
         {
             try
             {
-                var redisKeys = _db.Execute("KEYS", "*");
-                var result = (string[])redisKeys;
+                var redisKeys = await _db.ExecuteAsync("KEYS", "*");
+                var result = redisKeys.ToDictionary().Keys;
 
                 if (result is null)
                     return;
 
-                // FormatException at this line, idk whi it happens.
+                //FormatException at this line, idk whi it happens.
                 // No one variable int this log not null.
                 // Maybe it because of '\n' in log message
                 logger.LogInformation($"Request to delete data by pattern from redis cluster\n" +
-                    $"Pattern: {key}");
+                    $"Pattern: {pattern}");
 
                 var deletedKeys = new List<string>();
+                var partsOfPattern = pattern.Split('_');
 
-                var keysContainsPattern = result.Where(str => str.Contains(key)).ToArray();
-                var partsKeyPattern = key.Split('_');
-
-                foreach (var redisKey in keysContainsPattern)
-                {
-                    try
+                var tasks = result.Where(x => x.StartsWith(pattern))
+                    .ToHashSet()
+                    .Select(async match =>
                     {
-                        if (redisKey.Split('_')[0] == partsKeyPattern[0] && redisKey.Split('_')[1] == partsKeyPattern[1])
+                        if (partsOfPattern[0].Equals(match[0]) && partsOfPattern[1].Equals(match[1]))
                         {
-                            await _db.KeyDeleteAsync(redisKey);
-                            deletedKeys.Add(redisKey);
+                            _db.KeyDeleteAsync(match);
+                            deletedKeys.Add(match);
                         }
-                    }
-                    catch (IndexOutOfRangeException)
-                    {
-                        continue;
-                    }
-                }
+                    });
+
+                await Task.WhenAll(tasks);
 
                 logger.LogInformation(string.Join(", ", deletedKeys));
             }

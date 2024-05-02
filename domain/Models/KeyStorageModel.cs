@@ -12,6 +12,8 @@ namespace domain.Models
 
         public string storage_name { get; set; }
 
+        public string? description { get; set; }
+
         public DateTime last_time_modified { get; set; }
 
         public string access_code { get; set; }

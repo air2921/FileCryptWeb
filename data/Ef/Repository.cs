@@ -40,6 +40,30 @@ namespace data_access.Ef
 
         #endregion
 
+        public int GetCount(ISpecification<T>? specification, CancellationToken cancellationToken = default)
+        {
+            try
+            {
+                using var cts = new CancellationTokenSource(TimeSpan.FromSeconds(GET_ALL_AWAITING));
+                cancellationToken = CancellationTokenSource.CreateLinkedTokenSource(cancellationToken, cts.Token).Token;
+
+                IQueryable<T> query = _dbSet;
+                if (specification is not null)
+                    query = SpecificationEvaluator.Default.GetQuery(query, specification);
+
+                return query.Count();
+            }
+            catch (OperationCanceledException)
+            {
+                throw new EntityException(REQUEST_TIMED_OUT);
+            }
+            catch (Exception ex)
+            {
+                _logger.LogCritical(ex.ToString(), nameof(_context), nameof(_dbSet));
+                throw new EntityException(ERROR);
+            }
+        }
+
         public async Task<IEnumerable<T>> GetAll(ISpecification<T>? specification = null, CancellationToken cancellationToken = default)
         {
             try

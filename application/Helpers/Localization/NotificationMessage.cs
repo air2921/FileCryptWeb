@@ -2,7 +2,7 @@
 {
     public static class NotificationMessage
     {
-        private const string NEW_LINE = "|new_line|";
+        private const string NEW_LINE = "|NEW_LINE|";
         private const string END_MESSAGE = "Best regards, FileCrypt Team";
 
         public const string AUTH_TOKENS_REVOKED_HEADER = "Revocation of Authentication Tokens Due to Suspicious Activity";

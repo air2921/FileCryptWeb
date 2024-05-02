@@ -10,6 +10,7 @@ export interface StoragesSortProps {
 export interface StorageProps {
     storage_id: number,
     storage_name: string,
+    description: string,
     last_time_modified: string,
     user_id: number
 }
@@ -64,11 +65,15 @@ export async function deleteStorage(storageId: number, code: number) {
     }
 }
 
-export async function addStorage(name: string, code: number) {
+export async function addStorage(name: string, description: string, code: number) {
     try {
         const response = await axios.post(
-            BASE_URL + `api/core/storage?name=${name}&code=${code}`,
-            null, { withCredentials: true }
+            BASE_URL + `api/core/storage`,
+            {
+                Name: name,
+                Description: description,
+                Code: code
+            }, { withCredentials: true }
         )
 
         return {

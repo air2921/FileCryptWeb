@@ -33,6 +33,7 @@ namespace webapi
                  string.IsNullOrWhiteSpace(elastic) || string.IsNullOrWhiteSpace(clamServer) ||
                  !int.TryParse(clamPort, out int number);
 
+#if DEBUG
             Console.WriteLine(
                 $"Email Password is valid ?: {!string.IsNullOrWhiteSpace(emailPassword)}\nEmail Password Value: {emailPassword}\n\n" +
                 $"JWT Key is valid ?: {!string.IsNullOrWhiteSpace(jwtKey)}\nJwt Key Value: {jwtKey}\n\n" +
@@ -40,6 +41,7 @@ namespace webapi
                 $"PostgreSQL is valid ?: {!string.IsNullOrWhiteSpace(postgres)}\nPostgreSQL Value: {postgres}\n\n" +
                 $"Elasticsearch is valid ?: {!string.IsNullOrWhiteSpace(elastic)}\nElasticsearch Value: {elastic}\n\n" +
                 $"ClamAV ( !!! ONLY CONNECTION STRING !!! ) is valid ?: {!string.IsNullOrWhiteSpace(clamServer) && !string.IsNullOrWhiteSpace(clamPort)}\nClamAV Value: {clamServer}:{clamPort}\n");
+#endif
 
             if (invalidConfiguration)
                 throw new InvalidConfigurationException();

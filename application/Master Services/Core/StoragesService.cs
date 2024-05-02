@@ -16,13 +16,14 @@ namespace application.Master_Services.Core
         IRedisCache redisCache,
         IHashUtility hashUtility) : IStorageService
     {
-        public async Task<Response> Add(string storageName, string accessCode, int userId)
+        public async Task<Response> Add(string storageName, string accessCode, string? description, int userId)
         {
             try
             {
                 await repository.Add(new KeyStorageModel
                 {
                     storage_name = storageName,
+                    description = description,
                     access_code = hashUtility.Hash(accessCode),
                     user_id = userId,
                     last_time_modified = DateTime.UtcNow

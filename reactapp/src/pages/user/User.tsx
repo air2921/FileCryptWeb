@@ -1,7 +1,5 @@
 ﻿import React, { useEffect, useState } from 'react';
 import { useNavigate, useParams } from 'react-router-dom';
-import OfferList from '../../components/lists/offers/OfferList';
-import FileList from '../../components/lists/files/FileList';
 import { UserProps, getFullyUser } from '../../utils/api/Users';
 import ErrorPage from '../static/error-status/ErrorPage';
 import Loader from '../static/loader/Loader';
@@ -45,10 +43,10 @@ const User = () => {
             </div>
             <div className="file-offer-container">
                 <div className="files">
-                    <FileList files={files} isOwner={isOwner} />
+
                 </div>
                 <div className="offers">
-                    <OfferList offers={offers} isOwner={isOwner} />
+
                 </div>
             </div>
         </div>

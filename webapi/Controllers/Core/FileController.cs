@@ -63,6 +63,20 @@ namespace webapi.Controllers.Core
                 return StatusCode(response.Status, new { files = response.ObjectData });
         }
 
+        [HttpGet("activity")]
+        public async Task<IActionResult> GetRangeFilesForTimeInterval([FromQuery] bool byDesc,
+            [FromQuery] DateTime start, [FromQuery] DateTime end)
+        {
+            if (end > start)
+                return StatusCode(400, new { message = Message.INVALID_FORMAT });
+
+            var response = await fileService.GetRangeForInterval(byDesc, start, end, userInfo.UserId);
+            if (!response.IsSuccess)
+                return StatusCode(response.Status, new { message = response.Message });
+            else
+                return StatusCode(response.Status, new { activity = response.ObjectData });
+        }
+
         [HttpDelete("{fileId}")]
         [ValidateAntiForgeryToken]
         public async Task<IActionResult> DeleteFile([FromRoute] int fileId)

@@ -1,41 +1,35 @@
 import React from 'react';
-import Message from '../../../utils/helpers/message/Message';
 import DateComponent from '../../../utils/helpers/date/Date';
 import Font from '../../../utils/helpers/icon/Font';
+import { NotificationProps } from '../../../utils/api/Notifications';
+import NoState from '../../noState/NoState';
 
 interface NotificationListProps {
     notifications: NotificationProps[] | null,
     deleteNotification?: (notificationId: number) => void,
 }
 
-interface NotificationProps {
-    notification_id: number,
-    message_header: string,
-    message: string,
-    priority: string,
-    send_time: string,
-    is_checked: boolean,
-    receiver_id: number
-}
-
 function NotificationList({ notifications, deleteNotification }: NotificationListProps) {
 
+    const formatMessage = (description: string) => {
+        const splitter = '|NEW_LINE|'
+        const lines = description.split(splitter);
+        return lines.join('\n');
+    }
+
     if (!notifications || notifications.every(notification => notification === null)) {
-        return <div><Message message={'No received notifications'} font='storage' /></div>;
+        return <NoState />
     }
 
     let font;
-
     if (notifications.some(notification => notification !== null && !notification.is_checked)) {
         font = 'notifications_active';
-    }
-    else {
+    } else {
         font = 'notifications';
     }
 
     return (
         <ul>
-            <Message message={'Your Notifications'} font={font} />
             {notifications
                 .filter(notification => notification !== null)
                 .map(notification => (
@@ -55,17 +49,17 @@ function NotificationList({ notifications, deleteNotification }: NotificationLis
                         </div>
                         <div className="notification-details">
                             <div className="info">
-                                <div className="body">{notification.message}</div>
+                                <div className="body">{formatMessage(notification.message)}</div>
                                 <div className="id">
                                     <div className="notification-id">Notification ID#{notification.notification_id}</div>
-                                    <div className="user-id">User ID#{notification.receiver_id}</div>
+                                    <div className="user-id">User ID#{notification.user_id}</div>
                                 </div>
                             </div>
                             <div className="time"><DateComponent date={notification.send_time} /></div>
                         </div>
-                        {notification.priority == 'Info' && deleteNotification && (
+                        {notification.priority === 'Info' && deleteNotification && (
                             <button onClick={() => deleteNotification(notification.notification_id)}>
-                                <Font font={'delete'} />
+                                Delete
                             </button>
                         )}
                     </li>

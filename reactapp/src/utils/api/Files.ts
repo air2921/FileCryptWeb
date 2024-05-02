@@ -59,6 +59,20 @@ export async function getFiles(sort: FilesSortProps) {
     }
 }
 
+export async function getFilesInterval(byDesc: boolean, start: Date, end: Date) {
+    try {
+        const response = await axios.get(`api/core/file/activity?byDesc=${byDesc}&start=${start}&end=${end}`);
+
+        return {
+            success: true,
+            statusCode: response.status,
+            data: response.data,
+            message: undefined
+        }
+    } catch (error: any) {
+        return errorHandler(error);
+    }
+
 export async function deleteFile(fileId: number) {
     try {
         const response = await axios.delete(BASE_URL + `api/core/file/${fileId}`, { withCredentials: true });

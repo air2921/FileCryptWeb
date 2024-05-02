@@ -4,6 +4,7 @@ namespace domain.Abstractions.Data
 {
     public interface IRepository<T> where T : class
     {
+        int GetCount(ISpecification<T>? specification, CancellationToken cancellationToken = default);
         Task<IEnumerable<T>> GetAll(ISpecification<T>? specification = null, CancellationToken cancellationToken = default);
         Task<T> GetById(int id, CancellationToken cancellationToken = default);
         Task<T> GetByFilter(ISpecification<T> specification, CancellationToken cancellationToken = default);
