@@ -11,17 +11,15 @@ import Settings from './pages/user/Settings'
 import Files from './pages/list/files/Files';
 import RecoveryAccount from './pages/auth/recovery/RecoveryAccount'
 import ErrorPage from './pages/static/error-status/ErrorPage'
-import Layout from './components/Layout/Layout';
+import Layout from './components/layout/Layout';
 import useAuth from './components/hooks/useAuth';
+import Loader from './pages/static/loader/Loader';
 
 function App() {
     const isAuth = useAuth();
 
     if (isAuth === null) {
-        return (
-            <>
-            </>
-        )
+        return <Loader />
     }
 
     return (

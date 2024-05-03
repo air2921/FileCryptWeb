@@ -1,0 +1,9 @@
+.activity-board ul {
+    column-count: 53;
+    column-gap: 12px;
+}
+
+.day-block {
+    width: 12px;
+    height: 12px;
+}

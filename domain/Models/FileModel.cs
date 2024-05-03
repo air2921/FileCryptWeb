@@ -24,11 +24,4 @@ namespace domain.Models
         [JsonIgnore]
         public virtual UserModel? User { get; set; }
     }
-
-    public enum FileType
-    {
-        Private,
-        Internal,
-        Received
-    }
 }

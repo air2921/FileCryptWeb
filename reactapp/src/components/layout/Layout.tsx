@@ -6,7 +6,6 @@ import './Layout.css'
 import useResize from '../hooks/useResize';
 import useAuth from '../hooks/useAuth';
 import { getAuth, logout } from '../../utils/api/Auth';
-import { getUser } from '../../utils/api/Users';
 
 function Layout() {
     const [id, setId] = useState(cookie.load('auth_user_id'));

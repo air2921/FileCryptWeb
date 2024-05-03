@@ -24,6 +24,7 @@ namespace application.Helper_Services.Account
                 {
                     email = user.Email,
                     password = user.Password,
+                    last_time_password_modified = DateTime.UtcNow,
                     username = user.Username,
                     role = user.Role,
                     is_2fa_enabled = user.Flag2Fa,
