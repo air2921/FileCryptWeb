@@ -1,4 +1,5 @@
-import React from 'react';
+import React, { useState } from 'react';
+import Board, { ActivityProps } from '../../../components/activityBoard/Board';
 
 function Home() {
     return (
@@ -35,6 +36,9 @@ function Home() {
             </div>
             <div>
                 The source code of the project is open and available on <a href="https://github.com/air2921/FileCryptWeb-ASP-React">GitHub</a>.
+            </div>
+            <div>
+                <Board days={new Array(length = 0)} year={2022} />
             </div>
         </div>
     );

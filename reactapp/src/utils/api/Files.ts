@@ -72,6 +72,7 @@ export async function getFilesInterval(byDesc: boolean, start: Date, end: Date) 
     } catch (error: any) {
         return errorHandler(error);
     }
+}
 
 export async function deleteFile(fileId: number) {
     try {
@@ -123,7 +124,7 @@ export async function cypherFile(props: CypherProps) {
     }
 }
 
-const downloadFile = (file: Blob, filename: string) => {
+function downloadFile(file: Blob, filename: string) {
     const fileURL = URL.createObjectURL(new Blob([file], { type: file.type }));
 
     const downloadLink = document.createElement('a');
