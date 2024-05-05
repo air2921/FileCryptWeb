@@ -8,10 +8,12 @@ namespace application.Helper_Services.Admin
 {
     public class TokenService(
         IRepository<TokenModel> tokenRepository,
-        IRepository<NotificationModel> notificationRepository) : ITransaction<TokenModel>, IValidator
+        IRepository<NotificationModel> notificationRepository,
+        IDatabaseTransaction dbTransaction) : ITransaction<TokenModel>, IValidator
     {
         public async Task CreateTransaction(TokenModel data, object? parameter = null)
         {
+            using var transaction = await dbTransaction.BeginAsync();
             try
             {
                 if (!int.TryParse(parameter?.ToString(), out int userId))
@@ -29,9 +31,12 @@ namespace application.Helper_Services.Admin
                     send_time = DateTime.UtcNow,
                     user_id = userId!
                 });
+
+                await dbTransaction.CommitAsync(transaction);
             }
             catch (EntityException)
             {
+                await dbTransaction.RollbackAsync(transaction);
                 throw;
             }
         }

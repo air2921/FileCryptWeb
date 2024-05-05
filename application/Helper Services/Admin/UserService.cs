@@ -7,10 +7,12 @@ namespace application.Helper_Services.Admin
 {
     public class UserService(
         IRepository<UserModel> userRepository,
-        IRepository<TokenModel> tokenRepository) : ITransaction<UserModel>, IValidator
+        IRepository<TokenModel> tokenRepository,
+        IDatabaseTransaction dbTransaction) : ITransaction<UserModel>, IValidator
     {
         public async Task CreateTransaction(UserModel target, object? parameter = null)
         {
+            using var transaction = await dbTransaction.BeginAsync();
             try
             {
                 if (!bool.TryParse(parameter?.ToString(), out bool block))
@@ -23,9 +25,12 @@ namespace application.Helper_Services.Admin
                     await tokenRepository.DeleteMany((await tokenRepository
                         .GetAll(new RefreshTokensByRelationSpec(target.id)))
                         .Select(t => t.token_id));
+
+                await dbTransaction.CommitAsync(transaction);
             }
             catch (EntityException)
             {
+                await dbTransaction.RollbackAsync(transaction);
                 throw;
             }
         }

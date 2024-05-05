@@ -11,10 +11,12 @@ namespace application.Helper_Services.Account.Edit
     public class _2FaHelper(
         IRepository<UserModel> userRepository,
         IRepository<NotificationModel> notificationRepository,
-        IRedisCache redisCache) : ITransaction<UserModel>, IDataManagement, IValidator
+        IRedisCache redisCache,
+        IDatabaseTransaction dbTransaction) : ITransaction<UserModel>, IDataManagement, IValidator
     {
         public async Task CreateTransaction(UserModel user, object? parameter = null)
         {
+            using var transaction = await dbTransaction.BeginAsync();
             try
             {
                 if (parameter is null || !bool.TryParse(parameter.ToString(), out bool enable))
@@ -35,10 +37,12 @@ namespace application.Helper_Services.Account.Edit
                     is_checked = false,
                     user_id = user.id
                 });
-
+                
+                await dbTransaction.CommitAsync(transaction);
             }
             catch (EntityException)
             {
+                await dbTransaction.RollbackAsync(transaction);
                 throw;
             }
         }

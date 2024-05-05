@@ -32,7 +32,7 @@ namespace application.Master_Services.Account
                 if (user is null)
                     return new Response { Status = 404, Message = Message.NOT_FOUND };
 
-                string token = Guid.NewGuid().ToString("N") + Guid.NewGuid().ToString() + generate.GenerateKey();
+                string token = generate.GuidCombine(5, true);
                 await recoveryHelper.CreateTokenTransaction(user, token);
                 await emailSender.SendMessage(new EmailDto
                 {

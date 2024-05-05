@@ -91,33 +91,44 @@ function Board({ days, year }: { days: ActivityProps[], year: number }) {
         }
     }
 
+    function getTotalActivity(arr: ActivityProps[]) {
+        let totalActivity = 0;
+        arr.forEach(item => {
+            totalActivity += item.ActivityCount;
+        });
+        return totalActivity;
+    }
+
     useEffect(() => {
         setFullYearActivity(days, year);
     }, [days, year])
 
-    const BlockComponent = ({ count }: { count: number }) => {
+    const BlockComponent = ({ count, date }: { count: number, date: string }) => {
         return (
             <div className="day-block" style={{ backgroundColor: setColor(count) }}>
-
+                <span className="tooltip">{`${count === 0 ? 'No' : count} activity on ${date}`}</span>
             </div>
         );
     }
 
     return (
-        <div className="activity-board">
-            <table>
-                <tbody>
-                    {[0, 1, 2, 3, 4, 5, 6].map((row, index) => (
-                        <tr key={index + 1} className={`${index + 1}-days-line`}>
-                            {activity.slice(setNextStep(index, isLeap), setNextStep(index, isLeap) + setStep(index, isLeap)).map(day => (
-                                <td key={day.Date}>
-                                    <BlockComponent count={day.ActivityCount} />
-                                </td>
-                            ))}
-                        </tr>
-                    ))}
-                </tbody>
-            </table>
+        <div>
+            <div>{getTotalActivity(days)} active actions in {year} year</div>
+            <div className="activity-board">
+                <table>
+                    <tbody>
+                        {[0, 1, 2, 3, 4, 5, 6].map((row, index) => (
+                            <tr key={index + 1} className={`${index + 1}-days-line`}>
+                                {activity.slice(setNextStep(index, isLeap), setNextStep(index, isLeap) + setStep(index, isLeap)).map(day => (
+                                    <td key={day.Date}>
+                                        <BlockComponent count={day.ActivityCount} date={day.Date} />
+                                    </td>
+                                ))}
+                            </tr>
+                        ))}
+                    </tbody>
+                </table>
+            </div>
         </div>
     );
 }

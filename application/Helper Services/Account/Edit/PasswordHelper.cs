@@ -11,10 +11,12 @@ namespace application.Helper_Services.Account.Edit
         IHashUtility hashUtility,
         IRepository<UserModel> userRepository,
         IRepository<NotificationModel> notificationRepository,
-        IRedisCache redisCache) : ITransaction<UserModel>, IDataManagement
+        IRedisCache redisCache,
+        IDatabaseTransaction dbTransaction) : ITransaction<UserModel>, IDataManagement
     {
         public async Task CreateTransaction(UserModel user, object? parameter = null)
         {
+            using var transaction = await dbTransaction.BeginAsync();
             try
             {
                 if (parameter is not string password)
@@ -33,9 +35,12 @@ namespace application.Helper_Services.Account.Edit
                     is_checked = false,
                     user_id = user.id
                 });
+
+                await dbTransaction.CommitAsync(transaction);
             }
             catch (EntityException)
             {
+                await dbTransaction.RollbackAsync(transaction);
                 throw;
             }
         }

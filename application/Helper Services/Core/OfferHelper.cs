@@ -10,10 +10,12 @@ namespace application.Helper_Services.Core
         IRepository<KeyStorageItemModel> storageItemRepository,
         IRepository<OfferModel> offerRepository,
         IRepository<NotificationModel> notificationRepository,
-        IRedisCache redisCache) : ITransaction<CreateOfferDTO>, ITransaction<AcceptOfferDTO>, IDataManagement
+        IRedisCache redisCache,
+        IDatabaseTransaction dbTransaction) : ITransaction<CreateOfferDTO>, ITransaction<AcceptOfferDTO>, IDataManagement
     {
         public async Task CreateTransaction(CreateOfferDTO dto, object? parameter = null)
         {
+            using var transaction = await dbTransaction.BeginAsync();
             try
             {
                 await offerRepository.Add(new OfferModel
@@ -36,15 +38,19 @@ namespace application.Helper_Services.Core
                     is_checked = false,
                     user_id = dto.ReceiverId
                 });
+
+                await dbTransaction.CommitAsync(transaction);
             }
             catch (EntityException)
             {
+                await dbTransaction.RollbackAsync(transaction);
                 throw;
             }
         }
 
         public async Task CreateTransaction(AcceptOfferDTO dto, object? parameter = null)
         {
+            using var transaction = await dbTransaction.BeginAsync();
             try
             {
                 await storageItemRepository.Add(new KeyStorageItemModel
@@ -57,9 +63,12 @@ namespace application.Helper_Services.Core
 
                 dto.Offer.is_accepted = true;
                 await offerRepository.Update(dto.Offer);
+
+                await dbTransaction.CommitAsync(transaction);
             }
             catch (EntityException)
             {
+                await dbTransaction.RollbackAsync(transaction);
                 throw;
             }
         }

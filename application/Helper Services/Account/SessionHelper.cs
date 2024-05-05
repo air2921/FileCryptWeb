@@ -23,10 +23,12 @@ namespace application.Helper_Services.Account
         IRepository<TokenModel> tokenRepository,
         IRepository<NotificationModel> notificationRepository,
         IRedisCache redisCache,
-        ITokenComparator tokenComparator) : ISessionHelper, IDataManagement
+        ITokenComparator tokenComparator,
+        IDatabaseTransaction dbTransaction) : ISessionHelper, IDataManagement
     {
         private async Task LoginTransaction(UserModel user, string refreshToken)
         {
+            using var transaction = await dbTransaction.BeginAsync();
             try
             {
                 await tokenRepository.Add(new TokenModel
@@ -47,9 +49,12 @@ namespace application.Helper_Services.Account
                 });
 
                 await DeleteExpiredTokens(user.id);
+
+                await dbTransaction.CommitAsync(transaction);
             }
             catch (EntityException)
             {
+                await dbTransaction.RollbackAsync(transaction);
                 throw;
             }
         }

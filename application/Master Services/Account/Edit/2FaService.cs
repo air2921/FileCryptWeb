@@ -33,7 +33,7 @@ namespace application.Master_Services.Account.Edit
                 if (!hashUtility.Verify(password, user.password))
                     return new Response { Status = 401, Message = Message.INCORRECT };
 
-                int code = generate.GenerateSixDigitCode();
+                int code = generate.GenerateCode(6);
                 await emailSender.SendMessage(new EmailDto
                 {
                     username = user.username,

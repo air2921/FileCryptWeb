@@ -21,12 +21,14 @@ namespace application.Helper_Services.Account
         IRepository<NotificationModel> notificationRepository,
         IRepository<LinkModel> linkRepository,
         IRepository<TokenModel> tokenRepository,
-        IHashUtility hashUtility) : IRecoveryHelper, IValidator
+        IHashUtility hashUtility,
+        IDatabaseTransaction dbTransaction) : IRecoveryHelper, IValidator
     {
         public bool IsValid(object data, object? parameter = null) => Regex.IsMatch((string)data, RegularEx.Password);
 
         public async Task RecoveryTransaction(UserModel user, string token, string password)
         {
+            using var transaction = await dbTransaction.BeginAsync();
             try
             {
                 user.password = hashUtility.Hash(password);
@@ -46,15 +48,19 @@ namespace application.Helper_Services.Account
 
                 var tokens = (await tokenRepository.GetAll(new RefreshTokensByRelationSpec(user.id))).Select(x => x.token_id);
                 await tokenRepository.DeleteMany(tokens);
+
+                await dbTransaction.CommitAsync(transaction);
             }
             catch (EntityException)
             {
+                await dbTransaction.RollbackAsync(transaction);
                 throw;
             }
         }
 
         public async Task CreateTokenTransaction(UserModel user, string token)
         {
+            using var transaction = await dbTransaction.BeginAsync();
             try
             {
                 await linkRepository.Add(new LinkModel
@@ -75,9 +81,12 @@ namespace application.Helper_Services.Account
                     is_checked = false,
                     user_id = user.id
                 });
+
+                await dbTransaction.CommitAsync(transaction);
             }
             catch (EntityException)
             {
+                await dbTransaction.RollbackAsync(transaction);
                 throw;
             }
         }

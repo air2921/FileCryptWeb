@@ -36,7 +36,7 @@ namespace application.Master_Services.Account.Edit
                 if (!hashUtility.Verify(password, user.password))
                     return new Response { Status = 401, Message = Message.INCORRECT };
 
-                int code = generate.GenerateSixDigitCode();
+                int code = generate.GenerateCode(6);
                 await emailSender.SendMessage(new EmailDto
                 {
                     username = user.username,
@@ -72,7 +72,7 @@ namespace application.Master_Services.Account.Edit
                 if (user is not null)
                     return new Response { Status = 401, Message = Message.CONFLICT };
 
-                int confirmationCode = generate.GenerateSixDigitCode();
+                int confirmationCode = generate.GenerateCode(6);
                 await emailSender.SendMessage(new EmailDto()
                 {
                     username = "User",

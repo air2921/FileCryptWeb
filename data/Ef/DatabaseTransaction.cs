@@ -1,20 +1,17 @@
 ﻿using Microsoft.EntityFrameworkCore.Storage;
 using domain.Abstractions.Data;
+using System.Transactions;
 
 namespace data_access.Ef
 {
     public class DatabaseTransaction(FileCryptDbContext dbContext) : IDatabaseTransaction
     {
-        private readonly IDbContextTransaction _transaction = dbContext.Database.BeginTransaction();
+        public async Task<IDbContextTransaction> BeginAsync() => await dbContext.Database.BeginTransactionAsync();
 
-        public async Task CommitAsync() => await _transaction.CommitAsync();
+        public async Task CommitAsync(IDbContextTransaction transaction) => await transaction.CommitAsync();
 
-        public async Task RollbackAsync() => await _transaction.RollbackAsync();
+        public async Task RollbackAsync(IDbContextTransaction transaction) => await transaction.RollbackAsync();
 
-        public async ValueTask DisposeAsync()
-        {
-            await _transaction.DisposeAsync();
-            GC.SuppressFinalize(this);
-        }
+        public void Dispose(IDbContextTransaction transaction) => transaction.Dispose();
     }
 }

@@ -1,5 +1,45 @@
-.day-block {
-    width: 3px;
-    height: 3px;
-    border: solid 0.3px #ffffff;
+.activity-board {
+    border: solid 1.2px #ffffff;
+    border-radius: 6px;
+    height: fit-content;
+    width: fit-content;
+    padding: 8px;
 }
+
+.activity-board table {
+    border-collapse: collapse;
+    border-spacing: 0;
+    line-height: 1px;
+}
+
+.day-block {
+    width: 10px;
+    height: 10px;
+    border: solid 1.8px #ffffff;
+    border-radius: 3px;
+    position: relative;
+    display: inline-block;
+}
+
+    .day-block .tooltip {
+        border: solid 0.8px #ffffff;
+        visibility: hidden;
+        width: 200px;
+        height: auto;
+        background-color: #555;
+        color: #fff;
+        text-align: center;
+        padding: 8px;
+        border-radius: 12px;
+        position: absolute;
+        z-index: 1;
+        bottom: 125%;
+        left: 50%;
+        opacity: 0;
+        transition: opacity 0.3s;
+    }
+
+    .day-block:hover .tooltip {
+        visibility: visible;
+        opacity: 1;
+    }

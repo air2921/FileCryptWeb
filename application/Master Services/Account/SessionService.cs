@@ -44,7 +44,7 @@ namespace application.Master_Services.Account
                 if (!user.is_2fa_enabled)
                     return await sessionHelper.GenerateCredentials(user, tokenComparator.CreateRefresh());
 
-                int code = generate.GenerateSixDigitCode();
+                int code = generate.GenerateCode(6);
                 await emailSender.SendMessage(new EmailDto
                 {
                     username = user.username,

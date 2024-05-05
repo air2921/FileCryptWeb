@@ -2,6 +2,34 @@ import React, { useState } from 'react';
 import Board, { ActivityProps } from '../../../components/activityBoard/Board';
 
 function Home() {
+    const [act, setAct] = useState<ActivityProps[] | null>(new Array(length = 0));
+
+    function set() {
+        const arr: ActivityProps[] = new Array();
+        arr.push({ Date: '01.01.2024', ActivityCount: 25 });
+        arr.push({ Date: '03.02.2024', ActivityCount: 42 });
+        arr.push({ Date: '15.03.2024', ActivityCount: 17 });
+        arr.push({ Date: '27.04.2024', ActivityCount: 38 });
+        arr.push({ Date: '02.05.2024', ActivityCount: 56 });
+        arr.push({ Date: '04.05.2024', ActivityCount: 12 });
+        arr.push({ Date: '07.04.2024', ActivityCount: 31 });
+        arr.push({ Date: '10.03.2024', ActivityCount: 49 });
+        arr.push({ Date: '13.02.2024', ActivityCount: 23 });
+        arr.push({ Date: '16.01.2024', ActivityCount: 45 });
+        arr.push({ Date: '19.04.2024', ActivityCount: 27 });
+        arr.push({ Date: '21.03.2024', ActivityCount: 39 });
+        arr.push({ Date: '24.02.2024', ActivityCount: 18 });
+        arr.push({ Date: '26.01.2024', ActivityCount: 36 });
+        arr.push({ Date: '29.04.2024', ActivityCount: 50 });
+        arr.push({ Date: '30.03.2024', ActivityCount: 63 });
+        arr.push({ Date: '01.02.2024', ActivityCount: 21 });
+        arr.push({ Date: '03.01.2024', ActivityCount: 47 });
+        arr.push({ Date: '05.04.2024', ActivityCount: 33 });
+        arr.push({ Date: '07.03.2024', ActivityCount: 44 });
+
+        setAct(arr);
+    }
+
     return (
         <div className="home">
             <div className="head-container">
@@ -38,7 +66,8 @@ function Home() {
                 The source code of the project is open and available on <a href="https://github.com/air2921/FileCryptWeb-ASP-React">GitHub</a>.
             </div>
             <div>
-                <Board days={new Array(length = 0)} year={2022} />
+                <Board days={act!} year={2024} />
+                <button onClick={() => set()}>Set</button>
             </div>
         </div>
     );

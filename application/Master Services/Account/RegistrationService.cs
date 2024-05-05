@@ -29,7 +29,7 @@ namespace application.Master_Services.Account
             try
             {
                 dto.Email = dto.Email.ToLowerInvariant();
-                int code = generate.GenerateSixDigitCode();
+                int code = generate.GenerateCode(6);
 
                 if (!validator.IsValid(dto))
                     return new Response { Status = 400, Message = Message.INVALID_FORMAT };
