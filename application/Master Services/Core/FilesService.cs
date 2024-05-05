@@ -120,41 +120,25 @@ namespace application.Master_Services.Core
 
             var activity = new HashSet<Day>();
             foreach (var el in dict)
-                activity.Add(new Day { Date = el.Key, ActivityCount = el.Value, DayNumber = GetDayNumber(el.Key) });
+                activity.Add(new Day { Date = el.Key, ActivityCount = el.Value });
 
             return activity;
         }
-
-        private int GetDayNumber(string dateStr)
-        {
-            var date = DateTime.Parse(dateStr);
-            int[] daysInMonth = new int[] { 31, IsLeapYear(date.Year) ? 29 : 28, 31, 30, 31, 30, 31, 31, 30, 31, 30, 31 };
-            int dayOfYear = date.Day;
-
-
-            for (int i = 0; i < date.Month - 1; i++)
-                dayOfYear += daysInMonth[i];
-
-            return dayOfYear;
-        }
-
-        private bool IsLeapYear(int year) => (year % 4 == 0 && year % 100 != 0) || (year % 400 == 0);
 
         public class Day
         {
             public string Date { get; set; }
             public int ActivityCount { get; set; }
-            public int DayNumber {get; set; }
 
             public override bool Equals(object? obj)
             {
                 if (obj is null || obj is not Day other)
                     return false;
 
-                return Date == other.Date && ActivityCount == other.ActivityCount && DayNumber == other.DayNumber;
+                return Date == other.Date && ActivityCount == other.ActivityCount;
             }
 
-            public override int GetHashCode() => HashCode.Combine(Date, ActivityCount, DayNumber);
+            public override int GetHashCode() => HashCode.Combine(Date, ActivityCount);
         }
     }
 }

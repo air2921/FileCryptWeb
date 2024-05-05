@@ -13,7 +13,7 @@ namespace domain.Specifications.Sorting_Specifications
             End = end;
 
             Query.Where(f => f.user_id.Equals(userId));
-            Query.Where(f => f.operation_date >= start && f.operation_date < end);
+            Query.Where(f => f.operation_date >= start.ToUniversalTime() && f.operation_date < end.ToUniversalTime());
 
             if (byDesc)
                 Query.OrderByDescending(f => f.operation_date);

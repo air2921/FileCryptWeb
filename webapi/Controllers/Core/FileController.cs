@@ -67,7 +67,7 @@ namespace webapi.Controllers.Core
         public async Task<IActionResult> GetRangeFilesForTimeInterval([FromQuery] bool byDesc,
             [FromQuery] DateTime start, [FromQuery] DateTime end)
         {
-            if (end > start)
+            if (start > end)
                 return StatusCode(400, new { message = Message.INVALID_FORMAT });
 
             var response = await fileService.GetRangeForInterval(byDesc, start, end, userInfo.UserId);

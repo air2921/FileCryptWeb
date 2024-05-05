@@ -41,6 +41,9 @@ const User = () => {
             <div className="user-container">
 
             </div>
+            <div className="user-activity">
+
+            </div>
             <div className="file-offer-container">
                 <div className="files">
 
