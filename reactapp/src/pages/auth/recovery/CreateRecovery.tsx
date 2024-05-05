@@ -1,6 +1,5 @@
 import React, { FormEvent, useState } from 'react';
 import Message from '../../../utils/helpers/message/Message';
-import AxiosRequest from '../../../utils/api/AxiosRequest';
 import { createRecovery } from '../../../utils/api/Auth';
 
 const CreateRecovery = () => {
@@ -51,7 +50,7 @@ const CreateRecovery = () => {
             </form>
             {message &&
                 <div className="recovery-message">
-                    <Message message={message} font={font} />
+                    <Message message={message} icon={font} />
                 </div>
             }
         </div>

@@ -160,7 +160,7 @@ const Register = () => {
                 <Verify />
             </Modal>
             <div className="message">
-                {errorMessage && <Message message={errorMessage} font='error' />}
+                {errorMessage && <Message message={errorMessage} icon='error' />}
             </div>
         </div>
     );

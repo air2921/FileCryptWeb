@@ -1,7 +1,6 @@
 import React, { FormEvent, useState } from 'react';
 import { useLocation, useNavigate } from 'react-router-dom';
 import Message from '../../../utils/helpers/message/Message';
-import AxiosRequest from '../../../utils/api/AxiosRequest';
 import './RecoveryAccount.css'
 import { recoveryAccount } from '../../../utils/api/Auth';
 
@@ -62,7 +61,7 @@ const RecoveryAccount = () => {
             </form>
             {message &&
                 <div className="recovery-message">
-                    <Message message={message} font={font} />
+                    <Message message={message} icon={font} />
                 </div>
             }
         </div>

@@ -1,11 +1,11 @@
 ﻿import React, { useEffect, useState } from 'react';
-import Font from '../../utils/helpers/icon/Font';
 import { Link, Outlet, useNavigate } from 'react-router-dom';
 import cookie from 'react-cookies'
 import './Layout.css'
 import useResize from '../hooks/useResize';
 import useAuth from '../hooks/useAuth';
 import { getAuth, logout } from '../../utils/api/Auth';
+import Icon from '../../utils/helpers/icon/Icon';
 
 function Layout() {
     const [id, setId] = useState(cookie.load('auth_user_id'));
@@ -298,11 +298,11 @@ function Layout() {
                             onChange={(e) => setInputValue(e.target.value)}
                             placeholder="#2921"
                         />
-                        <button className="layout-find-btn" onClick={findUser}><Font font={'search'} /></button>
+                        <button className="layout-find-btn" onClick={findUser}><Icon icon={'search'} /></button>
                     </div>
                     {isAuth && (
                         <div className="layout-notification-container">
-                            <Link to="/notifications"><Font font={'notifications'} /></Link>
+                            <Link to="/notifications"><Icon icon={'notifications'} /></Link>
                         </div>
                     )}
                 </div>

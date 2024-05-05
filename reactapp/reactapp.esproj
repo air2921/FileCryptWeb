@@ -13,7 +13,6 @@
   <ItemGroup>
     <Folder Include="src\components\lists\storages\" />
     <Folder Include="src\components\modal\" />
-    <Folder Include="src\components\hooks\" />
     <Folder Include="src\components\noState\" />
     <Folder Include="src\components\activityBoard\" />
   </ItemGroup>

@@ -1,8 +1,8 @@
 import React from 'react';
 import DateComponent from '../../../utils/helpers/date/Date';
-import Font from '../../../utils/helpers/icon/Font';
 import { NotificationProps } from '../../../utils/api/Notifications';
 import NoState from '../../noState/NoState';
+import Icon from '../../../utils/helpers/icon/Icon';
 
 interface NotificationListProps {
     notifications: NotificationProps[] | null,
@@ -37,11 +37,11 @@ function NotificationList({ notifications, deleteNotification }: NotificationLis
                         <div className="notification-header">
                             <div className="notification-icon">
                                 {
-                                    notification.priority === 'Trade' ? <Font font={'key'} /> :
-                                    notification.priority === 'Info' ? <Font font={'info'} /> :
-                                    notification.priority === 'Warning' ? <Font font={'warning'} /> :
-                                    notification.priority === 'Security' ? <Font font={'security'} /> :
-                                    <Font font={'notifications'} />
+                                    notification.priority === 'Trade' ? <Icon icon={'key'} /> :
+                                        notification.priority === 'Info' ? <Icon icon={'info'} /> :
+                                            notification.priority === 'Warning' ? <Icon icon={'warning'} /> :
+                                                notification.priority === 'Security' ? <Icon icon={'security'} /> :
+                                                    <Icon icon={'notifications'} />
                                 }
                             </div>
                             <div className="priority">{notification.priority}</div>

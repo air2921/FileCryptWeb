@@ -1,4 +1,4 @@
-import React, { ChangeEvent, FormEvent, useEffect, useState } from 'react';
+import React, { FormEvent, useEffect, useState } from 'react';
 import Modal from '../../components/modal/Modal';
 import Message from '../../utils/helpers/message/Message';
 import * as api from '../../utils/api/Users';
@@ -406,7 +406,7 @@ const Settings = () => {
                 <TwoFA isEnable={user.is_2fa_enabled} />
                 <Email />
             </div>
-            {message && <Message message={message} font={icon} />}
+            {message && <Message message={message} icon={icon} />}
         </div>
     );
 }
