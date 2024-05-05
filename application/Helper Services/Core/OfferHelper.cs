@@ -10,6 +10,7 @@ namespace application.Helper_Services.Core
         IRepository<KeyStorageItemModel> storageItemRepository,
         IRepository<OfferModel> offerRepository,
         IRepository<NotificationModel> notificationRepository,
+        IRepository<ActivityModel> activityRepository,
         IRedisCache redisCache,
         IDatabaseTransaction dbTransaction) : ITransaction<CreateOfferDTO>, ITransaction<AcceptOfferDTO>, IDataManagement
     {
@@ -39,6 +40,13 @@ namespace application.Helper_Services.Core
                     user_id = dto.ReceiverId
                 });
 
+                await activityRepository.Add(new ActivityModel
+                {
+                    user_id = dto.SenderId,
+                    action_date = DateTime.UtcNow,
+                    action_type = Activity.OpenOffer.ToString()
+                });
+
                 await dbTransaction.CommitAsync(transaction);
             }
             catch (EntityException)
@@ -59,6 +67,13 @@ namespace application.Helper_Services.Core
                     storage_id = dto.StorageId,
                     created_at = DateTime.UtcNow,
                     key_value = dto.Offer.offer_body
+                });
+
+                await activityRepository.Add(new ActivityModel
+                {
+                    user_id = dto.Offer.receiver_id,
+                    action_date = DateTime.UtcNow,
+                    action_type = Activity.CloseOffer.ToString()
                 });
 
                 dto.Offer.is_accepted = true;

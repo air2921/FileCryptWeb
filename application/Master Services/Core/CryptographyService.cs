@@ -42,7 +42,7 @@ namespace application.Master_Services.Core
                 await fileHelper.UploadFile(path, dto.Content);
                 await cryptographyHelper.CypherFile(path, dto.Operation, key);
                 await fileHelper.CreateFile(dto.UserId, filename, dto.ContentType,
-                    fileHelper.GetFileCategory(dto.ContentType));
+                    fileHelper.GetFileCategory(dto.ContentType), SetEncryptFlag(dto.Operation));
 
                 await redisCache.DeteteCacheByKeyPattern($"{ImmutableData.FILES_PREFIX}{dto.UserId}");
 
@@ -81,6 +81,14 @@ namespace application.Master_Services.Core
                 logger.LogError(ex.ToString());
                 return new Response { Status = 500, Message = Message.ERROR };
             }
+        }
+
+        private bool SetEncryptFlag(string operation)
+        {
+            if (operation == "encrypt")
+                return true;
+
+            return false;
         }
     }
 }

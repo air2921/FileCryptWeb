@@ -1,10 +1,6 @@
 import React, { useEffect, useState } from "react";
 import './Board.css';
-
-export interface ActivityProps {
-    Date: string,
-    ActivityCount: number
-}
+import { ActivityProps } from "../../utils/api/Activity";
 
 function Board({ days, year }: { days: ActivityProps[], year: number }) {
     const [activity, setActivity] = useState<ActivityProps[]>(Array());
