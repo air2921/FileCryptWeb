@@ -1,5 +1,6 @@
 import React, { useState } from 'react';
-import Board, { ActivityProps } from '../../../components/activityBoard/Board';
+import Board from '../../../components/activityBoard/Board';
+import { ActivityProps } from '../../../utils/api/Activity';
 
 function Home() {
     const [act, setAct] = useState<ActivityProps[] | null>(new Array(length = 0));
