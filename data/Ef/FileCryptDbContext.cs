@@ -15,6 +15,7 @@ namespace data_access.Ef
         private const bool IS_BLOCKED = false;
 
         public virtual DbSet<UserModel> Users { get; set; }
+        public virtual DbSet<ActivityModel> Activity { get; set; }
         public virtual DbSet<FileModel> Files { get; set; }
         public virtual DbSet<NotificationModel> Notifications { get; set; }
         public virtual DbSet<OfferModel> Offers { get; set; }
@@ -35,6 +36,12 @@ namespace data_access.Ef
         protected override void OnModelCreating(ModelBuilder modelBuilder)
         {
             #region Has one with many
+
+            modelBuilder.Entity<ActivityModel>()
+                .HasOne(a => a.User)
+                .WithMany(u => u.Activity)
+                .HasForeignKey(a => a.user_id)
+                .OnDelete(DeleteBehavior.Cascade);
 
             modelBuilder.Entity<TokenModel>()
                 .HasOne(f => f.User)

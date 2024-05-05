@@ -52,6 +52,7 @@ namespace application
 
         private static void AddCacheServices(this IServiceCollection services)
         {
+            services.AddScoped<ICacheHandler<ActivityModel>, Cache_Handlers.Activity>();
             services.AddScoped<ICacheHandler<FileModel>, Files>();
             services.AddScoped<ICacheHandler<NotificationModel>, Notifications>();
             services.AddScoped<ICacheHandler<OfferModel>, Offers>();
@@ -78,6 +79,7 @@ namespace application
             services.AddScoped<IAdminTokenService, Admin_TokenService>();
             services.AddScoped<IAdminUserService, Admin_UserService>();
 
+            services.AddScoped<IActivityService, ActivityService>();
             services.AddScoped<ICryptographyService, CryptographyService>();
             services.AddScoped<IFileService, FilesService>();
             services.AddScoped<INotificationService, NotificationsService>();
@@ -128,6 +130,8 @@ namespace application
         {
             services.AddScoped<ICryptographyHelper, CryptographyHelper>();
             services.AddScoped<IFileHelper, FileHelper>();
+            services.AddScoped<ITransaction<KeyStorageModel>, KeyStorageHelper>();
+            services.AddScoped<ITransaction<KeyStorageItemModel>, KeyStorageItemHelper>();
             services.AddScoped<ITransaction<CreateOfferDTO>, OfferHelper>();
             services.AddScoped<ITransaction<AcceptOfferDTO>, OfferHelper>();
             services.AddKeyedScoped<IDataManagement, OfferHelper>(ImplementationKey.CORE_OFFER_SERVICE);

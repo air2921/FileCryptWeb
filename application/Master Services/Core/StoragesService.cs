@@ -7,11 +7,14 @@ using domain.Models;
 using domain.Specifications.By_Relation_Specifications;
 using application.Abstractions.TP_Services;
 using application.Abstractions.Endpoints.Core;
+using Microsoft.EntityFrameworkCore.Storage;
+using application.Helper_Services;
 
 namespace application.Master_Services.Core
 {
     public class StoragesService(
         IRepository<KeyStorageModel> repository,
+        ITransaction<KeyStorageModel> transaction,
         ICacheHandler<KeyStorageModel> cacheHandler,
         IRedisCache redisCache,
         IHashUtility hashUtility) : IStorageService
@@ -20,7 +23,7 @@ namespace application.Master_Services.Core
         {
             try
             {
-                await repository.Add(new KeyStorageModel
+                await transaction.CreateTransaction(new KeyStorageModel
                 {
                     storage_name = storageName,
                     description = description,

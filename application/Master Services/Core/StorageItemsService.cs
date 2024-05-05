@@ -7,11 +7,13 @@ using domain.Models;
 using application.Abstractions.TP_Services;
 using application.Abstractions.Endpoints.Core;
 using System.Text.RegularExpressions;
+using application.Helper_Services;
 
 namespace application.Master_Services.Core
 {
     public class StorageItemsService(
         IRepository<KeyStorageItemModel> repository,
+        ITransaction<KeyStorageItemModel> transaction,
         ICacheHandler<KeyStorageItemModel> itemCacheHandler,
         ICacheHandler<KeyStorageModel> storageCacheHandler,
         IRedisCache redisCache,
@@ -43,13 +45,13 @@ namespace application.Master_Services.Core
                 if (!response.IsSuccess)
                     return response;
 
-                await repository.Add(new KeyStorageItemModel
+                await transaction.CreateTransaction(new KeyStorageItemModel
                 {
                     storage_id = storageId,
                     key_name = name,
                     key_value = value,
                     created_at = DateTime.UtcNow
-                });
+                }, userId.ToString());
                 await redisCache.DeteteCacheByKeyPattern($"{ImmutableData.STORAGE_ITEMS_PREFIX}{userId}");
 
                 return new Response { Status = 201, Message = Message.CREATED };

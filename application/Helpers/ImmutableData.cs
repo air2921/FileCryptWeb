@@ -47,6 +47,7 @@
 
         #region Redis Keys Prefix
 
+        public const string ACTIVITY_PREFIX = "Activity_";
         public const string FILES_PREFIX = "Files_";
         public const string KEYS_PREFIX = "Keys_";
         public const string NOTIFICATIONS_PREFIX = "Notifications_";

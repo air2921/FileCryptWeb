@@ -10,6 +10,7 @@ using Newtonsoft.Json;
 namespace application.Helper_Services.Core
 {
     public class FileHelper(
+        IRepository<ActivityModel> activityRepository,
         IRepository<FileModel> fileRepository,
         IRepository<MimeModel> mimeRepository, 
 #pragma warning disable CS9113 // Параметр не прочитан.
@@ -17,6 +18,7 @@ namespace application.Helper_Services.Core
 #pragma warning restore CS9113 // Параметр не прочитан.
         IGetSize getSize,
         IRedisCache redisCache,
+        IDatabaseTransaction dbTransaction,
         ILogger<FileHelper> logger) : IFileHelper
     {
         private const int TASK_AWAITING = 10000;
@@ -118,8 +120,9 @@ namespace application.Helper_Services.Core
             };
         }
 
-        public async Task CreateFile(int userID, string uniqueFileName, string mime, string mimeCategory)
+        public async Task CreateFile(int userID, string uniqueFileName, string mime, string mimeCategory, bool encrypt)
         {
+            using var transaction = await dbTransaction.BeginAsync();
             try
             {
                 await fileRepository.Add(new FileModel
@@ -130,9 +133,19 @@ namespace application.Helper_Services.Core
                     file_mime_category = mimeCategory,
                     operation_date = DateTime.UtcNow,
                 });
+
+                await activityRepository.Add(new ActivityModel
+                {
+                    user_id = userID,
+                    action_date = DateTime.UtcNow,
+                    action_type = encrypt ? Activity.Encrypt.ToString() : Activity.Decrypt.ToString()
+                });
+
+                await dbTransaction.CommitAsync(transaction);
             }
             catch (EntityException)
             {
+                await dbTransaction.RollbackAsync(transaction);
                 throw;
             }
         }
