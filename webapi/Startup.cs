@@ -68,10 +68,7 @@ namespace webapi
             app.UseBearer();
             app.UseAuthentication();
             app.UseUserSession();
-
-            if (env.IsDevelopment())
-                app.UseLog();
-
+            app.UseLog();
             app.UseAuthorization();
             app.UseXSRF();
             app.UseExceptionHandle();

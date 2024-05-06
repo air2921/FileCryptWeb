@@ -50,9 +50,9 @@ namespace webapi
                 options.AddPolicy("AllowSpecificOrigin", builder =>
                 {
                     builder.WithOrigins("https://localhost:5173")
-                           .AllowAnyHeader()
-                           .AllowAnyMethod()
-                           .AllowCredentials();
+                    .AllowAnyHeader()
+                    .AllowAnyMethod()
+                    .AllowCredentials();
                 });
             });
 

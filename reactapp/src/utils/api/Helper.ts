@@ -1,5 +1,6 @@
-export const BASE_URL = 'https://localhost:8081/';
+import cookie from 'react-cookies'
 
+export const BASE_URL = 'https://localhost:8081/';
 const STORAGE_PREFIX = 'Storage#'
 
 export function errorHandler(error: any) {
@@ -9,6 +10,10 @@ export function errorHandler(error: any) {
     if (error.response) {
         errorMessage = error.response.data && error.response.data.message ? error.response.data.message : 'Unknown error';
         statusCode = error.response.status;
+
+        if (error.response.headers && error.response.headers['X-AUTH_REQUIRED']) {
+            cookie.remove('auth_success');
+        }
     }
 
     return {
