@@ -1,9 +1,16 @@
+.activity-board-container {
+    display: flex;
+    flex-direction: column;
+}
+
 .activity-board {
+    flex-direction: column;
+    display: flex;
     border: solid 1.2px #ffffff;
     border-radius: 6px;
     height: fit-content;
     width: fit-content;
-    padding: 8px;
+    padding: 10px;
 }
 
 .activity-board table {
@@ -43,3 +50,20 @@
         visibility: visible;
         opacity: 1;
     }
+
+.bottom-activity-info {
+    display: flex;
+    justify-content: right;
+    margin-top: 3px;
+}
+
+.less-more-activity {
+    display: flex;
+    align-items: center;
+}
+
+.example-activity-start,
+.example-activity-end {
+    margin: 0 10px;
+    font-size: 14px
+}

@@ -87,7 +87,7 @@ function Board({ days, year }: { days: ActivityProps[], year: number }) {
         }
     }
 
-    function getTotalActivity(arr: ActivityProps[]) {
+    function getTotalActivity(arr: ActivityProps[]): number {
         let totalActivity = 0;
         arr.forEach(item => {
             totalActivity += item.ActivityCount;
@@ -108,7 +108,7 @@ function Board({ days, year }: { days: ActivityProps[], year: number }) {
     }
 
     return (
-        <div>
+        <div className="activity-board-container">
             <div>{getTotalActivity(days)} active actions in {year} year</div>
             <div className="activity-board">
                 <table>
@@ -124,6 +124,19 @@ function Board({ days, year }: { days: ActivityProps[], year: number }) {
                         ))}
                     </tbody>
                 </table>
+                <div className="bottom-activity-info">
+                    <div className="less-more-activity">
+                        <span className="example-activity-start">Less</span>
+                        <div className="activity-block-example">
+                            <div className="day-block" style={{ backgroundColor: setColor(0) }}></div>
+                            <div className="day-block" style={{ backgroundColor: setColor(10) }}></div>
+                            <div className="day-block" style={{ backgroundColor: setColor(25) }}></div>
+                            <div className="day-block" style={{ backgroundColor: setColor(50) }}></div>
+                            <div className="day-block" style={{ backgroundColor: setColor(100) }}></div>
+                        </div>
+                        <span className="example-activity-end">More</span>
+                    </div>
+                </div>
             </div>
         </div>
     );

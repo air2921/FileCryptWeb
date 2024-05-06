@@ -40,8 +40,8 @@ namespace application.Master_Services.Core
                 return new Response
                 {
                     Status = 200,
-                    ObjectData = await cacheHandler.CacheAndGetRange(
-                        new ActivityRangeObject(cacheKey, userId, byDesc, type, start, end))
+                    ObjectData = FormatRange(await cacheHandler.CacheAndGetRange(
+                        new ActivityRangeObject(cacheKey, userId, byDesc, type, start, end)))
                 };
             }
             catch (EntityException ex)
@@ -58,18 +58,17 @@ namespace application.Master_Services.Core
 
         private HashSet<ActivityDTO> FormatRange(IEnumerable<ActivityModel> activities)
         {
-            var dict = activities
+            var groupedActivities = activities
                 .GroupBy(activity => activity.action_date.ToString("dd.MM.yyyy"))
-                .ToDictionary(
-                    group => group.Key,
-                    group => group.Count()
-                );
+                .Select(group => new ActivityDTO
+                {
+                    Date = group.Key,
+                    ActivityCount = group.Count(),
+                    Activities = group.ToArray()
+                })
+                .ToHashSet();
 
-            var activity = new HashSet<ActivityDTO>();
-            foreach (var el in dict)
-                activity.Add(new ActivityDTO { Date = el.Key, ActivityCount = el.Value });
-
-            return activity;
+            return groupedActivities;
         }
     }
 }

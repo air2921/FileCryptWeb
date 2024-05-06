@@ -1,18 +1,28 @@
 ﻿using domain.Models;
 using Microsoft.EntityFrameworkCore;
+using StackExchange.Redis;
 
 namespace data_access.Ef
 {
     public class FileCryptDbContext : DbContext, ISeed
     {
-        private const int USER_ID = 264950;
+        private const string HIGHEST_EMAIL = "Highest244@gmail.com";
+        private const string HIGHEST_USERNAME = "Highest";
+        private const string HIGHEST_PASSWORD = "$2a$11$NbXvhbJEkKlsF2axlu3/B.WrlF.fm2vvD.1Bq7Qx3yGotVM28UGKe"; //123
+        private const string HIGHEST_ROLE = "HighestAdmin";
 
-        private const string EMAIL = "FileCrypt147@gmail.com";
-        private const string USERNAME = "FileCrypt";
-        private const string PASSWORD = "$2a$11$vOj8wlzPuP/.7Bdj4YOU.O7Dki4.eZwSztFfndoJNETtFsI51Lfny"; //FileCrypt123
-        private const string ROLE = "HighestAdmin";
-        private const bool TWO_FA_ENABLED = false;
-        private const bool IS_BLOCKED = false;
+        private const string SIMPLE_EMAIL = "Simple244@gmail.com";
+        private const string SIMPLE_USERNAME = "Simple";
+        private const string SIMPLE_PASSWORD = "$2a$11$PPjoeOlyveAarHmMifiMiOeJbYf3IMSRJAHZ/IrwvQjoKt.k2jpuq"; //123456
+        private const string SIMPLE_ROLE = "Admin";
+
+        private const string USER_EMAIL = "User244@gmail.com";
+        private const string USER_PASSWORD = "$2a$11$67rCu/FXexJpoBKzJlssv.pV0iAw7KTWnCD0G5Foc3QfnR.bmFgC6"; //123456789
+        private const string USER_USERNAME = "User";
+        private const string USER_ROLE = "User";
+
+        private const string CODE = "$2a$11$eRfKDDVUFY9hm/kIiDuBAOKBgq/qfUyCtra4djWiwAfh3XCvxm05K"; //23663
+
 
         public virtual DbSet<UserModel> Users { get; set; }
         public virtual DbSet<ActivityModel> Activity { get; set; }
@@ -114,35 +124,169 @@ namespace data_access.Ef
             #endregion
         }
 
-        public UserModel AdminSeed()
+        public object AdminSeed()
         {
             using var context = new FileCryptDbContext((DbContextOptions<FileCryptDbContext>)_options);
-            var user = context.Users.Find(USER_ID);
-            if (user is null)
+            var user1 = context.Users.Find(123);
+            var user2 = context.Users.Find(123456);
+            var user3 = context.Users.Find(123456789);
+            if (user1 is null)
             {
-                user = new UserModel
+                user1 = new UserModel
                 {
-                    id = USER_ID,
-                    email = EMAIL.ToLowerInvariant(),
-                    username = USERNAME,
-                    password = PASSWORD,
+                    id = 123,
+                    email = HIGHEST_EMAIL.ToLowerInvariant(),
+                    username = HIGHEST_USERNAME,
+                    password = HIGHEST_PASSWORD,
                     last_time_password_modified = DateTime.UtcNow,
-                    role = ROLE,
-                    is_2fa_enabled = TWO_FA_ENABLED,
-                    is_blocked = IS_BLOCKED
+                    role = HIGHEST_ROLE,
+                    is_2fa_enabled = false,
+                    is_blocked = false,
                 };
+                context.Users.Add(user1);
 
-                context.Users.Add(user);
-                context.SaveChanges();
+                context.KeyStorages.Add(new KeyStorageModel
+                {
+                    storage_id = 1,
+                    storage_name = "123",
+                    user_id = 123,
+                    access_code = CODE,
+                    last_time_modified = DateTime.UtcNow
+                });
 
-                return user;
+                context.KeyStorageItems.AddRange([
+                    new KeyStorageItemModel {
+                        storage_id = 1,
+                        created_at = DateTime.UtcNow,
+                        key_id = 1,
+                        key_name = "1",
+                        key_value = "QMdssjO/4WmBEcdxFR8ZxDYtGd4wmL+bf1UKMuh3x2A="
+                    },
+                    new KeyStorageItemModel {
+                        storage_id = 1,
+                        created_at = DateTime.UtcNow,
+                        key_id = 2,
+                        key_name = "2",
+                        key_value = "GZkkxJ9F3iNfm7yRhGPAXI5xcFznyfANQ1+cup3KZzg="
+                    },
+                    new KeyStorageItemModel {
+                        storage_id = 1,
+                        created_at = DateTime.UtcNow,
+                        key_id = 3,
+                        key_name = "3",
+                        key_value = "Hp04C2IZnJa4lztVGx9qMabluHWKXYww3JTicqCEeP4="
+                    },
+                ]);
             }
-            return user;
+
+            if (user2 is null)
+            {
+                user2 = new UserModel
+                {
+                    id = 123456,
+                    email = SIMPLE_EMAIL.ToLowerInvariant(),
+                    username = SIMPLE_USERNAME,
+                    password = SIMPLE_PASSWORD,
+                    last_time_password_modified = DateTime.UtcNow,
+                    role = SIMPLE_ROLE,
+                    is_2fa_enabled = false,
+                    is_blocked = false,
+                };
+                context.Users.Add(user2);
+
+                context.KeyStorages.Add(new KeyStorageModel
+                {
+                    storage_id = 2,
+                    storage_name = "123456",
+                    user_id = 123456,
+                    access_code = CODE,
+                    last_time_modified = DateTime.UtcNow
+                });
+
+                context.KeyStorageItems.AddRange([
+                    new KeyStorageItemModel {
+                        storage_id = 2,
+                        created_at = DateTime.UtcNow,
+                        key_id = 4,
+                        key_name = "4",
+                        key_value = "mhGrL7dA+9p94i6ovZMILGHjxkfZkx9OdHt8ZINxO80="
+                    },
+                    new KeyStorageItemModel {
+                        storage_id = 2,
+                        created_at = DateTime.UtcNow,
+                        key_id = 5,
+                        key_name = "5",
+                        key_value = "AFmYgYVWL6s/0lfR8sWuJT9oIWFGkHMI9Ly8hxi0M4o="
+                    },
+                    new KeyStorageItemModel {
+                        storage_id = 2,
+                        created_at = DateTime.UtcNow,
+                        key_id = 6,
+                        key_name = "6",
+                        key_value = "hAXO8qGrPZ0MKXuZnIbFtpsqzlkCbv9fwTupPBnUv3U="
+                    },
+                ]);
+            }
+
+            if (user3 is null)
+            {
+                user3 = new UserModel
+                {
+                    id = 123456789,
+                    email = USER_EMAIL.ToLowerInvariant(),
+                    username = USER_USERNAME,
+                    password = USER_PASSWORD,
+                    last_time_password_modified = DateTime.UtcNow,
+                    role = USER_ROLE,
+                    is_2fa_enabled = false,
+                    is_blocked = false,
+                };
+                context.Users.Add(user3);
+
+                context.KeyStorages.Add(new KeyStorageModel
+                {
+                    storage_id = 3,
+                    storage_name = "123456789",
+                    user_id = 123456789,
+                    access_code = CODE,
+                    last_time_modified = DateTime.UtcNow
+                });
+
+                context.KeyStorageItems.AddRange([
+                    new KeyStorageItemModel {
+                        storage_id = 3,
+                        created_at = DateTime.UtcNow,
+                        key_id = 7,
+                        key_name = "7",
+                        key_value = "uOfhQ7ONycUUZZWN/5xbXG+UH5f6A4t/KhLsGyzsRcc="
+                    },
+                    new KeyStorageItemModel {
+                        storage_id = 3,
+                        created_at = DateTime.UtcNow,
+                        key_id = 8,
+                        key_name = "8",
+                        key_value = "BxvBLTNXv1T2HPs6ECy4ZEQ7NZdKqdcsNOu977XZpxY="
+                    },
+                    new KeyStorageItemModel {
+                        storage_id = 3,
+                        created_at = DateTime.UtcNow,
+                        key_id = 9,
+                        key_name = "9",
+                        key_value = "JsQOXx/wGGJy94Ynwz5zUWunJTLkgZhs8mzIZXTm8go="
+                    },
+                ]);
+            }
+
+            context.SaveChanges();
+            var users = context.Users.Include(x => x.KeyStorages)
+                .ThenInclude(x => x.StorageItems)
+                .ToList();
+            return new { users };
         }
     }
 
     public interface ISeed
     {
-        UserModel AdminSeed();
+        object AdminSeed();
     }
 }
