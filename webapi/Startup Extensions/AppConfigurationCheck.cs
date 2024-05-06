@@ -1,28 +1,19 @@
-﻿using System.Text.RegularExpressions;
+﻿using application.Helpers;
+using System.Text.RegularExpressions;
 using webapi.Exceptions;
 using webapi.Helpers;
 
 namespace webapi
 {
-    public class AppConfigurationCheck
+    public static class AppConfigurationCheck
     {
         /// <summary>
-        /// Using GetAwaiter().GetResult() or .Result is bad practice and may cause a deadlock
+        /// Checks configuration settings and stops the application if the settings are invalid
         /// </summary>
         /// <exception cref="InvalidConfigurationException"></exception>
 
-        public static void ConfigurationCheck()
+        public static void Check(this IConfiguration configuration)
         {
-            var configuration = new ConfigurationBuilder()
-                .AddUserSecrets<Program>()
-                .SetBasePath(Directory.GetCurrentDirectory())
-                .AddJsonFile("appsettings.json", false, true)
-                .AddEnvironmentVariables()
-                .Build();
-
-            string keyPattern = Validation.EncryptionKey;
-            string emailPattern = Validation.Email;
-
             string? jwtKey = configuration[App.SECRET_KEY];
             string? emailPassword = configuration[App.EMAIL_PASSWORD];
             string? emailAdress = configuration[App.EMAIL];
@@ -40,17 +31,17 @@ namespace webapi
                  string.IsNullOrWhiteSpace(redisServer) || string.IsNullOrWhiteSpace(postgres) ||
                  string.IsNullOrWhiteSpace(emailAdress) || string.IsNullOrWhiteSpace(appKey) ||
                  string.IsNullOrWhiteSpace(elastic) || string.IsNullOrWhiteSpace(clamServer) ||
-                 !Regex.IsMatch(emailAdress, emailPattern) || !Regex.IsMatch(appKey, keyPattern) || !int.TryParse(clamPort, out int number);
+                 !int.TryParse(clamPort, out int number);
 
+#if DEBUG
             Console.WriteLine(
                 $"Email Password is valid ?: {!string.IsNullOrWhiteSpace(emailPassword)}\nEmail Password Value: {emailPassword}\n\n" +
-                $"Email Address is valid ?: {!string.IsNullOrWhiteSpace(emailAdress) && Regex.IsMatch(emailAdress, emailPattern)}\nEmail Address Value: {emailAdress}\n\n" +
-                $"App Key is valid ?: {!string.IsNullOrWhiteSpace(appKey) && Regex.IsMatch(appKey, keyPattern)}\nApp Key Value: {appKey}\n\n" +
                 $"JWT Key is valid ?: {!string.IsNullOrWhiteSpace(jwtKey)}\nJwt Key Value: {jwtKey}\n\n" +
                 $"Redis is valid ?: {!string.IsNullOrWhiteSpace(redisServer)}\nRedis Value: {redisServer}\n\n" +
                 $"PostgreSQL is valid ?: {!string.IsNullOrWhiteSpace(postgres)}\nPostgreSQL Value: {postgres}\n\n" +
                 $"Elasticsearch is valid ?: {!string.IsNullOrWhiteSpace(elastic)}\nElasticsearch Value: {elastic}\n\n" +
                 $"ClamAV ( !!! ONLY CONNECTION STRING !!! ) is valid ?: {!string.IsNullOrWhiteSpace(clamServer) && !string.IsNullOrWhiteSpace(clamPort)}\nClamAV Value: {clamServer}:{clamPort}\n");
+#endif
 
             if (invalidConfiguration)
                 throw new InvalidConfigurationException();

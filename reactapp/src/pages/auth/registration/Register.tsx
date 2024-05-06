@@ -1,89 +1,65 @@
 ﻿import React, { ChangeEvent, FormEvent, useState } from 'react';
-import Modal from '../../../components/Modal/Modal';
+import Modal from '../../../components/modal/Modal';
 import { useNavigate } from 'react-router-dom';
 import Message from '../../../utils/helpers/message/Message';
-import AxiosRequest from '../../../utils/api/AxiosRequest';
 import './Registration.css'
+import { registration, verifyRegistration } from '../../../utils/api/Auth';
 
 const Register = () => {
     const [email, setEmail] = useState('');
     const [password, setPassword] = useState('');
     const [username, setUsername] = useState('');
     const [is2Fa, set2Fa] = useState(false);
+    const [code, setCode] = useState<number>();
     const [successStatusCode, setStatusCode] = useState(false);
     const [errorMessage, setErrorMessage] = useState('');
     const navigate = useNavigate();
 
-    const handleSubmit = async (e: FormEvent) => {
+    const registerSubmit = async (e: FormEvent) => {
         e.preventDefault();
 
-        const response = await AxiosRequest({
-            endpoint: 'api/auth/register',
-            method: 'POST',
-            withCookie: true,
-            requestBody: {
-                email: email,
-                password: password,
-                username: username,
-                is_2fa_enabled: is2Fa
-            }
-        });
+        const result = await registration(email, password, username, is2Fa);
 
-        if (response.isSuccess) {
-            localStorage.setItem('registration_email', email);
+        if (result.statusCode === 200) {
             setStatusCode(true);
+        } else {
+            setErrorMessage(result.message);
         }
-        else {
-            setErrorMessage(response.data);
 
-            setTimeout(() => {
-                setErrorMessage('');
-            }, 5000)
+        setTimeout(() => {
+            setErrorMessage('');
+        }, 5000)
+    }
+
+    const verifySubmit = async (e: FormEvent) => {
+        if (code === null || code === undefined) {
+            return;
         }
-    };
+
+        const result = await verifyRegistration(code);
+
+        if (result.statusCode === 201) {
+            navigate('/auth/login')
+        } else {
+            setErrorMessage(result.message ? result.message : 'Unexpected error');
+        }
+
+        setTimeout(() => {
+            setErrorMessage('');
+        }, 5000)
+    }
 
     const handleCheckboxChange = (e: ChangeEvent<HTMLInputElement>) => {
         set2Fa(e.target.checked);
     };
 
     const Verify = () => {
-        const [code, setCode] = useState<number>();
-
-        const handleSubmit = async (e: FormEvent) => {
-            e.preventDefault();
-
-            const email = localStorage.getItem('registration_email');
-            if (!email || email === undefined) {
-                setErrorMessage('Try again later');
-
-                setTimeout(() => {
-                    setErrorMessage('');
-                }, 5000)
-
-                return;
-            }
-
-            const response = await AxiosRequest({ endpoint: `api/auth/verify?code=${code}&email=${email}`, method: 'POST', withCookie: true, requestBody: null });
-
-            if (response.isSuccess) {
-                localStorage.removeItem('registration_email');
-                navigate('/');
-            }
-            else {
-                setErrorMessage(response.data);
-
-                setTimeout(() => {
-                    setErrorMessage('');
-                }, 5000)
-            }
-        };
-
         return (
             <div className="verify-container">
                 <div className="verify-header">
                     Account Verification
                 </div>
-                <form className="verify-form" onSubmit={handleSubmit}>
+                <form className="verify-form" onSubmit={verifySubmit}>
                     <div className="code-text">Enter your numeric code from your email</div>
                     <div className="code-container">
                         <label htmlFor="code" className="code-label">
@@ -122,7 +98,7 @@ const Register = () => {
                 <div className="registration-header">
                     Welcome to FileCryptWeb !
                 </div>
-                <form className="registraion-form" onSubmit={handleSubmit}>
+                <form className="registraion-form" onSubmit={registerSubmit}>
                     <div className="registration-input-container">
                         <div className="username-container">
                             <div className="username-text">Username</div>
@@ -184,7 +160,7 @@ const Register = () => {
                 <Verify />
             </Modal>
             <div className="message">
-                {errorMessage && <Message message={errorMessage} font='error' />}
+                {errorMessage && <Message message={errorMessage} icon='error' />}
             </div>
         </div>
     );

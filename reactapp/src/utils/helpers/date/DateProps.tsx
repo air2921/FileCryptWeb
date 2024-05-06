@@ -1,3 +1,0 @@
-interface DateProps {
-    date: string
-}

@@ -1,115 +1,85 @@
-﻿using Microsoft.AspNetCore.Authorization;
+﻿using application.Abstractions.Endpoints.Core;
+using application.DTO.Outer;
+using application.Helpers.Localization;
+using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
-using Newtonsoft.Json;
-using webapi.Attributes;
-using webapi.DB;
-using webapi.Exceptions;
-using webapi.Helpers;
-using webapi.Interfaces;
-using webapi.Interfaces.Redis;
-using webapi.Interfaces.Services;
-using webapi.Localization;
-using webapi.Models;
+using webapi.Helpers.Abstractions;
 
 namespace webapi.Controllers.Core
 {
-    [Route("api/core/files")]
+    [Route("api/core/file")]
     [ApiController]
     [Authorize]
-    public class FileController : ControllerBase
+    public class FileController(
+        ICryptographyService cryptographyService,
+        IFileService fileService,
+        IUserInfo userInfo) : ControllerBase
     {
-        #region fields and constructor
-
-        private readonly IRepository<FileModel> _fileRepository;
-        private readonly ISorting _sorting;
-        private readonly IRedisCache _redisCache;
-        private readonly IUserInfo _userInfo;
-
-        public FileController(
-            IRepository<FileModel> fileRepository,
-            ISorting sorting,
-            IRedisCache redisCache,
-            IUserInfo userInfo)
-        {
-            _fileRepository = fileRepository;
-            _sorting = sorting;
-            _redisCache = redisCache;
-            _userInfo = userInfo;
-        }
-
-        #endregion
-
-        [HttpDelete("{fileId}")]
+        [HttpPost("cypher/{storageId}/{keyId}")]
         [ValidateAntiForgeryToken]
-        [ProducesResponseType(204)]
-        [ProducesResponseType(typeof(object), 500)]
-        public async Task<IActionResult> DeleteFileFromHistory([FromRoute] int fileId)
+        public async Task<IActionResult> CypherFile(IFormFile file, [FromRoute] int storageId,
+            [FromRoute] int keyId, [FromQuery] bool encrypt, [FromQuery] int code)
         {
-            try
+            var response = await cryptographyService.Cypher(new CypherFileDTO
             {
-                await _fileRepository.DeleteByFilter(query => query.Where(f => f.file_id.Equals(fileId) && f.user_id.Equals(_userInfo.UserId)));
-                await _redisCache.DeteteCacheByKeyPattern($"{ImmutableData.FILES_PREFIX}{_userInfo.UserId}");
+                Operation = encrypt ? "encrypt" : "decrypt",
+                StorageId = storageId,
+                KeyId = keyId,
+                Code = code.ToString(),
+                UserId = userInfo.UserId,
+                FileName = file.FileName,
+                ContentType = file.ContentType,
+                Content = file.OpenReadStream()
+            });
 
-                return StatusCode(204);
-            }
-            catch (EntityNotDeletedException ex)
-            {
-                return StatusCode(500, new { message = ex.Message });
-            }
+            if (!response.IsSuccess)
+                return StatusCode(response.Status, new { message = response.Message });
+
+            var stream = GetStream(response.ObjectData);
+            if (stream is null)
+                return StatusCode(500, new { message = Message.ERROR });
+
+            return File(stream, file.ContentType, file.FileName);
         }
 
         [HttpGet("{fileId}")]
-        [ProducesResponseType(typeof(FileModel), 200)]
-        [ProducesResponseType(typeof(object), 404)]
-        [ProducesResponseType(typeof(object), 500)]
-        public async Task<IActionResult> GetOneFile([FromRoute] int fileId)
+        public async Task<IActionResult> GetFile([FromRoute] int fileId)
         {
-            try
-            {
-                var cacheKey = $"{ImmutableData.FILES_PREFIX}{_userInfo.UserId}_{fileId}";
-
-                var cache = await _redisCache.GetCachedData(cacheKey);
-                if (cache is not null)
-                    return StatusCode(200, new { file = JsonConvert.DeserializeObject<FileModel>(cache) });
-
-                var file = await _fileRepository.GetByFilter(query => query.Where(f => f.file_id.Equals(fileId) && f.user_id.Equals(_userInfo.UserId)));
-                if (file is null)
-                    return StatusCode(404, new { message = Message.NOT_FOUND });
-
-                await _redisCache.CacheData(cacheKey, file, TimeSpan.FromMinutes(5));
-
-                return StatusCode(200, new { file });
-            }
-            catch (OperationCanceledException ex)
-            {
-                return StatusCode(500, new { message = ex.Message });
-            }
+            var response = await fileService.GetOne(userInfo.UserId, fileId);
+            if (!response.IsSuccess)
+                return StatusCode(response.Status, new { message = response.Message });
+            else
+                return StatusCode(response.Status, new { file = response.ObjectData });
         }
 
-        [HttpGet("all")]
-        [ProducesResponseType(typeof(IEnumerable<FileModel>), 200)]
-        [ProducesResponseType(typeof(object), 500)]
-        public async Task<IActionResult> GetAllFiles([FromQuery] int skip, [FromQuery] int count,
-            [FromQuery] bool byDesc, [FromQuery] string? type, [FromQuery] string? category, [FromQuery] string? mime)
+        [HttpGet("range")]
+        public async Task<IActionResult> GetRangeFiles([FromQuery] int skip, [FromQuery] int count,
+            [FromQuery] bool byDesc, [FromQuery] string? category, [FromQuery] string? mime)
         {
-            try
-            {
-                var cacheKey = $"{ImmutableData.FILES_PREFIX}{_userInfo.UserId}_{skip}_{count}_{byDesc}_{type}_{category}_{mime}";
+            var response = await fileService.GetRange(userInfo.UserId, skip, count, byDesc, category, mime);
+            if (!response.IsSuccess)
+                return StatusCode(response.Status, new { message = response.Message });
+            else
+                return StatusCode(response.Status, new { files = response.ObjectData });
+        }
 
-                var cacheFiles = await _redisCache.GetCachedData(cacheKey);
-                if (cacheFiles is not null)
-                    return StatusCode(200, new { files = JsonConvert.DeserializeObject<IEnumerable<FileModel>>(cacheFiles) });
+        [HttpDelete("{fileId}")]
+        [ValidateAntiForgeryToken]
+        public async Task<IActionResult> DeleteFile([FromRoute] int fileId)
+        {
+            var response = await fileService.DeleteOne(userInfo.UserId, fileId);
+            if (!response.IsSuccess)
+                return StatusCode(response.Status, new { message = response.Message });
+            else
+                return StatusCode(response.Status);
+        }
 
-                var files = await _fileRepository.GetAll(_sorting.SortFiles(_userInfo.UserId, skip, count, byDesc, type, mime, category));
+        private Stream? GetStream(object? response)
+        {
+            if (response is not Stream stream)
+                return null;
 
-                await _redisCache.CacheData(cacheKey, files, TimeSpan.FromMinutes(3));
-
-                return StatusCode(200, new { files });
-            }
-            catch (OperationCanceledException ex)
-            {
-                return StatusCode(500, new { message = ex.Message });
-            }
+            return stream;
         }
     }
 }

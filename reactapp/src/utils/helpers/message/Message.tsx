@@ -1,10 +1,10 @@
 import React from 'react';
-import Font from '../icon/Font';
+import Icon from '../icon/Icon';
 
-function Message({ message, font }: MessageProps) {
+function Message({ message, icon }: { message: string, icon: string }) {
     return (
         <div className="message-container">
-            <Font font={font} />
+            <Icon icon={icon} />
             <div>{message}</div>
         </div>
     );

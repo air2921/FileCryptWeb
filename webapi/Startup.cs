@@ -1,4 +1,13 @@
 ﻿using webapi.Middlewares;
+using application;
+using services;
+using data_access;
+using webapi.Helpers.Abstractions;
+using webapi.Helpers;
+using Serilog;
+using application.Helpers;
+using Serilog.Sinks.Elasticsearch;
+using additional;
 
 namespace webapi
 {
@@ -6,13 +15,38 @@ namespace webapi
     {
         public void ConfigureServices(IServiceCollection services)
         {
-            AppConfigurationCheck.ConfigurationCheck();
+            var env = Environment.GetEnvironmentVariable("ASPNETCORE_ENVIRONMENT");
+            var config = new ConfigurationBuilder()
+                .AddUserSecrets<Startup>()
+                .SetBasePath(Directory.GetCurrentDirectory())
+                .AddJsonFile("appsettings.json", false, true)
+                .AddEnvironmentVariables()
+                .Build();
 
-            DependencyContainer.Singleton(services);
-            DependencyContainer.Scoped(services);
-            DependencyContainer.Transient(services);
+            Log.Logger = new LoggerConfiguration()
+                .MinimumLevel.Information()
+                .Enrich.FromLogContext()
+                .Enrich.WithProperty("Environment", env)
+                .ReadFrom.Configuration(config)
+                .WriteTo.Console()
+                .WriteTo.Elasticsearch(ConfigurationElasticSink(config))
+                .CreateLogger();
 
-            AppServices.Register(services);
+            config.Check();
+            services.AddScoped<IUserInfo, UserData>();
+            services.AddSingleton<IHttpContextAccessor, HttpContextAccessor>();
+
+            services.AddLogging(log =>
+            {
+                log.ClearProviders();
+                log.AddSerilog(Log.Logger);
+            });
+
+            services.AddProviderInfrastructure(Log.Logger);
+            services.AddDataInfrastructure(config, Log.Logger);
+            services.AddServiceInfrastructure(config, Log.Logger);
+            services.AddApplication(config);
+            services.AddServices(config);
         }
 
         public void Configure(IApplicationBuilder app, IWebHostEnvironment env)
@@ -28,16 +62,9 @@ namespace webapi
                 app.UseHsts();
 
             app.UseHttpsRedirection();
-            app.UseStaticFiles();
             app.UseRouting();
             app.UseSession();
-
-            if (env.IsProduction())
-                app.UseCors("AllowSpecificOrigin");
-            else
-                app.UseCors("AllowAnyOrigin");
-
-            app.UseFreeze();
+            app.UseCors("AllowSpecificOrigin");
             app.UseBearer();
             app.UseAuthentication();
             app.UseUserSession();
@@ -53,6 +80,15 @@ namespace webapi
             {
                 endpoint.MapControllers();
             });
+        }
+
+        private static ElasticsearchSinkOptions ConfigurationElasticSink(IConfigurationRoot configuration)
+        {
+            return new ElasticsearchSinkOptions(new Uri(configuration.GetConnectionString(App.ELASTIC_SEARCH)!))
+            {
+                AutoRegisterTemplate = true,
+                IndexFormat = $"logs-{DateTime.UtcNow:yyyy}"
+            };
         }
     }
 }

@@ -1,16 +1,11 @@
 ﻿using System.Security.Claims;
-using webapi.Interfaces.Services;
+using webapi.Helpers.Abstractions;
 
 namespace webapi.Helpers
 {
-    public class UserData : IUserInfo
+    public class UserData(IHttpContextAccessor httpContextAccessor) : IUserInfo
     {
-        private readonly HttpContext _httpContext;
-
-        public UserData(IHttpContextAccessor httpContextAccessor)
-        {
-            _httpContext = httpContextAccessor.HttpContext ?? throw new InvalidOperationException("User is not authenticated");
-        }
+        private readonly HttpContext _httpContext = httpContextAccessor.HttpContext ?? throw new InvalidOperationException("User is not authenticated");
 
         public int UserId => GetIntClaimValue(ClaimTypes.NameIdentifier);
 
@@ -19,6 +14,17 @@ namespace webapi.Helpers
         public string Role => GetStringClaimValue(ClaimTypes.Role);
 
         public string Email => GetStringClaimValue(ClaimTypes.Email);
+
+        public string RequestId => GetRequest();
+
+        private string GetRequest()
+        {
+            Microsoft.Extensions.Primitives.StringValues token;
+            if (_httpContext.Request.Headers.TryGetValue("X-REQUEST-TOKEN", out token))
+                return token.FirstOrDefault() ?? "None";
+            else
+                return "None";
+        }
 
         private string GetStringClaimValue(string claimType)
         {

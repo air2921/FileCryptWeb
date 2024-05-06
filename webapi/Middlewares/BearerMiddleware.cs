@@ -1,90 +1,71 @@
-﻿using Microsoft.EntityFrameworkCore;
-using webapi.DB;
-using webapi.Helpers;
-using webapi.Interfaces.Services;
+﻿using application.Abstractions.Endpoints.Account;
+using application.Helpers;
 
 namespace webapi.Middlewares
 {
     // You may need to install the Microsoft.AspNetCore.Http.Abstractions package into your project
-    public class BearerMiddleware
+    public class BearerMiddleware(RequestDelegate next, ILogger<BearerMiddleware> logger, IWebHostEnvironment env)
     {
-        private readonly RequestDelegate _next;
-        private readonly ILogger<BearerMiddleware> _logger;
-        private readonly IWebHostEnvironment _env;
-
-        public BearerMiddleware(RequestDelegate next, ILogger<BearerMiddleware> logger, IWebHostEnvironment env)
+        public async Task Invoke(HttpContext context, ISessionService service)
         {
-            _next = next;
-            _logger = logger;
-            _env = env;
-        }
-
-        public async Task Invoke(HttpContext context, FileCryptDbContext dbContext, ITokenService tokenService)
-        {
-            string jwt = null;
-
-            context.Request.Cookies.TryGetValue(ImmutableData.JWT_COOKIE_KEY, out string? jwtCookie);
-            var jwtHeaders = context.Request.Headers[ImmutableData.JWT_TOKEN_HEADER_NAME];
-
-            if (!string.IsNullOrWhiteSpace(jwtCookie))
-                jwt = jwtCookie;
-            else
-                jwt = jwtHeaders.ToString();
-
-            if (!string.IsNullOrWhiteSpace(jwt))
+            if (context.Request.Headers.ContainsKey(ImmutableData.NONE_BEARER))
             {
-                context.Request.Headers.Add("Authorization", $"Bearer {jwt}");
-                AddSecurityHeaders(context);
-
-                await _next(context);
+                await next(context);
                 return;
             }
 
-            string refresh = null;
-            var refreshHeaders = context.Request.Headers[ImmutableData.REFRESH_TOKEN_HEADER_NAME];
-            context.Request.Cookies.TryGetValue(ImmutableData.REFRESH_COOKIE_KEY, out string? refreshCookie);
-
-            if (!string.IsNullOrWhiteSpace(refreshCookie))
-                refresh = refreshCookie;
-            else
-                refresh = refreshHeaders.ToString();
-
-            if (!string.IsNullOrWhiteSpace(refresh))
+            context.Request.Cookies.TryGetValue(ImmutableData.JWT_COOKIE_KEY, out string? requestJwt);
+            if (!string.IsNullOrWhiteSpace(requestJwt))
             {
-                if (_env.IsDevelopment())
-                    _logger.LogWarning(tokenService.HashingToken(refresh));
+                context.Request.Headers.Append("Authorization", $"Bearer {requestJwt}");
+                AddSecurityHeaders(context);
 
-                var userAndToken = await dbContext.Tokens
-                    .Where(t => t.refresh_token == tokenService.HashingToken(refresh))
-                    .Join(dbContext.Users, token => token.user_id, user => user.id, (token, user) => new { token, user })
-                    .FirstOrDefaultAsync();
+                await next(context);
+                return;
+            }
 
-                if (userAndToken is null || userAndToken.token.expiry_date < DateTime.UtcNow || userAndToken.user.is_blocked == true)
+            context.Request.Cookies.TryGetValue(ImmutableData.REFRESH_COOKIE_KEY, out string? requestRefresh);
+            if (!string.IsNullOrWhiteSpace(requestRefresh))
+            {
+                if (env.IsDevelopment())
+                    logger.LogWarning(requestRefresh);
+
+                var response = await service.UpdateJwt(requestRefresh);
+                if (!response.IsSuccess)
                 {
-                    tokenService.DeleteTokens();
-                    await _next(context);
+                    context.Response.Cookies.Delete(ImmutableData.REFRESH_COOKIE_KEY);
+                    await next(context);
                     return;
                 }
 
-                string createdJWT = tokenService.GenerateJwtToken(userAndToken.user, ImmutableData.JwtExpiry);
-                var jwtCookieOptions = tokenService.SetCookieOptions(ImmutableData.JwtExpiry);
+                if (response.ObjectData is not string newJwt)
+                {
+                    await next(context);
+                    return;
+                }
 
-                context.Response.Cookies.Append(ImmutableData.JWT_COOKIE_KEY, createdJWT, jwtCookieOptions);
-
-                context.Request.Headers.Add("Authorization", $"Bearer {createdJWT}");
+                context.Response.Cookies.Append(ImmutableData.JWT_COOKIE_KEY, newJwt, new CookieOptions
+                {
+                    MaxAge = ImmutableData.JwtExpiry,
+                    Secure = true,
+                    HttpOnly = false,
+                    SameSite = SameSiteMode.None,
+                    IsEssential = false
+                });
+                context.Request.Headers.Append("Authorization", $"Bearer {newJwt}");
                 AddSecurityHeaders(context);
             }
 
-            await _next(context);
+            await next(context);
             return;
         }
 
         private void AddSecurityHeaders(HttpContext context)
         {
-            context.Response.Headers.Add("X-Content-Type-Options", "nosniff");
-            context.Response.Headers.Add("X-Xss-Protection", "1");
-            context.Response.Headers.Add("X-Frame-Options", "DENY");
-            context.Response.Headers.Add("Content-Security-Policy", "default-src 'self'; script-src 'self' https://cdnjs.cloudflare.com; style-src 'self' https://fonts.googleapis.com; font-src 'self' https://fonts.gstatic.com; img-src 'self' data:;");
+            context.Response.Headers.Append("X-Content-Type-Options", "nosniff");
+            context.Response.Headers.Append("X-Xss-Protection", "1");
+            context.Response.Headers.Append("X-Frame-Options", "DENY");
+            context.Response.Headers.Append("Content-Security-Policy", "default-src 'self'; script-src 'self' https://cdnjs.cloudflare.com; style-src 'self' https://fonts.googleapis.com; font-src 'self' https://fonts.gstatic.com; img-src 'self' data:;");
         }
     }
 
