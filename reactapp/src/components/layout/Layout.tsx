@@ -1,35 +1,63 @@
 ﻿import React, { useEffect, useState } from 'react';
 import { Link, Outlet, useNavigate } from 'react-router-dom';
 import cookie from 'react-cookies'
-import './Layout.css'
 import useResize from '../hooks/useResize';
 import useAuth from '../hooks/useAuth';
 import { getAuth, logout } from '../../utils/api/Auth';
 import Icon from '../../utils/helpers/icon/Icon';
+import './Layout.css'
+
+interface LinkProps {
+    icon: string,
+    name: string,
+    path: string,
+    id: string
+}
 
 function Layout() {
     const [id, setId] = useState(cookie.load('auth_user_id'));
     const [role, setRole] = useState(cookie.load('auth_role'));
     const [profilePath, setPath] = useState('');
     const [isAsideVisible, setAsideVisible] = useState(sessionStorage.getItem('isAsideVisible') === 'true');
-    const [inputValue, setInputValue] = useState('');
-    const [inputError, setInputError] = useState(false);
+
+    const authLinks: LinkProps[] = setAuthLinks();
+    const defaultLinks: LinkProps[] = setDefaultLinks();
+
+    function setAuthLinks(): LinkProps[] {
+        const authLinks: LinkProps[] = new Array();
+
+        authLinks.push({ icon: 'account_circle', name: 'Profile', path: profilePath, id: 'profile' });
+        authLinks.push({ icon: 'manage_accounts', name: 'Settings', path: "/settings", id: 'settings' });
+        authLinks.push({ icon: 'contacts', name: 'Users', path: "/users/all", id: 'users' });
+        authLinks.push({ icon: 'inbox', name: 'Notifications', path: "/inbox", id: 'inbox' });
+        authLinks.push({ icon: 'storage', name: 'Storages', path: "/storages", id: 'storages' });
+        authLinks.push({ icon: 'folder', name: 'Files', path: "/files", id: 'files' });
+        authLinks.push({ icon: 'hub', name: 'Offers', path: "/offers/hub", id: 'offers' });
+        authLinks.push({ icon: 'terminal', name: 'Admin Panel', path: "/admin", id: 'admin' });
+
+        return authLinks;
+    }
+
+    function setDefaultLinks(): LinkProps[] {
+        const defaultLinks: LinkProps[] = new Array();
+
+        defaultLinks.push({ icon: 'home', name: 'Home', path: "/", id: 'home' });
+        defaultLinks.push({ icon: 'info', name: 'About', path: "/about", id: 'about' });
+        defaultLinks.push({ icon: 'policy', name: 'Policy', path: "/policy", id: 'policy' });
+
+        return defaultLinks;
+    }
 
     const isAuth = useAuth();
     const isDesktop = useResize();
     const navigate = useNavigate();
-
-    const resetAsideVisible = () => {
-        setAsideVisible(false);
-    };
 
     const getAuthStatus = async () => {
         const response = await getAuth()
 
         if (response.success) {
             return true;
-        }
-        else {
+        } else {
             return false;
         }
     }
@@ -53,42 +81,6 @@ function Layout() {
         }
     };
 
-    const findUser = async () => {
-        if (inputValue === '') {
-            setInputError(true);
-
-            setTimeout(() => {
-                setInputError(false);
-            }, 3000)
-
-            return;
-        }
-
-        const hashtagIndex = inputValue.indexOf('#');
-        if (hashtagIndex !== -1) {
-            const findUserId = parseInt(inputValue.substring(hashtagIndex + 1), 10);
-
-            if (!isAuth) {
-                navigate('*');
-                setInputValue('');
-                return;
-            }
-
-            navigate(`/user/${findUserId}`);
-        } else {
-
-            //Здесь возможно будет поиск списка юзеров по юзернейму
-
-            setInputError(true);
-
-            setTimeout(() => {
-                setInputError(false);
-            }, 3000)
-
-            return;
-        }
-    };
-
     const logoutMe = async () => {
         const response = await logout();
 
@@ -101,44 +93,29 @@ function Layout() {
         return (
             <>
                 <div className="layout-desktop-sidebar-links-container">
-                    <div className="layout-desktop-link">
-                        <Link to={profilePath}>
-                            <i className="material-icons-outlined" style={{ background: 'transparent', fontSize: '26px' }}>account_circle</i>
-                            <h4>Profile</h4>
-                        </Link>
-                    </div>
-                    <div className="layout-desktop-link">
-                        <Link to="/settings">
-                            <i className="material-icons-outlined" style={{ background: 'transparent', fontSize: '26px' }}>manage_accounts</i>
-                            <h4>Settings</h4>
-                        </Link>
-                    </div>
-                    <div className="layout-desktop-link">
-                        <Link to="/files">
-                            <i className="material-icons-outlined" style={{ background: 'transparent', fontSize: '26px' }}>storage</i>
-                            <h4>Files</h4>
-                        </Link>
-                    </div>
-                    <div className="layout-desktop-link">
-                        <Link to="/offers">
-                            <i className="material-icons-outlined" style={{ background: 'transparent', fontSize: '26px' }}>storage</i>
-                            <h4>Offers</h4>
-                        </Link>
-                    </div>
-                    <div className="layout-desktop-link">
-                        <Link to="/api">
-                            <i className="material-icons-outlined" style={{ background: 'transparent', fontSize: '26px' }}>vpn_key</i>
-                            <h4>API</h4>
-                        </Link>
-                    </div>
-                    {(role === 'Admin' || role === 'HighestAdmin') && (
-                        <div className="layout-desktop-link">
-                            <Link to="/admin">
-                                <i className="material-icons-outlined" style={{ background: 'transparent', fontSize: '26px' }}>admin_panel_settings</i>
-                                <h4>Admin</h4>
-                            </Link>
-                        </div>
-                    )}
+                    {authLinks.map(link => (
+                        <>
+                            {link.id === 'admin' ? (
+                                <>
+                                    {(role === 'Admin' || role === 'HighestAdmin') && (
+                                        <div className="layout-desktop-link">
+                                            <Link to={link.path}>
+                                                <i className="material-icons-outlined" style={{ background: 'transparent', fontSize: '26px' }}>{link.icon}</i>
+                                                <h4>{link.name}</h4>
+                                            </Link>
+                                        </div>
+                                    )}
+                                </>
+                            ) : (
+                                    <div className="layout-desktop-link">
+                                        <Link to={link.path}>
+                                            <i className="material-icons-outlined" style={{ background: 'transparent', fontSize: '26px' }}>{link.icon}</i>
+                                            <h4>{link.name}</h4>
+                                        </Link>
+                                    </div>
+                            )}
+                        </>
+                    ))}
                 </div>
             </>
         );
@@ -146,136 +123,79 @@ function Layout() {
 
     const MobileSidebar = () => {
         return (
-            <div className="layout-mobile-menu" onClick={resetAsideVisible}>
-                {isAuth && (
+            <div className="layout-mobile-menu" onClick={() => setAsideVisible(false)}>
+                <div className="layout-mobile-links-container">
+                    {isAuth && (
+                        <>
+                            {authLinks.map(link => (
+                                <>
+                                    {link.id === 'admin' ? (
+                                        <>
+                                            {(role === 'Admin' || role === 'HighestAdmin') && (
+                                                <div className="layout-mobile-link">
+                                                    <Link to={link.path}>
+                                                        <div className="layout-mobile-link-content">
+                                                            <div className="layout-mobile-icon">
+                                                                <i className="material-icons-outlined" style={{ background: 'transparent', fontSize: '28px' }}>{link.icon}</i>
+                                                            </div>
+                                                            <div className="layout-mobile-name">
+                                                                {link.name}
+                                                            </div>
+                                                        </div>
+                                                    </Link>
+                                                </div>
+                                            )}
+                                        </>
+                                    ) : (
+                                            <div className="layout-mobile-link">
+                                                <Link to={link.path}>
+                                                    <div className="layout-mobile-link-content">
+                                                        <div className="layout-mobile-icon">
+                                                            <i className="material-icons-outlined" style={{ background: 'transparent', fontSize: '28px' }}>{link.icon}</i>
+                                                        </div>
+                                                        <div className="layout-mobile-name">
+                                                            {link.name}
+                                                        </div>
+                                                    </div>
+                                                </Link>
+                                            </div>
+                                    )}
+                                </>
+                            ))}
+                        </>
+                    )}
                     <>
-                        <div className="layout-mobile-link">
-                            <Link to={profilePath}>
-                                <div className="layout-mobile-link-content">
-                                    <div className="layout-mobile-icon">
-                                        <i className="material-icons-outlined" style={{ background: 'transparent', fontSize: '28px' }}>account_circle</i>
-                                    </div>
-                                    <div className="layout-mobile-name">
-                                        Profile
-                                    </div>
-                                </div>
-                            </Link>
-                        </div>
-                        <div className="layout-mobile-link">
-                            <Link to="/settings">
-                                <div className="layout-mobile-link-content">
-                                    <div className="layout-mobile-icon">
-                                        <i className="material-icons-outlined" style={{ background: 'transparent', fontSize: '28px' }}>manage_accounts</i>
-                                    </div>
-                                    <div className="layout-mobile-name">
-                                        Settings
-                                    </div>
-                                </div>
-                            </Link>
-                        </div>
-                        <div className="layout-mobile-link">
-                            <Link to="/files">
-                                <div className="layout-mobile-link-content">
-                                    <div className="layout-mobile-icon">
-                                        <i className="material-icons-outlined" style={{ background: 'transparent', fontSize: '28px' }}>storage</i>
-                                    </div>
-                                    <div className="layout-mobile-name">
-                                        Files
-                                    </div>
-                                </div>
-                            </Link>
-                        </div>
-                        <div className="layout-mobile-link">
-                            <Link to="/offers">
-                                <div className="layout-mobile-link-content">
-                                    <div className="layout-mobile-icon">
-                                        <i className="material-icons-outlined" style={{ background: 'transparent', fontSize: '28px' }}>storage</i>
-                                    </div>
-                                    <div className="layout-mobile-name">
-                                        Offers
-                                    </div>
-                                </div>
-                            </Link>
-                        </div>
-                        <div className="layout-mobile-link">
-                            <Link to="/api">
-                                <div className="layout-mobile-link-content">
-                                    <div className="layout-mobile-icon">
-                                        <i className="material-icons-outlined" style={{ background: 'transparent', fontSize: '28px' }}>vpn_key</i>
-                                    </div>
-                                    <div className="layout-mobile-name">
-                                        API
-                                    </div>
-                                </div>
-                            </Link>
-                        </div>
-                        {(role === 'Admin' || role === 'HighestAdmin') && (
+                        {defaultLinks.map(link => (
                             <div className="layout-mobile-link">
-                                <Link to="/admin">
+                                <Link to={link.path}>
                                     <div className="layout-mobile-link-content">
                                         <div className="layout-mobile-icon">
-                                            <i className="material-icons-outlined" style={{ background: 'transparent', fontSize: '28px' }}>admin_panel_settings</i>
+                                            <i className="material-icons-outlined" style={{ background: 'transparent', fontSize: '28px' }}>{link.icon}</i>
                                         </div>
                                         <div className="layout-mobile-name">
-                                            Admin
+                                            {link.name}
                                         </div>
                                     </div>
                                 </Link>
                             </div>
-                        )}
+                        ))}
                     </>
-                )}
-                <div className="layout-mobile-link">
-                    <Link to="/">
-                        <div className="layout-mobile-link-content">
-                            <div className="layout-mobile-icon">
-                                <i className="material-icons-outlined" style={{ background: 'transparent', fontSize: '28px' }}>home</i>
+                    <div className="layout-mobile-auth-btn-container">
+                        {isAuth ? (
+                            <div className="layout-mobile-signout-btn-container">
+                                <button className="layout-mobile-signout-btn" onClick={logout}>Sign Out</button>
                             </div>
-                            <div className="layout-mobile-name">
-                                Home
-                            </div>
-                        </div>
-                    </Link>
-                </div>
-                <div className="layout-mobile-link">
-                    <Link to="/about">
-                        <div className="layout-mobile-link-content">
-                            <div className="layout-mobile-icon">
-                                <i className="material-icons-outlined" style={{ background: 'transparent', fontSize: '28px' }}>info</i>
-                            </div>
-                            <div className="layout-mobile-name">
-                                About
-                            </div>
-                        </div>
-                    </Link>
-                </div>
-                <div className="layout-mobile-link">
-                    <Link to="/policy">
-                        <div className="layout-mobile-link-content">
-                            <div className="layout-mobile-icon">
-                                <i className="material-icons-outlined" style={{ background: 'transparent', fontSize: '28px' }}>policy</i>
-                            </div>
-                            <div className="layout-mobile-name">
-                                Policy
-                            </div>
-                        </div>
-                    </Link>
-                </div>
-                <div className="layout-mobile-auth-btn-container">
-                    {isAuth ? (
-                        <div className="layout-mobile-signout-btn-container">
-                            <button className="layout-mobile-signout-btn" onClick={logout}>Sign Out</button>
-                        </div>
-                    ) : (
-                            <div className="layout-mobile-is-auth-container">
-                                <div className="layout-mobile-signup-btn-container" onClick={resetAsideVisible}>
-                                    <button className="layout-mobile-signup-btn" onClick={() => navigate('/auth/signup')}>Sign Up</button>
+                        ) : (
+                                <div className="layout-mobile-is-auth-container">
+                                    <div className="layout-mobile-signup-btn-container" onClick={() => setAsideVisible(false)}>
+                                        <button className="layout-mobile-signup-btn" onClick={() => navigate('/auth/signup')}>Sign Up</button>
+                                    </div>
+                                    <div className="layout-mobile-signin-btn-container" onClick={() => setAsideVisible(false)}>
+                                        <button className="layout-mobile-signin-btn" onClick={() => navigate('/auth/login')}>Sign In</button>
+                                    </div>
                                 </div>
-                                <div className="layout-mobile-signin-btn-container" onClick={resetAsideVisible}>
-                                    <button className="layout-mobile-signin-btn" onClick={() => navigate('/auth/login')}>Sign In</button>
-                                </div>
-                            </div>
-                    )}
+                        )}
+                    </div>
                 </div>
             </div>
         );
@@ -288,23 +208,6 @@ function Layout() {
                     <Link to="/">FILECRYPT</Link>
                     <Link to="/about">About</Link>
                     <Link to="/policy">Policy</Link>
-                </div>
-                <div className="layout-head-center">
-                    <div className="layout-find-container">
-                        <input className={inputError ? 'find-input error' : 'find-input'}
-                            type="text" id="user"
-                            required={true}
-                            value={inputValue}
-                            onChange={(e) => setInputValue(e.target.value)}
-                            placeholder="#2921"
-                        />
-                        <button className="layout-find-btn" onClick={findUser}><Icon icon={'search'} /></button>
-                    </div>
-                    {isAuth && (
-                        <div className="layout-notification-container">
-                            <Link to="/notifications"><Icon icon={'notifications'} /></Link>
-                        </div>
-                    )}
                 </div>
                 <div className="layout-header-auth-btn-container">
                     {isAuth ? (
@@ -353,7 +256,7 @@ function Layout() {
                             </>
                         ) : (
                                 <button className="layout-aside-visible-btn" onClick={() => setAsideVisible(!isAsideVisible)}>
-                                    <i className="layout-material-icons-outlined" style={{ background: 'transparent' }}>menu</i>
+                                    <Icon icon={'menu'} />
                                 </button>
                         )}
                     </div>

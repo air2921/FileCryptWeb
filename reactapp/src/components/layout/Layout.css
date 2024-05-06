@@ -25,6 +25,10 @@
     border-bottom: solid 0.6px #808080;
 }
 
+.layout-mobile-links-container {
+    padding-top: 30px;
+}
+
 .layout-mobile-link-content {
     display: flex;
     align-items: center;
@@ -154,7 +158,7 @@
 .layout-header-links {
     justify-content: flex-start;
     margin-left: 60px;
-    margin-top: 0px;
+    margin-top: 8px;
     position: fixed;
 }
 
@@ -169,86 +173,11 @@
             color: #075ce2;
         }
 
-.layout-head-center {
-    display: flex;
-    justify-content: center;
-    align-items: center;
-}
-
-.layout-find-container {
-    display: flex;
-    justify-content: center;
-    align-items: center;
-}
-
-.find-input {
-    height: 24px;
-    width: 140px;
-    background-color: transparent;
-    border: solid 0.8px #808080;
-    border-radius: 8px;
-    margin-right: 5px;
-    margin-top: -10px;
-}
-
-    .find-input:focus {
-        outline: none;
-    }
-
-    .find-input.error {
-        height: 24px;
-        width: 140px;
-        background-color: transparent;
-        border: 1px solid #f00;
-        margin-right: 5px;
-        margin-top: -10px;
-        border-radius: 8px;
-    }
-
-    .find-input.error:focus {
-        outline: none;
-    }
-
-    .find-input::placeholder {
-        color: #808080;
-        text-indent: 6px;
-    }
-
-.layout-find-btn {
-    margin-left: 5px;
-    margin-top: -5px;
-    padding: 3px;
-    background-color: transparent;
-}
-
-    .layout-find-btn:hover {
-        border-color: transparent;
-    }
-
-    .layout-find-btn:focus {
-        outline: none;
-    }
-
-.layout-notification-container {
-    margin-top: -5px;
-    margin-left: 30px;
-}
-
-    .layout-notification-container a {
-        text-decoration: none;
-        color: #fff;
-        transition: color 0.3s ease;
-    }
-
-        .layout-notification-container a:hover {
-            color: #075ce2;
-        }
-
 .layout-header-signout-btn-container {
     display: flex;
     justify-content: flex-end;
     margin-right: 50px;
-    margin-top: -38px;
+    margin-top: -8px;
 }
 
 .layout-header-signout-btn:hover {
@@ -260,7 +189,7 @@
     display: flex;
     justify-content: flex-end;
     margin-right: 50px;
-    margin-top: -35px;
+    margin-top: -8px;
 }
 
 .layout-header-signup-btn,
