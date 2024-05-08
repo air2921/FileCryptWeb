@@ -14,9 +14,6 @@ namespace data_access
         public static void AddDataInfrastructure(this IServiceCollection services,
             IConfiguration _config, Serilog.ILogger logger)
         {
-            Console.WriteLine($"Redis: {_config.GetConnectionString("Redis")}");
-            Console.WriteLine($"PostreSQL: {_config.GetConnectionString("Postgres")}");
-
             services.AddDbContext<FileCryptDbContext>(options =>
             {
                 options.UseNpgsql(_config.GetConnectionString("Postgres"))

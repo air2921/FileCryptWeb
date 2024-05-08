@@ -6,9 +6,14 @@ export interface ActivityProps {
     ActivityCount: number
 }
 
-export async function getRangeActivity(byDesc: boolean, start: Date, end: Date, type?: string) {
+export async function getRangeActivity(byDesc: boolean, start: Date, end: Date, type?: string | null) {
     try {
-        const response = await axios.get(`api/core/activity?byDesc=${byDesc}&start=${start}&end=${end}`);
+        let typeParam = '';
+        if (type) {
+            typeParam = `&type=${type}`
+        }
+
+        const response = await axios.get(`api/core/activity?byDesc=${byDesc}&start=${start}&end=${end}${typeParam}`);
 
         return {
             success: true,

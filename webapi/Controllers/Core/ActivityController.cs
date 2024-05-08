@@ -22,7 +22,7 @@ namespace webapi.Controllers.Core
 
         [HttpGet("range")]
         public async Task<IActionResult> GetRangeActivity([FromQuery] bool byDesc,
-            [FromQuery] DateTime start, [FromQuery] DateTime end, [FromQuery] string? type)
+            [FromQuery] DateTime start, [FromQuery] DateTime end, [FromQuery] int? type)
         {
             var response = await service.GetRange(userInfo.UserId, byDesc, start, end, type);
             if (!response.IsSuccess)

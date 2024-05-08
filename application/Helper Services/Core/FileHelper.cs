@@ -138,7 +138,7 @@ namespace application.Helper_Services.Core
                 {
                     user_id = userID,
                     action_date = DateTime.UtcNow,
-                    action_type = encrypt ? Activity.Encrypt.ToString() : Activity.Decrypt.ToString()
+                    type_id = encrypt ? (int)Activity.Encrypt : (int)Activity.Decrypt
                 });
 
                 await dbTransaction.CommitAsync(transaction);

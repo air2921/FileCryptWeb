@@ -24,7 +24,7 @@ namespace application.Helper_Services.Core
                 {
                     user_id = id,
                     action_date = DateTime.UtcNow,
-                    action_type = Activity.AddKey.ToString()
+                    type_id = (int)Activity.AddKey
                 });
 
                 await dbTransaction.CommitAsync(transaction);

@@ -19,7 +19,7 @@ namespace application.Helper_Services.Core
                 {
                     user_id = data.user_id,
                     action_date = DateTime.UtcNow,
-                    action_type = Activity.AddStorage.ToString()
+                    type_id = (int)Activity.AddStorage
                 });
 
                 await dbTransaction.CommitAsync(transaction);

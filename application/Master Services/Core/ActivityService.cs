@@ -31,7 +31,7 @@ namespace application.Master_Services.Core
             }
         }
 
-        public async Task<Response> GetRange(int userId, bool byDesc, DateTime start, DateTime end, string? type = null)
+        public async Task<Response> GetRange(int userId, bool byDesc, DateTime start, DateTime end, int? type = null)
         {
             try
             {

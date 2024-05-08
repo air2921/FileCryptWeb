@@ -5,7 +5,7 @@ namespace domain.Specifications.Sorting_Specifications
 {
     public class ActivitySortSpec : Specification<ActivityModel>
     {
-        public ActivitySortSpec(int userId, bool byDesc, DateTime start, DateTime end, string? type = null)
+        public ActivitySortSpec(int userId, bool byDesc, DateTime start, DateTime end, int? type = null)
         {
             UserId = userId;
             ByDesc = byDesc;
@@ -15,7 +15,7 @@ namespace domain.Specifications.Sorting_Specifications
             Query.Where(a => a.user_id.Equals(userId));
 
             if (type is not null)
-                Query.Where(a => a.action_type.Equals(type));
+                Query.Where(a => a.type_id.Equals(type));
 
             Query.Where(a => a.action_date >= start.ToUniversalTime() && a.action_date < end.ToUniversalTime());
 

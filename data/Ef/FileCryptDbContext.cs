@@ -147,7 +147,7 @@ namespace data_access.Ef
 
                 context.KeyStorages.Add(new KeyStorageModel
                 {
-                    storage_id = 1,
+                    storage_id = 123,
                     storage_name = "123",
                     user_id = 123,
                     access_code = CODE,
@@ -156,23 +156,23 @@ namespace data_access.Ef
 
                 context.KeyStorageItems.AddRange([
                     new KeyStorageItemModel {
-                        storage_id = 1,
+                        storage_id = 123,
                         created_at = DateTime.UtcNow,
-                        key_id = 1,
+                        key_id = 123,
                         key_name = "1",
                         key_value = "QMdssjO/4WmBEcdxFR8ZxDYtGd4wmL+bf1UKMuh3x2A="
                     },
                     new KeyStorageItemModel {
-                        storage_id = 1,
+                        storage_id = 123,
                         created_at = DateTime.UtcNow,
-                        key_id = 2,
+                        key_id = 124,
                         key_name = "2",
                         key_value = "GZkkxJ9F3iNfm7yRhGPAXI5xcFznyfANQ1+cup3KZzg="
                     },
                     new KeyStorageItemModel {
-                        storage_id = 1,
+                        storage_id = 123,
                         created_at = DateTime.UtcNow,
-                        key_id = 3,
+                        key_id = 125,
                         key_name = "3",
                         key_value = "Hp04C2IZnJa4lztVGx9qMabluHWKXYww3JTicqCEeP4="
                     },
@@ -196,7 +196,7 @@ namespace data_access.Ef
 
                 context.KeyStorages.Add(new KeyStorageModel
                 {
-                    storage_id = 2,
+                    storage_id = 234,
                     storage_name = "123456",
                     user_id = 123456,
                     access_code = CODE,
@@ -205,23 +205,23 @@ namespace data_access.Ef
 
                 context.KeyStorageItems.AddRange([
                     new KeyStorageItemModel {
-                        storage_id = 2,
+                        storage_id = 234,
                         created_at = DateTime.UtcNow,
-                        key_id = 4,
+                        key_id = 126,
                         key_name = "4",
                         key_value = "mhGrL7dA+9p94i6ovZMILGHjxkfZkx9OdHt8ZINxO80="
                     },
                     new KeyStorageItemModel {
-                        storage_id = 2,
+                        storage_id = 234,
                         created_at = DateTime.UtcNow,
-                        key_id = 5,
+                        key_id = 127,
                         key_name = "5",
                         key_value = "AFmYgYVWL6s/0lfR8sWuJT9oIWFGkHMI9Ly8hxi0M4o="
                     },
                     new KeyStorageItemModel {
-                        storage_id = 2,
+                        storage_id = 234,
                         created_at = DateTime.UtcNow,
-                        key_id = 6,
+                        key_id = 128,
                         key_name = "6",
                         key_value = "hAXO8qGrPZ0MKXuZnIbFtpsqzlkCbv9fwTupPBnUv3U="
                     },
@@ -245,7 +245,7 @@ namespace data_access.Ef
 
                 context.KeyStorages.Add(new KeyStorageModel
                 {
-                    storage_id = 3,
+                    storage_id = 345,
                     storage_name = "123456789",
                     user_id = 123456789,
                     access_code = CODE,
@@ -254,23 +254,23 @@ namespace data_access.Ef
 
                 context.KeyStorageItems.AddRange([
                     new KeyStorageItemModel {
-                        storage_id = 3,
+                        storage_id = 345,
                         created_at = DateTime.UtcNow,
-                        key_id = 7,
+                        key_id = 129,
                         key_name = "7",
                         key_value = "uOfhQ7ONycUUZZWN/5xbXG+UH5f6A4t/KhLsGyzsRcc="
                     },
                     new KeyStorageItemModel {
-                        storage_id = 3,
+                        storage_id = 345,
                         created_at = DateTime.UtcNow,
-                        key_id = 8,
+                        key_id = 130,
                         key_name = "8",
                         key_value = "BxvBLTNXv1T2HPs6ECy4ZEQ7NZdKqdcsNOu977XZpxY="
                     },
                     new KeyStorageItemModel {
-                        storage_id = 3,
+                        storage_id = 345,
                         created_at = DateTime.UtcNow,
-                        key_id = 9,
+                        key_id = 131,
                         key_name = "9",
                         key_value = "JsQOXx/wGGJy94Ynwz5zUWunJTLkgZhs8mzIZXTm8go="
                     },
@@ -278,10 +278,10 @@ namespace data_access.Ef
             }
 
             context.SaveChanges();
-            var users = context.Users.Include(x => x.KeyStorages)
-                .ThenInclude(x => x.StorageItems)
-                .ToList();
-            return new { users };
+            var users = context.Users.ToList();
+            var storages = context.KeyStorages.ToList();
+            var keys = context.KeyStorageItems.ToList();
+            return new { users, storages, keys };
         }
     }
 

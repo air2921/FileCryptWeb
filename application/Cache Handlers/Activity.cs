@@ -87,5 +87,5 @@ namespace application.Cache_Handlers
     }
 
     public record class ActivityObject(string CacheKey, int ActivityId, int UserId);
-    public record class ActivityRangeObject(string CacheKey, int UserId, bool ByDesc, string? Type, DateTime Start, DateTime End);
+    public record class ActivityRangeObject(string CacheKey, int UserId, bool ByDesc, int? Type, DateTime Start, DateTime End);
 }

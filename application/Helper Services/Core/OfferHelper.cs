@@ -44,7 +44,7 @@ namespace application.Helper_Services.Core
                 {
                     user_id = dto.SenderId,
                     action_date = DateTime.UtcNow,
-                    action_type = Activity.OpenOffer.ToString()
+                    type_id = (int)Activity.OpenOffer
                 });
 
                 await dbTransaction.CommitAsync(transaction);
@@ -73,7 +73,7 @@ namespace application.Helper_Services.Core
                 {
                     user_id = dto.Offer.receiver_id,
                     action_date = DateTime.UtcNow,
-                    action_type = Activity.CloseOffer.ToString()
+                    type_id = (int)Activity.CloseOffer
                 });
 
                 dto.Offer.is_accepted = true;

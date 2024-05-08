@@ -10,7 +10,7 @@ namespace domain.Models
         [Key]
         public int action_id { get; set; }
 
-        public string action_type { get; set; }
+        public int type_id { get; set; }
         
         public DateTime action_date { get; set; }
 
@@ -27,22 +27,22 @@ namespace domain.Models
 
             return 
                 action_id == other.action_id &&
-                action_type == other.action_type &&
+                type_id == other.type_id &&
                 action_date == other.action_date && 
                 user_id == other.user_id;
         }
 
-        public override int GetHashCode() => HashCode.Combine(action_id, action_type, action_date, user_id);
+        public override int GetHashCode() => HashCode.Combine(action_id, type_id, action_date, user_id);
     }
 
     public enum Activity
     {
-        Encrypt,
-        Decrypt,
-        OpenOffer,
-        CloseOffer,
-        AddKey,
-        AddStorage,
-        ShareStorage,
+        Encrypt = 101,
+        Decrypt = 102,
+        OpenOffer = 201,
+        CloseOffer = 202,
+        AddKey = 301,
+        AddStorage = 302,
+        ShareStorage = 303
     }
 }
