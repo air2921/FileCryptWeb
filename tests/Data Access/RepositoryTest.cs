@@ -606,7 +606,7 @@ namespace tests.Data_Access
                 );
             }
 
-            await repository.DeleteMany(new List<int> { 1, 2, 3 });
+            await repository.DeleteMany([1, 2, 3]);
 
             var entity1 = await repository.GetById(1);
             var entity2 = await repository.GetById(2);
@@ -642,7 +642,7 @@ namespace tests.Data_Access
 
             await repository.AddRange(entities);
 
-            await Assert.ThrowsAsync<EntityException>(() => repository.DeleteMany(new List<int> { 1, 2, 3 }, cancellationToken));
+            await Assert.ThrowsAsync<EntityException>(() => repository.DeleteMany([1, 2, 3], cancellationToken));
         }
 
         [Fact]
@@ -671,7 +671,7 @@ namespace tests.Data_Access
 
             await repository.AddRange(entities);
 
-            await Assert.ThrowsAsync<EntityException>(() => repository.DeleteMany(new List<int> { 1, 2, 3 }, cancellationTokenSource.Token));
+            await Assert.ThrowsAsync<EntityException>(() => repository.DeleteMany([1, 2, 3], cancellationTokenSource.Token));
         }
 
         [Fact]

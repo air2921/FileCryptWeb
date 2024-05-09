@@ -6,7 +6,7 @@ namespace tests
     {
         public FakeLogger()
         {
-            LoggedMessages = new();
+            LoggedMessages = [];
         }
 
 #pragma warning disable CS8767 // Допустимость значений NULL для ссылочных типов в типе параметра не соответствует неявно реализованному элементу (возможно, из-за атрибутов допустимости значений NULL).

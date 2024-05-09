@@ -40,7 +40,7 @@ namespace webapi
                                 Id = "Bearer"
                             }
                         },
-                        new string[] {}
+                        Array.Empty<string>()
                     }
                 });
             });
@@ -67,13 +67,11 @@ namespace webapi
                 session.Cookie.SecurePolicy = CookieSecurePolicy.Always;
             });
 
-            services.AddAuthorization(options =>
-            {
-                options.AddPolicy("RequireAdminPolicy", policy =>
+            services.AddAuthorizationBuilder()
+                .AddPolicy("RequireAdminPolicy", policy =>
                 {
                     policy.RequireRole("HighestAdmin", "Admin");
                 });
-            });
 
             services.AddAuthentication(auth =>
             {

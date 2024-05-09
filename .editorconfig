@@ -5,3 +5,6 @@ dotnet_diagnostic.CA1069.severity = error
 
 # IDE1006: Стили именования
 dotnet_diagnostic.IDE1006.severity = none
+
+# SYSLIB1045: Преобразовать в "GeneratedRegexAttribute".
+dotnet_diagnostic.SYSLIB1045.severity = none

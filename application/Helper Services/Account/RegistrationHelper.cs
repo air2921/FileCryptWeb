@@ -61,8 +61,7 @@ namespace application.Helper_Services.Account
 
         public bool IsValid(object data, object? parameter = null)
         {
-            var user = data as RegisterDTO;
-            if (user is null)
+            if (data is not RegisterDTO user)
                 return false;
 
             bool isValidUsername = Regex.IsMatch(user.Username, RegularEx.Username);

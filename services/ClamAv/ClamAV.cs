@@ -5,9 +5,7 @@ using Microsoft.Extensions.Configuration;
 
 namespace services.ClamAv
 {
-#pragma warning disable CS8618 // Поле, не допускающее значения NULL, должно содержать значение, отличное от NULL, при выходе из конструктора. Возможно, стоит объявить поле как допускающее значения NULL.
     public class ClamAV(ILogger<ClamAV> logger, IConfiguration configuration, IClamSetting clamSetting) : IVirusCheck
-#pragma warning restore CS8618 // Поле, не допускающее значения NULL, должно содержать значение, отличное от NULL, при выходе из конструктора. Возможно, стоит объявить поле как допускающее значения NULL.
     {
         public async Task<bool> GetResultScan(Stream fileStream, CancellationToken cancellationToken)
         {
@@ -39,20 +37,13 @@ namespace services.ClamAv
         Task<ClamScanResult> SendAndScanFileAsync(Stream stream, CancellationToken cancellationToken);
     }
 
-    public class ClamClientWrapper : IClamClient
+    public class ClamClientWrapper(ClamClient clamClient) : IClamClient
     {
-        private readonly ClamClient _clamClient;
-
-        public ClamClientWrapper(ClamClient clamClient)
-        {
-            _clamClient = clamClient;
-        }
-
         public async Task<ClamScanResult> SendAndScanFileAsync(Stream stream, CancellationToken cancellationToken)
         {
             try
             {
-                return await _clamClient.SendAndScanFileAsync(stream, cancellationToken);
+                return await clamClient.SendAndScanFileAsync(stream, cancellationToken);
             }
             catch (Exception)
             {

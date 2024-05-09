@@ -34,16 +34,16 @@ namespace application.Master_Services.Core
             }
         }
 
-        public async Task<Response> GetRange(string username)
+        public async Task<Response> GetRange(string username, int skip, int count)
         {
             try
             {
-                var cacheKey = $"{ImmutableData.USER_LIST}{username}";
+                var cacheKey = $"{ImmutableData.USER_LIST}{username}_";
 
                 return new Response
                 {
                     Status = 200,
-                    ObjectData = await cacheHandler.CacheAndGetRange(new UserRangeObject(cacheKey, username))
+                    ObjectData = await cacheHandler.CacheAndGetRange(new UserRangeObject(cacheKey, username, skip, count))
                 };
             }
             catch (EntityException ex)

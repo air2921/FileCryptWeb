@@ -41,9 +41,12 @@ export async function getFullyUser(userId: number) {
     }
 }
 
-export async function getRangeUsers(username: string) {
+export async function getRangeUsers(username: string, skip: number = 0, count: number = 25) {
     try {
-        const response = await axios.get(BASE_URL + `api/core/user/range/${username}`, { withCredentials: true });
+        const response = await axios.get(
+            BASE_URL + `api/core/user/range/${username}?skip=${skip}&count=${count}`,
+            { withCredentials: true }
+        );
 
         return {
             success: true,

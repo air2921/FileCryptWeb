@@ -62,7 +62,7 @@ namespace application.Cache_Handlers
                 var cache = await redisCache.GetCachedData(userObj.CacheKey);
                 if (cache is null)
                 {
-                    users = (List<UserModel>)await userRepository.GetAll(new UsersByUsernameSpec(userObj.Username));
+                    users = (List<UserModel>)await userRepository.GetAll(new UsersByUsernameSpec(userObj.Username, userObj.Skip, userObj.Count));
                     foreach (var user in users)
                     {
                         user.password = string.Empty;
@@ -92,5 +92,5 @@ namespace application.Cache_Handlers
     }
 
     public record class UserObject(string CacheKey, int UserId, bool IsOwner);
-    public record class UserRangeObject(string CacheKey, string Username);
+    public record class UserRangeObject(string CacheKey, string Username, int Skip, int Count);
 }

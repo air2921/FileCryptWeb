@@ -24,7 +24,7 @@ namespace tests.Api
         public void UserId_ClaimTypeNotPresent_ThrowsException()
         {
             var httpContextAccessorMock = new Mock<IHttpContextAccessor>();
-            var claims = new Claim[] { };
+            var claims = Array.Empty<Claim>();
             var identity = new ClaimsIdentity(claims, "TestAuthType");
             var claimsPrincipal = new ClaimsPrincipal(identity);
             var httpContext = new DefaultHttpContext
@@ -66,7 +66,7 @@ namespace tests.Api
         public void Property_ClaimTypeNotPresent_ThrowsException(string propertyName)
         {
             var httpContextAccessorMock = new Mock<IHttpContextAccessor>();
-            var claims = new Claim[] { };
+            var claims = Array.Empty<Claim>();
             var identity = new ClaimsIdentity(claims, "TestAuthType");
             var claimsPrincipal = new ClaimsPrincipal(identity);
             var httpContext = new DefaultHttpContext

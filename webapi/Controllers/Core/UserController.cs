@@ -50,9 +50,10 @@ namespace webapi.Controllers.Core
         }
 
         [HttpGet("range/{username}")]
-        public async Task<IActionResult> GetRangeUsers([FromRoute] string username)
+        public async Task<IActionResult> GetRangeUsers([FromRoute] string username,
+            [FromQuery] int skip, [FromQuery] int count)
         {
-            var response = await service.GetRange(username);
+            var response = await service.GetRange(username, skip, count);
             if (!response.IsSuccess)
                 return StatusCode(response.Status, new { message = response.Message });
             else

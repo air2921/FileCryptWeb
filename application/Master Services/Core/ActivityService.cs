@@ -64,7 +64,7 @@ namespace application.Master_Services.Core
                 {
                     Date = group.Key,
                     ActivityCount = group.Count(),
-                    Activities = group.ToArray()
+                    Activities = [.. group]
                 })
                 .ToHashSet();
 

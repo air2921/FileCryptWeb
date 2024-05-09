@@ -19,8 +19,7 @@ namespace webapi.Helpers
 
         private string GetRequest()
         {
-            Microsoft.Extensions.Primitives.StringValues token;
-            if (_httpContext.Request.Headers.TryGetValue("X-REQUEST-TOKEN", out token))
+            if (_httpContext.Request.Headers.TryGetValue("X-REQUEST-TOKEN", out Microsoft.Extensions.Primitives.StringValues token))
                 return token.FirstOrDefault() ?? "None";
             else
                 return "None";

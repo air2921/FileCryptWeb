@@ -41,14 +41,9 @@ namespace services.Cryptography
         }
     }
 
-    public class DecryptKey : ICypherKey
+    public class DecryptKey(IAes aes) : ICypherKey
     {
-        private readonly IAes _aes;
-
-        public DecryptKey(IAes aes)
-        {
-            _aes = aes;
-        }
+        private readonly IAes _aes = aes;
 
         public async Task<string> CypherKeyAsync(string text, byte[] key)
         {
