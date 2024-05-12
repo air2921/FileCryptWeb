@@ -122,6 +122,7 @@ namespace tests.Data_Access
             var logger = new FakeLogger<Repository<KeyStorageModel>>();
             var repository = new Repository<KeyStorageModel>(logger, context);
 
+            await Task.Delay(1000);
             var cancellationToken = new CancellationTokenSource(TimeSpan.FromMilliseconds(0.01)).Token;
 
             await Assert.ThrowsAsync<EntityException>(() => repository.GetAll(null, cancellationToken));
@@ -209,6 +210,7 @@ namespace tests.Data_Access
             var logger = new FakeLogger<Repository<KeyStorageModel>>();
             var repository = new Repository<KeyStorageModel>(logger, context);
 
+            await Task.Delay(1000);
             var cancellationToken = new CancellationTokenSource(TimeSpan.FromMilliseconds(0.01)).Token;
 
             await Assert.ThrowsAsync<EntityException>(() => repository.GetByFilter(null, cancellationToken));
@@ -295,6 +297,7 @@ namespace tests.Data_Access
             var logger = new FakeLogger<Repository<KeyStorageModel>>();
             var repository = new Repository<KeyStorageModel>(logger, context);
 
+            await Task.Delay(1000);
             var cancellationToken = new CancellationTokenSource(TimeSpan.FromMilliseconds(0.01)).Token;
 
             await Assert.ThrowsAsync<EntityException>(() => repository.GetById(1, cancellationToken));
@@ -355,6 +358,7 @@ namespace tests.Data_Access
             var logger = new FakeLogger<Repository<KeyStorageModel>>();
             var repository = new Repository<KeyStorageModel>(logger, context);
 
+            await Task.Delay(1000);
             var cancellationToken = new CancellationTokenSource(TimeSpan.FromMilliseconds(0.01)).Token;
 
             var storageModel = new KeyStorageModel
@@ -443,6 +447,7 @@ namespace tests.Data_Access
             var logger = new FakeLogger<Repository<KeyStorageModel>>();
             var repository = new Repository<KeyStorageModel>(logger, context);
 
+            await Task.Delay(1000);
             var cancellationToken = new CancellationTokenSource(TimeSpan.FromMilliseconds(0.01)).Token;
 
             var entities = new List<KeyStorageModel>
@@ -526,6 +531,7 @@ namespace tests.Data_Access
             var logger = new FakeLogger<Repository<KeyStorageModel>>();
             var repository = new Repository<KeyStorageModel>(logger, context);
 
+            await Task.Delay(1000);
             var cancellationToken = new CancellationTokenSource(TimeSpan.FromMilliseconds(0.01)).Token;
 
             var storageModel = new KeyStorageModel
@@ -628,6 +634,7 @@ namespace tests.Data_Access
             var logger = new FakeLogger<Repository<KeyStorageModel>>();
             var repository = new Repository<KeyStorageModel>(logger, context);
 
+            await Task.Delay(1000);
             var cancellationToken = new CancellationTokenSource(TimeSpan.FromMilliseconds(0.01)).Token;
 
             var entities = new List<KeyStorageModel>
@@ -715,6 +722,7 @@ namespace tests.Data_Access
             var logger = new FakeLogger<Repository<KeyStorageModel>>();
             var repository = new Repository<KeyStorageModel>(logger, context);
 
+            await Task.Delay(1000);
             var cancellationToken = new CancellationTokenSource(TimeSpan.FromMilliseconds(0.01)).Token;
 
             var storageModel = new KeyStorageModel
@@ -812,6 +820,7 @@ namespace tests.Data_Access
             var logger = new FakeLogger<Repository<KeyStorageModel>>();
             var repository = new Repository<KeyStorageModel>(logger, context);
 
+            await Task.Delay(1000);
             var cancellationToken = new CancellationTokenSource(TimeSpan.FromMilliseconds(0.01)).Token;
 
             var storageModel = new KeyStorageModel
