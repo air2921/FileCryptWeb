@@ -5,7 +5,7 @@ namespace domain.Specifications.Sorting_Specifications
 {
     public class NotificationsSortSpec : Specification<NotificationModel>
     {
-        public NotificationsSortSpec(int? userId, int skip, int count, bool byDesc, string? priority, bool? isChecked)
+        public NotificationsSortSpec(int? userId, int skip, int count, bool byDesc, int? priority, bool? isChecked)
         {
             UserId = userId;
             SkipCount = skip;
@@ -22,7 +22,7 @@ namespace domain.Specifications.Sorting_Specifications
             if (userId.HasValue)
                 Query.Where(n => n.user_id.Equals(userId.Value));
 
-            if (!string.IsNullOrWhiteSpace(priority))
+            if (priority.HasValue)
                 Query.Where(n => n.priority.Equals(priority));
 
             if (isChecked.HasValue)
@@ -35,7 +35,7 @@ namespace domain.Specifications.Sorting_Specifications
         public int SkipCount { get; private set; }
         public int Count { get; private set; }
         public bool ByDesc { get; private set; }
-        public string? Priority { get; private set; }
+        public int? Priority { get; private set; }
         public bool? IsChecked { get; private set;}
     }
 }

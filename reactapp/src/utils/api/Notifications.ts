@@ -7,7 +7,7 @@ export interface NotificationSortProps {
     skip: number;
     count: number;
     orderByDesc: string;
-    priority?: string;
+    priority?: number;
     isChecked?: string;
 }
 
@@ -15,7 +15,7 @@ export interface NotificationProps{
     notification_id: number;
     message_header: string;
     message: string;
-    priority: string;
+    priority: number;
     send_time: string;
     is_checked: boolean;
     user_id: number;

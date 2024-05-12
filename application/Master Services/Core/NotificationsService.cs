@@ -36,7 +36,7 @@ namespace application.Master_Services.Core
         }
 
         public async Task<Response> GetRange(int userId, int skip, int count,
-            bool byDesc, string? priority, bool? isChecked)
+            bool byDesc, int? priority, bool? isChecked)
         {
             try
             {

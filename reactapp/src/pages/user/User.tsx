@@ -27,12 +27,16 @@ const User = () => {
     };
 
     const fetchActivity = async () => {
-        let start = `2024-01-01`;
-        let end = `2024-12-31`;
+        let start
+        let end
 
         if (year) {
             start = `${year}-01-01`
             end = `${year}-12-31`;
+        } else {
+            const currentYear = new Date().getFullYear();
+            start = `${currentYear}-01-01`;
+            end = `${currentYear}-12-31`;
         }
 
         const startDate = new Date(start);

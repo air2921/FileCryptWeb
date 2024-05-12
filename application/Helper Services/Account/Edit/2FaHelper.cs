@@ -32,7 +32,7 @@ namespace application.Helper_Services.Account.Edit
                 {
                     message_header = NotificationMessage.AUTH_2FA_HEADER,
                     message = enable ? NotificationMessage.AUTH_2FA_ENABLE_BODY : NotificationMessage.AUTH_2FA_DISABLE_BODY,
-                    priority = Priority.Security.ToString(),
+                    priority = (int)Priority.Security,
                     send_time = DateTime.UtcNow,
                     is_checked = false,
                     user_id = user.id

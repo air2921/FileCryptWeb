@@ -34,7 +34,7 @@ namespace application.Helper_Services.Core
                 {
                     message_header = "New offer",
                     message = $"You got a new offer from #{dto.SenderId}",
-                    priority = Priority.Trade.ToString(),
+                    priority = (int)Priority.Trade,
                     send_time = DateTime.UtcNow,
                     is_checked = false,
                     user_id = dto.ReceiverId

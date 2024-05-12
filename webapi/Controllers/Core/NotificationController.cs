@@ -25,7 +25,7 @@ namespace webapi.Controllers.Core
 
         [HttpGet("range")]
         public async Task<IActionResult> GetRangeNotifications([FromQuery] int skip, [FromQuery] int count,
-            [FromQuery] bool byDesc, [FromQuery] string? priority,
+            [FromQuery] bool byDesc, [FromQuery] int? priority,
             [FromQuery] bool? isChecked)
         {
             var response = await service.GetRange(userInfo.UserId, skip, count, byDesc, priority, isChecked);

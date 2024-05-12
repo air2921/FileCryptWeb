@@ -14,7 +14,7 @@ namespace domain.Models
 
         public string message { get; set; }
 
-        public string priority { get; set; }
+        public int priority { get; set; }
 
         public DateTime send_time { get; set; }
 
@@ -29,9 +29,9 @@ namespace domain.Models
 
     public enum Priority
     {
-        Trade,
-        Info,
-        Warning,
-        Security
+        Trade = 101,
+        Info = 102,
+        Warning = 301,
+        Security = 302
     }
 }

@@ -42,7 +42,7 @@ namespace application.Helper_Services.Account
                 {
                     message_header = NotificationMessage.AUTH_NEW_LOGIN_HEADER,
                     message = NotificationMessage.AUTH_NEW_LOGIN_BODY,
-                    priority = Priority.Security.ToString(),
+                    priority = (int)Priority.Security,
                     send_time = DateTime.UtcNow,
                     is_checked = false,
                     user_id = user.id

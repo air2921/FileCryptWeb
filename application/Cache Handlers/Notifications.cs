@@ -92,5 +92,5 @@ namespace application.Cache_Handlers
     }
 
     public record class NotificationObject(string CacheKey, int UserId, int NotificationId);
-    public record class NotificationRangeObject(string CacheKey, int UserId, int Skip, int Count, bool ByDesc, string? Priority, bool? IsChecked);
+    public record class NotificationRangeObject(string CacheKey, int UserId, int Skip, int Count, bool ByDesc, int? Priority, bool? IsChecked);
 }

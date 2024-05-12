@@ -1,32 +1,32 @@
 import React, { useState } from 'react';
 import Board from '../../../components/activityBoard/Board';
-import { ActivityProps } from '../../../utils/api/Activity';
+import { DayActivityProps } from '../../../utils/api/Activity';
 
 function Home() {
-    const [act, setAct] = useState<ActivityProps[] | null>(new Array(length = 0));
+    const [act, setAct] = useState<DayActivityProps[] | null>(new Array(length = 0));
 
     function set() {
-        const arr: ActivityProps[] = new Array();
-        arr.push({ Date: '01.01.2024', ActivityCount: 25 });
-        arr.push({ Date: '03.02.2024', ActivityCount: 42 });
-        arr.push({ Date: '15.03.2024', ActivityCount: 17 });
-        arr.push({ Date: '27.04.2024', ActivityCount: 38 });
-        arr.push({ Date: '02.05.2024', ActivityCount: 56 });
-        arr.push({ Date: '04.05.2024', ActivityCount: 12 });
-        arr.push({ Date: '07.04.2024', ActivityCount: 31 });
-        arr.push({ Date: '10.03.2024', ActivityCount: 49 });
-        arr.push({ Date: '13.02.2024', ActivityCount: 23 });
-        arr.push({ Date: '16.01.2024', ActivityCount: 45 });
-        arr.push({ Date: '19.04.2024', ActivityCount: 27 });
-        arr.push({ Date: '21.03.2024', ActivityCount: 39 });
-        arr.push({ Date: '24.02.2024', ActivityCount: 18 });
-        arr.push({ Date: '26.01.2024', ActivityCount: 36 });
-        arr.push({ Date: '29.04.2024', ActivityCount: 50 });
-        arr.push({ Date: '30.03.2024', ActivityCount: 63 });
-        arr.push({ Date: '01.02.2024', ActivityCount: 21 });
-        arr.push({ Date: '03.01.2024', ActivityCount: 47 });
-        arr.push({ Date: '05.04.2024', ActivityCount: 33 });
-        arr.push({ Date: '07.03.2024', ActivityCount: 44 });
+        const arr: DayActivityProps[] = new Array();
+        arr.push({ Date: '01.01.2024', ActivityCount: 25, Activities: [] });
+        arr.push({ Date: '03.02.2024', ActivityCount: 42, Activities: [] });
+        arr.push({ Date: '15.03.2024', ActivityCount: 17, Activities: [] });
+        arr.push({ Date: '27.04.2024', ActivityCount: 38, Activities: [] });
+        arr.push({ Date: '02.05.2024', ActivityCount: 56, Activities: [] });
+        arr.push({ Date: '04.05.2024', ActivityCount: 12, Activities: [] });
+        arr.push({ Date: '07.04.2024', ActivityCount: 31, Activities: [] });
+        arr.push({ Date: '10.03.2024', ActivityCount: 49, Activities: [] });
+        arr.push({ Date: '13.02.2024', ActivityCount: 23, Activities: [] });
+        arr.push({ Date: '16.01.2024', ActivityCount: 45, Activities: [] });
+        arr.push({ Date: '19.04.2024', ActivityCount: 27, Activities: [] });
+        arr.push({ Date: '21.03.2024', ActivityCount: 39, Activities: [] });
+        arr.push({ Date: '24.02.2024', ActivityCount: 18, Activities: [] });
+        arr.push({ Date: '26.01.2024', ActivityCount: 36, Activities: [] });
+        arr.push({ Date: '29.04.2024', ActivityCount: 50, Activities: [] });
+        arr.push({ Date: '30.03.2024', ActivityCount: 63, Activities: [] });
+        arr.push({ Date: '01.02.2024', ActivityCount: 21, Activities: [] });
+        arr.push({ Date: '03.01.2024', ActivityCount: 47, Activities: [] });
+        arr.push({ Date: '05.04.2024', ActivityCount: 33, Activities: [] });
+        arr.push({ Date: '07.03.2024', ActivityCount: 44, Activities: [] });
 
         setAct(arr);
     }

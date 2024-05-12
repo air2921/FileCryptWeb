@@ -27,7 +27,7 @@ namespace application.Helper_Services.Admin
                     message_header = NotificationMessage.AUTH_TOKENS_REVOKED_HEADER,
                     message = NotificationMessage.AUTH_TOKENS_REVOKED_BODY,
                     is_checked = false,
-                    priority = Priority.Security.ToString(),
+                    priority = (int)Priority.Security,
                     send_time = DateTime.UtcNow,
                     user_id = userId!
                 });

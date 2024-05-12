@@ -38,7 +38,7 @@ namespace application.Helper_Services.Account
                 {
                     message_header = NotificationMessage.AUTH_PASSWORD_CHANGED_HEADER,
                     message = NotificationMessage.AUTH_PASSWORD_CHANGED_BODY,
-                    priority = Priority.Security.ToString(),
+                    priority = (int)Priority.Security,
                     send_time = DateTime.UtcNow,
                     is_checked = false,
                     user_id = user.id
@@ -76,7 +76,7 @@ namespace application.Helper_Services.Account
                     message_header = "Someone trying recovery your account",
                     message = $"Someone trying recovery your account {user.username}#{user.id} at {DateTime.UtcNow}." +
                     $"Unique token was sent on {user.email}",
-                    priority = Priority.Security.ToString(),
+                    priority = (int)Priority.Security,
                     send_time = DateTime.UtcNow,
                     is_checked = false,
                     user_id = user.id

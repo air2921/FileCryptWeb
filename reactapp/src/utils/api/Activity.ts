@@ -1,19 +1,27 @@
 import axios from "axios";
 import { BASE_URL, errorHandler } from './Helper';
 
-export interface ActivityProps {
+export interface DayActivityProps {
     Date: string,
     ActivityCount: number
+    Activities: ActivityProps[]
 }
 
-export async function getRangeActivity(byDesc: boolean, start: Date, end: Date, type?: string | null) {
+export interface ActivityProps {
+    action_id: number,
+    type_id: number,
+    action_date: string,
+    user_id: number
+}
+
+export async function getRangeActivity(byDesc: boolean, start: Date, end: Date, type?: number | null) {
     try {
         let typeParam = '';
         if (type) {
             typeParam = `&type=${type}`
         }
 
-        const response = await axios.get(`api/core/activity?byDesc=${byDesc}&start=${start}&end=${end}${typeParam}`);
+        const response = await axios.get(BASE_URL + `api/core/activity?byDesc=${byDesc}&start=${start}&end=${end}${typeParam}`);
 
         return {
             success: true,
@@ -28,7 +36,7 @@ export async function getRangeActivity(byDesc: boolean, start: Date, end: Date, 
 
 export async function getActivity(id: number) {
     try {
-        const response = await axios.get(`api/core/activity/${id}`);
+        const response = await axios.get(BASE_URL + `api/core/activity/${id}`);
 
         return {
             success: true,

@@ -37,10 +37,10 @@ function NotificationList({ notifications, deleteNotification }: NotificationLis
                         <div className="notification-header">
                             <div className="notification-icon">
                                 {
-                                    notification.priority === 'Trade' ? <Icon icon={'key'} /> :
-                                        notification.priority === 'Info' ? <Icon icon={'info'} /> :
-                                            notification.priority === 'Warning' ? <Icon icon={'warning'} /> :
-                                                notification.priority === 'Security' ? <Icon icon={'security'} /> :
+                                    notification.priority === 101 ? <Icon icon={'key'} /> :
+                                        notification.priority === 102 ? <Icon icon={'info'} /> :
+                                            notification.priority === 301 ? <Icon icon={'warning'} /> :
+                                                notification.priority === 302 ? <Icon icon={'security'} /> :
                                                     <Icon icon={'notifications'} />
                                 }
                             </div>
@@ -57,7 +57,7 @@ function NotificationList({ notifications, deleteNotification }: NotificationLis
                             </div>
                             <div className="time"><DateComponent date={notification.send_time} /></div>
                         </div>
-                        {notification.priority === 'Info' && deleteNotification && (
+                        {notification.priority === 102 && deleteNotification && (
                             <button onClick={() => deleteNotification(notification.notification_id)}>
                                 Delete
                             </button>

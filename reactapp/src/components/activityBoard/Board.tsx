@@ -1,9 +1,9 @@
 import React, { useEffect, useState } from "react";
 import './Board.css';
-import { ActivityProps } from "../../utils/api/Activity";
+import { DayActivityProps } from "../../utils/api/Activity";
 
-function Board({ days, year }: { days: ActivityProps[], year: number }) {
-    const [activity, setActivity] = useState<ActivityProps[]>(Array());
+function Board({ days, year }: { days: DayActivityProps[], year: number }) {
+    const [activity, setActivity] = useState<DayActivityProps[]>(Array());
     const [isLeap, setLeap] = useState(false);
 
     function setColor(count: number): string {
@@ -46,13 +46,13 @@ function Board({ days, year }: { days: ActivityProps[], year: number }) {
         return dates;
     }
 
-    function setFullYearActivity(props: ActivityProps[], year: number): void {
+    function setFullYearActivity(props: DayActivityProps[], year: number): void {
         const existingDates = new Set(props.map(prop => prop.Date));
 
         const arr = getAllDatesInYear(year);
         arr.forEach(date => {
             if (!existingDates.has(date)) {
-                props.push({ Date: date, ActivityCount: 0 });
+                props.push({ Date: date, ActivityCount: 0, Activities: [] });
             }
         });
 
@@ -87,7 +87,7 @@ function Board({ days, year }: { days: ActivityProps[], year: number }) {
         }
     }
 
-    function getTotalActivity(arr: ActivityProps[]): number {
+    function getTotalActivity(arr: DayActivityProps[]): number {
         let totalActivity = 0;
         arr.forEach(item => {
             totalActivity += item.ActivityCount;

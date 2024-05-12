@@ -28,7 +28,7 @@ namespace application.Helper_Services.Account.Edit
                 {
                     message_header = NotificationMessage.AUTH_EMAIL_CHANGED_HEADER,
                     message = NotificationMessage.AUTH_EMAIL_CHANGED_BODY,
-                    priority = Priority.Security.ToString(),
+                    priority = (int)Priority.Security,
                     send_time = DateTime.UtcNow,
                     is_checked = false,
                     user_id = user.id
