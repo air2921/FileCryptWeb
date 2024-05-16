@@ -6,12 +6,15 @@ import Loader from '../static/loader/Loader';
 import { FileProps } from '../../utils/api/Files';
 import { StorageProps } from '../../utils/api/Storages';
 import { OfferProps } from '../../utils/api/Offers';
-import { getRangeActivity } from '../../utils/api/Activity';
+import { DayActivityProps, getRangeActivity } from '../../utils/api/Activity';
+import Board from '../../components/activityBoard/Board';
 
 const User = () => {
+    let { year } = useParams();
     const { userId } = useParams();
-    const { year } = useParams();
+    const [currentYear, setYear] = useState(new Date().getFullYear());
     const [data, setData] = useState(null);
+    const [activity, setActivity] = useState<null | DayActivityProps[]>();
     const [status, setStatus] = useState(500)
     const [errorMessage, setErrorMessage] = useState('');
 
@@ -33,8 +36,8 @@ const User = () => {
         if (year) {
             start = `${year}-01-01`
             end = `${year}-12-31`;
+            setYear(parseInt(year))
         } else {
-            const currentYear = new Date().getFullYear();
             start = `${currentYear}-01-01`;
             end = `${currentYear}-12-31`;
         }
@@ -45,17 +48,19 @@ const User = () => {
         const response = await getRangeActivity(true, startDate, endDate, null);
 
         if (response.success) {
-
+            setActivity(response.data);
         } else {
-
+            setStatus(response.statusCode);
+            setErrorMessage(response.message!);
         }
     }
 
     useEffect(() => {
         fetchData();
+        fetchActivity();
     }, [userId]);
 
-    if (!data) {
+    if (!data || !activity) {
         return errorMessage ? <ErrorPage statusCode={status} message={errorMessage} /> : <Loader />;
     }
 
@@ -69,7 +74,7 @@ const User = () => {
 
             </div>
             <div className="user-activity">
-
+                <Board days={activity} year={currentYear} />
             </div>
             <div className="file-offer-container">
                 <div className="files">

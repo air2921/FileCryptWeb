@@ -12,6 +12,7 @@ namespace domain.Specifications
             Count = count;
 
             Query.Where(x => x.username.Contains(username));
+            Query.OrderBy(x => Math.Abs(x.username.IndexOf(username) - x.username.Length));
 
             Query.Skip(skip).Take(count);
         }

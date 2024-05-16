@@ -66,7 +66,7 @@ function Board({ days, year }: { days: DayActivityProps[], year: number }) {
         setActivity(props);
     }
 
-    function setNextStep(step: number, isLeap: boolean): number {
+    function setNextStep(step: number): number {
         const defaultStep = 52;
         let skip = 0;
 
@@ -115,7 +115,7 @@ function Board({ days, year }: { days: DayActivityProps[], year: number }) {
                     <tbody>
                         {[0, 1, 2, 3, 4, 5, 6].map((row, index) => (
                             <tr key={index + 1} className={`${index + 1}-days-line`}>
-                                {activity.slice(setNextStep(index, isLeap), setNextStep(index, isLeap) + setStep(index, isLeap)).map(day => (
+                                {activity.slice(setNextStep(index), setNextStep(index) + setStep(index, isLeap)).map(day => (
                                     <td key={day.Date}>
                                         <BlockComponent count={day.ActivityCount} date={day.Date} />
                                     </td>

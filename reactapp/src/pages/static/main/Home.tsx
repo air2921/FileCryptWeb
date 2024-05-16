@@ -1,34 +1,50 @@
 import React, { useState } from 'react';
 import Board from '../../../components/activityBoard/Board';
-import { DayActivityProps } from '../../../utils/api/Activity';
+import { ActivityProps, DayActivityProps } from '../../../utils/api/Activity';
 
 function Home() {
     const [act, setAct] = useState<DayActivityProps[] | null>(new Array(length = 0));
 
     function set() {
         const arr: DayActivityProps[] = new Array();
-        arr.push({ Date: '01.01.2024', ActivityCount: 25, Activities: [] });
-        arr.push({ Date: '03.02.2024', ActivityCount: 42, Activities: [] });
-        arr.push({ Date: '15.03.2024', ActivityCount: 17, Activities: [] });
-        arr.push({ Date: '27.04.2024', ActivityCount: 38, Activities: [] });
-        arr.push({ Date: '02.05.2024', ActivityCount: 56, Activities: [] });
-        arr.push({ Date: '04.05.2024', ActivityCount: 12, Activities: [] });
-        arr.push({ Date: '07.04.2024', ActivityCount: 31, Activities: [] });
-        arr.push({ Date: '10.03.2024', ActivityCount: 49, Activities: [] });
-        arr.push({ Date: '13.02.2024', ActivityCount: 23, Activities: [] });
-        arr.push({ Date: '16.01.2024', ActivityCount: 45, Activities: [] });
-        arr.push({ Date: '19.04.2024', ActivityCount: 27, Activities: [] });
-        arr.push({ Date: '21.03.2024', ActivityCount: 39, Activities: [] });
-        arr.push({ Date: '24.02.2024', ActivityCount: 18, Activities: [] });
-        arr.push({ Date: '26.01.2024', ActivityCount: 36, Activities: [] });
-        arr.push({ Date: '29.04.2024', ActivityCount: 50, Activities: [] });
-        arr.push({ Date: '30.03.2024', ActivityCount: 63, Activities: [] });
-        arr.push({ Date: '01.02.2024', ActivityCount: 21, Activities: [] });
-        arr.push({ Date: '03.01.2024', ActivityCount: 47, Activities: [] });
-        arr.push({ Date: '05.04.2024', ActivityCount: 33, Activities: [] });
-        arr.push({ Date: '07.03.2024', ActivityCount: 44, Activities: [] });
+        arr.push({ Date: '01.01.2024', ActivityCount: 25, Activities: setAddAct(25) });
+        arr.push({ Date: '03.02.2024', ActivityCount: 42, Activities: setAddAct(42) });
+        arr.push({ Date: '15.03.2024', ActivityCount: 17, Activities: setAddAct(17) });
+        arr.push({ Date: '27.04.2024', ActivityCount: 38, Activities: setAddAct(38) });
+        arr.push({ Date: '02.05.2024', ActivityCount: 56, Activities: setAddAct(56) });
+        arr.push({ Date: '04.05.2024', ActivityCount: 12, Activities: setAddAct(12) });
+        arr.push({ Date: '07.04.2024', ActivityCount: 31, Activities: setAddAct(31) });
+        arr.push({ Date: '10.03.2024', ActivityCount: 49, Activities: setAddAct(49) });
+        arr.push({ Date: '13.02.2024', ActivityCount: 23, Activities: setAddAct(23) });
+        arr.push({ Date: '16.01.2024', ActivityCount: 45, Activities: setAddAct(45) });
+        arr.push({ Date: '19.04.2024', ActivityCount: 27, Activities: setAddAct(27) });
+        arr.push({ Date: '21.03.2024', ActivityCount: 39, Activities: setAddAct(39) });
+        arr.push({ Date: '24.02.2024', ActivityCount: 18, Activities: setAddAct(18) });
+        arr.push({ Date: '26.01.2024', ActivityCount: 36, Activities: setAddAct(36) });
+        arr.push({ Date: '29.04.2024', ActivityCount: 50, Activities: setAddAct(50) });
+        arr.push({ Date: '30.03.2024', ActivityCount: 63, Activities: setAddAct(63) });
+        arr.push({ Date: '01.02.2024', ActivityCount: 21, Activities: setAddAct(21) });
+        arr.push({ Date: '03.01.2024', ActivityCount: 47, Activities: setAddAct(47) });
+        arr.push({ Date: '05.04.2024', ActivityCount: 33, Activities: setAddAct(33) });
+        arr.push({ Date: '07.03.2024', ActivityCount: 44, Activities: setAddAct(44) });
 
         setAct(arr);
+    }
+
+    function getRandomNumber(): number {
+        const numbers = [101, 102, 201, 202, 301, 302, 303];
+        const randomIndex = Math.floor(Math.random() * numbers.length);
+        return numbers[randomIndex];
+    }
+
+    function setAddAct(count: number) {
+        const arr: ActivityProps[] = new Array();
+
+        for (let i = 0; i < count; i++) {
+            arr.push({ action_date: '', action_id: 1, user_id: 1, type_id: getRandomNumber() })
+        }
+
+        return arr;
     }
 
     return (
