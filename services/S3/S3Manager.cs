@@ -29,7 +29,7 @@ namespace services.S3
             }
         }
 
-        public async Task<Stream?> Download(string key)
+        public async Task<Stream> Download(string key)
         {
             try
             {

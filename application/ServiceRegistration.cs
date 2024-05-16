@@ -55,6 +55,7 @@ namespace application
             services.AddScoped<IRegistrationService, RegistrationService>();
             services.AddScoped<ISessionService, SessionService>();
             services.AddScoped<IRecoveryService, RecoveryService>();
+            services.AddScoped<IAvatarService, AvatarService>();
             services.AddScoped<IUsernameService, UsernameService>();
             services.AddScoped<IPasswordService, PasswordService>();
             services.AddScoped<I2FaService, _2FaService>();
