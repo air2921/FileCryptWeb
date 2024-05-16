@@ -14,7 +14,7 @@ namespace webapi.Controllers.Account.Edit
         IAvatarService service,
         IUserInfo userInfo) : ControllerBase
     {
-        [HttpGet()]
+        [HttpGet("{userId}")]
         public async Task<IActionResult> GetAvatar([FromRoute] int userId)
         {
             var response = await service.Download(userId);
