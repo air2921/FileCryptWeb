@@ -10,6 +10,7 @@
 
   <ItemGroup>
     <PackageReference Include="AutoMapper" Version="13.0.1" />
+    <PackageReference Include="LoggerEnhancer.Log" Version="1.0.1" />
     <PackageReference Include="Microsoft.AspNetCore.Authentication.JwtBearer" Version="8.0.3" />
     <PackageReference Include="Microsoft.AspNetCore.OpenApi" Version="8.0.3" />
     <PackageReference Include="Microsoft.Extensions.Logging" Version="8.0.0" />
@@ -22,7 +23,6 @@
   </ItemGroup>
 
   <ItemGroup>
-    <ProjectReference Include="..\additional\additional.csproj" />
     <ProjectReference Include="..\application\application.csproj" />
     <ProjectReference Include="..\data\data access.csproj" />
     <ProjectReference Include="..\services\services.csproj" />
