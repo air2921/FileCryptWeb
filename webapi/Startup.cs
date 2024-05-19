@@ -7,7 +7,7 @@ using webapi.Helpers;
 using Serilog;
 using application.Helpers;
 using Serilog.Sinks.Elasticsearch;
-using additional;
+using LoggerEnhancer;
 
 namespace webapi
 {
@@ -42,7 +42,7 @@ namespace webapi
                 log.AddSerilog(Log.Logger);
             });
 
-            services.AddProviderInfrastructure(Log.Logger);
+            services.AddLoggerEnhancer();
             services.AddDataInfrastructure(config, Log.Logger);
             services.AddServiceInfrastructure(config, Log.Logger);
             services.AddApplication(config);
