@@ -1,4 +1,4 @@
-﻿using additional;
+﻿using LoggerEnhancer.Abstractions;
 using System.Diagnostics;
 using System.Security.Claims;
 
@@ -7,7 +7,7 @@ namespace webapi.Middlewares
     // You may need to install the Microsoft.AspNetCore.Http.Abstractions package into your project
     public class LogMiddleware(RequestDelegate next, ILogger<LogMiddleware> logger)
     {
-        public async Task Invoke(HttpContext context, IRequest requestInfo)
+        public async Task Invoke(HttpContext context, IContext loggerContext)
         {
             var stopwatch = Stopwatch.StartNew();
 
@@ -29,7 +29,7 @@ namespace webapi.Middlewares
 
             var user = new User { Username = claimsUsername, Id = claimId, Role = claimRole };
             var request = new RequestInfo { Path = path, Method = method };
-            requestInfo.Token = requestId;
+            loggerContext.ContextId = requestId;
 
             logger.LogInformation($"Request entered at: {DateTime.UtcNow}\n" +
                                   $"User: {user.Username}, Id: {user.Id}, Role: {user.Role}\n" +

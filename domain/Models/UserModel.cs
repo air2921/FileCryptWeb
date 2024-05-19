@@ -7,8 +7,29 @@ namespace domain.Models
     [Table("users")]
     public class UserModel
     {
+        private string? _avatarId;
+
         [Key]
         public int id { get; set; }
+
+        [JsonIgnore(Condition = JsonIgnoreCondition.WhenWritingNull)]
+        public string? avatarId
+        {
+            get => _avatarId;
+            set
+            {
+                if (value is null)
+                    return;
+
+                _avatarId = $"#{id}:" + value;
+            }
+        }
+
+        [JsonIgnore(Condition = JsonIgnoreCondition.WhenWritingNull)]
+        public string? avatar_content_type { get; set; }
+
+        [JsonIgnore(Condition = JsonIgnoreCondition.WhenWritingNull)]
+        public string? avatar_name { get; set; }
 
         public string username { get; set; }
 

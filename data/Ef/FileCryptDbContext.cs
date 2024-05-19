@@ -135,6 +135,9 @@ namespace data_access.Ef
                 user1 = new UserModel
                 {
                     id = 123,
+                    avatarId = null,
+                    avatar_content_type = null,
+                    avatar_name = null,
                     email = HIGHEST_EMAIL.ToLowerInvariant(),
                     username = HIGHEST_USERNAME,
                     password = HIGHEST_PASSWORD,
@@ -184,6 +187,9 @@ namespace data_access.Ef
                 user2 = new UserModel
                 {
                     id = 123456,
+                    avatarId = null,
+                    avatar_content_type = null,
+                    avatar_name = null,
                     email = SIMPLE_EMAIL.ToLowerInvariant(),
                     username = SIMPLE_USERNAME,
                     password = SIMPLE_PASSWORD,
@@ -233,6 +239,9 @@ namespace data_access.Ef
                 user3 = new UserModel
                 {
                     id = 123456789,
+                    avatarId = null,
+                    avatar_content_type = null,
+                    avatar_name = null,
                     email = USER_EMAIL.ToLowerInvariant(),
                     username = USER_USERNAME,
                     password = USER_PASSWORD,

@@ -1,5 +1,4 @@
 ﻿using application.Abstractions.TP_Services;
-using application.Master_Services.Account.Edit;
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Logging;
@@ -9,6 +8,8 @@ using services.Cryptography;
 using services.Cryptography.Abstractions;
 using services.Cryptography.Helpers;
 using services.Cryptography.Helpers.Security;
+using services.S3;
+using services.S3.Abstractions;
 using services.Sender;
 using static services.Sender.EmailSender;
 
@@ -28,12 +29,18 @@ namespace services
             services.AddScoped<IAes, AesCreator>();
             services.AddScoped<IClamSetting, ClamSetting>();
             services.AddScoped<IGenerate, Generate>();
+            services.AddScoped<IS3Manager, S3Manager>();
             services.AddScoped<IHashUtility, HashUtility>();
             services.AddScoped<IGetSize, FileManager>();
 
             services.AddTransient<ICypher, Cypher>();
             services.AddKeyedTransient<ICypherKey, EncryptKey>("Encrypt");
             services.AddKeyedTransient<ICypherKey, DecryptKey>("Decrypt");
+
+            services.AddScoped<IS3ClientProvider>(provider =>
+            {
+                return new S3Client(_config);
+            });
 
             services.AddScoped<ISmtpClient>(provider =>
             {
