@@ -19,7 +19,7 @@ namespace domain.Models
             set
             {
                 if (value is null)
-                    return;
+                    _avatarId = value;
 
                 _avatarId = $"#{id}:" + value;
             }
