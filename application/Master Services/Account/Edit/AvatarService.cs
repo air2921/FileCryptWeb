@@ -5,10 +5,13 @@ using application.Helpers.Localization;
 using domain.Abstractions.Data;
 using domain.Exceptions;
 using domain.Models;
+using System.IO;
+using System.Net.Mime;
 
 namespace application.Master_Services.Account.Edit
 {
     public class AvatarService(
+        IGetSize getSize,
         IS3Manager s3Manager,
         IDatabaseTransaction dbTransaction,
         IRepository<UserModel> userRepository) : IAvatarService
@@ -48,6 +51,9 @@ namespace application.Master_Services.Account.Edit
 
         public async Task<Response> Change(Stream stream, string name, string contentType, int userId, string avatarId)
         {
+            if (!IsValidFile(contentType, stream))
+                return new Response { Status = 400, Message = Message.INVALID_FORMAT };
+
             var transaction = await dbTransaction.BeginAsync();
 
             try
@@ -106,5 +112,8 @@ namespace application.Master_Services.Account.Edit
                 return new Response { Status = 500, Message = ex.Message };
             }
         }
+
+        private bool IsValidFile(string contentType, Stream stream) =>
+            getSize.GetFileSizeInMb(stream) <= 10.0 || contentType.Split('/')[0] == "image";
     }
 }
