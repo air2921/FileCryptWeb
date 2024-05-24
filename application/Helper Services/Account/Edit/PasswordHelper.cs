@@ -23,7 +23,6 @@ namespace application.Helper_Services.Account.Edit
                     throw new EntityException(Message.ERROR);
 
                 user.password = hashUtility.Hash(password);
-                user.last_time_password_modified = DateTime.UtcNow;
                 await userRepository.Update(user);
 
                 await notificationRepository.Add(new NotificationModel

@@ -11,6 +11,23 @@ export interface UserProps {
     is_blocked: boolean
 }
 
+export async function getAvatar(userId: number) {
+    try {
+        const response = await axios.get(`api/account/avatar/${userId}`, { withCredentials: true });
+        const blob = new Blob([response.data], { type: response.headers['content-type'] });
+        const url = URL.createObjectURL(blob);
+
+        return {
+            success: true,
+            statusCode: response.status,
+            data: url,
+            message: undefined
+        }
+    } catch (error: any) {
+        return errorHandler(error);
+    }
+}
+
 export async function getUser(userId: number, own: boolean) {
     try {
         const response = await axios.get(BASE_URL + `api/core/user/${userId}?own=${own}`, { withCredentials: true });
