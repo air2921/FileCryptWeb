@@ -13,7 +13,7 @@ function Offer({ offer, isOwner }: { offer: OfferProps, isOwner: boolean }) {
 
     return (
         <div className="entity-offer-container">
-            <div className="entity-offer-type">Offer Type: {setTradeType(offer.offer_type)}</div>
+            <div className="entity-offer-type">Type: {setTradeType(offer.offer_type)}</div>
             <div className="entity-offer-status">{offer.is_accepted ? "Already accepted" : "Pending acceptance"}</div>
             <div className="entity-offer-participants">
                 <div className="entity-offer-info">
@@ -21,8 +21,8 @@ function Offer({ offer, isOwner }: { offer: OfferProps, isOwner: boolean }) {
                 </div>
                 {isOwner && offer.offer_body && offer.offer_header && (
                     <div className="entity-offer-main">
-                        <div className="entity-offer-header">Offer Header: {offer.offer_header}</div>
-                        <div className="entity-offer-body">Offer Body: {offer.offer_body}</div>
+                        <div className="entity-offer-header">Header: {offer.offer_header}</div>
+                        <div className="entity-offer-body">Body: {offer.offer_body}</div>
                     </div>
                 )};
             </div>
