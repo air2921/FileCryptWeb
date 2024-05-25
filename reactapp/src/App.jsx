@@ -7,7 +7,6 @@ import Home from './pages/static/main/Home';
 import About from './pages/static/main/About';
 import Policy from './pages/static/main/Policy'
 import User from './pages/user/User';
-import Settings from './pages/user/Settings'
 import Files from './pages/list/files/Files';
 import RecoveryAccount from './pages/auth/recovery/RecoveryAccount'
 import ErrorPage from './pages/static/error-status/ErrorPage'
@@ -32,7 +31,6 @@ function App() {
                     {isAuth ? (
                         <>
                             <Route path="user/:userId" element={<User />} />
-                            <Route path="settings" element={<Settings />} />
                             <Route path="files" element={<Files />} />
                         </>
                     ) : (

@@ -11,8 +11,6 @@
     <BuildOutputFolder>$(MSBuildProjectDirectory)\dist</BuildOutputFolder>
   </PropertyGroup>
   <ItemGroup>
-    <Folder Include="src\components\entities\user\" />
-    <Folder Include="src\components\lists\storages\" />
     <Folder Include="src\components\modal\" />
     <Folder Include="src\components\noState\" />
     <Folder Include="src\components\activityBoard\" />

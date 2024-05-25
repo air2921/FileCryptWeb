@@ -7,14 +7,14 @@ export interface OfferSortProps {
     orderByDesc: string,
     sent?: string,
     closed?: string,
-    type?: string
+    type?: number
 }
 
 export interface OfferProps {
     offer_id: number;
     offer_header?: string | null;
     offer_body?: string | null;
-    offer_type: string;
+    offer_type: number;
     is_accepted: boolean;
     created_at: string;
     sender_id: number;

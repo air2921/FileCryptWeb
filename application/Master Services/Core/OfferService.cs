@@ -124,7 +124,7 @@ namespace application.Master_Services.Core
         }
 
         public async Task<Response> GetRange(int userId, int skip, int count, bool byDesc,
-            bool? sended, bool? isAccepted, string? type, bool bodyHide)
+            bool? sended, bool? isAccepted, int? type, bool bodyHide)
         {
             try
             {

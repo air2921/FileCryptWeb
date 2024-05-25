@@ -27,7 +27,7 @@ namespace application.Helper_Services.Core
                     offer_header = $"Proposal to accept an encryption key from a user: #{dto.SenderId}",
                     created_at = DateTime.UtcNow,
                     is_accepted = false,
-                    offer_type = TradeType.Key.ToString()
+                    offer_type = (int)TradeType.Key
                 });
 
                 await notificationRepository.Add(new NotificationModel

@@ -85,5 +85,5 @@ namespace application.Cache_Handlers
     }
 
     public record class OfferObject(string CacheKey, int UserId, int OfferId);
-    public record class OfferRangeObject(string CacheKey, int UserId, int Skip, int Count, bool ByDesc, bool? Sended, bool? IsAccepted, string? Type);
+    public record class OfferRangeObject(string CacheKey, int UserId, int Skip, int Count, bool ByDesc, bool? Sended, bool? IsAccepted, int? Type);
 }
