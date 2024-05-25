@@ -42,7 +42,7 @@ export function dateFormate(date: string): string {
     return formattedDate;
 }
 
-export function lineFormat(message: string): string {
+export function lineFormate(message: string): string {
     const splitter = '|NEW_LINE|'
     const lines = message.split(splitter);
     return lines.join('\n');

@@ -10,7 +10,7 @@ export interface StoragesSortProps {
 export interface StorageProps {
     storage_id: number,
     storage_name: string,
-    description: string,
+    description?: string,
     last_time_modified: string,
     user_id: number
 }
