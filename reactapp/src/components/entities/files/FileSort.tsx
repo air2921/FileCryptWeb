@@ -1,30 +1,15 @@
 import React from "react";
+import DateSort, { DateSortProps } from "../DateSort";
 
-interface SortProps {
+interface SortProps extends DateSortProps {
     category?: string;
     onCategoryChange: (status?: string) => void;
-    orderBy: string;
-    onOrderByChange: (orderby: string) => void;
 }
 
 function FileSort(props: SortProps) {
     return (
         <div>
-            <div>
-                <details>
-                    <summary>
-                        <span>Select Order</span>
-                    </summary>
-                    <select
-                        className="sort-entity-file-order"
-                        required={true}
-                        value={props.orderBy}
-                        onChange={(e) => props.onOrderByChange(e.target.value)}>
-                        <option value="true">Descending (Time)</option>
-                        <option value="false">Ascending (Time)</option>
-                    </select>
-                </details>
-            </div>
+            <DateSort orderBy={props.orderBy} onOrderByChange={props.onOrderByChange} />
             <div>
                 <details>
                     <summary>
