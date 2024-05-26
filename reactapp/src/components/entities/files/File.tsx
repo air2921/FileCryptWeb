@@ -1,6 +1,6 @@
 import React from "react";
-import { FileProps } from "../../utils/api/Files";
-import { dateFormate } from "../../utils/helpers/Formatter";
+import { FileProps } from "../../../utils/api/Files";
+import { dateFormate } from "../../../utils/helpers/Formatter";
 
 function File({ file }: { file: FileProps }) {
     return (

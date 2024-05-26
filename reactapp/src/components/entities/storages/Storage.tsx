@@ -1,6 +1,6 @@
 import React from "react";
-import { StorageProps } from "../../utils/api/Storages";
-import { dateFormate, lineFormate } from "../../utils/helpers/Formatter";
+import { StorageProps } from "../../../utils/api/Storages";
+import { dateFormate, lineFormate } from "../../../utils/helpers/Formatter";
 
 function Storage({ storage }: { storage: StorageProps }) {
     return (

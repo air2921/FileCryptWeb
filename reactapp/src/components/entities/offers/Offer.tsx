@@ -1,6 +1,6 @@
 import React from "react";
-import { OfferProps } from "../../utils/api/Offers";
-import { dateFormate } from "../../utils/helpers/Formatter";
+import { OfferProps } from "../../../utils/api/Offers";
+import { dateFormate } from "../../../utils/helpers/Formatter";
 
 function Offer({ offer, isOwner }: { offer: OfferProps, isOwner: boolean }) {
     function setTradeType(type: number): string {

@@ -1,7 +1,7 @@
 ﻿import React, { ChangeEvent, useEffect, useState } from 'react';
 import Message from '../../../utils/helpers/message/Message';
 import { CypherProps, FileProps, cypherFile, deleteFile, getFiles } from '../../../utils/api/Files';
-import Loader from '../../static/loader/Loader';
+import Loader from '../../../components/widgets/loader/Loader';
 
 interface FileButtonProps {
     id: string,

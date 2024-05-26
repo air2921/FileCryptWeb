@@ -1,6 +1,6 @@
 import React from "react";
-import { KeyProps } from "../../utils/api/Keys";
-import { dateFormate } from "../../utils/helpers/Formatter";
+import { KeyProps } from "../../../utils/api/Keys";
+import { dateFormate } from "../../../utils/helpers/Formatter";
 
 function Key({ key }: { key: KeyProps }) {
     return (

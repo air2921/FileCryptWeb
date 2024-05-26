@@ -3,7 +3,7 @@ import { BASE_URL, errorHandler, setStorageCode } from './Helper';
 
 export interface KeySortProps {
     skip: number,
-    count: number,
+    count: 10,
     orderByDesc: string
 }
 

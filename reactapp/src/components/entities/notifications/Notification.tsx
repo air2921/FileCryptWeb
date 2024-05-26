@@ -1,7 +1,7 @@
 import React from "react";
-import { NotificationProps } from "../../utils/api/Notifications";
-import Icon from "../../utils/helpers/icon/Icon";
-import { dateFormate, lineFormate } from "../../utils/helpers/Formatter";
+import { NotificationProps } from "../../../utils/api/Notifications";
+import Icon from "../../../utils/helpers/icon/Icon";
+import { dateFormate, lineFormate } from "../../../utils/helpers/Formatter";
 
 function Notification({ notification, isShowBody }: { notification: NotificationProps, isShowBody: boolean }) {
     function setNotificationType(type: number): string {

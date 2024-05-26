@@ -1,7 +1,7 @@
 import React, { useEffect, useState } from "react";
 import imageCompression from 'browser-image-compression';
-import { UserProps } from "../../utils/api/Users";
-import { resizeImage } from "../../utils/helpers/Formatter";
+import { UserProps } from "../../../utils/api/Users";
+import { resizeImage } from "../../../utils/helpers/Formatter";
 import { useNavigate } from "react-router-dom";
 
 function User({ user, isOwner, avatar_size, file }: { user: UserProps, isOwner: boolean, avatar_size: number, file: File }) {
