@@ -22,6 +22,9 @@ function Layout() {
 
     const authLinks: LinkProps[] = setAuthLinks();
     const defaultLinks: LinkProps[] = setDefaultLinks();
+    const isAuth = useAuth();
+    const isDesktop = useResize();
+    const navigate = useNavigate();
 
     function setAuthLinks(): LinkProps[] {
         const authLinks: LinkProps[] = new Array();
@@ -47,10 +50,6 @@ function Layout() {
 
         return defaultLinks;
     }
-
-    const isAuth = useAuth();
-    const isDesktop = useResize();
-    const navigate = useNavigate();
 
     const getAuthStatus = async () => {
         const response = await getAuth()
