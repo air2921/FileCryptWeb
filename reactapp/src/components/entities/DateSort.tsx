@@ -13,7 +13,7 @@ function DateSort({ orderBy, onOrderByChange }: DateSortProps) {
                     <span>Select Order</span>
                 </summary>
                 <select
-                    className="sort-entity-file-order"
+                    className="sort-entity-order"
                     required={true}
                     value={orderBy}
                     onChange={(e) => onOrderByChange(e.target.value)}>

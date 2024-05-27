@@ -1,6 +1,6 @@
 import React from "react";
 import { NotificationProps } from "../../../utils/api/Notifications";
-import Icon from "../../../utils/helpers/icon/Icon";
+import Icon from "../../widgets/icon/Icon";
 import { dateFormate, lineFormate } from "../../../utils/helpers/Formatter";
 
 function Notification({ notification, isShowBody }: { notification: NotificationProps, isShowBody: boolean }) {
@@ -13,16 +13,16 @@ function Notification({ notification, isShowBody }: { notification: Notification
             case 301:
                 return 'warning';
             case 302:
-                return 'security';
+                return 'danger';
             default:
-                return 'notifications';
+                return 'notification';
         }
     }
 
     return (
         <div className="entity-notification-container">
             <div className={notification.is_checked ? "checked" : "none-checked"}>
-                <div><Icon icon={setNotificationType(notification.priority)} /></div>
+                <div><Icon icon={setNotificationType(notification.priority)} height={24} width={24} /></div>
                 <div>{notification.message_header}</div>
                 <div>{dateFormate(notification.send_time)}</div>
                 {isShowBody && (

@@ -4,8 +4,8 @@ import cookie from 'react-cookies'
 import useResize from '../hooks/useResize';
 import useAuth from '../hooks/useAuth';
 import { getAuth, logout } from '../../utils/api/Auth';
-import Icon from '../../utils/helpers/icon/Icon';
 import './Layout.css'
+import Icon from '../widgets/icon/Icon';
 
 interface LinkProps {
     icon: string,
@@ -26,13 +26,13 @@ function Layout() {
     function setAuthLinks(): LinkProps[] {
         const authLinks: LinkProps[] = new Array();
 
-        authLinks.push({ icon: 'account_circle', name: 'Profile', path: profilePath, id: 'profile' });
-        authLinks.push({ icon: 'manage_accounts', name: 'Settings', path: "/settings", id: 'settings' });
-        authLinks.push({ icon: 'contacts', name: 'Users', path: "/users/all", id: 'users' });
-        authLinks.push({ icon: 'inbox', name: 'Notifications', path: "/inbox", id: 'inbox' });
+        authLinks.push({ icon: 'profile', name: 'Profile', path: profilePath, id: 'profile' });
+        authLinks.push({ icon: 'settings', name: 'Settings', path: "/settings", id: 'settings' });
+        authLinks.push({ icon: 'users', name: 'Users', path: "/users/all", id: 'users' });
+        authLinks.push({ icon: 'notification', name: 'Notifications', path: "/inbox", id: 'inbox' });
         authLinks.push({ icon: 'storage', name: 'Storages', path: "/storages", id: 'storages' });
-        authLinks.push({ icon: 'folder', name: 'Files', path: "/files", id: 'files' });
-        authLinks.push({ icon: 'hub', name: 'Offers', path: "/offers/hub", id: 'offers' });
+        authLinks.push({ icon: 'folder-lock', name: 'Files', path: "/files", id: 'files' });
+        authLinks.push({ icon: 'trade', name: 'Offers', path: "/offers/hub", id: 'offers' });
         authLinks.push({ icon: 'terminal', name: 'Admin Panel', path: "/admin", id: 'admin' });
 
         return authLinks;
@@ -42,7 +42,7 @@ function Layout() {
         const defaultLinks: LinkProps[] = new Array();
 
         defaultLinks.push({ icon: 'home', name: 'Home', path: "/", id: 'home' });
-        defaultLinks.push({ icon: 'info', name: 'About', path: "/about", id: 'about' });
+        defaultLinks.push({ icon: 'about', name: 'About', path: "/about", id: 'about' });
         defaultLinks.push({ icon: 'policy', name: 'Policy', path: "/policy", id: 'policy' });
 
         return defaultLinks;
@@ -100,7 +100,7 @@ function Layout() {
                                     {(role === 'Admin' || role === 'HighestAdmin') && (
                                         <div className="layout-desktop-link">
                                             <Link to={link.path}>
-                                                <i className="material-icons-outlined" style={{ background: 'transparent', fontSize: '26px' }}>{link.icon}</i>
+                                                <Icon icon={link.icon} height={36} width={36} />
                                                 <h4>{link.name}</h4>
                                             </Link>
                                         </div>
@@ -109,7 +109,7 @@ function Layout() {
                             ) : (
                                     <div className="layout-desktop-link">
                                         <Link to={link.path}>
-                                            <i className="material-icons-outlined" style={{ background: 'transparent', fontSize: '26px' }}>{link.icon}</i>
+                                            <Icon icon={link.icon} height={36} width={36} />
                                             <h4>{link.name}</h4>
                                         </Link>
                                     </div>
@@ -136,7 +136,7 @@ function Layout() {
                                                     <Link to={link.path}>
                                                         <div className="layout-mobile-link-content">
                                                             <div className="layout-mobile-icon">
-                                                                <i className="material-icons-outlined" style={{ background: 'transparent', fontSize: '28px' }}>{link.icon}</i>
+                                                                <Icon icon={link.icon} height={36} width={36} />
                                                             </div>
                                                             <div className="layout-mobile-name">
                                                                 {link.name}
@@ -151,7 +151,7 @@ function Layout() {
                                                 <Link to={link.path}>
                                                     <div className="layout-mobile-link-content">
                                                         <div className="layout-mobile-icon">
-                                                            <i className="material-icons-outlined" style={{ background: 'transparent', fontSize: '28px' }}>{link.icon}</i>
+                                                            <Icon icon={link.icon} height={36} width={36} />
                                                         </div>
                                                         <div className="layout-mobile-name">
                                                             {link.name}
@@ -170,7 +170,7 @@ function Layout() {
                                 <Link to={link.path}>
                                     <div className="layout-mobile-link-content">
                                         <div className="layout-mobile-icon">
-                                            <i className="material-icons-outlined" style={{ background: 'transparent', fontSize: '28px' }}>{link.icon}</i>
+                                            <Icon icon={link.icon} height={36} width={36} />
                                         </div>
                                         <div className="layout-mobile-name">
                                             {link.name}
@@ -256,7 +256,7 @@ function Layout() {
                             </>
                         ) : (
                                 <button className="layout-aside-visible-btn" onClick={() => setAsideVisible(!isAsideVisible)}>
-                                    <Icon icon={'menu'} />
+                                    <Icon icon={'menu'} height={36} width={36} />
                                 </button>
                         )}
                     </div>

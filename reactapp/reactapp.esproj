@@ -14,7 +14,7 @@
     <Folder Include="src\components\modal\" />
     <Folder Include="src\components\noState\" />
     <Folder Include="src\components\activityBoard\" />
-    <Folder Include="src\components\widgets\toggle\" />
+    <Folder Include="src\components\widgets\icon\" />
   </ItemGroup>
   <ItemGroup>
     <TypeScriptConfiguration Remove="src\ui\**" />
