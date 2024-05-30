@@ -1,5 +1,5 @@
 import React, { FormEvent, useState } from 'react';
-import Message from '../../../utils/helpers/message/Message';
+import Message from '../../../components/widgets/Message';
 import { createRecovery } from '../../../utils/api/Auth';
 
 const CreateRecovery = () => {

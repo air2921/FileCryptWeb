@@ -2,7 +2,7 @@ import React, { FormEvent, useState } from 'react';
 import { useNavigate } from 'react-router-dom'
 import Modal from '../../../components/modal/Modal';
 import CreateRecovery from '../recovery/CreateRecovery';
-import Message from '../../../utils/helpers/message/Message';
+import Message from '../../../components/widgets/Message';
 import { login, verifyLogin } from '../../../utils/api/Auth';
 import './Login.css'
 

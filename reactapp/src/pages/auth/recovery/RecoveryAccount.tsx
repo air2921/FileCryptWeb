@@ -1,6 +1,6 @@
 import React, { FormEvent, useState } from 'react';
 import { useLocation, useNavigate } from 'react-router-dom';
-import Message from '../../../utils/helpers/message/Message';
+import Message from '../../../components/widgets/Message';
 import './RecoveryAccount.css'
 import { recoveryAccount } from '../../../utils/api/Auth';
 

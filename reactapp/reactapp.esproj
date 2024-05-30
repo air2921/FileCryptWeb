@@ -15,6 +15,9 @@
     <Folder Include="src\components\noState\" />
     <Folder Include="src\components\activityBoard\" />
     <Folder Include="src\components\widgets\icon\" />
+    <Folder Include="src\components\widgets\paginator\" />
+    <Folder Include="src\components\widgets\verify\" />
+    <Folder Include="src\components\widgets\storage-access\" />
   </ItemGroup>
   <ItemGroup>
     <TypeScriptConfiguration Remove="src\ui\**" />

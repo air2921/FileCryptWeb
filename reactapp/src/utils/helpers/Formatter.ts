@@ -42,6 +42,10 @@ export function dateFormate(date: string): string {
     return formattedDate;
 }
 
+export function boolParse(state: string): boolean {
+    return state.toLowerCase() === "true";
+}
+
 export function lineFormate(message: string): string {
     const splitter = '|NEW_LINE|'
     const lines = message.split(splitter);

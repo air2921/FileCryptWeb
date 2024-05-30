@@ -1,7 +1,7 @@
 ﻿import React, { ChangeEvent, FormEvent, useState } from 'react';
 import Modal from '../../../components/modal/Modal';
 import { useNavigate } from 'react-router-dom';
-import Message from '../../../utils/helpers/message/Message';
+import Message from '../../../components/widgets/Message';
 import './Registration.css'
 import { registration, verifyRegistration } from '../../../utils/api/Auth';
 

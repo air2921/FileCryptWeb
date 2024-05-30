@@ -7,7 +7,6 @@ using domain.Models;
 using domain.Specifications.By_Relation_Specifications;
 using application.Abstractions.TP_Services;
 using application.Abstractions.Endpoints.Core;
-using Microsoft.EntityFrameworkCore.Storage;
 using application.Helper_Services;
 
 namespace application.Master_Services.Core
@@ -21,6 +20,9 @@ namespace application.Master_Services.Core
     {
         public async Task<Response> Add(string storageName, string accessCode, string? description, int userId)
         {
+            if (!accessCode.Length.Equals(6))
+                return new Response { Status = 400, Message = "The code must be six digits" };
+
             try
             {
                 await transaction.CreateTransaction(new KeyStorageModel
