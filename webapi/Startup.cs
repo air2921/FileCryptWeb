@@ -87,5 +87,6 @@ namespace webapi
                 IndexFormat = $"logs-{DateTime.UtcNow:yyyy}"
             };
         }
+
     }
 }
