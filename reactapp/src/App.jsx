@@ -7,7 +7,6 @@ import Home from './pages/static/main/Home';
 import About from './pages/static/main/About';
 import Policy from './pages/static/main/Policy';
 import User from './pages/user/User';
-import Files from './pages/list/files/Files';
 import RecoveryAccount from './pages/auth/recovery/RecoveryAccount';
 import ErrorPage from './components/widgets/error-status/ErrorPage';
 import Layout from './components/layout/Layout';
@@ -31,7 +30,6 @@ function App() {
                     {isAuth ? (
                         <>
                             <Route path="user/:userId" element={<User />} />
-                            <Route path="files" element={<Files />} />
                         </>
                     ) : (
                             <Route path="*" element={<ErrorPage statusCode={401} message={'Unauthorized'} />} />

@@ -99,7 +99,7 @@ function Layout() {
                                     {(role === 'Admin' || role === 'HighestAdmin') && (
                                         <div className="layout-desktop-link">
                                             <Link to={link.path}>
-                                                <Icon icon={link.icon} height={36} width={36} />
+                                                <Icon icon={link.icon} height={28} width={28} />
                                                 <h4>{link.name}</h4>
                                             </Link>
                                         </div>
@@ -108,7 +108,7 @@ function Layout() {
                             ) : (
                                     <div className="layout-desktop-link">
                                         <Link to={link.path}>
-                                            <Icon icon={link.icon} height={36} width={36} />
+                                            <Icon icon={link.icon} height={28} width={28} />
                                             <h4>{link.name}</h4>
                                         </Link>
                                     </div>
@@ -135,7 +135,7 @@ function Layout() {
                                                     <Link to={link.path}>
                                                         <div className="layout-mobile-link-content">
                                                             <div className="layout-mobile-icon">
-                                                                <Icon icon={link.icon} height={36} width={36} />
+                                                                <Icon icon={link.icon} height={32} width={32} />
                                                             </div>
                                                             <div className="layout-mobile-name">
                                                                 {link.name}
@@ -150,7 +150,7 @@ function Layout() {
                                                 <Link to={link.path}>
                                                     <div className="layout-mobile-link-content">
                                                         <div className="layout-mobile-icon">
-                                                            <Icon icon={link.icon} height={36} width={36} />
+                                                            <Icon icon={link.icon} height={32} width={32} />
                                                         </div>
                                                         <div className="layout-mobile-name">
                                                             {link.name}
@@ -255,7 +255,7 @@ function Layout() {
                             </>
                         ) : (
                                 <button className="layout-aside-visible-btn" onClick={() => setAsideVisible(!isAsideVisible)}>
-                                    <Icon icon={'menu'} height={36} width={36} />
+                                    <Icon icon={'menu'} height={28} width={28} />
                                 </button>
                         )}
                     </div>

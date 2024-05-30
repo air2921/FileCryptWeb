@@ -10,7 +10,6 @@ const RecoveryAccount = () => {
     const token = searchParams.get('token');
     const [password, setPassword] = useState('');
     const [message, setMessage] = useState('');
-    const [font, setFont] = useState('');
     const navigate = useNavigate();
 
     function setMessageState(message: string) {
@@ -20,7 +19,7 @@ const RecoveryAccount = () => {
     const recoveryAccountSubmit = async (e: FormEvent) => {
         e.preventDefault();
 
-        if (token === null || token === undefined) {
+        if (!token) {
             return;
         }
 
