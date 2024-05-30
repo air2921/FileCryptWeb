@@ -16,7 +16,7 @@ namespace domain.Models
         [JsonIgnore(Condition = JsonIgnoreCondition.WhenWritingNull)]
         public string offer_body { get; set; }
 
-        public string offer_type { get; set; }
+        public int offer_type { get; set; }
 
         public bool is_accepted { get; set; }
 
@@ -37,6 +37,6 @@ namespace domain.Models
 
     public enum TradeType
     {
-        Key
+        Key = 101
     }
 }

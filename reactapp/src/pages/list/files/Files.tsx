@@ -1,7 +1,7 @@
 ﻿import React, { ChangeEvent, useEffect, useState } from 'react';
-import Message from '../../../utils/helpers/message/Message';
+import Message from '../../../components/widgets/Message';
 import { CypherProps, FileProps, cypherFile, deleteFile, getFiles } from '../../../utils/api/Files';
-import Loader from '../../static/loader/Loader';
+import Loader from '../../../components/widgets/loader/Loader';
 
 interface FileButtonProps {
     id: string,
@@ -81,6 +81,28 @@ const Files = () => {
     //    }
     //};
 
+    //function FileButton({ id, font, onChange, operationType }: FileButtonProps) {
+
+    //    const clickElement = (elementId: string) => {
+    //        document.getElementById(elementId)?.click();
+    //    };
+
+    //    return (
+    //        <div>
+    //            <input
+    //                type="file"
+    //                id={id}
+    //                style={{ display: "none" }}
+    //                required={true}
+    //                onChange={(event) => onChange(event, operationType)}
+    //            />
+    //            <button onClick={() => clickElement(id)}>
+    //                <Font font={font} />
+    //            </button>
+    //        </div>
+    //    );
+    //}
+
     //const resetMessageAfterDelay = () => {
     //    setTimeout(() => {
     //        setMessage('');
@@ -102,28 +124,6 @@ const Files = () => {
 
     //if (!files) {
     //    return message ? <div>{message}</div> : <Loader />;
-    //}
-
-    //function FileButton({ id, font, onChange, operationType }: FileButtonProps) {
-
-    //    const clickElement = (elementId: string) => {
-    //        document.getElementById(elementId)?.click();
-    //    };
-
-    //    return (
-    //        <div>
-    //            <input
-    //                type="file"
-    //                id={id}
-    //                style={{ display: "none" }}
-    //                required={true}
-    //                onChange={(event) => onChange(event, operationType)}
-    //            />
-    //            <button onClick={() => clickElement(id)}>
-    //                <Font font={font} />
-    //            </button>
-    //        </div>
-    //    );
     //}
 
     //const SetFileAndEncrypt = () => {

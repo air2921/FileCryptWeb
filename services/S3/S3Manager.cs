@@ -48,6 +48,28 @@ namespace services.S3
             }
         }
 
+        public async Task<Dictionary<string, Stream>> DownloadCollection(IEnumerable<string> keys)
+        {
+            var fileStreams = new Dictionary<string, Stream>();
+
+            var tasks = keys.Select(async key =>
+            {
+                try
+                {
+                    var stream = await Download(key);
+                    fileStreams.Add(key, stream);
+                }
+                catch (Exception ex)
+                {
+                    logger.LogError(ex.ToString());
+                }
+            });
+
+            await Task.WhenAll(tasks);
+
+            return fileStreams;
+        }
+
         public async Task Delete(string key)
         {
             try

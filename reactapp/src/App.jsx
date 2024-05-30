@@ -5,15 +5,13 @@ import Register from './pages/auth/registration/Register';
 import Login from './pages/auth/login/Login';
 import Home from './pages/static/main/Home';
 import About from './pages/static/main/About';
-import Policy from './pages/static/main/Policy'
+import Policy from './pages/static/main/Policy';
 import User from './pages/user/User';
-import Settings from './pages/user/Settings'
-import Files from './pages/list/files/Files';
-import RecoveryAccount from './pages/auth/recovery/RecoveryAccount'
-import ErrorPage from './pages/static/error-status/ErrorPage'
+import RecoveryAccount from './pages/auth/recovery/RecoveryAccount';
+import ErrorPage from './components/widgets/error-status/ErrorPage';
 import Layout from './components/layout/Layout';
 import useAuth from './components/hooks/useAuth';
-import Loader from './pages/static/loader/Loader';
+import Loader from './components/widgets/loader/Loader';
 
 function App() {
     const isAuth = useAuth();
@@ -32,8 +30,6 @@ function App() {
                     {isAuth ? (
                         <>
                             <Route path="user/:userId" element={<User />} />
-                            <Route path="settings" element={<Settings />} />
-                            <Route path="files" element={<Files />} />
                         </>
                     ) : (
                             <Route path="*" element={<ErrorPage statusCode={401} message={'Unauthorized'} />} />

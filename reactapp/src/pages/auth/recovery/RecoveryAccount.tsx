@@ -1,6 +1,6 @@
 import React, { FormEvent, useState } from 'react';
 import { useLocation, useNavigate } from 'react-router-dom';
-import Message from '../../../utils/helpers/message/Message';
+import Message from '../../../components/widgets/Message';
 import './RecoveryAccount.css'
 import { recoveryAccount } from '../../../utils/api/Auth';
 
@@ -10,13 +10,16 @@ const RecoveryAccount = () => {
     const token = searchParams.get('token');
     const [password, setPassword] = useState('');
     const [message, setMessage] = useState('');
-    const [font, setFont] = useState('');
     const navigate = useNavigate();
+
+    function setMessageState(message: string) {
+        setMessage(message);
+    }
 
     const recoveryAccountSubmit = async (e: FormEvent) => {
         e.preventDefault();
 
-        if (token === null || token === undefined) {
+        if (!token) {
             return;
         }
 
@@ -26,13 +29,7 @@ const RecoveryAccount = () => {
             navigate('/auth/login');
         } else {
             setMessage(result.message);
-            setFont('error');
         }
-
-        setTimeout(() => {
-            setMessage('');
-            setFont('');
-        }, 5000)
     }
 
     return (
@@ -59,11 +56,9 @@ const RecoveryAccount = () => {
                     <button className="account-recovery-btn-submit" type="submit">Submit</button>
                 </div>
             </form>
-            {message &&
-                <div className="recovery-message">
-                    <Message message={message} icon={font} />
-                </div>
-            }
+            <div className="recovery-message">
+                <Message message={message} success={false} onMessageChange={setMessageState} />
+            </div>
         </div>
     );
 }

@@ -5,7 +5,7 @@ namespace domain.Specifications.Sorting_Specifications
 {
     public class OffersSortSpec : Specification<OfferModel>
     {
-        public OffersSortSpec(int? userId, int skip, int count, bool byDesc, bool? sent, bool? isAccepted, string? type)
+        public OffersSortSpec(int? userId, int skip, int count, bool byDesc, bool? sent, bool? isAccepted, int? type)
         {
             UserId = userId;
             SkipCount = skip;
@@ -36,7 +36,7 @@ namespace domain.Specifications.Sorting_Specifications
             if (isAccepted.HasValue)
                 Query.Where(o => o.is_accepted.Equals(isAccepted));
 
-            if (!string.IsNullOrWhiteSpace(type))
+            if (type.HasValue)
                 Query.Where(o => o.offer_type.Equals(type));
 
             Query.Skip(skip).Take(count);
@@ -48,6 +48,6 @@ namespace domain.Specifications.Sorting_Specifications
         public bool ByDesc { get; private set; }
         public bool? Sent { get; private set; }
         public bool? IsAccepted { get; private set; }
-        public string? Type { get; private set; }
+        public int? Type { get; private set; }
     }
 }

@@ -43,7 +43,7 @@ namespace webapi.Controllers.Core
         [HttpGet("range")]
         public async Task<IActionResult> GetRangeOffers([FromQuery] int skip, [FromQuery] int count,
             [FromQuery] bool byDesc, [FromQuery] bool? sent,
-            [FromQuery] bool? closed, [FromQuery] string? type)
+            [FromQuery] bool? closed, [FromQuery] int? type)
         {
             var response = await service.GetRange(userInfo.UserId, skip, count, byDesc, sent, closed, type, false);
             if (!response.IsSuccess)

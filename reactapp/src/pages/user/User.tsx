@@ -1,8 +1,8 @@
 ﻿import React, { useEffect, useState } from 'react';
 import { useParams } from 'react-router-dom';
 import { UserProps, getFullyUser } from '../../utils/api/Users';
-import ErrorPage from '../static/error-status/ErrorPage';
-import Loader from '../static/loader/Loader';
+import ErrorPage from '../../components/widgets/error-status/ErrorPage';
+import Loader from '../../components/widgets/loader/Loader';
 import { FileProps } from '../../utils/api/Files';
 import { StorageProps } from '../../utils/api/Storages';
 import { OfferProps } from '../../utils/api/Offers';

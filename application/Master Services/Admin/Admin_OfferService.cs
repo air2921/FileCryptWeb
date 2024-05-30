@@ -29,7 +29,7 @@ namespace application.Master_Services.Admin
         }
 
         public async Task<Response> GetRange(int? userId, int skip, int count, bool byDesc,
-            bool? sended, bool? isAccepted, string? type)
+            bool? sended, bool? isAccepted, int? type)
         {
             try
             {

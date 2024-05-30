@@ -24,7 +24,7 @@ namespace webapi.Controllers.Admin
         [HttpGet("range")]
         public async Task<IActionResult> GetRangeOffers([FromQuery] int? userId, [FromQuery] int skip,
             [FromQuery] int count, [FromQuery] bool byDesc, [FromQuery] bool? sent,
-            [FromQuery] bool? isAccepted, [FromQuery] string? type)
+            [FromQuery] bool? isAccepted, [FromQuery] int? type)
         {
             var response = await service.GetRange(userId, skip, count, byDesc, sent, isAccepted, type);
             return StatusCode(response.Status, new { offers = response.ObjectData });

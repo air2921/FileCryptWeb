@@ -3,14 +3,14 @@ import { BASE_URL, errorHandler } from "./Helper";
 
 export interface StoragesSortProps {
     skip: number,
-    count: number,
+    count: 10,
     orderByDesc: string
 }
 
 export interface StorageProps {
     storage_id: number,
     storage_name: string,
-    description: string,
+    description?: string,
     last_time_modified: string,
     user_id: number
 }

@@ -1,11 +1,9 @@
 import axios from "axios";
 import { BASE_URL, errorHandler } from './Helper';
 
-export const SPLITTER = '|new_line|';
-
 export interface NotificationSortProps {
     skip: number;
-    count: number;
+    count: 10;
     orderByDesc: string;
     priority?: number;
     isChecked?: string;
