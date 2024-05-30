@@ -15,6 +15,10 @@ const Register = () => {
     const [errorMessage, setErrorMessage] = useState('');
     const navigate = useNavigate();
 
+    function setMessageState(message: string) {
+        setErrorMessage(message);
+    }
+
     const registerSubmit = async (e: FormEvent) => {
         e.preventDefault();
 
@@ -25,10 +29,6 @@ const Register = () => {
         } else {
             setErrorMessage(result.message);
         }
-
-        setTimeout(() => {
-            setErrorMessage('');
-        }, 5000)
     }
 
     const verifySubmit = async (e: FormEvent) => {
@@ -43,10 +43,6 @@ const Register = () => {
         } else {
             setErrorMessage(result.message ? result.message : 'Unexpected error');
         }
-
-        setTimeout(() => {
-            setErrorMessage('');
-        }, 5000)
     }
 
     const handleCheckboxChange = (e: ChangeEvent<HTMLInputElement>) => {
@@ -160,7 +156,7 @@ const Register = () => {
                 <Verify />
             </Modal>
             <div className="message">
-                {errorMessage && <Message message={errorMessage} icon='error' />}
+                <Message message={errorMessage} success={false} onMessageChange={setMessageState} />
             </div>
         </div>
     );

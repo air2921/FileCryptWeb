@@ -7,7 +7,7 @@ interface MessageProps {
     onMessageChange: (message: string) => void;
 }
 
-function MessageP(props: MessageProps) {
+function Message(props: MessageProps) {
     const [icon, setIcon] = useState('');
 
     useEffect(() => {
@@ -34,15 +34,6 @@ function MessageP(props: MessageProps) {
                 </div>
             )}
         </>
-    );
-}
-
-function Message({ message, icon }: { message: string, icon: string }) {
-    return (
-        <div className="message-container">
-            <div>{message}</div>
-            <Icon icon={icon} height={24} width={24} />
-        </div>
     );
 }
 

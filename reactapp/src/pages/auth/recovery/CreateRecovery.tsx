@@ -5,7 +5,11 @@ import { createRecovery } from '../../../utils/api/Auth';
 const CreateRecovery = () => {
     const [email, setEmail] = useState('');
     const [message, setMessage] = useState('');
-    const [font, setFont] = useState('');
+    const [status, setStatus] = useState(false);
+
+    function setMessageState(message: string) {
+        setMessage(message);
+    }
 
     const createRecoverySubmit = async (e: FormEvent) => {
         e.preventDefault();
@@ -14,16 +18,11 @@ const CreateRecovery = () => {
 
         if (result.statusCode === 201) {
             setMessage(result.message);
-            setFont('check_small')
+            setStatus(true);
         } else {
             setMessage(result.message);
-            setFont('error')
+            setStatus(false);
         }
-
-        setTimeout(() => {
-            setMessage('');
-            setFont('');
-        }, 5000)
     }
 
     return (
@@ -48,11 +47,9 @@ const CreateRecovery = () => {
                     <button className="recovery-btn-submit" type="submit">Send recovery link</button>
                 </div>
             </form>
-            {message &&
-                <div className="recovery-message">
-                    <Message message={message} icon={font} />
-                </div>
-            }
+            <div className="recovery-message">
+                <Message message={message} success={status} onMessageChange={setMessageState} />
+            </div>
         </div>
     );
 }

@@ -15,6 +15,10 @@ const Login = () => {
     const [code, setCode] = useState<number>();
     const navigate = useNavigate();
 
+    function setMessageState(message: string) {
+        setErrorMessage(message);
+    }
+
     const loginSubmit = async (e: FormEvent) => {
         e.preventDefault();
 
@@ -25,10 +29,6 @@ const Login = () => {
             navigate('/');
         } else {
             setErrorMessage(result.message);
-
-            setTimeout(() => {
-                setErrorMessage('');
-            }, 5000)
         }
     };
 
@@ -37,10 +37,6 @@ const Login = () => {
 
         if (code === undefined) {
             setErrorMessage('Code cannot be empty');
-
-            setTimeout(() => {
-                setErrorMessage('');
-            }, 5000)
             return;
         }
 
@@ -49,10 +45,6 @@ const Login = () => {
             navigate('/')
         } else {
             setErrorMessage(result.message);
-
-            setTimeout(() => {
-                setErrorMessage('');
-            }, 5000)
         }
     };
 
@@ -146,7 +138,7 @@ const Login = () => {
                 <CreateRecovery />
             </Modal>
             <div className="message">
-                {errorMessage && <Message message={errorMessage} icon='error' />}
+                <Message message={errorMessage} success={false} onMessageChange={setMessageState} />
             </div>
         </div>
     );

@@ -13,6 +13,10 @@ const RecoveryAccount = () => {
     const [font, setFont] = useState('');
     const navigate = useNavigate();
 
+    function setMessageState(message: string) {
+        setMessage(message);
+    }
+
     const recoveryAccountSubmit = async (e: FormEvent) => {
         e.preventDefault();
 
@@ -26,13 +30,7 @@ const RecoveryAccount = () => {
             navigate('/auth/login');
         } else {
             setMessage(result.message);
-            setFont('error');
         }
-
-        setTimeout(() => {
-            setMessage('');
-            setFont('');
-        }, 5000)
     }
 
     return (
@@ -59,11 +57,9 @@ const RecoveryAccount = () => {
                     <button className="account-recovery-btn-submit" type="submit">Submit</button>
                 </div>
             </form>
-            {message &&
-                <div className="recovery-message">
-                    <Message message={message} icon={font} />
-                </div>
-            }
+            <div className="recovery-message">
+                <Message message={message} success={false} onMessageChange={setMessageState} />
+            </div>
         </div>
     );
 }
