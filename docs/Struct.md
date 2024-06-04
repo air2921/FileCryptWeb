@@ -1,3 +1,5 @@
+```
+project/
 ├── .dockerignore
 ├── .editorconfig
 ├── .gitattributes
@@ -289,3 +291,4 @@
     └── Startup Extensions/
         ├── AppConfigurationCheck.cs
         └── AppServices.cs
+```
