@@ -1,5 +1,4 @@
-﻿using application.Abstractions.Endpoints.Account;
-using application.Abstractions.TP_Services;
+﻿using application.Abstractions.TP_Services;
 using application.DTO.Inner;
 using application.Helper_Services;
 using application.Helpers;
@@ -18,7 +17,7 @@ namespace application.Master_Services.Account.Edit
         IEmailSender emailSender,
         IRepository<UserModel> userRepository,
         IHashUtility hashUtility,
-        IGenerate generate) : I2FaService
+        IGenerate generate)
     {
         private readonly string CODE = $"_2FaController_VerificationCode#";
 

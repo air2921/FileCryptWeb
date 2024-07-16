@@ -1,6 +1,5 @@
-﻿using application.Abstractions.Endpoints.Core;
+﻿using application.Master_Services.Core;
 using Microsoft.AspNetCore.Authorization;
-using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Mvc;
 using webapi.Helpers.Abstractions;
 
@@ -10,7 +9,7 @@ namespace webapi.Controllers.Core
     [ApiController]
     [Authorize]
     public class NotificationController(
-        INotificationService service,
+        NotificationsService service,
         IUserInfo userInfo) : ControllerBase
     {
         [HttpGet("{notificationId}")]

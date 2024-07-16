@@ -1,5 +1,4 @@
-﻿using application.Abstractions.Endpoints.Admin;
-using application.Helper_Services;
+﻿using application.Helper_Services;
 using application.Helpers;
 using application.Helpers.Localization;
 using domain.Abstractions.Data;
@@ -11,7 +10,7 @@ namespace application.Master_Services.Admin
     public class Admin_UserService(
         [FromKeyedServices(ImplementationKey.ADMIN_USER_SERVICE)] ITransaction<UserModel> transaction,
         [FromKeyedServices(ImplementationKey.ADMIN_USER_SERVICE)] IValidator validator,
-        IRepository<UserModel> userRepository) : IAdminUserService
+        IRepository<UserModel> userRepository)
     {
         public async Task<Response> DeleteUser(int userId)
         {

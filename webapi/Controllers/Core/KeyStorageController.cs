@@ -1,4 +1,4 @@
-﻿using application.Abstractions.Endpoints.Core;
+﻿using application.Master_Services.Core;
 using application.DTO.Outer;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
@@ -10,8 +10,8 @@ namespace webapi.Controllers.Core
     [ApiController]
     [Authorize]
     public class KeyStorageController(
-        IStorageService storageService,
-        IStorageItemService storageItemService,
+        StoragesService storageService,
+        StorageItemsService storageItemService,
         IUserInfo userInfo) : ControllerBase
     {
         [HttpPost]

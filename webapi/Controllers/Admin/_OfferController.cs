@@ -1,7 +1,5 @@
-﻿using application.Abstractions.Endpoints.Admin;
-using application.Cache_Handlers;
+﻿using application.Master_Services.Admin;
 using Microsoft.AspNetCore.Authorization;
-using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Mvc;
 
 namespace webapi.Controllers.Admin
@@ -9,7 +7,7 @@ namespace webapi.Controllers.Admin
     [Route("api/admin/offer")]
     [ApiController]
     [Authorize(Policy = "RequireAdminPolicy")]
-    public class _OfferController(IAdminOfferService service) : ControllerBase
+    public class _OfferController(Admin_OfferService service) : ControllerBase
     {
         [HttpGet("{offerId}")]
         public async Task<IActionResult> GetOffer([FromRoute] int offerId)

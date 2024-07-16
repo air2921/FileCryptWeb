@@ -9,7 +9,6 @@ using domain.Specifications.By_Relation_Specifications;
 using Microsoft.Extensions.DependencyInjection;
 using application.Helper_Services;
 using application.Abstractions.TP_Services;
-using application.Abstractions.Endpoints.Core;
 
 namespace application.Master_Services.Core
 {
@@ -22,7 +21,7 @@ namespace application.Master_Services.Core
         ICacheHandler<KeyStorageItemModel> itemCacheHandler,
         ICacheHandler<OfferModel> offerCacheHandler,
         [FromKeyedServices(ImplementationKey.CORE_OFFER_SERVICE)] IDataManagement data,
-        IHashUtility hashUtility) : IOfferService
+        IHashUtility hashUtility)
     {
         public async Task<Response> Add(int senderId, int receiverId, int keyId, int storageId, string code)
         {

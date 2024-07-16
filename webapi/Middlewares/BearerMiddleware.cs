@@ -1,12 +1,12 @@
-﻿using application.Abstractions.Endpoints.Account;
-using application.Helpers;
+﻿using application.Helpers;
+using application.Master_Services.Account;
 
 namespace webapi.Middlewares
 {
     // You may need to install the Microsoft.AspNetCore.Http.Abstractions package into your project
     public class BearerMiddleware(RequestDelegate next, ILogger<BearerMiddleware> logger, IWebHostEnvironment env)
     {
-        public async Task Invoke(HttpContext context, ISessionService service)
+        public async Task Invoke(HttpContext context, SessionService service)
         {
             if (context.Request.Headers.ContainsKey(ImmutableData.NONE_BEARER))
             {

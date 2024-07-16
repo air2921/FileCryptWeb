@@ -1,4 +1,4 @@
-﻿using application.Abstractions.Endpoints.Core;
+﻿using application.Master_Services.Core;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 using webapi.Helpers.Abstractions;
@@ -8,7 +8,7 @@ namespace webapi.Controllers.Core
     [Route("api/core/activity")]
     [ApiController]
     [Authorize]
-    public class ActivityController(IActivityService service, IUserInfo userInfo) : ControllerBase
+    public class ActivityController(ActivityService service, IUserInfo userInfo) : ControllerBase
     {
         [HttpGet("{activityId}")]
         public async Task<IActionResult> GetActivity([FromRoute] int activityId)

@@ -1,4 +1,4 @@
-﻿using application.Abstractions.Endpoints.Account;
+﻿using application.Master_Services.Account.Edit;
 using application.Helpers;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
@@ -10,7 +10,7 @@ namespace webapi.Controllers.Account.Edit
     [ApiController]
     [Authorize]
     [ValidateAntiForgeryToken]
-    public class UsernameController(IUsernameService service, IUserInfo userInfo) : ControllerBase
+    public class UsernameController(UsernameService service, IUserInfo userInfo) : ControllerBase
     {
         [HttpPost]
         public async Task<IActionResult> Update([FromQuery] string username)

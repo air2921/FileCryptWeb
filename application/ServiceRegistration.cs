@@ -1,7 +1,4 @@
-﻿using application.Abstractions.Endpoints.Account;
-using application.Abstractions.Endpoints.Admin;
-using application.Abstractions.Endpoints.Core;
-using application.Abstractions.Inner;
+﻿using application.Abstractions.Inner;
 using application.Cache_Handlers;
 using application.DTO.Inner;
 using application.Helper_Services;
@@ -52,31 +49,31 @@ namespace application
 
         private static void AddUpperModuleServices(this IServiceCollection services)
         {
-            services.AddScoped<IRegistrationService, RegistrationService>();
-            services.AddScoped<ISessionService, SessionService>();
-            services.AddScoped<IRecoveryService, RecoveryService>();
-            services.AddScoped<IAvatarService, AvatarService>();
-            services.AddScoped<IUsernameService, UsernameService>();
-            services.AddScoped<IPasswordService, PasswordService>();
-            services.AddScoped<I2FaService, _2FaService>();
-            services.AddScoped<IEmailService, EmailService>();
+            services.AddScoped<RegistrationService>();
+            services.AddScoped<SessionService>();
+            services.AddScoped<RecoveryService>();
+            services.AddScoped<AvatarService>();
+            services.AddScoped<UsernameService>();
+            services.AddScoped<PasswordService>();
+            services.AddScoped<_2FaService>();
+            services.AddScoped<EmailService>();
 
-            services.AddScoped<IAdminFileService, Admin_FileService>();
-            services.AddScoped<IAdminLinkService, Admin_LinkService>();
-            services.AddScoped<IAdminMimeService, Admin_MimeService>();
-            services.AddScoped<IAdminNotificationService, Admin_NotificationService>();
-            services.AddScoped<IAdminOfferService, Admin_OfferService>();
-            services.AddScoped<IAdminTokenService, Admin_TokenService>();
-            services.AddScoped<IAdminUserService, Admin_UserService>();
+            services.AddScoped<Admin_FileService>();
+            services.AddScoped<Admin_LinkService>();
+            services.AddScoped<Admin_MimeService>();
+            services.AddScoped<Admin_NotificationService>();
+            services.AddScoped<Admin_OfferService>();
+            services.AddScoped<Admin_TokenService>();
+            services.AddScoped<Admin_UserService>();
 
-            services.AddScoped<IActivityService, ActivityService>();
-            services.AddScoped<ICryptographyService, CryptographyService>();
-            services.AddScoped<IFileService, FilesService>();
-            services.AddScoped<INotificationService, NotificationsService>();
-            services.AddScoped<IOfferService, OfferService>();
-            services.AddScoped<IStorageItemService, StorageItemsService>();
-            services.AddScoped<IStorageService, StoragesService>();
-            services.AddScoped<IUserService, UsersService>();
+            services.AddScoped<ActivityService>();
+            services.AddScoped<CryptographyService>();
+            services.AddScoped<FilesService>();
+            services.AddScoped<NotificationsService>();
+            services.AddScoped<OfferService>();
+            services.AddScoped<StorageItemsService>();
+            services.AddScoped<StoragesService>();
+            services.AddScoped<UsersService>();
         }
     }
 

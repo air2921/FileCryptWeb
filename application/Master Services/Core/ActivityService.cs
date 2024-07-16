@@ -1,5 +1,4 @@
-﻿using application.Abstractions.Endpoints.Core;
-using application.Cache_Handlers;
+﻿using application.Cache_Handlers;
 using application.DTO.Outer;
 using application.Helpers;
 using application.Helpers.Localization;
@@ -8,7 +7,7 @@ using domain.Models;
 
 namespace application.Master_Services.Core
 {
-    public class ActivityService(ICacheHandler<ActivityModel> cacheHandler) : IActivityService
+    public class ActivityService(ICacheHandler<ActivityModel> cacheHandler)
     {
         public async Task<Response> GetOne(int userId, int activityId)
         {

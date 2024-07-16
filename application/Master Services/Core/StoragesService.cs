@@ -6,7 +6,6 @@ using domain.Exceptions;
 using domain.Models;
 using domain.Specifications.By_Relation_Specifications;
 using application.Abstractions.TP_Services;
-using application.Abstractions.Endpoints.Core;
 using application.Helper_Services;
 
 namespace application.Master_Services.Core
@@ -16,7 +15,7 @@ namespace application.Master_Services.Core
         ITransaction<KeyStorageModel> transaction,
         ICacheHandler<KeyStorageModel> cacheHandler,
         IRedisCache redisCache,
-        IHashUtility hashUtility) : IStorageService
+        IHashUtility hashUtility)
     {
         public async Task<Response> Add(string storageName, string accessCode, string? description, int userId)
         {

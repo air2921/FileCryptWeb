@@ -9,7 +9,6 @@ using domain.Models;
 using domain.Specifications;
 using Microsoft.Extensions.DependencyInjection;
 using application.Abstractions.TP_Services;
-using application.Abstractions.Endpoints.Account;
 
 namespace application.Master_Services.Account
 {
@@ -20,7 +19,7 @@ namespace application.Master_Services.Account
         IRepository<UserModel> userRepository,
         IEmailSender emailSender,
         IHashUtility hashUtility,
-        IGenerate generate) : IRegistrationService
+        IGenerate generate)
     {
         private readonly string USER_OBJECT = "AuthRegistrationController_UserObject_Email:";
 

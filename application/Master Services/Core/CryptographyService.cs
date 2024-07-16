@@ -1,5 +1,4 @@
-﻿using application.Abstractions.Endpoints.Core;
-using application.Abstractions.Inner;
+﻿using application.Abstractions.Inner;
 using application.DTO.Outer;
 using application.Helpers;
 using application.Helpers.Localization;
@@ -13,7 +12,7 @@ namespace application.Master_Services.Core
         IFileHelper fileHelper,
         ICryptographyHelper cryptographyHelper,
         IRedisCache redisCache,
-        ILogger<CryptographyService> logger) : ICryptographyService
+        ILogger<CryptographyService> logger)
     {
         private const string DISK_NAME = "C:";
         private const string FOLDER = "FileCryptWeb";

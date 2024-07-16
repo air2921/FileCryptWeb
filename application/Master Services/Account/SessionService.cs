@@ -11,7 +11,6 @@ using Microsoft.Extensions.DependencyInjection;
 using application.Helper_Services.Account;
 using application.Abstractions.Inner;
 using application.Abstractions.TP_Services;
-using application.Abstractions.Endpoints.Account;
 
 namespace application.Master_Services.Account
 {
@@ -23,7 +22,7 @@ namespace application.Master_Services.Account
         IEmailSender emailSender,
         IHashUtility hashUtility,
         IGenerate generate,
-        ITokenComparator tokenComparator) : ISessionService
+        ITokenComparator tokenComparator)
     {
         private readonly string USER_OBJECT = "AuthSessionController_UserObject_Email:";
 

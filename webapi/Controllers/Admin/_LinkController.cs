@@ -1,6 +1,5 @@
-﻿using application.Abstractions.Endpoints.Admin;
+﻿using application.Master_Services.Admin;
 using Microsoft.AspNetCore.Authorization;
-using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Mvc;
 
 namespace webapi.Controllers.Admin
@@ -8,7 +7,7 @@ namespace webapi.Controllers.Admin
     [Route("api/admin/token/recovery")]
     [ApiController]
     [Authorize(Policy = "RequireAdminPolicy")]
-    public class _LinkController(IAdminLinkService service) : ControllerBase
+    public class _LinkController(Admin_LinkService service) : ControllerBase
     {
         [HttpGet("{linkId}")]
         public async Task<IActionResult> GetLink([FromRoute] int linkId)

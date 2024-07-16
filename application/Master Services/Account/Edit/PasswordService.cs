@@ -8,15 +8,14 @@ using domain.Models;
 using Microsoft.Extensions.DependencyInjection;
 using System.Text.RegularExpressions;
 using application.Abstractions.TP_Services;
-using application.Abstractions.Endpoints.Account;
 
 namespace application.Master_Services.Account.Edit
 {
-    internal class PasswordService(
+    public class PasswordService(
         [FromKeyedServices(ImplementationKey.ACCOUNT_PASSWORD_SERVICE)] ITransaction<UserModel> transaction,
         [FromKeyedServices(ImplementationKey.ACCOUNT_PASSWORD_SERVICE)] IDataManagement dataManagament,
         IRepository<UserModel> userRepository,
-        IHashUtility hashUtility) : IPasswordService
+        IHashUtility hashUtility)
     {
         public async Task<Response> UpdatePassword(PasswordDTO dto, int id)
         {

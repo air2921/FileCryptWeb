@@ -1,5 +1,5 @@
-﻿using application.Abstractions.Endpoints.Account;
-using application.DTO.Outer;
+﻿using application.DTO.Outer;
+using application.Master_Services.Account;
 using Microsoft.AspNetCore.Mvc;
 
 namespace webapi.Controllers.Account.Auth
@@ -7,7 +7,7 @@ namespace webapi.Controllers.Account.Auth
     [Route("api/auth")]
     [ApiController]
     [ValidateAntiForgeryToken]
-    public class RegisterController(IRegistrationService service) : ControllerBase
+    public class RegisterController(RegistrationService service) : ControllerBase
     {
         [HttpPost("register")]
         public async Task<IActionResult> StartRegistration([FromBody] RegisterDTO registerDTO)

@@ -1,6 +1,6 @@
-﻿using application.Abstractions.Endpoints.Account;
-using application.DTO.Outer;
+﻿using application.DTO.Outer;
 using application.Helpers.Localization;
+using application.Master_Services.Account.Edit;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 using webapi.Helpers.Abstractions;
@@ -11,7 +11,7 @@ namespace webapi.Controllers.Account.Edit
     [ApiController]
     [Authorize]
     public class AvatarController(
-        IAvatarService service,
+        AvatarService service,
         IUserInfo userInfo) : ControllerBase
     {
         [HttpGet("{userId}")]

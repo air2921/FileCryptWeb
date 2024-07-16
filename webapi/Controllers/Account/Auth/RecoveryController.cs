@@ -1,6 +1,5 @@
-﻿using application.Abstractions.Endpoints.Account;
-using application.DTO.Outer;
-using Microsoft.AspNetCore.Http;
+﻿using application.DTO.Outer;
+using application.Master_Services.Account;
 using Microsoft.AspNetCore.Mvc;
 
 namespace webapi.Controllers.Account.Auth
@@ -8,7 +7,7 @@ namespace webapi.Controllers.Account.Auth
     [Route("api/auth")]
     [ApiController]
     [ValidateAntiForgeryToken]
-    public class RecoveryController(IRecoveryService service) : ControllerBase
+    public class RecoveryController(RecoveryService service) : ControllerBase
     {
         [HttpPost("send/ticket")]
         public async Task<IActionResult> SendTicket([FromQuery] string email)

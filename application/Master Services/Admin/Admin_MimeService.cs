@@ -1,5 +1,4 @@
-﻿using application.Abstractions.Endpoints.Admin;
-using application.Abstractions.TP_Services;
+﻿using application.Abstractions.TP_Services;
 using application.Helpers;
 using application.Helpers.Localization;
 using domain.Abstractions.Data;
@@ -12,7 +11,7 @@ namespace application.Master_Services.Admin
     public class Admin_MimeService(
         IRepository<MimeModel> repository,
         IRedisCache redisCache,
-        IFileManager fileManager) : IAdminMimeService
+        IFileManager fileManager)
     {
         public async Task<Response> GetOne(int mimeId)
         {

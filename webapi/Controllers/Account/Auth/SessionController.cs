@@ -1,4 +1,4 @@
-﻿using application.Abstractions.Endpoints.Account;
+﻿using application.Master_Services.Account;
 using application.DTO.Outer;
 using application.Helpers;
 using application.Helpers.Localization;
@@ -9,7 +9,7 @@ namespace webapi.Controllers.Account.Auth
 {
     [Route("api/auth")]
     [ApiController]
-    public class SessionController(ISessionService service) : ControllerBase
+    public class SessionController(SessionService service) : ControllerBase
     {
         [HttpPost("login")]
         [ValidateAntiForgeryToken]

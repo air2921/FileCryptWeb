@@ -1,6 +1,5 @@
-﻿using application.Abstractions.Endpoints.Account;
+﻿using application.Master_Services.Account.Edit;
 using Microsoft.AspNetCore.Authorization;
-using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Mvc;
 using webapi.Helpers.Abstractions;
 
@@ -10,7 +9,7 @@ namespace webapi.Controllers.Account.Edit
     [ApiController]
     [Authorize]
     [ValidateAntiForgeryToken]
-    public class TwoFaController(I2FaService service, IUserInfo userInfo) : ControllerBase
+    public class TwoFaController(_2FaService service, IUserInfo userInfo) : ControllerBase
     {
         [HttpPost("send/mail")]
         public async Task<IActionResult> SendMail([FromQuery] string password)

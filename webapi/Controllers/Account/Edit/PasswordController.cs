@@ -1,7 +1,6 @@
-﻿using application.Abstractions.Endpoints.Account;
+﻿using application.Master_Services.Account.Edit;
 using application.DTO.Outer;
 using Microsoft.AspNetCore.Authorization;
-using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Mvc;
 using webapi.Helpers.Abstractions;
 
@@ -11,7 +10,7 @@ namespace webapi.Controllers.Account.Edit
     [ApiController]
     [Authorize]
     [ValidateAntiForgeryToken]
-    public class PasswordController(IPasswordService service, IUserInfo userInfo) : ControllerBase
+    public class PasswordController(PasswordService service, IUserInfo userInfo) : ControllerBase
     {
         [HttpPost]
         public async Task<IActionResult> Change([FromBody] PasswordDTO dto)

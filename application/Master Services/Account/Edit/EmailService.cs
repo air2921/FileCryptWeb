@@ -1,5 +1,4 @@
-﻿using application.Abstractions.Endpoints.Account;
-using application.Abstractions.TP_Services;
+﻿using application.Abstractions.TP_Services;
 using application.DTO.Inner;
 using application.Helper_Services;
 using application.Helpers;
@@ -19,7 +18,7 @@ namespace application.Master_Services.Account.Edit
         IRepository<UserModel> userRepository,
         IEmailSender emailSender,
         IHashUtility hashUtility,
-        IGenerate generate) : IEmailService
+        IGenerate generate)
     {
         private readonly string EMAIL = $"EmailController_Email#";
         private readonly string OLD_EMAIL_CODE = $"EmailController_ConfirmationCode_OldEmail#";

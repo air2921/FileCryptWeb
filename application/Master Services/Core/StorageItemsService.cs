@@ -5,7 +5,6 @@ using domain.Abstractions.Data;
 using domain.Exceptions;
 using domain.Models;
 using application.Abstractions.TP_Services;
-using application.Abstractions.Endpoints.Core;
 using System.Text.RegularExpressions;
 using application.Helper_Services;
 
@@ -17,7 +16,7 @@ namespace application.Master_Services.Core
         ICacheHandler<KeyStorageItemModel> itemCacheHandler,
         ICacheHandler<KeyStorageModel> storageCacheHandler,
         IRedisCache redisCache,
-        IHashUtility hashUtility) : IStorageItemService
+        IHashUtility hashUtility)
     {
         private bool IsBase64String(string? key)
         {

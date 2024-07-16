@@ -1,5 +1,4 @@
-﻿using application.Abstractions.Endpoints.Account;
-using application.Helpers;
+﻿using application.Helpers;
 using application.Helpers.Localization;
 using domain.Abstractions.Data;
 using domain.Exceptions;
@@ -10,7 +9,7 @@ namespace application.Master_Services.Account.Edit
 {
     public class UsernameService(
         IRepository<UserModel> userRepository,
-        IRedisCache redisCache) : IUsernameService
+        IRedisCache redisCache)
     {
         public async Task<Response> UpdateUsername(string username, int id)
         {

@@ -1,5 +1,4 @@
-﻿using application.Abstractions.Endpoints.Account;
-using application.Abstractions.TP_Services;
+﻿using application.Abstractions.TP_Services;
 using application.DTO.Outer;
 using application.Helpers.Localization;
 using domain.Abstractions.Data;
@@ -14,7 +13,7 @@ namespace application.Master_Services.Account.Edit
         IGetSize getSize,
         IS3Manager s3Manager,
         IDatabaseTransaction dbTransaction,
-        IRepository<UserModel> userRepository) : IAvatarService
+        IRepository<UserModel> userRepository)
     {
         public async Task<Response> Delete(int userId)
         {

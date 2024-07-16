@@ -4,14 +4,13 @@ using application.Cache_Handlers;
 using domain.Abstractions.Data;
 using domain.Exceptions;
 using domain.Models;
-using application.Abstractions.Endpoints.Core;
 
 namespace application.Master_Services.Core
 {
     public class UsersService(
         IRepository<UserModel> repository,
         ICacheHandler<UserModel> cacheHandler,
-        IRedisCache redisCache) : IUserService
+        IRedisCache redisCache)
     {
         public async Task<Response> GetOne(int ownerId, int targetId)
         {

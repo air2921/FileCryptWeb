@@ -1,4 +1,4 @@
-﻿using application.Abstractions.Endpoints.Core;
+﻿using application.Master_Services.Core;
 using application.Master_Services;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
@@ -10,7 +10,7 @@ namespace webapi.Controllers.Core
     [ApiController]
     [Authorize]
     public class UserController(
-        IUserService service,
+        UsersService service,
         IUserInfo userInfo) : ControllerBase
     {
         [HttpGet("{userId}")]
@@ -24,8 +24,8 @@ namespace webapi.Controllers.Core
         }
 
         [HttpGet("fully/{userId}")]
-        public async Task<IActionResult> GetFullyUser([FromRoute] int userId, IFileService fileService,
-            IStorageService storageService, IOfferService offerService)
+        public async Task<IActionResult> GetFullyUser([FromRoute] int userId, FilesService fileService,
+            StoragesService storageService, OfferService offerService)
         {
             var user = await service.GetOne(userInfo.UserId, userId);
             if (!user.IsSuccess) return StatusCode(user.Status, new { message = user.Message });

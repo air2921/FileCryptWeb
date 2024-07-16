@@ -1,4 +1,4 @@
-﻿using application.Abstractions.Endpoints.Core;
+﻿using application.Master_Services.Core;
 using application.DTO.Outer;
 using application.Helpers.Localization;
 using Microsoft.AspNetCore.Authorization;
@@ -11,8 +11,8 @@ namespace webapi.Controllers.Core
     [ApiController]
     [Authorize]
     public class FileController(
-        ICryptographyService cryptographyService,
-        IFileService fileService,
+        CryptographyService cryptographyService,
+        FilesService fileService,
         IUserInfo userInfo) : ControllerBase
     {
         [HttpPost("cypher/{storageId}/{keyId}")]

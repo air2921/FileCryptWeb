@@ -10,7 +10,6 @@ using domain.Specifications;
 using Microsoft.Extensions.DependencyInjection;
 using application.Helper_Services.Account;
 using application.Abstractions.TP_Services;
-using application.Abstractions.Endpoints.Account;
 
 namespace application.Master_Services.Account
 {
@@ -22,7 +21,7 @@ namespace application.Master_Services.Account
         IEmailSender emailSender,
         IRedisCache redisCache,
         IFileManager fileManager,
-        IGenerate generate) : IRecoveryService
+        IGenerate generate)
     {
         public async Task<Response> SendTicket(string email)
         {

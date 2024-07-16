@@ -1,6 +1,5 @@
-﻿using application.Abstractions.Endpoints.Admin;
+﻿using application.Master_Services.Admin;
 using Microsoft.AspNetCore.Authorization;
-using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Mvc;
 using webapi.Helpers.Abstractions;
 
@@ -10,7 +9,7 @@ namespace webapi.Controllers.Admin
     [ApiController]
     [Authorize(Policy = "RequireAdminPolicy")]
     public class _TokenController(
-        IAdminTokenService service,
+        Admin_TokenService service,
         IUserInfo userInfo) : ControllerBase
     {
         [HttpDelete("{tokenId}")]

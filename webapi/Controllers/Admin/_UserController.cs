@@ -1,4 +1,4 @@
-﻿using application.Abstractions.Endpoints.Admin;
+﻿using application.Master_Services.Admin;
 using data_access.Ef;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
@@ -8,7 +8,7 @@ namespace webapi.Controllers.Admin
     [Route("api/admin/user")]
     [ApiController]
     [Authorize(Roles = "HighestAdmin")]
-    public class _UserController(IAdminUserService service) : ControllerBase
+    public class _UserController(Admin_UserService service) : ControllerBase
     {
         [HttpDelete("{userId}")]
         [ValidateAntiForgeryToken]
